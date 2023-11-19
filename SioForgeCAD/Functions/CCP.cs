@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Autodesk.AutoCAD.ApplicationServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using System;
+using System.Collections.Generic;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
@@ -25,7 +25,7 @@ namespace SioForgeCAD.Functions
                 SecondPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
                 ObjectId Line = Commun.Drawing.Lines.SingleLine(FirstPointCote.Points, SecondPointCote.Points, 252);
-                 
+
                 var Values = ComputeValue();
                 DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNamePente, Values);
                 using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
                     Points Indermediaire = InsertionTransientPointsValues.Point;
                     PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                     PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
-                    Generic.Erase(Line); 
+                    Generic.Erase(Line);
                     tr.Commit();
                     if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                     {

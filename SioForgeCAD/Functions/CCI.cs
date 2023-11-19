@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using System.Collections.Generic;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
@@ -31,7 +31,7 @@ namespace SioForgeCAD.Functions
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         HightLighter.UnhighlightAll();
-                        
+
                         InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
 
                         ed.WriteMessage($"Pente : {ComputeValue(FirstPointCote.Points)["PENTE"]}\n");
@@ -72,7 +72,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-  
+
 
 
 

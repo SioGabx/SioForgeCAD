@@ -1,9 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun
 {
@@ -31,7 +27,7 @@ namespace SioForgeCAD.Commun
         }
         public static void UnhighlightAll()
         {
-            foreach(ObjectId objectId in HightLightedObject.ToArray())
+            foreach (ObjectId objectId in HightLightedObject.ToArray())
             {
                 RegisterUnhighlight(objectId);
             }

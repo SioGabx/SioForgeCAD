@@ -3,10 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -189,7 +186,7 @@ namespace SioForgeCAD.Commun
                     double? Altitude = GetAltitudeFromBloc(SelectedBlocObjectId);
                     if (Altitude == null)
                     {
-                        ed.WriteMessage("Aucune côte détéctée\n"); 
+                        ed.WriteMessage("Aucune côte détéctée\n");
                         tr.Commit();
                         continue;
                     }

@@ -1,13 +1,9 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -84,7 +80,7 @@ namespace SioForgeCAD.Commun
             ent.Erase(true);
         }
 
-        public enum AngleUnit { Radians, Degrees}
+        public enum AngleUnit { Radians, Degrees }
         public static double GetUSCRotation(AngleUnit angleUnit)
         {
             var doc = AcAp.DocumentManager.MdiActiveDocument;
