@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.AutoCAD.ApplicationServices;
+﻿using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
-using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -34,12 +26,15 @@ namespace SioForgeCAD.Functions
                 bool isMultipleIndermediairePlacement = false;
                 do
                 {
+                    DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
+
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         HightLighter.UnhighlightAll();
-                        ObjectId blockRef = CotationElements.InsertBlocFromBlocName("_APUd_COTATIONS_Altimetries", Points.Empty, Generic.GetUSCRotation(Generic.AngleUnit.Radians));
-                        DBObjectCollection ents = Generic.Explode(new List<ObjectId>() { blockRef });
+                        
                         InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
+
+                        ed.WriteMessage($"Pente : {ComputeValue(FirstPointCote.Points)["PENTE"]}\n");
                         string[] KeyWords;
                         if (!isMultipleIndermediairePlacement)
                         {
@@ -56,9 +51,7 @@ namespace SioForgeCAD.Functions
 
                         if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                         {
-                            var Values = ComputeValue(Indermediaire);
-                            ed.WriteMessage($"Pente : {Values["PENTE"]}\n");
-                            CotationElements.InsertBlocFromBlocName("_APUd_COTATIONS_Altimetries", Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), Values);
+                            CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(Indermediaire));
                         }
                         else if (IndermediairePromptPointResultStatus == PromptStatus.Keyword)
                         {

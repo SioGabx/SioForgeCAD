@@ -49,61 +49,23 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
-
-        //public static BlockReference InsertBlocFromBlocName(string BlocName, Points Location, double Angle = 0, bool Values = true)
-        //{
-        //    //public void InsertBloc(string bloc_name, Point3d location, string attribut_text, double angle = 0, List<StringIntClass> stringIntClasses = null)
-        //    //{
-        //    Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-        //    Database db = doc.Database;
-        //    Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
-
-        //    ImportBlocFromBlocNameIfMissing(BlocName);
-        //    //insertion du bloc
-        //    BlockTable bt2 = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
-        //    BlockTableRecord blockDef = bt2[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
-        //    //Also open modelspace - we'll be adding our BlockReference to it
-        //    BlockTableRecord ms = bt2[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
-        //    //Create new BlockReference, and link it to our block definition
-        //    using (BlockReference blockRef = new BlockReference(new Point3d(0,0,0), blockDef.ObjectId))
-        //    {
-        //        blockRef.ColorIndex = 256;
-        //        blockRef.Rotation = Angle;
-        //        blockRef.Position = Location.SCG;
-        //        ms.AppendEntity(blockRef);
-
-        //        string AttributeName = "cote";
-        //        string AttributeValue = "caca";
-        //        string AttributeType = "string";
-        //        //Generic block
-        //        foreach (ObjectId id in blockDef)
-        //        {
-        //            DBObject obj = id.GetObject(OpenMode.ForRead);
-        //            AttributeDefinition attDef = obj as AttributeDefinition;
-
-        //            if ((attDef != null) && (!attDef.Constant))
-        //            {
-        //                if (attDef.Tag.IgnoreCaseEquals(AttributeName))
-        //                {
-        //                    using (AttributeReference attRef = new AttributeReference())
-        //                    {
-        //                        attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
-        //                        attRef.TextString = AttributeValue;
-        //                        attRef.TextStyleId = Generic.AddFontStyle("Arial");
-        //                        //Add the AttributeReference to the BlockReference
-        //                        blockRef.AttributeCollection.AppendAttribute(attRef);
-        //                        tr.AddNewlyCreatedDBObject(attRef, true);
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        return blockRef;
-        //    }
-        //}
-
-
+        public static DBObjectCollection InitBlocForTransient(string BlocName, Dictionary<string, string> InitAttributesValues)
+        {
+            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            var db = doc.Database;
+            DBObjectCollection ents = new DBObjectCollection();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                //The first block is added for initialising the process and then deleted. Be sure to add a value.
+                ObjectId blockRef = CotationElements.InsertBlocFromBlocName(BlocName, Points.Empty, Generic.GetUSCRotation(Generic.AngleUnit.Radians), InitAttributesValues);
+                DBObject dBObject = blockRef.GetDBObject();
+                Generic.Erase(blockRef);
+                ents.Add(dBObject);
+                tr.Commit();
+            }
+            return ents;
+        }
 
 
         public static ObjectId InsertBlocFromBlocName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> Values = null)

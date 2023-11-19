@@ -66,32 +66,15 @@ namespace SioForgeCAD.Commun
 
         private void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
         {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            var db = doc.Database;
+
             Matrix3d mat = Matrix3d.Displacement(curPt.GetVectorTo(moveToPt));
             Dictionary<string, string> Values = UpdateFunction(new Points(moveToPt));
             for (int i = 0; i < Drawable.Count; i++)
             {
-
                 Entity e = Drawable[i] as Entity;
-                //if ((e is AttributeDefinition AttributeElement))
-                //{
-                //    string AttributeDefinitionName = AttributeElement.Prompt.ToUpperInvariant();
-                //    if (Values != null && Values.ContainsKey(AttributeDefinitionName))
-                //    {
-                //        if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
-                //        {
-                //            AttributeElement.TextString = AttributeDefinitionTargetValue;
-                //            AttributeElement.Tag = AttributeDefinitionTargetValue;
-                //        }
-                //    }
-                //    e = AttributeElement;
-                //}
-
-
-
-                Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-                var ed = doc.Editor;
-                var db = doc.Database;
-
                 if (e is BlockReference blockReference)
                 {
                     // Open the block reference for write
@@ -102,11 +85,13 @@ namespace SioForgeCAD.Commun
                             blockReference.UpgradeOpen();
                         }
                         // Loop through the attributes of the block reference
+
                         foreach (var attId in blockReference.AttributeCollection)
                         {
                             if (attId is AttributeReference AttributeElement)
                             {
                                 string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
+                                AttributeElement.ColorIndex = Settings.TransientColorIndex;
                                 if (Values != null && Values.ContainsKey(AttributeDefinitionName))
                                 {
                                     if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
@@ -115,30 +100,9 @@ namespace SioForgeCAD.Commun
                                     }
                                 }
                             }
-
                         }
-
                     }
                 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 e.TransformBy(mat);
                 TransientManager.CurrentTransientManager.UpdateTransient(Drawable[i], new IntegerCollection());
             }
@@ -162,23 +126,12 @@ namespace SioForgeCAD.Commun
 
         private void CreateTransGraphics()
         {
-
             foreach (Entity drawable in this.Entities)
             {
                 Entity drawableClone = drawable.Clone() as Entity;
-
-                if (drawableClone is AttributeDefinition AttributeDefinition)
-                {
-                    AttributeDefinition.Prompt = AttributeDefinition.Tag.ToUpperInvariant();
-                }
-                drawableClone.ColorIndex = 252;
+                drawableClone.ColorIndex = Settings.TransientColorIndex;
                 Drawable.Add(drawableClone);
-            }
-
-            // Draw each one initially
-            foreach (Drawable d in Drawable)
-            {
-                TransientManager.CurrentTransientManager.AddTransient(d, TransientDrawingMode.DirectShortTerm, 128, new IntegerCollection());
+                TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128, new IntegerCollection());
             }
         }
 

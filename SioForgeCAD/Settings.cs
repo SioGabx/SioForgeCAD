@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SioForgeCAD
+{
+    public static class Settings
+    {
+        public static string BlocNameAltimetrie = "_APUd_COTATIONS_Altimetries";
+        public static string BlocNamePente = "_APUd_COTATIONS_Pentes";
+
+        public static int TransientColorIndex = 252;
+
+    }
+}
