@@ -8,12 +8,17 @@ namespace SioForgeCAD.Commun
     {
         public static Points Empty { get; set; } = new Points(new Point3d(0, 0, 0));
         public Point3d SCG { get; }
-        public Point3d SCU { get; }
+        public Point3d SCU
+        {
+            get
+            {
+                return ToCurentSCU(SCG);
+            }
+        }
 
         public Points(Point3d SCG)
         {
             this.SCG = SCG;
-            this.SCU = ToCurentSCU(SCG);
         }
 
         public static Point3d ToCurentSCU(Point3d OriginalPoint)
@@ -30,7 +35,14 @@ namespace SioForgeCAD.Commun
             return PromptedPoint;
         }
 
-
+        public static Points From3DPoint(double x, double y, double z)
+        {
+            return new Points(new Point3d(x, y, z));
+        }
+        public static Points From3DPoint(Point3d Point3d)
+        {
+            return new Points(Point3d);
+        }
 
     }
 }

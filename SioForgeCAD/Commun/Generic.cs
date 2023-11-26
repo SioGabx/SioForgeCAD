@@ -74,10 +74,12 @@ namespace SioForgeCAD.Commun
         public static void Erase(ObjectId ObjectToErase)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
-            Entity ent = (Entity)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
-            ent.Erase(true);
+            using (Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                Entity ent = (Entity)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
+                ent.Erase(true);
+                tr.Commit();
+            }
         }
 
         public enum AngleUnit { Radians, Degrees }
@@ -95,63 +97,5 @@ namespace SioForgeCAD.Commun
             double ucs_angle_degres = ucs_rotAngle * 180 / Math.PI;
             return ucs_angle_degres;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

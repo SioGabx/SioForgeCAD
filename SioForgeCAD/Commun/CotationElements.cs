@@ -16,30 +16,33 @@ namespace SioForgeCAD.Commun
             var doc = AcAp.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             var ed = doc.Editor;
-            Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
-
-            BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-
-            if (!bt.Has(BlocName))
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                string TempFolderPath = System.IO.Path.GetTempPath();
-                string TempFolderFilePath = System.IO.Path.Combine(TempFolderPath, $"{BlocName}.dwg");
-                Generic.ReadResource(BlocName, TempFolderFilePath);
 
-                Database sourceDb = new Database(false, true); //Temporary database to hold data for block we want to import
-                try
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+                if (!bt.Has(BlocName))
                 {
-                    sourceDb.ReadDwgFile(TempFolderFilePath, System.IO.FileShare.Read, true, ""); //Read the DWG into a side database
-                    db.Insert(TempFolderFilePath, sourceDb, false);
+                    string TempFolderPath = System.IO.Path.GetTempPath();
+                    string TempFolderFilePath = System.IO.Path.Combine(TempFolderPath, $"{BlocName}.dwg");
+                    Generic.ReadResource(BlocName, TempFolderFilePath);
+
+                    Database sourceDb = new Database(false, true); //Temporary database to hold data for block we want to import
+                    try
+                    {
+                        sourceDb.ReadDwgFile(TempFolderFilePath, System.IO.FileShare.Read, true, ""); //Read the DWG into a side database
+                        db.Insert(TempFolderFilePath, sourceDb, false);
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                    {
+                        ed.WriteMessage("\nErreur : " + ex.Message);
+                    }
+                    finally
+                    {
+                        sourceDb.Dispose();
+                    }
                 }
-                catch (Autodesk.AutoCAD.Runtime.Exception ex)
-                {
-                    ed.WriteMessage("\nErreur : " + ex.Message);
-                }
-                finally
-                {
-                    sourceDb.Dispose();
-                }
+                tr.Commit();
             }
         }
 
@@ -123,9 +126,9 @@ namespace SioForgeCAD.Commun
                             if (BlocPropertyCollectionDictionnary.TryGetValue(ValueKey, out DynamicBlockReferenceProperty BlocProperty))
                             {
                                 object Value = ConvertValueToProperty((DwgDataType)BlocProperty.PropertyTypeCode, Values[ValueKey]);
-                                if (Value is int) BlocProperty.Value = (short)Convert.ToInt32(Value);
-                                if (Value is double) BlocProperty.Value = Convert.ToDouble(Value);
-                                if (Value is string) BlocProperty.Value = (string)Value;
+                                if (Value is int ValueAsInt) BlocProperty.Value = (short)ValueAsInt;
+                                if (Value is double ValueAsDbl) BlocProperty.Value = ValueAsDbl;
+                                if (Value is string ValueAsStr) BlocProperty.Value = ValueAsStr;
                             }
                         }
                     }

@@ -1,0 +1,52 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace SioForgeCAD.Forms
+{
+    public partial class InputDialogBox : Form
+    {
+        public InputDialogBox()
+        {
+            InitializeComponent();
+            this.Text = Assembly.GetExecutingAssembly().GetName().Name;
+        }
+
+        public string GetUserInput()
+        {
+            return UserInputBox.Text;
+        }
+
+        public void SetUserInputPlaceholder(string UserInputBoxPlaceholder)
+        {
+            UserInputBox.Text = UserInputBoxPlaceholder;
+        }
+
+        public void SetPrompt(string Prompt)
+        {
+            PromptLabel.Text = Prompt;
+        }
+
+        private void PromptAcceptButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+        }
+
+        private void PromptCancelButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+        }
+
+        private void UserInputBox_Validated(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+        }
+    }
+}

@@ -47,23 +47,23 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public Dictionary<string, string> ComputeValue()
+        private Dictionary<string, string> ComputeValue()
         {
             if (FirstPointCote?.Points?.SCU == null || SecondPointCote?.Points?.SCU == null)
             {
                 return null;
             }
             var ComputeSlopeAndIntermediate = Arythmetique.ComputeSlopeAndIntermediate(FirstPointCote, SecondPointCote, Points.Empty);
-            var PenteBlocSettings = GetPenteBlocSettings();
+            var (AnglePente, SensPente) = GetPenteBlocSettings();
             double Slope = ComputeSlopeAndIntermediate.Slope;
             return new Dictionary<string, string>() {
                 {"PENTE", $"{Slope}%" },
-                {"ANGLE_PENTE", PenteBlocSettings.AnglePente },
-                {"SENS_PENTE", PenteBlocSettings.SensPente },
+                {"ANGLE_PENTE", AnglePente },
+                {"SENS_PENTE", SensPente },
             };
         }
 
-        public (string AnglePente, string SensPente) GetPenteBlocSettings()
+        private (string AnglePente, string SensPente) GetPenteBlocSettings()
         {
             double NormalizeDegrees(double AngleInDegreesToNormalize)
             {
@@ -114,7 +114,7 @@ namespace SioForgeCAD.Functions
                     BlocInverseState = 0;
                 }
 
-                DegreesAngles = DegreesAngles + 180;
+                DegreesAngles += 180;
                 DegreesAngles = NormalizeDegrees(DegreesAngles);
             }
             double RadiansAngle = DegreesAngles * Math.PI / 180;

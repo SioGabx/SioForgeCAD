@@ -26,7 +26,7 @@ namespace SioForgeCAD.Commun
             var ed = doc.Editor;
             var db = doc.Database;
 
-            Point3d basePt = Points.Empty.SCG;
+            Point3d basePt = Points.Empty.SCU;
             Point3d curPt = basePt;
             CreateTransGraphics();
 
@@ -71,7 +71,7 @@ namespace SioForgeCAD.Commun
                 if (e is BlockReference blockReference)
                 {
                     // Open the block reference for write
-                    using (Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager)
+                    using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         if (!blockReference.IsWriteEnabled)
                         {
@@ -94,6 +94,7 @@ namespace SioForgeCAD.Commun
                                 }
                             }
                         }
+                        tr.Commit();
                     }
                 }
                 e.TransformBy(mat);

@@ -49,6 +49,15 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static string FormatAltitude(double? Altitude)
+        {
+            if (Altitude == null)
+            {
+                Altitude = 0;
+            }
+            return Altitude?.ToString("#.00");
+        }
+
         private static void SaveSelectionPointsType(SelectionPointsType SelectionPointsType)
         {
             Properties.Settings.Default.SelectionPointsType = SelectionPointsType.ToString();
@@ -111,13 +120,26 @@ namespace SioForgeCAD.Commun
             return PromptDoubleAltitudeResult.Value;
         }
 
-        private static double? GetAltitudeFromBloc(Autodesk.AutoCAD.DatabaseServices.ObjectId BlocObjectId)
+        public static double? GetAltitudeFromBloc(Autodesk.AutoCAD.DatabaseServices.ObjectId BlocObjectId)
         {
             var doc = AcAp.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             var ed = doc.Editor;
             TransactionManager tr = db.TransactionManager;
-            BlockReference blkRef = (BlockReference)tr.GetObject(BlocObjectId, OpenMode.ForRead);
+            DBObject BlocObject = tr.GetObject(BlocObjectId, OpenMode.ForRead);
+            return GetAltitudeFromBloc(BlocObject);
+        }
+
+        public static double? GetAltitudeFromBloc(DBObject BlocObject)
+        {
+            var doc = AcAp.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            var ed = doc.Editor;
+            TransactionManager tr = db.TransactionManager;
+            if (!(BlocObject is BlockReference blkRef))
+            {
+                return null;
+            }
 
             foreach (Autodesk.AutoCAD.DatabaseServices.ObjectId AttributeObjectId in blkRef.AttributeCollection)
             {
@@ -250,13 +272,10 @@ namespace SioForgeCAD.Commun
                             throw ex;
                         }
                     }
-
                 }
             } while (IsLooping);
 
             return null;
         }
-
-
     }
 }

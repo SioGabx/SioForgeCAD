@@ -72,10 +72,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
-
-
-
         public Dictionary<string, string> ComputeValue(Points Intermediaire)
         {
             var ComputeSlopeAndIntermediate = Arythmetique.ComputeSlopeAndIntermediate(FirstPointCote, SecondPointCote, Intermediaire);
