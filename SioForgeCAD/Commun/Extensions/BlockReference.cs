@@ -13,7 +13,6 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
-            blockRef.UpgradeOpen();
             if (blockRef.IsDynamicBlock)
             {
                 // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
