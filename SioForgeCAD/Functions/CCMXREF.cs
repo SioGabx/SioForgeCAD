@@ -70,7 +70,7 @@ namespace SioForgeCAD.Functions
                     double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Radians);
                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                    if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCU, Settings.BlocNameAltimetrie, AltimetrieStr))
+                    if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCG, Settings.BlocNameAltimetrie, AltimetrieStr))
                     {
                         ed.WriteMessage("Un block ayant la même valeur existe déja à cette position");
                     }

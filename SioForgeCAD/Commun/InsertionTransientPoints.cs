@@ -26,7 +26,7 @@ namespace SioForgeCAD.Commun
             var ed = doc.Editor;
             var db = doc.Database;
 
-            Point3d basePt = Points.Empty.SCU;
+            Point3d basePt = Points.Empty.SCG;
             Point3d curPt = basePt;
             CreateTransGraphics();
 

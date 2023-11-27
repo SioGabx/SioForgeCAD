@@ -71,17 +71,16 @@ namespace SioForgeCAD.Functions
                         }
                         // ouvrir la défintion du bloc en écriture
                         BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[blockname], OpenMode.ForWrite);
-                            // changer le nom du bloc
-                            try
-                            {
-                                btr.Name = NewName;
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
+                        // changer le nom du bloc
+                        try
+                        {
+                            btr.Name = NewName;
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
                             ed.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
-                            }
-                        
+                        }
                     }
                 }
                 tr.Commit();

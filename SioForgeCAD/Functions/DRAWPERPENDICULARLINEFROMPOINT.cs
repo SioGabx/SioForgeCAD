@@ -26,39 +26,49 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            Entity SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
-            if (SelectedEntity is Line ProjectionTargetLine)
+            using (Transaction GlobalTrans = db.TransactionManager.StartTransaction())
             {
-                SelectedEntity = ProjectionTargetLine.ToPolyline();
-            }
-            if (!(SelectedEntity is Polyline ProjectionTarget))
-            {
-                ed.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
-                return;
-            }
-            while (true)
-            {
-                using (Transaction trans = db.TransactionManager.StartTransaction())
+                try
                 {
-                    PromptPointOptions pointOptions = new PromptPointOptions("Sélectionnez un point : \n");
-                    PromptPointResult pointResult = ed.GetPoint(pointOptions);
-                    if (pointResult.Status != PromptStatus.OK)
+                    Entity SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
+                    if (SelectedEntity is Line ProjectionTargetLine)
                     {
-                        trans.Commit();
+                        SelectedEntity = ProjectionTargetLine.ToPolyline();
+                    }
+                    if (!(SelectedEntity is Polyline ProjectionTarget))
+                    {
+                        ed.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
                         return;
                     }
-
-                    Points ProjectionOriginPoint = pointResult.Value.ToPoints();
-
-                    var ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(ProjectionOriginPoint, ProjectionTarget, true);
-                    if (ListOfPerpendicularLines.Count > 0)
+                    while (true)
                     {
-                        Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault();
-                        Lines.Draw(NearestPointPerpendicularLine, null);
-                    }
-                    trans.Commit();
-                }
+                        using (Transaction trans = db.TransactionManager.StartTransaction())
+                        {
+                            PromptPointOptions pointOptions = new PromptPointOptions("Sélectionnez un point : \n");
+                            PromptPointResult pointResult = ed.GetPoint(pointOptions);
+                            if (pointResult.Status != PromptStatus.OK)
+                            {
+                                trans.Commit();
+                                return;
+                            }
 
+                            Points ProjectionOriginPoint = Points.GetFromPromptPointResult(pointResult);
+
+                            var ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(ProjectionOriginPoint, ProjectionTarget, true);
+                            if (ListOfPerpendicularLines.Count > 0)
+                            {
+                                Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault();
+                                Lines.Draw(NearestPointPerpendicularLine, null);
+                            }
+                            trans.Commit();
+                        }
+
+                    }
+                }
+                finally
+                {
+                    GlobalTrans.Commit();
+                }
             }
         }
     }

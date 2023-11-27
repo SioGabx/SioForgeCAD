@@ -13,6 +13,7 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
+            blockRef.UpgradeOpen();
             if (blockRef.IsDynamicBlock)
             {
                 // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
@@ -26,6 +27,33 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return blockRef.Name;
         }
+
+
+        public static DynamicBlockReferencePropertyCollection GetDynamicProperties(this BlockReference blockReference)
+        {
+            return blockReference.DynamicBlockReferencePropertyCollection;
+        }
+
+        public static void SetDynamicBlockReferenceProperty(this BlockReference blockReference, string propertyName, object value)
+        {
+            DynamicBlockReferencePropertyCollection propertyCollection = GetDynamicProperties(blockReference);
+
+            if (propertyCollection != null)
+            {
+                foreach (DynamicBlockReferenceProperty prop in propertyCollection)
+                {
+                    if (prop.PropertyName.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!prop.ReadOnly)
+                        {
+                            prop.Value = value;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
 
 
         public static Point3d ProjectPointToCurrentSpace(ObjectId xrefId, Point3d pointInXref)
@@ -45,15 +73,9 @@ namespace SioForgeCAD.Commun.Extensions
 
                     // Transformez le point dans la référence externe vers l'espace monde
                     Point3d worldPoint = pointInXref.TransformBy(xrefTransform);
-
-                    // Transformez le point du monde à l'espace courant
-                    Matrix3d currentUcsMatrix = doc.Editor.CurrentUserCoordinateSystem;
-                    Point3d currentSpacePoint = worldPoint.TransformBy(currentUcsMatrix.Inverse());
-
-                    // Committez la transaction
                     transaction.Commit();
 
-                    return currentSpacePoint;
+                    return worldPoint;
                 }
             }
 

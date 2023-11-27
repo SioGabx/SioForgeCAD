@@ -31,7 +31,7 @@ namespace SioForgeCAD.Functions
             ObjectId[] selectedBlockIds;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (ActualSelection.Count == 0)
+                if (ActualSelection == null || ActualSelection.Count == 0)
                 {
                     PromptSelectionOptions peo = new PromptSelectionOptions()
                     {
@@ -71,10 +71,21 @@ namespace SioForgeCAD.Functions
                             }
 
                             // Clone the old block definition and its contents
-                            ObjectId newBtrId = CloneBlockDefinition(tr, blockRef.BlockTableRecord, oldName, newName);
+                            ObjectId newBtrId = CloneBlockDefinition(tr, blockRef, oldName, newName);
 
                             // Update the block reference to use the new block definition
                             blockRef.UpgradeOpen();
+                            if (blockRef.IsDynamicBlock)
+                            {
+                                foreach (DynamicBlockReferenceProperty prop in blockRef.GetDynamicProperties())
+                                {
+                                    if (!prop.ReadOnly)
+                                    {
+                                        blockRef.SetDynamicBlockReferenceProperty(prop.PropertyName, prop.Value);
+                                    }
+                                    
+                                }
+                            }
                             blockRef.BlockTableRecord = newBtrId;
                         }
                     }
@@ -84,7 +95,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private ObjectId CloneBlockDefinition(Transaction tr, ObjectId oldBtrId, string oldName, string newName)
+        private ObjectId CloneBlockDefinition3(Transaction tr, ObjectId oldBtrId, string oldName, string newName)
         {
             if (regroupBlockDefinitionIfSameName && renamedBlockNames.ContainsKey(oldName))
             {
@@ -121,6 +132,59 @@ namespace SioForgeCAD.Functions
             }
             return newBtrId;
         }
+
+
+        private ObjectId CloneBlockDefinition(Transaction tr, BlockReference blockRef, string oldName, string newName)
+        {
+            if (regroupBlockDefinitionIfSameName && renamedBlockNames.ContainsKey(oldName))
+            {
+                return renamedBlockNames[oldName];
+            }
+
+            ObjectId oldBtrId = blockRef.BlockTableRecord;
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            BlockTableRecord oldBtr = tr.GetObject(oldBtrId, OpenMode.ForRead) as BlockTableRecord;
+            BlockTableRecord newBtr = new BlockTableRecord();
+
+            newBtr.Name = newName;
+            ObjectId newBtrId;
+
+            // Append the new block table record to the block table
+            using (BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable)
+            {
+                bt.UpgradeOpen();
+                newBtrId = bt.Add(newBtr);
+                tr.AddNewlyCreatedDBObject(newBtr, true);
+
+                foreach (ObjectId id in oldBtr)
+                {
+                    Entity ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
+
+                    if (ent != null)
+                    {
+                        Entity entCopy = ent.Clone() as Entity;
+                        newBtr.AppendEntity(entCopy);
+                        tr.AddNewlyCreatedDBObject(entCopy, true);
+                    }
+                }
+
+                // Set the insertion point of the new block definition
+                newBtr.Origin = oldBtr.Origin;
+
+                if (regroupBlockDefinitionIfSameName)
+                {
+                    renamedBlockNames.Add(oldName, newBtr.ObjectId);
+                }
+            }
+
+            return newBtrId;
+        }
+
+
+
+
 
         private string GetUniqueBlockName(string baseName)
         {

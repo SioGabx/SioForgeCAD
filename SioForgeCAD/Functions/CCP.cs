@@ -49,7 +49,7 @@ namespace SioForgeCAD.Functions
 
         private Dictionary<string, string> ComputeValue()
         {
-            if (FirstPointCote?.Points?.SCU == null || SecondPointCote?.Points?.SCU == null)
+            if (FirstPointCote?.Points?.SCG == null || SecondPointCote?.Points?.SCG == null)
             {
                 return null;
             }
@@ -81,11 +81,11 @@ namespace SioForgeCAD.Functions
 
             double PointsAngleVectorInRadians = 0;
 
-            using (Line acLine = new Line(FirstPointCote.Points.SCU, SecondPointCote.Points.SCU))
+            using (Line acLine = new Line(FirstPointCote.Points.SCG, SecondPointCote.Points.SCG))
             {
                 try
                 {
-                    PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(FirstPointCote.Points.SCU), Vector3d.ZAxis);
+                    PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(FirstPointCote.Points.SCG), Vector3d.ZAxis);
                 }
                 catch (System.Exception)
                 {
@@ -102,7 +102,7 @@ namespace SioForgeCAD.Functions
             }
 
             double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Degrees);
-            DegreesAngles -= 2 * USCRotation;
+            DegreesAngles -= 1 * USCRotation;
             if (DegreesAngles > 90 + USCRotation && DegreesAngles < 270 + USCRotation)
             {
                 if (BlocInverseState == 0)

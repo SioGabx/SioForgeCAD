@@ -78,7 +78,7 @@ namespace SioForgeCAD.Commun
                 //Also open modelspace - we'll be adding our BlockReference to it
                 BlockTableRecord ms = bt2[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
                 //Create new BlockReference, and link it to our block definition
-                using (BlockReference blockRef = new BlockReference(BlocLocation.SCU, blockDef.ObjectId))
+                using (BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
                 {
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;

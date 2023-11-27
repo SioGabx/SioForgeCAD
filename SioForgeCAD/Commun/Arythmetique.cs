@@ -11,20 +11,21 @@ namespace SioForgeCAD.Commun
             {
                 return (0, 0);
             }
-            Point3d FirstSCUPoint = First.Points.SCU;
-            Point3d SecondSCUPoint = Second.Points.SCU;
+            Point3d FirstPointSCG = First.Points.SCG;
+            Point3d SecondPointSCG = Second.Points.SCG;
+            Point3d IntermediairePointInSCG = Intermediaire.SCG;
 
             //calcul distance :
-            double AI_dist_horizontal = Math.Pow(Intermediaire.SCU.X - FirstSCUPoint.X, 2);
-            double AI_dist_vertical = Math.Pow(Intermediaire.SCU.Y - FirstSCUPoint.Y, 2);
+            double AI_dist_horizontal = Math.Pow(IntermediairePointInSCG.X - FirstPointSCG.X, 2);
+            double AI_dist_vertical = Math.Pow(IntermediairePointInSCG.Y - FirstPointSCG.Y, 2);
             double AI_dist_total = Math.Sqrt(AI_dist_horizontal + AI_dist_vertical);
 
-            double IB_dist_horizontal = Math.Pow(SecondSCUPoint.X - Intermediaire.SCU.X, 2);
-            double IB_dist_vertical = Math.Pow(SecondSCUPoint.Y - Intermediaire.SCU.Y, 2);
+            double IB_dist_horizontal = Math.Pow(SecondPointSCG.X - IntermediairePointInSCG.X, 2);
+            double IB_dist_vertical = Math.Pow(SecondPointSCG.Y - IntermediairePointInSCG.Y, 2);
             double IB_dist_total = Math.Sqrt(IB_dist_horizontal + IB_dist_vertical);
 
-            double AB_dist_horizontal = Math.Pow(SecondSCUPoint.X - FirstSCUPoint.X, 2);
-            double AB_dist_vertical = Math.Pow(SecondSCUPoint.Y - FirstSCUPoint.Y, 2);
+            double AB_dist_horizontal = Math.Pow(SecondPointSCG.X - FirstPointSCG.X, 2);
+            double AB_dist_vertical = Math.Pow(SecondPointSCG.Y - FirstPointSCG.Y, 2);
             double AB_dist_total = Math.Sqrt(AB_dist_horizontal + AB_dist_vertical);
 
             double AIB_dist_total = AI_dist_total + IB_dist_total;

@@ -91,15 +91,15 @@ namespace SioForgeCAD.Commun
             {
                 var PolylineSegment = GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
 
-                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjection(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCU).GetVector3d();
+                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjection(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCG).GetVector3d();
 
                 Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd);
-                Point3d IntersectionPoint = FindIntersection(BasePoint.SCU, PerpendicularVectorLine, SegmentLine);
+                Point3d IntersectionPoint = FindIntersection(BasePoint.SCG, PerpendicularVectorLine, SegmentLine);
                 if (IntersectionPoint == Point3d.Origin)
                 {
                     continue;
                 }
-                Line PerpendicularLine = new Line(BasePoint.SCU, IntersectionPoint);
+                Line PerpendicularLine = new Line(BasePoint.SCG, IntersectionPoint);
                 bool IsLineIsIntersectingOtherSegments = CheckForSegmentIntersections && CheckIfLineIsIntersectingOtherSegments(TargetPolyline, PerpendicularLine, PolylineSegmentIndex);
                 if (!IsLineIsIntersectingOtherSegments && SegmentLine.IsLinePassesThroughPoint(IntersectionPoint))
                 {

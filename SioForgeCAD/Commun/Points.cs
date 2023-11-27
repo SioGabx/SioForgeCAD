@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun
         {
             get
             {
-                return ToCurentSCU(SCG);
+                return ToCurrentSCU(SCG);
             }
         }
 
@@ -21,7 +21,14 @@ namespace SioForgeCAD.Commun
             this.SCG = SCG;
         }
 
-        public static Point3d ToCurentSCU(Point3d OriginalPoint)
+        public static Point3d ToCurrentSCU(Point3d OriginalPoint)
+        {
+            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+            Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem);
+            return ConvertedPoint;
+        }
+        public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
@@ -31,7 +38,8 @@ namespace SioForgeCAD.Commun
 
         public static Points GetFromPromptPointResult(PromptPointResult PromptPointResult)
         {
-            Points PromptedPoint = new Points(PromptPointResult.Value);
+            //ed.GetPoints return a SCU location, we need to convert that to SCG
+            Points PromptedPoint = new Points(ToSCGFromCurentSCU(PromptPointResult.Value));
             return PromptedPoint;
         }
 
