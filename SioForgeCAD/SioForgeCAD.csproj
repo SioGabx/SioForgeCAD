@@ -111,11 +111,14 @@
     <Compile Include="Commun\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\Point3d.cs" />
     <Compile Include="Commun\HightLighter.cs" />
     <Compile Include="Commun\Extensions\ObjectId.cs" />
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Generic.cs" />
     <Compile Include="Commun\InsertionTransientPoints.cs" />
+    <Compile Include="Commun\Layers.cs" />
+    <Compile Include="Commun\PerpendicularPoint.cs" />
     <Compile Include="Commun\SelectInXref.cs" />
     <Compile Include="Forms\InputDialogBox.cs">
       <SubType>Form</SubType>
@@ -129,6 +132,7 @@
     <Compile Include="Commun\CotePoints.cs" />
     <Compile Include="Commun\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUEEACH.cs" />
+    <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

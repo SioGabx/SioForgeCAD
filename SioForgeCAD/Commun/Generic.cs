@@ -89,7 +89,7 @@ namespace SioForgeCAD.Commun
             var ed = doc.Editor;
             Matrix3d ucsCur = ed.CurrentUserCoordinateSystem;
             CoordinateSystem3d cs = ucsCur.CoordinateSystem3d;
-            Double ucs_rotAngle = cs.Xaxis.AngleOnPlane(new Plane(Point3d.Origin, Vector3d.ZAxis));
+            double ucs_rotAngle = cs.Xaxis.AngleOnPlane(new Plane(Point3d.Origin, Vector3d.ZAxis));
             if (angleUnit == AngleUnit.Radians)
             {
                 return ucs_rotAngle;
@@ -97,5 +97,9 @@ namespace SioForgeCAD.Commun
             double ucs_angle_degres = ucs_rotAngle * 180 / Math.PI;
             return ucs_angle_degres;
         }
+
+
+
+
     }
 }

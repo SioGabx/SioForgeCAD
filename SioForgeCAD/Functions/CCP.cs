@@ -24,7 +24,7 @@ namespace SioForgeCAD.Functions
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
                 SecondPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
-                ObjectId Line = Commun.Drawing.Lines.SingleLine(FirstPointCote.Points, SecondPointCote.Points, 252);
+                ObjectId Line = Commun.Drawing.Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
 
                 var Values = ComputeValue();
                 DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNamePente, Values);

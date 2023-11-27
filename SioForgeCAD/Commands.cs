@@ -1,11 +1,15 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -58,7 +62,258 @@ namespace SioForgeCAD
         }
 
 
+        [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet)]
+        public void DRAWPERPENDICULARLINEFROMPOINT()
+        {
+            Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
+        }
 
+        [CommandMethod("C2P")]
+        public static void ConvertCirclesToPolylines()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                PromptSelectionResult selResult = ed.GetSelection();
+                if (selResult.Status == PromptStatus.OK)
+                {
+                    SelectionSet selSet = selResult.Value;
+
+                    foreach (SelectedObject selObj in selSet)
+                    {
+                        if (selObj.ObjectId.ObjectClass.DxfName == "CIRCLE")
+                        {
+                            Circle circle = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Circle;
+
+                            // Convert circle to polyline logic
+                            using (Polyline pline = new Polyline())
+                            {
+                                double bulge = 1.0; // Bulge for arc segment
+                                double halfWidth = 0.0; // Set width as needed
+
+                                // Add the first vertex
+                                pline.AddVertexAt(0, new Point2d(circle.Center.X - circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
+
+                                // Add the second vertex
+                                pline.AddVertexAt(1, new Point2d(circle.Center.X + circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
+                                pline.Closed = true;
+                                // Set other polyline properties...
+                                pline.Layer = circle.Layer;
+
+                                // Add the polyline to the block table record
+                                btr.AppendEntity(pline);
+                                tr.AddNewlyCreatedDBObject(pline, true);
+
+                                // Remove or comment out the next line to retain the selected Circle
+                                circle.Erase();
+                            }
+                        }
+                    }
+                }
+
+                tr.Commit();
+            }
+        }
+
+
+
+
+
+
+
+
+
+        //[CommandMethod("OffsetLine")]
+        //public void OffsetLine()
+        //{
+        //    Document doc = Application.DocumentManager.MdiActiveDocument;
+        //    Database db = doc.Database;
+        //    Editor ed = doc.Editor;
+
+        //    // Sélection de la ligne à décaler
+        //    PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez la ligne à décaler : ");
+        //    peo.SetRejectMessage("\nVeuillez sélectionner une ligne.");
+        //    peo.AddAllowedClass(typeof(Line), true);
+
+        //    PromptEntityResult per = ed.GetEntity(peo);
+
+        //    if (per.Status != PromptStatus.OK)
+        //        return;
+
+        //    // Obtenir la ligne sélectionnée
+        //    using (Transaction tr = db.TransactionManager.StartTransaction())
+        //    {
+        //        Line selectedLine = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Line;
+        //        if (selectedLine == null)
+        //            return;
+
+        //        // Obtenir le vecteur de la ligne
+        //        Vector3d lineVector = selectedLine.GetVector3d();
+
+        //        // Calculer le vecteur perpendiculaire
+        //        Vector3d offsetVector = new Vector3d(-lineVector.Y, lineVector.X, 0);
+        //        offsetVector = offsetVector / offsetVector.Length * 1.0;
+
+        //        // Créer une nouvelle ligne décalée
+        //        Point3d startPoint = selectedLine.StartPoint + offsetVector;
+        //        Point3d endPoint = selectedLine.EndPoint + offsetVector;
+
+        //        Line offsetLine = new Line(startPoint, endPoint);
+
+        //        // Ajouter la nouvelle ligne à la base de données
+        //        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+        //        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+        //        btr.AppendEntity(offsetLine);
+        //        tr.AddNewlyCreatedDBObject(offsetLine, true);
+
+        //        tr.Commit();
+        //    }
+
+        //    ed.Regen(); // Mettre à jour l'affichage
+        //}
+
+
+
+
+        //[CommandMethod("OffsetEntity")]
+        //public void OffsetEntity()
+        //{
+        //    Document doc = Application.DocumentManager.MdiActiveDocument;
+        //    Database db = doc.Database;
+        //    Editor ed = doc.Editor;
+
+        //    // Sélection de l'entité à décaler
+        //    PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez la ligne ou la polyligne à décaler : ");
+        //    peo.SetRejectMessage("\nVeuillez sélectionner une ligne ou une polyligne.");
+        //    peo.AddAllowedClass(typeof(Line), true);
+        //    peo.AddAllowedClass(typeof(Polyline), true);
+
+        //    PromptEntityResult per = ed.GetEntity(peo);
+
+        //    if (per.Status != PromptStatus.OK)
+        //        return;
+
+        //    // Obtenir l'entité sélectionnée
+        //    using (Transaction tr = db.TransactionManager.StartTransaction())
+        //    {
+        //        Entity selectedEntity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+        //        if (selectedEntity == null)
+        //            return;
+
+        //        // Créer une nouvelle entité décalée avec un agrandissement du périmètre
+        //        Entity offsetEntity = OffsetEntity(selectedEntity, 1.0);
+
+        //        // Ajouter la nouvelle entité à la base de données
+        //        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+        //        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+        //        btr.AppendEntity(offsetEntity);
+        //        tr.AddNewlyCreatedDBObject(offsetEntity, true);
+
+        //        tr.Commit();
+        //    }
+
+        //    ed.Regen(); // Mettre à jour l'affichage
+        //}
+
+        //private Entity OffsetEntity(Entity originalEntity, double offsetDistance)
+        //{
+        //    // Créer une copie de l'entité d'origine
+        //    Entity offsetEntity = originalEntity.Clone() as Entity;
+
+        //    if (offsetEntity is Line line)
+        //    {
+        //        // Décalage pour les lignes
+        //        Vector3d lineVector = line.GetVector3d();
+        //        Vector3d offsetVector = new Vector3d(-lineVector.Y, lineVector.X, 0);
+        //        offsetVector = offsetVector.GetNormal() * offsetDistance;
+        //        line.StartPoint = line.StartPoint + offsetVector;
+        //        line.EndPoint = line.EndPoint + offsetVector;
+        //    }
+        //    else if (offsetEntity is Polyline polyline)
+        //    {
+        //        var offsetCurves = polyline.GetOffsetCurves(offsetDistance);
+
+        //        // Créer une nouvelle polyligne à partir des courbes résultantes
+        //        Polyline offsetPolyline = new Polyline();
+        //        offsetPolyline.JoinEntities(offsetCurves.Cast<Entity>().ToArray());
+        //        offsetEntity = offsetPolyline;
+        //    }
+
+        //    return offsetEntity;
+        //}
+
+        [CommandMethod("OffsetEntity")]
+        public void OffsetEntity()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Sélection de l'entité à décaler
+            PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez la ligne ou la polyligne à décaler : ");
+            peo.SetRejectMessage("\nVeuillez sélectionner une ligne ou une polyligne.");
+            peo.AddAllowedClass(typeof(Line), true);
+            peo.AddAllowedClass(typeof(Polyline), true);
+
+            PromptEntityResult per = ed.GetEntity(peo);
+
+            if (per.Status != PromptStatus.OK)
+                return;
+
+            // Obtenir l'entité sélectionnée
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                Entity selectedEntity = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
+                if (selectedEntity == null)
+                    return;
+
+                // Créer une nouvelle entité décalée
+                Entity offsetEntity = OffsetEntity(selectedEntity, 1.0);
+
+                // Ajouter la nouvelle entité à la base de données
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                btr.AppendEntity(offsetEntity);
+                tr.AddNewlyCreatedDBObject(offsetEntity, true);
+
+                tr.Commit();
+            }
+
+            ed.Regen(); // Mettre à jour l'affichage
+        }
+
+        private Entity OffsetEntity(Entity originalEntity, double offsetDistance)
+        {
+            // Créer une copie de l'entité d'origine
+            Entity offsetEntity = originalEntity.Clone() as Entity;
+
+            if (offsetEntity is Line line)
+            {
+                // Décalage pour les lignes
+                Vector3d lineVector = line.GetVector3d();
+                Vector3d offsetVector = new Vector3d(-lineVector.Y, lineVector.X, 0);
+                offsetVector = offsetVector.GetNormal() * offsetDistance;
+                line.StartPoint = line.StartPoint + offsetVector;
+                line.EndPoint = line.EndPoint + offsetVector;
+            }
+            else if (offsetEntity is Polyline polyline)
+            {
+                // Décalage pour les polylignes
+                for (int i = 0; i < polyline.NumberOfVertices; i++)
+                {
+                    Point2d vertex = polyline.GetPoint2dAt(i);
+                    polyline.SetPointAt(i, vertex + new Vector2d(offsetDistance, 0));
+                }
+            }
+
+            return offsetEntity;
+        }
 
 
 

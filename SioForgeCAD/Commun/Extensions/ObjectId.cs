@@ -9,15 +9,24 @@ namespace SioForgeCAD.Commun
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
-            Entity ObjectEntity = (Entity)db.TransactionManager.GetObject(objectId, OpenMode.ForRead);
-            return ObjectEntity;
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                Entity ObjectEntity = (Entity)trans.GetObject(objectId, OpenMode.ForRead);
+                trans.Abort();
+                return ObjectEntity;
+            }
         }
+
         public static DBObject GetDBObject(this ObjectId objectId)
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
-            DBObject ObjectEntity = (DBObject)db.TransactionManager.GetObject(objectId, OpenMode.ForRead);
-            return ObjectEntity;
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                DBObject ObjectEntity = (DBObject)trans.GetObject(objectId, OpenMode.ForRead);
+                trans.Abort();
+                return ObjectEntity;
+            }
         }
     }
 
