@@ -8,6 +8,7 @@ using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
@@ -18,72 +19,101 @@ namespace SioForgeCAD.Functions
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
-            // Définir un filtre pour ne sélectionner que des blocs
-            TypedValue[] filterList = new TypedValue[]
+
+            ObjectId[] SelectedBlocObjectIdArray;
+            var ActualSelection = ed.SelectImplied().Value;
+            
+            if (ActualSelection != null && ActualSelection.Count > 1)
             {
-                new TypedValue((int)DxfCode.Start, "INSERT")
-            };
-
-            SelectionFilter filter = new SelectionFilter(filterList);
-
-            // Options pour la sélection d'une seule entité avec le filtre
-            PromptSelectionOptions options = new PromptSelectionOptions();
-            options.MessageForAdding = "\nSélectionnez un bloc à renommer : ";
-            options.SingleOnly = true;
-
-            // Demandez à l'utilisateur de sélectionner un bloc
-            PromptSelectionResult selectionResult = ed.GetSelection(options, filter);
-
-            if (selectionResult.Status != PromptStatus.OK)
-            {
-                ed.WriteMessage("Sélection de bloc annulée ou invalide.");
-                return;
-            }
-
-            // Obtenez l'ObjectId de l'entité sélectionnée (le bloc)
-            ObjectId SelectedBlocObjectId = selectionResult.Value.GetObjectIds().FirstOrDefault();
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
-                string blockname = OriginalBlk.GetBlockReferenceName();
-
-                // ouvrir la table des blocs en lecture
-                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                // vérifier si la table contient bien le bloc à renommer
-                if (bt.Has(blockname))
+                var ListOfUniqueBlockName = new List<string>();
+                foreach (ObjectId SelectedBlocObjectId in ActualSelection.GetObjectIds())
                 {
-                    while (true)
+                    using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
-                        Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
-                        dialogBox.SetUserInputPlaceholder(blockname);
-                        dialogBox.SetPrompt("Indiquez un nouveau nom de bloc");
-                        DialogResult dialogResult = dialogBox.ShowDialog();
-                        if (dialogResult != DialogResult.OK)
+                        BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
+                        string blockname = OriginalBlk.GetBlockReferenceName();
+                        if (!ListOfUniqueBlockName.Contains(blockname))
                         {
-                            break;
-                        }
-                        string NewName = dialogBox.GetUserInput();
-                        if (string.IsNullOrWhiteSpace(NewName))
-                        {
-                            ed.WriteMessage("Impossible de definir le block avec un nom vide.\n");
-                            continue;
-                        }
-                        // ouvrir la défintion du bloc en écriture
-                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[blockname], OpenMode.ForWrite);
-                        // changer le nom du bloc
-                        try
-                        {
-                            btr.Name = NewName;
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            ed.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
+                            ListOfUniqueBlockName.Add(blockname);
                         }
                     }
                 }
-                tr.Commit();
+                if (ListOfUniqueBlockName.Count > 1)
+                {
+                    var AskContinue = MessageBox.Show($"Vous avez sélectionné un total de {ListOfUniqueBlockName.Count} blocs dont le nom est différent.\nÊtes-vous sûr de vouloir continuer ?", Generic.GetExtensionDLLName(), MessageBoxButtons.YesNo);
+                    if (AskContinue != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
+            }
+            if (ActualSelection == null || ActualSelection.Count <= 0)
+            {
+               PromptEntityOptions options = new PromptEntityOptions("Sélectionnez un bloc à renommer : ");
+                PromptEntityResult selectionResult = ed.GetEntity(options);
+                if (selectionResult.Status != PromptStatus.OK)
+                {
+                    ed.WriteMessage("Sélection de bloc annulée ou invalide.");
+                    return;
+                }
+                SelectedBlocObjectIdArray = new ObjectId[] { selectionResult.ObjectId };
+            }
+            else
+            {
+                SelectedBlocObjectIdArray = ActualSelection.GetObjectIds();
+            }
+            var ArealdyRenamedBlock = new List<string>();
+            foreach (ObjectId SelectedBlocObjectId in SelectedBlocObjectIdArray)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
+                    string blockname = OriginalBlk.GetBlockReferenceName();
+                    if (ArealdyRenamedBlock.Contains(blockname))
+                    {
+                        continue;
+                    }
+                    // ouvrir la table des blocs en lecture
+                    BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                    // vérifier si la table contient bien le bloc à renommer
+                    if (bt.Has(blockname))
+                    {
+                        while (true)
+                        {
+                            Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
+                            dialogBox.SetUserInputPlaceholder(blockname);
+                            dialogBox.SetPrompt("Indiquez un nouveau nom de bloc");
+                            DialogResult dialogResult = dialogBox.ShowDialog();
+                            if (dialogResult != DialogResult.OK)
+                            {
+                                return;
+                            }
+                            string NewName = dialogBox.GetUserInput();
+                            if (string.IsNullOrWhiteSpace(NewName))
+                            {
+                                ed.WriteMessage("Impossible de definir le block avec un nom vide.\n");
+                                continue;
+                            }
+                            // ouvrir la défintion du bloc en écriture
+                            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[blockname], OpenMode.ForWrite);
+                            // changer le nom du bloc
+                            try
+                            {
+                                btr.Name = NewName;
+                                ArealdyRenamedBlock.Add(NewName);
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                ed.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
+                            }
+                        }
+                    }
+
+                    ed.SetImpliedSelection(new ObjectId[0]);
+                    ed.SetImpliedSelection(SelectedBlocObjectIdArray.ToArray());
+                    tr.Commit(); 
+                }
             }
         }
     }

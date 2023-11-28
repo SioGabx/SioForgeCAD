@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
-            Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem);
+            Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
             return ConvertedPoint;
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)

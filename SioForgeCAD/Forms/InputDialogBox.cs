@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SioForgeCAD.Commun;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,7 +17,7 @@ namespace SioForgeCAD.Forms
         public InputDialogBox()
         {
             InitializeComponent();
-            this.Text = Assembly.GetExecutingAssembly().GetName().Name;
+            this.Text = Generic.GetExtensionDLLName();
         }
 
         public string GetUserInput()

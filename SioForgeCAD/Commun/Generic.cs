@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -15,6 +16,11 @@ namespace SioForgeCAD.Commun
             // Determine path
             byte[] ressource_bytes = Properties.Resources.ResourceManager.GetObject(name) as byte[];
             File.WriteAllBytes(tofile, ressource_bytes);
+        }
+
+        public static string GetExtensionDLLName()
+        {
+            return Assembly.GetExecutingAssembly().GetName().Name;
         }
 
         public static ObjectId AddFontStyle(string font)

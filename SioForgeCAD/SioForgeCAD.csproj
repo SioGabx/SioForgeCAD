@@ -131,7 +131,7 @@
     <Compile Include="Functions\CCI.cs" />
     <Compile Include="Commun\CotePoints.cs" />
     <Compile Include="Commun\Points.cs" />
-    <Compile Include="Functions\BLKMAKEUNIQUEEACH.cs" />
+    <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Initialization.cs" />

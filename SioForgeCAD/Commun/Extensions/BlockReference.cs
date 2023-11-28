@@ -53,8 +53,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
         public static Point3d ProjectPointToCurrentSpace(ObjectId xrefId, Point3d pointInXref)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
