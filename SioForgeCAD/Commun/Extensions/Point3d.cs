@@ -16,6 +16,10 @@ namespace SioForgeCAD.Commun.Extensions
         public static Point3d ToPoint3d(this Point2d p)
         {
             return new Point3d(p.X, p.Y, 0);
+        } 
+        public static Point3d Flatten(this Point3d p)
+        {
+            return new Point3d(p.X, p.Y, 0);
         }
 
         public static Points ToPoints(this Point3d p)

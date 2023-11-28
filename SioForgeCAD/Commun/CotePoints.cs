@@ -227,7 +227,7 @@ namespace SioForgeCAD.Commun
             if (Origin != null)
             {
                 PromptPointOptions.UseBasePoint = true;
-                PromptPointOptions.BasePoint = new Point3d(Origin.SCG.X, Origin.SCG.Y, 0);
+                PromptPointOptions.BasePoint = Origin.SCG.Flatten();
             }
 
             bool IsLooping;

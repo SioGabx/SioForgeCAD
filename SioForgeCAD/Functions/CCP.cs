@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -81,11 +82,14 @@ namespace SioForgeCAD.Functions
 
             double PointsAngleVectorInRadians = 0;
 
-            using (Line acLine = new Line(FirstPointCote.Points.SCG, SecondPointCote.Points.SCG))
+            Point3d StartPoint = FirstPointCote.Points.SCG.Flatten();
+            Point3d EndPoint = SecondPointCote.Points.SCG.Flatten();
+
+            using (Line acLine = new Line(StartPoint, EndPoint))
             {
                 try
                 {
-                    PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(FirstPointCote.Points.SCG), Vector3d.ZAxis);
+                    PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(StartPoint), Vector3d.ZAxis);
                 }
                 catch (System.Exception)
                 {
