@@ -21,7 +21,7 @@ namespace SioForgeCAD.Commun.Drawing
             polyline.AddVertexAt(1, line.EndPoint.ToPoint2d(), 0, 0, 0);
             return polyline;
         }
-       
+
 
         public static bool IsLinePassesThroughPoint(this Line line, Point3d point)
         {
@@ -54,39 +54,26 @@ namespace SioForgeCAD.Commun.Drawing
             return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
         }
 
-        public static ObjectId Draw(Points start, Points end, int ColorIndex = 256)
+        public static ObjectId Draw(Points start, Points end, int? ColorIndex = null)
         {
-            using (Line acLine = new Line(start.SCG, end.SCG))
+            return Draw(start.SCG, end.SCG, ColorIndex);
+        }
+
+        public static ObjectId Draw(Point3d start, Point3d end, int? ColorIndex = null)
+        {
+            using (Line acLine = new Line(start, end))
             {
-                return Draw(acLine);
+                return Draw(acLine, ColorIndex);
             }
         }
 
         public static ObjectId Draw(Line acLine, int? ColorIndex = 256)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            if (ColorIndex != null)
             {
-                BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-
-                //angleR = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(start), Vector3d.ZAxis);
-                if (ColorIndex != null)
-                {
-                    acLine.ColorIndex = ColorIndex ?? 0;
-                }
-                // Add the line to the drawing
-                acBlkTblRec.AppendEntity(acLine);
-                acTrans.AddNewlyCreatedDBObject(acLine, true);
-
-                // Commit the changes and dispose of the transaction
-                acTrans.Commit();
-                return acLine.ObjectId;
+                acLine.ColorIndex = ColorIndex ?? 0;
             }
+            return acLine.AddToDrawing();
         }
-
-
-
     }
 }

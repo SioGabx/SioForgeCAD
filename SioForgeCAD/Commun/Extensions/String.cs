@@ -17,6 +17,8 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+
         public static string CapitalizeFirstLetters(this string input, int x)
         {
             if (string.IsNullOrEmpty(input))

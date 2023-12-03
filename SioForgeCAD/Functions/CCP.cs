@@ -82,8 +82,23 @@ namespace SioForgeCAD.Functions
 
             double PointsAngleVectorInRadians = 0;
 
-            Point3d StartPoint = FirstPointCote.Points.SCG.Flatten();
-            Point3d EndPoint = SecondPointCote.Points.SCG.Flatten();
+            Point3d StartPoint;
+            Point3d EndPoint;
+
+            Point3d FirstPointCoteLocation = FirstPointCote.Points.SCG.Flatten();
+            Point3d SecondPointCoteLocation = SecondPointCote.Points.SCG.Flatten();
+            if (FirstPointCote.Altitude > SecondPointCote.Altitude)
+            {
+                StartPoint = FirstPointCoteLocation; 
+                EndPoint = SecondPointCoteLocation;
+            }
+            else
+            {
+                StartPoint = SecondPointCoteLocation;
+                EndPoint = FirstPointCoteLocation;
+            }
+
+
 
             using (Line acLine = new Line(StartPoint, EndPoint))
             {
@@ -100,11 +115,6 @@ namespace SioForgeCAD.Functions
             int BlocInverseState = 0;
 
             double DegreesAngles = PointsAngleVectorInRadians * 180 / Math.PI;
-            if (SecondPointCote.Altitude > FirstPointCote.Altitude)
-            {
-                BlocInverseState = 1;
-            }
-
             double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Degrees);
             DegreesAngles -= 1 * USCRotation;
             if (DegreesAngles > 90 + USCRotation && DegreesAngles < 270 + USCRotation)

@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.MacroRecorder;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -104,7 +105,20 @@ namespace SioForgeCAD.Commun
             return ucs_angle_degres;
         }
 
-
+        public static ObjectId AddToDrawing(this Entity entity)
+        {
+            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            var db = doc.Database;
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            {
+                BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                acBlkTblRec.AppendEntity(entity);
+                acTrans.AddNewlyCreatedDBObject(entity, true);
+                acTrans.Commit();
+                return entity.ObjectId;
+            }
+        }
 
 
     }

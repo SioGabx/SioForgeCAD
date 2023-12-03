@@ -7,7 +7,7 @@ using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
-    public static class CCMXREF
+    public static class CCXREF
     {
         public static void MoveCotationFromXrefToCurrentDrawing()
         {
@@ -66,7 +66,7 @@ namespace SioForgeCAD.Functions
 
                     
 
-                    Points BlockPosition = Points.From3DPoint(Commun.Extensions.BlockReferenceExtensions.ProjectPointToCurrentSpace(XrefSelection.XrefObjectId, blkRef.Position));
+                    Points BlockPosition = Points.From3DPoint(BlockReferenceExtensions.ProjectPointToCurrentSpace(XrefSelection.XrefObjectId, blkRef.Position));
                     double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Radians);
                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };

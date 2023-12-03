@@ -7,6 +7,7 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +17,19 @@ using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD
 {
-    public class Commands
+    public class Commands : IExtensionApplication
     {
+        public void Initialize()
+        {
+            Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
+        }
+
+        public void Terminate()
+        {
+            Functions.CIRCLETOPOLYLIGNE.ContextMenu.Detach();
+        }
+
+
         [CommandMethod("CCI")]
         public void CCI()
         {
@@ -55,10 +67,10 @@ namespace SioForgeCAD
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
 
-        [CommandMethod("CCMXREF", CommandFlags.Redraw)]
-        public void CCMXREF()
+        [CommandMethod("CCMREF", CommandFlags.Redraw)]
+        public void CCXREF()
         {
-            Functions.CCMXREF.MoveCotationFromXrefToCurrentDrawing();
+            Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
 
@@ -68,57 +80,16 @@ namespace SioForgeCAD
             Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
         }
 
-        [CommandMethod("C2P")]
-        public static void ConvertCirclesToPolylines()
+        [CommandMethod("CIRCLETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        public static void CIRCLETOPOLYLIGNE()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-
-                PromptSelectionResult selResult = ed.GetSelection();
-                if (selResult.Status == PromptStatus.OK)
-                {
-                    SelectionSet selSet = selResult.Value;
-
-                    foreach (SelectedObject selObj in selSet)
-                    {
-                        if (selObj.ObjectId.ObjectClass.DxfName == "CIRCLE")
-                        {
-                            Circle circle = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Circle;
-
-                            // Convert circle to polyline logic
-                            using (Polyline pline = new Polyline())
-                            {
-                                double bulge = 1.0; // Bulge for arc segment
-                                double halfWidth = 0.0; // Set width as needed
-
-                                // Add the first vertex
-                                pline.AddVertexAt(0, new Point2d(circle.Center.X - circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
-
-                                // Add the second vertex
-                                pline.AddVertexAt(1, new Point2d(circle.Center.X + circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
-                                pline.Closed = true;
-                                // Set other polyline properties...
-                                pline.Layer = circle.Layer;
-
-                                // Add the polyline to the block table record
-                                btr.AppendEntity(pline);
-                                tr.AddNewlyCreatedDBObject(pline, true);
-
-                                // Remove or comment out the next line to retain the selected Circle
-                                circle.Erase();
-                            }
-                        }
-                    }
-                }
-
-                tr.Commit();
-            }
+            Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
+        }
+        
+        [CommandMethod("DRAWCPTERRAIN", CommandFlags.UsePickSet)]
+        public static void DRAWCPTERRAIN()
+        {
+            Functions.DRAWCPTERRAIN.DrawTerrainFromSelectedPoints();
         }
 
 
