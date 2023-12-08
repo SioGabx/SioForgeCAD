@@ -8,6 +8,15 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Lines
     {
+        public static double GetLength(Point3d PointA, Point3d PointB)
+        {
+            using (var Line = new Line(PointA, PointB))
+            {
+                return Line.Length;
+            }
+        }
+
+
         public static Vector3d GetVector3d(this Line line)
         {
             Vector3d direction = line.EndPoint - line.StartPoint;
