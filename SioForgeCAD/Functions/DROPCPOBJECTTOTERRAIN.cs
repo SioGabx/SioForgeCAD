@@ -14,9 +14,8 @@ namespace SioForgeCAD.Functions
 {
     public static class DROPCPOBJECTTOTERRAIN
     {
-        public static async void Project()
+        public static void Project()
         {
-            await Task.Run(() => { 
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
@@ -49,7 +48,8 @@ namespace SioForgeCAD.Functions
                     {
                         var PolylineSegment = Polylines.GetSegmentPoint(TerrainBasePolyline, PolylineSegmentIndex);
                         Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd);
-                        Line PerpendicularLine = new Line(blkRef.Position, blkRef.Position.Add(PerpendicularVector.MultiplyBy(new Line(SegmentLine.EndPoint, blkRef.Position).Length)));
+                        Vector3d PerpendicularVectorIntersection = PerpendicularVector.MultiplyBy(new Line(SegmentLine.EndPoint, blkRef.Position).Length);
+                        Line PerpendicularLine = new Line(blkRef.Position.Add(-PerpendicularVectorIntersection), blkRef.Position.Add(PerpendicularVectorIntersection));
                         if (!Lines.AreLinesCutting(SegmentLine, PerpendicularLine, out Point3dCollection IntersectionPointsFounds))
                         {
                             continue;
@@ -60,7 +60,6 @@ namespace SioForgeCAD.Functions
                 }
                 acTrans.Commit();
             }
-            });
         }
     }
 }
