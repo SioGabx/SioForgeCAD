@@ -72,12 +72,11 @@ namespace SioForgeCAD.Functions
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
                     if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCG, Settings.BlocNameAltimetrie, AltimetrieStr))
                     {
-                        ed.WriteMessage("Un block ayant la même valeur existe déja à cette position");
+                        ed.WriteMessage("Un block ayant la même valeur existe déja à cette position\n");
                     }
                     else
                     {
                         CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
-                        ed.WriteMessage(Altimetrie?.ToString());
                     }
                     tr.Commit();
                 }

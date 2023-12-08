@@ -67,7 +67,7 @@ namespace SioForgeCAD
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
 
-        [CommandMethod("CCMREF", CommandFlags.Redraw)]
+        [CommandMethod("CCXREF", CommandFlags.Redraw)]
         public void CCXREF()
         {
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
@@ -90,6 +90,12 @@ namespace SioForgeCAD
         public static void DRAWCPTERRAIN()
         {
             Functions.DRAWCPTERRAIN.DrawTerrainFromSelectedPoints();
+        }
+         
+        [CommandMethod("DROPCPOBJECTTOTERRAIN")]
+        public static void DROPCPOBJECTTOTERRAIN()
+        {
+            Functions.DROPCPOBJECTTOTERRAIN.Project();
         }
 
 

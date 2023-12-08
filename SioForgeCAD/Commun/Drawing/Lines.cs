@@ -31,6 +31,15 @@ namespace SioForgeCAD.Commun.Drawing
                     point.Y >= Math.Min(line.StartPoint.Y, line.EndPoint.Y) &&
                     point.Y <= Math.Max(line.StartPoint.Y, line.EndPoint.Y));
         }
+
+        public static bool AreLinesCutting(Line line1, Line line2, out Point3dCollection IntersectionPointsFounds)
+        {
+            IntersectionPointsFounds = new Point3dCollection();
+            line1.IntersectWith(line2, Intersect.OnBothOperands, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
+            if (IntersectionPointsFounds.Count == 0) return false;
+            return true;
+        }
+
         public static bool AreLinesCutting(Line line1, Line line2)
         {
             double x1 = line1.StartPoint.X;

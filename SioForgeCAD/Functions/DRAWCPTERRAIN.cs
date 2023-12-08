@@ -24,43 +24,7 @@ namespace SioForgeCAD.Functions
             public Vector3d vector3D { get; set; }
         }
 
-        public static Polyline GetBaseTerrain()
-        {
-            while (true)
-            {
-                Document doc = Application.DocumentManager.MdiActiveDocument;
-                Database db = doc.Database;
-                Editor ed = doc.Editor;
-
-                PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
-                {
-                    MessageForAdding = "Sélectionnez une polyligne comme base de terrain",
-                    SingleOnly = true,
-                };
-                PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions);
-                if (polyResult.Status != PromptStatus.OK)
-                {
-                    return null;
-                }
-                Entity SelectedEntity;
-
-                using (Transaction GlobalTrans = db.TransactionManager.StartTransaction())
-                {
-                    SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
-                }
-                if (SelectedEntity is Line ProjectionTargetLine)
-                {
-                    SelectedEntity = ProjectionTargetLine.ToPolyline();
-                }
-                if (!(SelectedEntity is Polyline ProjectionTarget))
-                {
-                    ed.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
-                    continue;
-                }
-                return ProjectionTarget;
-            }
-        }
-
+        
         public static Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
         {
             var ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(BasePoint, Terrain, true);
@@ -78,13 +42,16 @@ namespace SioForgeCAD.Functions
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            Polyline TerrainBasePolyline = GetBaseTerrain();
-
+            Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("Sélectionnez une polyligne comme base de terrain");
+            if (TerrainBasePolyline == null)
+            {
+                return;
+            }
             TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
             SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
             PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = $"Selectionnez des côtes à projeter",
+                MessageForAdding = $"Selectionnez des côtes à projeter\n",
                 RejectObjectsOnLockedLayers = false,
             };
             var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
@@ -92,6 +59,13 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
+
+            var AskInversedOptions = new PromptKeywordOptions("Voullez-vous inverser la coupe ?");
+            AskInversedOptions.Keywords.Add("OUI");
+            AskInversedOptions.Keywords.Add("NON");
+            var AskInversedResult = ed.GetKeywords(AskInversedOptions);
+            bool IsInversed = AskInversedResult.StringResult == "OUI";
+
             List<TerrainPoint> terrainPoints = new List<TerrainPoint>();
 
             List<ObjectId> SelectedCotes = BlockRefSelection.Value.GetObjectIds().ToList();
@@ -114,7 +88,6 @@ namespace SioForgeCAD.Functions
                         Altitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId) ?? 0,
                         DistanceFromTerrainStart = new Line(TerrainBasePolyline.StartPoint.Flatten(), BlkRefOnTerrainPosition.SCG.Flatten()).Length
                     };
-                    Lines.Draw(new Line(TerrainBasePolyline.StartPoint, BlkRefOnTerrainPosition.SCG), 8);
                     terrainPoints.Add(TerrainPoint);
                 }
                 terrainPoints = terrainPoints.OrderBy(TerrainPoint => TerrainPoint.DistanceFromTerrainStart).ToList();
@@ -131,12 +104,22 @@ namespace SioForgeCAD.Functions
                     StartPoint = TerrainBasePolyline.EndPoint.ToPoints(),
                     Block = terrainPoints.Last().Block,
                     Altitude = terrainPoints.Last().Altitude,
-                    DistanceFromTerrainStart = 999999//TerrainBasePolyline.Length
+                    DistanceFromTerrainStart = TerrainBasePolyline.Length
                 };
-                terrainPoints.Insert(0, StartTerPoint);
-                terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
+                if (terrainPoints.First().DistanceFromTerrainStart != StartTerPoint.DistanceFromTerrainStart)
+                {
+                    terrainPoints.Insert(0, StartTerPoint);
+                }
+                if (terrainPoints.Last().DistanceFromTerrainStart != EndTerPoint.DistanceFromTerrainStart)
+                {
+                    terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
+                }
 
                 Vector3d TerrainBaseLineVector = TerrainBasePolyline.EndPoint - TerrainBasePolyline.StartPoint;
+                if (IsInversed)
+                {
+                    TerrainBaseLineVector *= -1;
+                }
                 Vector3d PerpendicularTerrainBaseLineVector = new Vector3d(-TerrainBaseLineVector.Y, TerrainBaseLineVector.X, 0).GetNormal();
 
                 double CoteMinimal = double.MaxValue;
@@ -151,16 +134,30 @@ namespace SioForgeCAD.Functions
                 for (int i = 0; i < terrainPoints.Count; i++)
                 {
                     TerrainPoint terrainPoint = terrainPoints[i];
-                    
+
                     terrainPoint.Length = terrainPoint.Altitude - CoteMinimalMaximumMultipleOfFive;
+
+
                     terrainPoint.vector3D = PerpendicularTerrainBaseLineVector.MultiplyBy(terrainPoint.Length);
                     terrainPoint.EndPoint = GetEndPoint(terrainPoint.StartPoint, terrainPoint.vector3D);
                     TerrainPointsToConnect.Add(terrainPoint.EndPoint);
                     Lines.Draw(terrainPoint.StartPoint, terrainPoint.EndPoint);
+
+                    double USCRotation = GetRotation(TerrainBaseLineVector, Vector3d.ZAxis);
+                    string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
+                    Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
+                    CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
                 }
                 Polylines.Draw(TerrainPointsToConnect);
                 trans.Commit();
             }
+        }
+
+        public static double GetRotation(Vector3d vector, Vector3d normal)
+        {
+            var plane = new Plane(Point3d.Origin, normal);
+            var ocsXAxis = Vector3d.XAxis.TransformBy(Matrix3d.PlaneToWorld(plane));
+            return ocsXAxis.GetAngleTo(vector.ProjectTo(normal, normal), normal);
         }
 
         private static Points GetEndPoint(Points startPoint, Vector3d vector3d)

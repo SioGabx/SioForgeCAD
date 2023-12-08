@@ -124,4 +124,7 @@
   <data name="_APUd_COTATIONS_Pentes" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Commun\Blocks\_APUd_COTATIONS_Pentes.dwg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="_APUd_CP_Altimetries" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Commun\Blocks\_APUd_CP_Altimetries.dwg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

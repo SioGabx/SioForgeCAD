@@ -79,5 +79,15 @@ namespace SioForgeCAD.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Byte[].
+        /// </summary>
+        internal static byte[] _APUd_CP_Altimetries {
+            get {
+                object obj = ResourceManager.GetObject("_APUd_CP_Altimetries", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

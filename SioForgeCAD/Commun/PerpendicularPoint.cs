@@ -11,7 +11,7 @@ namespace SioForgeCAD.Commun
     public static class PerpendicularPoint
     {
         // Fonction pour trouver le point d'intersection entre une ligne et un vecteur
-        private static Point3d FindIntersection(Point3d startPoint, Vector3d vector, Line line)
+        public static Point3d FindIntersection(Point3d startPoint, Vector3d vector, Line line)
         {
             double t = ((line.EndPoint.X - line.StartPoint.X) * (startPoint.Y - line.StartPoint.Y) -
                         (line.EndPoint.Y - line.StartPoint.Y) * (startPoint.X - line.StartPoint.X)) /
@@ -36,28 +36,8 @@ namespace SioForgeCAD.Commun
         }
 
 
-        private static (Point3d PolylineSegmentStart,Point3d PolylineSegmentEnd) GetSegmentPoint(Polyline TargetPolyline, int Index)
-        {
-            int NumberOfVertices = TargetPolyline.NumberOfVertices;
-            var PolylineSegmentStart = TargetPolyline.GetPoint3dAt(Index);
-            Index += 1;
-            if (Index >= NumberOfVertices)
-            {
-                Index = 0;
-            }
-            var PolylineSegmentEnd = TargetPolyline.GetPoint3dAt(Index);
-            return (PolylineSegmentStart, PolylineSegmentEnd);
-        }
-
-        private static int getVerticesMaximum(Polyline TargetPolyline)
-        {
-            int NumberOfVertices = (TargetPolyline.NumberOfVertices - 1);
-            if (TargetPolyline.Closed)
-            {
-                NumberOfVertices++;
-            }
-            return NumberOfVertices;
-        }
+      
+       
 
 
         public static List<Line> GetListOfPerpendicularLinesFromPoint(Points BasePoint, Polyline TargetPolyline, bool CheckForSegmentIntersections = true)
@@ -67,9 +47,9 @@ namespace SioForgeCAD.Commun
             Editor ed = doc.Editor;
 
             List<Line> PerpendicularLinesCollection = new List<Line>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
             {
-                var PolylineSegment = GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
+                var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
 
                 Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjection(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCG).GetVector3d();
 
@@ -90,15 +70,15 @@ namespace SioForgeCAD.Commun
             return PerpendicularLinesCollectionSorted;
         }
 
-        private static bool CheckIfLineIsIntersectingOtherSegments(Polyline TargetPolyline, Line PerpendicularLine, int CurrentIndex = -1)
+        public static bool CheckIfLineIsIntersectingOtherSegments(Polyline TargetPolyline, Line PerpendicularLine, int CurrentIndex = -1)
         {
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
             {
                 if (PolylineSegmentIndex == CurrentIndex)
                 {
                     continue;
                 }
-                var PolylineSegment = GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
+                var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
                 Line SegmentLineIntersectTest = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd);
                 return Lines.AreLinesCutting(SegmentLineIntersectTest, PerpendicularLine);
             }

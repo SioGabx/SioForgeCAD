@@ -113,6 +113,7 @@
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\Lines.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
     <Compile Include="Commun\Extensions\Point3d.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
+    <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -165,6 +167,7 @@
     <None Include="app.config" />
     <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Altimetries.dwg" />
     <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Pentes.dwg" />
+    <EmbeddedResource Include="Commun\Blocks\_APUd_CP_Altimetries.dwg" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

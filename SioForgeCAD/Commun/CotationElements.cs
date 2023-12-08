@@ -119,6 +119,10 @@ namespace SioForgeCAD.Commun
                         foreach (DynamicBlockReferenceProperty BlocProperty in BlocPropertyCollection.OfType<DynamicBlockReferenceProperty>())
                         {
                             string PropertyName = BlocProperty.PropertyName.ToUpperInvariant();
+                            if (BlocPropertyCollectionDictionnary.ContainsKey(PropertyName))
+                            {
+                                continue;
+                            }
                             BlocPropertyCollectionDictionnary.Add(PropertyName, BlocProperty);
                         }
                         foreach (string ValueKey in Values.Keys)
