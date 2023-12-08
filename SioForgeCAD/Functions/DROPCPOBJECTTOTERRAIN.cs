@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
@@ -36,9 +37,16 @@ namespace SioForgeCAD.Functions
             {
                 foreach (ObjectId SelectedObjectId in AllSelectedObjectIds)
                 {
-                    if ((SelectedObjectId.GetEntity(OpenMode.ForWrite) is BlockReference blkRef))
+                    if (Layers.IsLayerLocked(SelectedObjectId))
                     {
-                        TerrainBasePolyline.DropBlockReference(blkRef);
+                        continue;
+                    }
+                    using (Entity SelectedEntity = SelectedObjectId.GetEntity(OpenMode.ForWrite))
+                    {
+                        if (SelectedEntity is BlockReference blkRef)
+                        {
+                            TerrainBasePolyline.DropBlockReference(blkRef);
+                        }
                     }
                 }
                 acTrans.Commit();
@@ -55,6 +63,7 @@ namespace SioForgeCAD.Functions
 
         private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef)
         {
+            List<Point3d> ListOfPossibleIntersections = new List<Point3d>();
             for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TerrainBasePolyline); PolylineSegmentIndex++)
             {
                 var PolylineSegment = Polylines.GetSegmentPoint(TerrainBasePolyline, PolylineSegmentIndex);
@@ -67,10 +76,27 @@ namespace SioForgeCAD.Functions
                     {
                         continue;
                     }
-                    Vector3d translationVector = IntersectionPointsFounds[0] - blkRef.Position;
-                    blkRef.TransformBy(Matrix3d.Displacement(translationVector));
+                    ListOfPossibleIntersections.Add(IntersectionPointsFounds[0]);
                 }
             }
+            if (ListOfPossibleIntersections.Count == 0)
+            {
+                return;
+            }
+            Point3d FinalPoint = Point3d.Origin;
+            double MinimalDistance = double.MaxValue;
+            foreach (Point3d IntersectionPointFound in ListOfPossibleIntersections)
+            {
+                double NewPointDistance = Lines.GetLength(IntersectionPointFound, blkRef.Position);
+                if (NewPointDistance < MinimalDistance)
+                {
+                    MinimalDistance = NewPointDistance;
+                    FinalPoint = IntersectionPointFound;
+                }
+            }
+            Vector3d translationVector = FinalPoint - blkRef.Position;
+            blkRef.TransformBy(Matrix3d.Displacement(translationVector));
+
         }
 
     }

@@ -25,6 +25,12 @@ namespace SioForgeCAD.Commun
         {
             return AcAp.UIBindings.Collections.Layers;
         }
+        public static bool IsLayerLocked(ObjectId entity)
+        {
+            ObjectId layerId = entity.GetEntity().LayerId;
+            LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
+            return (layerRecord != null && layerRecord.IsLocked);
+        }
 
         public static ObjectId GetLayerIdByName(Database db, string layerName)
         {
