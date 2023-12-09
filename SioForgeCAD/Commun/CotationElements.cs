@@ -48,16 +48,14 @@ namespace SioForgeCAD.Commun
 
         public static DBObjectCollection InitBlocForTransient(string BlocName, Dictionary<string, string> InitAttributesValues)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-            var db = doc.Database;
+            Database db = Generic.GetDatabase();
             DBObjectCollection ents = new DBObjectCollection();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 //The first block is added for initialising the process and then deleted. Be sure to add a value.
                 ObjectId blockRef = CotationElements.InsertBlocFromBlocName(BlocName, Points.Empty, Generic.GetUSCRotation(Generic.AngleUnit.Radians), InitAttributesValues);
                 DBObject dBObject = blockRef.GetDBObject();
-                Generic.Erase(blockRef);
+                blockRef.EraseObject();
                 ents.Add(dBObject);
                 tr.Commit();
             }

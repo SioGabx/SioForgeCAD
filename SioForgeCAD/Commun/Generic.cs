@@ -1,12 +1,12 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.MacroRecorder;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -26,7 +26,7 @@ namespace SioForgeCAD.Commun
 
         public static ObjectId AddFontStyle(string font)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
+            var doc = GetDocument();
             using (Transaction newTransaction = doc.TransactionManager.StartTransaction())
             {
                 BlockTable newBlockTable;
@@ -54,8 +54,7 @@ namespace SioForgeCAD.Commun
 
         public static DBObjectCollection Explode(IEnumerable<ObjectId> ObjectsToExplode, bool EraseOriginal = true)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
+            Database db = GetDatabase();
             Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
 
             // Collect our exploded objects in a single collection
@@ -68,7 +67,6 @@ namespace SioForgeCAD.Commun
                 Entity ent = (Entity)tr.GetObject(ObjectToExplode, OpenMode.ForRead);
                 // Explode the object into our collection
                 ent.Explode(objs);
-                // Erase the original, if requested
                 if (EraseOriginal)
                 {
                     ent.UpgradeOpen();
@@ -78,22 +76,12 @@ namespace SioForgeCAD.Commun
             return objs;
         }
 
-        public static void Erase(ObjectId ObjectToErase)
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            using (Transaction tr = doc.TransactionManager.StartTransaction())
-            {
-                Entity ent = (Entity)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
-                ent.Erase(true);
-                tr.Commit();
-            }
-        }
+
 
         public enum AngleUnit { Radians, Degrees }
         public static double GetUSCRotation(AngleUnit angleUnit)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
+            var ed = GetEditor();
             Matrix3d ucsCur = ed.CurrentUserCoordinateSystem;
             CoordinateSystem3d cs = ucsCur.CoordinateSystem3d;
             double ucs_rotAngle = cs.Xaxis.AngleOnPlane(new Plane(Point3d.Origin, Vector3d.ZAxis));
@@ -107,12 +95,18 @@ namespace SioForgeCAD.Commun
 
         public static ObjectId AddToDrawing(this Entity entity)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
+            var db = GetDatabase();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                // Check if the entity is already in the database
+                if (entity.IsErased)
+                {
+                    acTrans.Abort();
+                    return ObjectId.Null;
+                }
                 acBlkTblRec.AppendEntity(entity);
                 acTrans.AddNewlyCreatedDBObject(entity, true);
                 acTrans.Commit();
@@ -120,6 +114,17 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
+        public static Document GetDocument()
+        {
+            return Application.DocumentManager.MdiActiveDocument;
+        }
+        public static Database GetDatabase()
+        {
+            return GetDocument().Database;
+        }
+        public static Editor GetEditor()
+        {
+            return GetDocument().Editor;
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace SioForgeCAD.Commun
             Editor ed = doc.Editor;
 
             List<Line> PerpendicularLinesCollection = new List<Line>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
             {
                 var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
 
@@ -72,7 +72,7 @@ namespace SioForgeCAD.Commun
 
         public static bool CheckIfLineIsIntersectingOtherSegments(Polyline TargetPolyline, Line PerpendicularLine, int CurrentIndex = -1)
         {
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
             {
                 if (PolylineSegmentIndex == CurrentIndex)
                 {

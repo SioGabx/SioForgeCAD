@@ -63,7 +63,7 @@ namespace SioForgeCAD.Functions
                         }
                         if (!isMultipleIndermediairePlacement)
                         {
-                            Generic.Erase(Line);
+                            Line.EraseObject();
                         }
 
                         tr.Commit();

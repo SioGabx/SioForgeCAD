@@ -10,7 +10,10 @@ namespace SioForgeCAD.Commun
         private static List<Autodesk.AutoCAD.DatabaseServices.ObjectId> HightLightedObject = new List<Autodesk.AutoCAD.DatabaseServices.ObjectId>();
         public static void RegisterHighlight(this Autodesk.AutoCAD.DatabaseServices.ObjectId ObjectId)
         {
-            HightLightedObject.Add(ObjectId);
+            if (!HightLightedObject.Contains(ObjectId))
+            {
+                HightLightedObject.Add(ObjectId);
+            }
             ObjectId.GetEntity().Highlight();
         }
         public static void RegisterHighlight(this Autodesk.AutoCAD.DatabaseServices.Entity Entity)
@@ -26,7 +29,10 @@ namespace SioForgeCAD.Commun
         {
             try
             {
-                HightLightedObject.Remove(ObjectId);
+                if (HightLightedObject.Contains(ObjectId))
+                {
+                    HightLightedObject.Remove(ObjectId);
+                }
                 ObjectId.GetEntity().Unhighlight();
             }
             catch (Exception ex)
@@ -37,6 +43,13 @@ namespace SioForgeCAD.Commun
         public static void UnhighlightAll()
         {
             foreach (ObjectId objectId in HightLightedObject.ToArray())
+            {
+                RegisterUnhighlight(objectId);
+            }
+        }
+        public static void UnhighlightAll(IEnumerable<ObjectId> HightLightedObject)
+        {
+            foreach (ObjectId objectId in HightLightedObject)
             {
                 RegisterUnhighlight(objectId);
             }

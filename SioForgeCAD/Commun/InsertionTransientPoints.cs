@@ -11,13 +11,29 @@ namespace SioForgeCAD.Commun
 {
     public class InsertionTransientPoints
     {
-        private Func<Points, Dictionary<string, string>> UpdateFunction;
-        private DBObjectCollection Entities;
-        private List<Drawable> Drawable = new List<Drawable>();
+        private Func<Points, Dictionary<string, string>> UpdateFunction { get; }
+        private DBObjectCollection Entities { get; set; }
+        public List<Drawable> Drawable { get; }
+
+        public DBObjectCollection SetEntities {
+            set {
+                ClearTransGraphics();
+                Entities = value;
+                CreateTransGraphics();
+            } 
+        }  
+
+        public DBObjectCollection GetEntities {
+            get {
+                return Entities ?? new DBObjectCollection();
+            } 
+        }
+
         public InsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction)
         {
             this.UpdateFunction = UpdateFunction;
             this.Entities = Entities;
+            this.Drawable = new List<Drawable>();
         }
 
         public (Points Point, PromptPointResult PromptPointResult) GetInsertionPoint(string Message, params string[] KeyWords)
@@ -30,12 +46,13 @@ namespace SioForgeCAD.Commun
             Point3d curPt = basePt;
             CreateTransGraphics();
 
-            PointMonitorEventHandler handler = delegate (object sender, PointMonitorEventArgs e)
+            void handler(object sender, PointMonitorEventArgs e)
             {
                 Point3d pt = e.Context.ComputedPoint;
                 UpdateTransGraphics(curPt, pt);
                 curPt = pt;
-            };
+            }
+
             ed.PointMonitor += handler;
             PromptPointOptions pointOptions = new PromptPointOptions(Message);
             foreach (string KeyWord in KeyWords)
@@ -44,6 +61,7 @@ namespace SioForgeCAD.Commun
                 pointOptions.AppendKeywordsToMessage = true;
             }
             PromptPointResult InsertionPromptPointResult = ed.GetPoint(pointOptions);
+            ed.PointMonitor -= handler;
             var InsertionPointResult = Points.GetFromPromptPointResult(InsertionPromptPointResult);
             ClearTransGraphics();
             if (InsertionPromptPointResult.Status == PromptStatus.OK)
@@ -57,7 +75,7 @@ namespace SioForgeCAD.Commun
         }
 
 
-        private void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+        virtual public void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
@@ -98,11 +116,17 @@ namespace SioForgeCAD.Commun
                     }
                 }
                 e.TransformBy(mat);
-                TransientManager.CurrentTransientManager.UpdateTransient(Drawable[i], new IntegerCollection());
+                RedrawTransEntities(Drawable[i]);
             }
         }
 
-        private void ClearTransGraphics()
+        public void RedrawTransEntities(Drawable entity)
+        {
+            TransientManager.CurrentTransientManager.UpdateTransient(entity, new IntegerCollection());
+        }
+
+
+        public virtual void ClearTransGraphics()
         {
             // Clear the transient graphics for our drawables
             TransientManager.CurrentTransientManager.EraseTransients(
@@ -114,13 +138,17 @@ namespace SioForgeCAD.Commun
             {
                 Entity.Dispose();
             }
-            Drawable.Clear();
-            Entities.Clear();
+            Drawable?.Clear();
+            Entities?.Clear();
         }
 
         private void CreateTransGraphics()
         {
-            foreach (Entity drawable in this.Entities)
+            if (Entities == null)
+            {
+                return;
+            }
+            foreach (Entity drawable in Entities)
             {
                 Entity drawableClone = drawable.Clone() as Entity;
                 drawableClone.ColorIndex = Settings.TransientColorIndex;

@@ -64,7 +64,7 @@ namespace SioForgeCAD.Functions
         private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef)
         {
             List<Point3d> ListOfPossibleIntersections = new List<Point3d>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.getVerticesMaximum(TerrainBasePolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TerrainBasePolyline); PolylineSegmentIndex++)
             {
                 var PolylineSegment = Polylines.GetSegmentPoint(TerrainBasePolyline, PolylineSegmentIndex);
                 Vector3d PerpendicularVector = GetUCSPerpendicularVector(TerrainBasePolyline);

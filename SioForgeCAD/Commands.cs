@@ -74,7 +74,7 @@ namespace SioForgeCAD
         }
 
 
-        [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet)]
+        [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public void DRAWPERPENDICULARLINEFROMPOINT()
         {
             Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
@@ -85,20 +85,18 @@ namespace SioForgeCAD
         {
             Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
         }
-        
-        [CommandMethod("DRAWCPTERRAIN", CommandFlags.UsePickSet)]
+
+        [CommandMethod("DRAWCPTERRAIN", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWCPTERRAIN()
         {
-            Functions.DRAWCPTERRAIN.DrawTerrainFromSelectedPoints();
+            new Functions.DRAWCPTERRAIN().DrawTerrainFromSelectedPoints();
         }
-         
+
         [CommandMethod("DROPCPOBJECTTOTERRAIN")]
         public static void DROPCPOBJECTTOTERRAIN()
         {
             Functions.DROPCPOBJECTTOTERRAIN.Project();
         }
-
-
 
 
 

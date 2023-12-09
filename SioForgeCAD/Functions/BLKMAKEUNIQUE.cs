@@ -10,15 +10,15 @@ namespace SioForgeCAD.Functions
 {
     public class BLKMAKEUNIQUE
     {
-        private Dictionary<string, string> renamedBlockNames;
-        private bool regroupBlockDefinitionIfSameName;
+        private readonly Dictionary<string, string> RenamedBlockNames;
+        private readonly bool RegroupBlockDefinitionIfSameName;
 
         public BLKMAKEUNIQUE(bool MakeUniqueEachBlocks)
         {
-            this.regroupBlockDefinitionIfSameName = MakeUniqueEachBlocks;
+            this.RegroupBlockDefinitionIfSameName = MakeUniqueEachBlocks;
             if (MakeUniqueEachBlocks)
             {
-                renamedBlockNames = new Dictionary<string, string>();
+                RenamedBlockNames = new Dictionary<string, string>();
             }
         }
 
@@ -112,7 +112,7 @@ namespace SioForgeCAD.Functions
                 ActualDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Ignore, false);
                 ActualTransaction.Commit();
             }
-            Generic.Erase(BlockReferenceObjectId);
+            BlockReferenceObjectId.EraseObject();
             return acIdMap2[newBlocRefenceId].Value;
         }
 
@@ -122,9 +122,9 @@ namespace SioForgeCAD.Functions
 
         private string GetUniqueBlockName(string oldName)
         {
-            if (regroupBlockDefinitionIfSameName && renamedBlockNames.ContainsKey(oldName))
+            if (RegroupBlockDefinitionIfSameName && RenamedBlockNames.ContainsKey(oldName))
             {
-                return renamedBlockNames[oldName];
+                return RenamedBlockNames[oldName];
             }
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -138,9 +138,9 @@ namespace SioForgeCAD.Functions
                     newName = $"{oldName}_{index}";
                     index++;
                 }
-                if (regroupBlockDefinitionIfSameName)
+                if (RegroupBlockDefinitionIfSameName)
                 {
-                    renamedBlockNames.Add(oldName, newName);
+                    RenamedBlockNames.Add(oldName, newName);
                 }
                 return newName;
             }

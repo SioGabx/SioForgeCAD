@@ -22,5 +22,11 @@ namespace SioForgeCAD.Commun.Extensions
             return Points.From3DPoint(p);
         }
 
+        public static Point3d GetMiddlePoint(this Point3d A,Point3d B) {
+            double X = (A.X + B.X)/2;
+            double Z = (A.Z + B.Z)/2;
+            double Y = (A.Y + B.Y)/2;
+            return new Point3d(X,Y,Z);
+        }
     }
 }

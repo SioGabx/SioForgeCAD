@@ -7,9 +7,9 @@ using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Drawing
 {
-     public static class Polylines
+    public static class Polylines
     {
-        public static int getVerticesMaximum(Polyline TargetPolyline)
+        public static int GetVerticesMaximum(Polyline TargetPolyline)
         {
             int NumberOfVertices = (TargetPolyline.NumberOfVertices - 1);
             if (TargetPolyline.Closed)
@@ -32,21 +32,60 @@ namespace SioForgeCAD.Commun.Drawing
             return (PolylineSegmentStart, PolylineSegmentEnd);
         }
 
-
-        public static ObjectId Draw(IEnumerable<Points> listOfPoints)
+        public static Polyline GetPolylineFromPoints(IEnumerable<Points> listOfPoints)
         {
             Polyline polyline = new Polyline();
             foreach (Points point in listOfPoints)
             {
                 polyline.AddVertexAt(polyline.NumberOfVertices, point.SCG.ToPoint2d(), 0, 0, 0);
             }
-            if (polyline.Length > 0)
+            return polyline;
+        }
+
+        private static bool CheckPointSide(Polyline BasePolyline, Point3d TargetPoint)
+        {
+            for (int segmentIndex = 0; segmentIndex < BasePolyline.NumberOfVertices - 1; segmentIndex++)
             {
-                return polyline.AddToDrawing();
+                Point3d startPoint = BasePolyline.GetPoint3dAt(segmentIndex);
+                Point3d endPoint = BasePolyline.GetPoint3dAt(segmentIndex + 1);
+
+                Vector2d polylineVector = new Vector2d(endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
+                Vector2d pointVector = new Vector2d(TargetPoint.X - startPoint.X, TargetPoint.Y - startPoint.Y);
+
+                //cross product
+                double crossProduct = polylineVector.X * pointVector.Y - polylineVector.Y * pointVector.X;
+
+                if (crossProduct < 0)
+                {
+                    //left
+                    return true;
+                }
             }
-            else
+            //right or collinear
+            return false;
+        }
+        public static bool IsAtLeftSide(this Polyline BasePolyline, Point3d TargetPoint)
+        {
+            return CheckPointSide(BasePolyline, TargetPoint);
+        }
+        public static bool IsAtRightSide(this Polyline BasePolyline, Point3d TargetPoint)
+        {
+            return !CheckPointSide(BasePolyline, TargetPoint);
+        }
+
+
+        public static ObjectId Draw(IEnumerable<Points> listOfPoints)
+        {
+            using (Polyline polyline = GetPolylineFromPoints(listOfPoints))
             {
-                return ObjectId.Null;
+                if (polyline.Length > 0)
+                {
+                    return polyline.AddToDrawing();
+                }
+                else
+                {
+                    return ObjectId.Null;
+                }
             }
         }
 

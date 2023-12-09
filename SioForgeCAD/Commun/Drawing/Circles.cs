@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun.Drawing
         {
             using (Circle acLine = new Circle(center.SCG, Vector3d.ZAxis, radius))
             {
-                return Draw(acLine);
+                return Draw(acLine, ColorIndex);
             }
         }
 

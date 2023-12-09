@@ -37,7 +37,7 @@ namespace SioForgeCAD.Functions
                     Points Indermediaire = InsertionTransientPointsValues.Point;
                     PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                     PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
-                    Generic.Erase(Line);
+                    Line.EraseObject();
                     tr.Commit();
                     if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                     {

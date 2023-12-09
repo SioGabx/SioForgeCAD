@@ -7,12 +7,17 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
-    public static class DRAWCPTERRAIN
+    public class DRAWCPTERRAIN
     {
+        private List<TerrainPoint> TerrainPoints = new List<TerrainPoint>();
+        private Polyline TerrainBasePolyline;
+        private double TerrainBaseAltimetrie = 0;
         public class TerrainPoint
         {
             public Points StartPoint { get; set; }
@@ -21,26 +26,27 @@ namespace SioForgeCAD.Functions
             public double DistanceFromTerrainStart { get; set; }
             public double Altitude { get; set; }
             public double Length { get; set; }
-            public Vector3d vector3D { get; set; }
+            public Vector3d Vector3D { get; set; }
         }
 
-        
-        public static Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
+
+        private Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
         {
             var ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(BasePoint, Terrain, true);
             if (ListOfPerpendicularLines.Count > 0)
             {
-                Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault();
-                return NearestPointPerpendicularLine.EndPoint.ToPoints();
+                using (Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault())
+                {
+                    return NearestPointPerpendicularLine.EndPoint.ToPoints();
+                }
             }
             return null;
         }
 
-        public static void DrawTerrainFromSelectedPoints()
+        public void DrawTerrainFromSelectedPoints()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
 
             Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("Sélectionnez une polyligne comme base de terrain");
             if (TerrainBasePolyline == null)
@@ -52,117 +58,203 @@ namespace SioForgeCAD.Functions
             PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
             {
                 MessageForAdding = $"Selectionnez des côtes à projeter\n",
-                RejectObjectsOnLockedLayers = false,
+                RejectObjectsOnLockedLayers = false
             };
             var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
-            if (BlockRefSelection.Status != PromptStatus.OK)
-            {
-                return;
-            }
+            if (BlockRefSelection.Status != PromptStatus.OK) { return; }
 
-            var AskInversedOptions = new PromptKeywordOptions("Voullez-vous inverser la coupe ?");
-            AskInversedOptions.Keywords.Add("OUI");
-            AskInversedOptions.Keywords.Add("NON");
-            var AskInversedResult = ed.GetKeywords(AskInversedOptions);
-            bool IsInversed = AskInversedResult.StringResult == "OUI";
-
-            List<TerrainPoint> terrainPoints = new List<TerrainPoint>();
-
-            List<ObjectId> SelectedCotes = BlockRefSelection.Value.GetObjectIds().ToList();
-            //Dictionary<BlockReference, Points> BaseTerrainIntersectionPoint = new Dictionary<BlockReference, Points>();
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
-                foreach (ObjectId id in SelectedCotes)
+                ObjectId[] SelectedCoteBloc = BlockRefSelection.Value.GetObjectIds();
+                this.TerrainBasePolyline = TerrainBasePolyline;
+                this.TerrainPoints = GetTerrainPoints(SelectedCoteBloc);
+                this.TerrainBaseAltimetrie = GetMinimalAltimetrie();
+
+                DrawCPTerrainInsertionTransientPoints insertionTransientPoints = new DrawCPTerrainInsertionTransientPoints(GetTerrain, TerrainBasePolyline);
+                var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe");
+                if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
                 {
-                    var BlkRef = id.GetEntity() as BlockReference;
-                    Points BlkRefPosition = BlkRef.Position.ToPoints();
-                    var BlkRefOnTerrainPosition = GetProjectedPointOnBaseTerrain(BlkRefPosition, TerrainBasePolyline);
-                    if (BlkRefOnTerrainPosition == null)
+                    List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);
+                    foreach (Entity ent in Terrain)
                     {
-                        continue;
+                        ent.AddToDrawing();
+                        ent.Dispose();
                     }
-                    var TerrainPoint = new TerrainPoint()
-                    {
-                        StartPoint = BlkRefOnTerrainPosition,
-                        Block = BlkRef,
-                        Altitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId) ?? 0,
-                        DistanceFromTerrainStart = new Line(TerrainBasePolyline.StartPoint.Flatten(), BlkRefOnTerrainPosition.SCG.Flatten()).Length
-                    };
-                    terrainPoints.Add(TerrainPoint);
                 }
-                terrainPoints = terrainPoints.OrderBy(TerrainPoint => TerrainPoint.DistanceFromTerrainStart).ToList();
-
-                TerrainPoint StartTerPoint = new TerrainPoint()
-                {
-                    StartPoint = TerrainBasePolyline.StartPoint.ToPoints(),
-                    Block = terrainPoints.First().Block,
-                    Altitude = terrainPoints.First().Altitude,
-                    DistanceFromTerrainStart = 0
-                };
-                TerrainPoint EndTerPoint = new TerrainPoint()
-                {
-                    StartPoint = TerrainBasePolyline.EndPoint.ToPoints(),
-                    Block = terrainPoints.Last().Block,
-                    Altitude = terrainPoints.Last().Altitude,
-                    DistanceFromTerrainStart = TerrainBasePolyline.Length
-                };
-                if (terrainPoints.First().DistanceFromTerrainStart != StartTerPoint.DistanceFromTerrainStart)
-                {
-                    terrainPoints.Insert(0, StartTerPoint);
-                }
-                if (terrainPoints.Last().DistanceFromTerrainStart != EndTerPoint.DistanceFromTerrainStart)
-                {
-                    terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
-                }
-
-                Vector3d TerrainBaseLineVector = TerrainBasePolyline.EndPoint - TerrainBasePolyline.StartPoint;
-                if (IsInversed)
-                {
-                    TerrainBaseLineVector *= -1;
-                }
-                Vector3d PerpendicularTerrainBaseLineVector = new Vector3d(-TerrainBaseLineVector.Y, TerrainBaseLineVector.X, 0).GetNormal();
-
-                double CoteMinimal = double.MaxValue;
-
-                foreach (TerrainPoint terrainPoint in terrainPoints)
-                {
-                    CoteMinimal = Math.Min(CoteMinimal, terrainPoint.Altitude - 1);
-                }
-                double CoteMinimalMaximumMultipleOfFive = CoteMinimal.RoundToNearestMultiple(5);
-
-                List<Points> TerrainPointsToConnect = new List<Points>();
-                for (int i = 0; i < terrainPoints.Count; i++)
-                {
-                    TerrainPoint terrainPoint = terrainPoints[i];
-
-                    terrainPoint.Length = terrainPoint.Altitude - CoteMinimalMaximumMultipleOfFive;
-
-
-                    terrainPoint.vector3D = PerpendicularTerrainBaseLineVector.MultiplyBy(terrainPoint.Length);
-                    terrainPoint.EndPoint = GetEndPoint(terrainPoint.StartPoint, terrainPoint.vector3D);
-                    TerrainPointsToConnect.Add(terrainPoint.EndPoint);
-                    Lines.Draw(terrainPoint.StartPoint, terrainPoint.EndPoint);
-
-                    double USCRotation = GetRotation(TerrainBaseLineVector, Vector3d.ZAxis);
-                    string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
-                    Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                    CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
-                }
-                Polylines.Draw(TerrainPointsToConnect);
+                HightLighter.UnhighlightAll(SelectedCoteBloc);
                 trans.Commit();
             }
         }
 
+        public static bool CheckIfIsInversed(Polyline BasePolyline, Point3d TargetPoint)
+        {
+            return BasePolyline.IsAtLeftSide(TargetPoint);
+        }
+
+        private List<TerrainPoint> GetTerrainPoints(ObjectId[] SelectedCotes)
+        {
+            List<TerrainPoint> terrainPoints = new List<TerrainPoint>();
+            foreach (ObjectId id in SelectedCotes)
+            {
+                var BlkRef = id.GetEntity() as BlockReference;
+                Points BlkRefPosition = BlkRef.Position.ToPoints();
+                var BlkRefOnTerrainPosition = GetProjectedPointOnBaseTerrain(BlkRefPosition, TerrainBasePolyline);
+                if (BlkRefOnTerrainPosition == null)
+                {
+                    continue;
+                }
+                var TerrainPoint = new TerrainPoint()
+                {
+                    StartPoint = BlkRefOnTerrainPosition,
+                    Block = BlkRef,
+                    Altitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId) ?? 0,
+                    DistanceFromTerrainStart = Lines.GetLength(TerrainBasePolyline.StartPoint.Flatten(), BlkRefOnTerrainPosition.SCG.Flatten())
+                };
+                terrainPoints.Add(TerrainPoint);
+            }
+            terrainPoints = terrainPoints.OrderBy(TerrainPoint => TerrainPoint.DistanceFromTerrainStart).ToList();
+
+            TerrainPoint StartTerPoint = new TerrainPoint()
+            {
+                StartPoint = TerrainBasePolyline.StartPoint.ToPoints(),
+                Block = terrainPoints.First().Block,
+                Altitude = terrainPoints.First().Altitude,
+                DistanceFromTerrainStart = 0
+            };
+            TerrainPoint EndTerPoint = new TerrainPoint()
+            {
+                StartPoint = TerrainBasePolyline.EndPoint.ToPoints(),
+                Block = terrainPoints.Last().Block,
+                Altitude = terrainPoints.Last().Altitude,
+                DistanceFromTerrainStart = TerrainBasePolyline.Length
+            };
+            if (terrainPoints.First().DistanceFromTerrainStart != StartTerPoint.DistanceFromTerrainStart)
+            {
+                terrainPoints.Insert(0, StartTerPoint);
+            }
+            if (terrainPoints.Last().DistanceFromTerrainStart != EndTerPoint.DistanceFromTerrainStart)
+            {
+                terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
+            }
+            return terrainPoints;
+        }
+
+        public double GetMinimalAltimetrie()
+        {
+            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            var ed = doc.Editor;
+
+            double CoteMinimal = double.MaxValue;
+            foreach (TerrainPoint terrainPoint in TerrainPoints)
+            {
+                CoteMinimal = Math.Min(CoteMinimal, terrainPoint.Altitude - 1);
+            }
+            double CoteMinimalMaximumMultipleOfFive = CoteMinimal.RoundToNearestMultiple(5);
+
+            PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions($"\nVeuillez entrer l'altimétrie de la ligne de base.\nCote minimale trouvée : {CoteMinimal}")
+            {
+                DefaultValue = CoteMinimalMaximumMultipleOfFive
+            };
+
+            PromptDoubleResult pDoubleRes = ed.GetDouble(pDoubleOpts);
+            if (pDoubleRes.Status == PromptStatus.OK)
+            {
+                return pDoubleRes.Value;
+            }
+            else
+            {
+                return CoteMinimalMaximumMultipleOfFive;
+            }
+        }
+
+
+        public List<Entity> GetTerrain(Points points)
+        {
+            var TerrainEntity = new List<Entity>();
+
+            Vector3d TerrainBaseLineVector = TerrainBasePolyline.EndPoint - TerrainBasePolyline.StartPoint;
+            if (CheckIfIsInversed(TerrainBasePolyline, points.SCG))
+            {
+                TerrainBaseLineVector *= -1;
+            }
+            Vector3d PerpendicularTerrainBaseLineVector = new Vector3d(-TerrainBaseLineVector.Y, TerrainBaseLineVector.X, 0).GetNormal();
+
+            List<Points> TerrainPointsToConnect = new List<Points>();
+            for (int i = 0; i < TerrainPoints.Count; i++)
+            {
+                TerrainPoint terrainPoint = TerrainPoints[i];
+                terrainPoint.Length = terrainPoint.Altitude - TerrainBaseAltimetrie;
+                terrainPoint.Vector3D = PerpendicularTerrainBaseLineVector.MultiplyBy(terrainPoint.Length);
+                terrainPoint.EndPoint = GetEndPoint(terrainPoint.StartPoint, terrainPoint.Vector3D);
+                TerrainPointsToConnect.Add(terrainPoint.EndPoint);
+                TerrainEntity.Add(Lines.GetFromPoints(terrainPoint.StartPoint, terrainPoint.EndPoint));
+
+                double USCRotation = GetRotation(TerrainBaseLineVector, Vector3d.ZAxis);
+                string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
+                Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
+
+                var CotationBlockRefObjectId = CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
+                TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
+                CotationBlockRefObjectId.EraseObject();
+            }
+            TerrainEntity.Add(Polylines.GetPolylineFromPoints(TerrainPointsToConnect));
+            return TerrainEntity;
+        }
+
         public static double GetRotation(Vector3d vector, Vector3d normal)
         {
-            var plane = new Plane(Point3d.Origin, normal);
-            var ocsXAxis = Vector3d.XAxis.TransformBy(Matrix3d.PlaneToWorld(plane));
-            return ocsXAxis.GetAngleTo(vector.ProjectTo(normal, normal), normal);
+            using (Plane plane = new Plane(Point3d.Origin, normal))
+            {
+                var ocsXAxis = Vector3d.XAxis.TransformBy(Matrix3d.PlaneToWorld(plane));
+                return ocsXAxis.GetAngleTo(vector.ProjectTo(normal, normal), normal);
+            }
         }
 
         private static Points GetEndPoint(Points startPoint, Vector3d vector3d)
         {
             return startPoint.SCG.Add(vector3d).ToPoints();
+        }
+
+    }
+
+    internal class DrawCPTerrainInsertionTransientPoints : InsertionTransientPoints
+    {
+        private readonly Func<Points, List<Entity>> UpdateFunction;
+        private readonly Polyline TerrainBasePolyline;
+        public DrawCPTerrainInsertionTransientPoints(Func<Points, List<Entity>> UpdateFunction, Polyline TerrainBasePolyline) : base(null, null)
+        {
+            this.UpdateFunction = UpdateFunction;
+            this.TerrainBasePolyline = TerrainBasePolyline;
+        }
+
+        private bool CheckIfRedrawIsNeeded(Point3d LastPoint, Point3d NewPoint)
+        {
+            //Redraw only if Inversed changed;
+            bool IsLastPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, LastPoint);
+            bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);
+            return IsLastPointInverted != IsNewPointInverted;
+        }
+
+
+        public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+        {
+            if (CheckIfRedrawIsNeeded(moveToPt, curPt))
+            {
+                SetEntities = UpdateFunction(moveToPt.ToPoints()).ToDBObjectCollection();
+                foreach (Autodesk.AutoCAD.GraphicsInterface.Drawable entity in Drawable)
+                {
+                    RedrawTransEntities(entity);
+                }
+            }
+        }
+
+        public override void ClearTransGraphics()
+        {
+            foreach (Entity entity in GetEntities)
+            {
+                entity.Dispose();
+            }
+            base.ClearTransGraphics();
         }
 
     }

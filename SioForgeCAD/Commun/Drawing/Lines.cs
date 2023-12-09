@@ -72,9 +72,17 @@ namespace SioForgeCAD.Commun.Drawing
             return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
         }
 
+        public static Line GetFromPoints(Points start, Points end)
+        {
+            return new Line(start.SCG, end.SCG);
+        }
+
         public static ObjectId Draw(Points start, Points end, int? ColorIndex = null)
         {
-            return Draw(start.SCG, end.SCG, ColorIndex);
+            using (Line acLine = GetFromPoints(start, end))
+            {
+                return Draw(acLine, ColorIndex);
+            }
         }
 
         public static ObjectId Draw(Point3d start, Point3d end, int? ColorIndex = null)
