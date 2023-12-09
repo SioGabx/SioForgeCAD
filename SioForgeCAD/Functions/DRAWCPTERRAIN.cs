@@ -48,7 +48,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("Sélectionnez une polyligne comme base de terrain");
+            Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("\nSélectionnez une polyligne comme base de terrain");
             if (TerrainBasePolyline == null)
             {
                 return;
@@ -57,7 +57,7 @@ namespace SioForgeCAD.Functions
             SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
             PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = $"Selectionnez des côtes à projeter\n",
+                MessageForAdding = $"\nSelectionnez des côtes à projeter",
                 RejectObjectsOnLockedLayers = false
             };
             var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);

@@ -34,7 +34,7 @@ namespace SioForgeCAD.Functions
 
                         InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
 
-                        ed.WriteMessage($"Pente : {ComputeValue(FirstPointCote.Points)["PENTE"]}\n");
+                        Generic.WriteMessage($"Pente : {ComputeValue(FirstPointCote.Points)["PENTE"]}");
                         string[] KeyWords;
                         if (!isMultipleIndermediairePlacement)
                         {
@@ -44,7 +44,7 @@ namespace SioForgeCAD.Functions
                         {
                             KeyWords = new string[] { };
                         }
-                        var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Indiquer les emplacements des points côte", KeyWords);
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("\nIndiquez les emplacements des points cote", KeyWords);
                         Points Indermediaire = InsertionTransientPointsValues.Point;
                         PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                         PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;

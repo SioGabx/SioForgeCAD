@@ -40,6 +40,12 @@ namespace SioForgeCAD
         public void CCP()
         {
             new SioForgeCAD.Functions.CCP().Compute();
+        } 
+        
+        [CommandMethod("CCA")]
+        public void CCA()
+        {
+            SioForgeCAD.Functions.CCA.Compute();
         }
 
         [CommandMethod("CCXREF", CommandFlags.Redraw)]
@@ -101,41 +107,6 @@ namespace SioForgeCAD
 
 
 
-        [CommandMethod("SelectNestedEntity")]
-        public static void SelectNestedEntity_Method()
-        {
-            Database db = HostApplicationServices.WorkingDatabase;
-            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
-
-            try
-            {
-                PromptNestedEntityOptions nestedEntOpt = new PromptNestedEntityOptions("\nPick a nested entity:");
-                PromptNestedEntityResult nestedEntRes = ed.GetNestedEntity(nestedEntOpt);
-
-                if (nestedEntRes.Status == PromptStatus.OK)
-                {
-                    using (Transaction tr = db.TransactionManager.StartTransaction())
-                    {
-                        int level = 0;
-                        Entity ent = tr.GetObject(nestedEntRes.ObjectId, OpenMode.ForRead) as Entity;
-                        ed.WriteMessage(string.Format("\nType of the nested entity: {0}", ent.ToString()));
-                        ed.WriteMessage(string.Format("\n#{0} level - block name: {1}", ++level, ent.BlockName));
-                        foreach (ObjectId id in nestedEntRes.GetContainers())
-                        {
-                            BlockReference container = tr.GetObject(id, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.BlockReference;
-                            ed.WriteMessage(string.Format("\n#{0} level - block name: {1}", ++level, container.Name));
-                        }
-
-                        tr.Commit();
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                ed.WriteMessage(ex.ToString());
-            }
-        }
-
 
 
 
@@ -169,7 +140,6 @@ namespace SioForgeCAD
         [CommandMethod("debug_random_point")]
         public static void DBG_Random_Point()
         {
-            //Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Random _random = new Random();
 
             // Generates a random number within a range.
@@ -177,14 +147,13 @@ namespace SioForgeCAD
             {
                 return _random.Next(min, max);
             }
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-            var db = doc.Database;
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                for (int i = 0; i < 50; i++)
+                for (int i = 0; i < 150; i++)
                 {
-                    double x = RandomNumber(-50, 50);
+                    double x = RandomNumber(-200, 200);
                     double y = RandomNumber(-50, 50);
                     double alti = RandomNumber(100, 120) + RandomNumber(0, 99) * 0.01;
                     Point3d point = new Point3d(x, y, 0);

@@ -13,9 +13,7 @@ namespace SioForgeCAD.Commun
 
         public static void ImportBlocFromBlocNameIfMissing(string BlocName)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            var ed = doc.Editor;
+            var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
 
@@ -35,7 +33,7 @@ namespace SioForgeCAD.Commun
                     }
                     catch (Autodesk.AutoCAD.Runtime.Exception ex)
                     {
-                        ed.WriteMessage("\nErreur : " + ex.Message);
+                        Generic.WriteMessage("\nErreur : " + ex.Message);
                     }
                     finally
                     {

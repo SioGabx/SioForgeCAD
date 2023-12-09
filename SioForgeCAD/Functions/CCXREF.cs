@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
                 Database db = Generic.GetDatabase();
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    string SelectMessage = "Veuillez selectionner une côte dans une XREF\n";
+                    string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
                     var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null);
                     if (GetBlockInXref == null)
                     {

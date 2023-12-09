@@ -59,6 +59,7 @@ namespace SioForgeCAD.Commun
             {
                 pointOptions.Keywords.Add(KeyWord);
                 pointOptions.AppendKeywordsToMessage = true;
+                pointOptions.AllowArbitraryInput = true;
             }
             PromptPointResult InsertionPromptPointResult = ed.GetPoint(pointOptions);
             ed.PointMonitor -= handler;

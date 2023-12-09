@@ -41,7 +41,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                     if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                     {
-                        ed.WriteMessage($"Pente : {Values["PENTE"]}\n");
+                        Generic.WriteMessage($"Pente : {Values["PENTE"]}");
                         CotationElements.InsertBlocFromBlocName(Settings.BlocNamePente, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), Values);
                     }
                 }

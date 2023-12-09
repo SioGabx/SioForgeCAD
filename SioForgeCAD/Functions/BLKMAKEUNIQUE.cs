@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                 {
                     PromptSelectionOptions peo = new PromptSelectionOptions()
                     {
-                        MessageForAdding = "Selectionnez des blocs à rendre unique",
+                        MessageForAdding = "\nSelectionnez des blocs à rendre unique",
                     };
 
                     PromptSelectionResult per = ed.GetSelection(peo);

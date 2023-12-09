@@ -34,5 +34,17 @@ namespace SioForgeCAD.Properties {
                 this["SelectionPointsType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double StepValue {
+            get {
+                return ((double)(this["StepValue"]));
+            }
+            set {
+                this["StepValue"] = value;
+            }
+        }
     }
 }

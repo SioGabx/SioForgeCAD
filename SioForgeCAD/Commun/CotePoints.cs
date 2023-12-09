@@ -87,13 +87,12 @@ namespace SioForgeCAD.Commun
 
         private static double GetCote(Points Origin)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            var ed = doc.Editor;
+            var db = Generic.GetDatabase();
+            var ed = Generic.GetEditor();
 
             //Write a point where the altitude is asked
             DBPoint PointDrawingEntity = new DBPoint(Origin.SCG);
-            Autodesk.AutoCAD.DatabaseServices.ObjectId PointDrawingEntityObjectId;
+            ObjectId PointDrawingEntityObjectId;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
@@ -123,10 +122,9 @@ namespace SioForgeCAD.Commun
             return PromptDoubleAltitudeResult.Value;
         }
 
-        public static double? GetAltitudeFromBloc(Autodesk.AutoCAD.DatabaseServices.ObjectId BlocObjectId)
+        public static double? GetAltitudeFromBloc(ObjectId BlocObjectId)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
+            var db = Generic.GetDatabase();
             TransactionManager tr = db.TransactionManager;
             DBObject BlocObject = tr.GetObject(BlocObjectId, OpenMode.ForRead);
             return GetAltitudeFromBloc(BlocObject);
@@ -134,9 +132,7 @@ namespace SioForgeCAD.Commun
 
         public static double? GetAltitudeFromBloc(DBObject BlocObject)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            var ed = doc.Editor;
+            var db = Generic.GetDatabase();
             TransactionManager tr = db.TransactionManager;
             if (!(BlocObject is BlockReference blkRef))
             {
@@ -151,7 +147,7 @@ namespace SioForgeCAD.Commun
                     bool IsDouble = double.TryParse(Attribute.TextString.Trim(), out double Altimetrie);
                     if (IsDouble)
                     {
-                        ed.WriteMessage($"Cote sélectionnée : {FormatAltitude(Altimetrie)}\n");
+                        Generic.WriteMessage($"Cote sélectionnée : {FormatAltitude(Altimetrie)}");
                         blkRef.RegisterHighlight();
                         return Altimetrie;
                     }
@@ -242,9 +238,8 @@ namespace SioForgeCAD.Commun
 
         private static CotePoints GetBloc(string Message)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var db = doc.Database;
-            var ed = doc.Editor;
+            var db = Generic.GetDatabase();
+            var ed = Generic.GetEditor();
 
             do
             {
@@ -259,13 +254,6 @@ namespace SioForgeCAD.Commun
                         AllowNone = false
                     };
                     PromptBlocSelectionOptions.Keywords.Add(PromptSelectionKeyWordString);
-                    //PromptBlocSelectionOptions.KeywordInput += delegate (object sender, SelectionTextInputEventArgs e)
-                    //{
-                    //    //Need to throw a exception here to exit the selection promt. Its catched to change the selection method to point and loop back
-                    //    throw new Autodesk.AutoCAD.Runtime.Exception(Autodesk.AutoCAD.Runtime.ErrorStatus.OK, e.Input);
-                    //};
-
-
                     Entity SelectedObject;
                     PromptEntityResult PromptBlocSelectionResult;
                     do
@@ -311,7 +299,7 @@ namespace SioForgeCAD.Commun
 
                     if (Altitude == null)
                     {
-                        ed.WriteMessage("Aucune côte détéctée\n");
+                        Generic.WriteMessage("Aucune côte détéctée");
                         tr.Commit();
                         continue;
                     }
@@ -324,13 +312,13 @@ namespace SioForgeCAD.Commun
 
         public static CotePoints GetCotePoints(string Message, Points Origin)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
+            var ed = Generic.GetEditor();
             PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message} [{SelectionPointsType.Bloc}]", SelectionPointsType.Bloc.ToString());
             if (Origin != null)
             {
                 PromptPointOptions.UseBasePoint = true;
                 PromptPointOptions.BasePoint = Origin.SCG.Flatten();
+                PromptPointOptions.UseDashedLine = true;
             }
 
             bool IsLooping;
