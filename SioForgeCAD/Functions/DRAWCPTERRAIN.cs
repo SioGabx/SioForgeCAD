@@ -141,8 +141,7 @@ namespace SioForgeCAD.Functions
 
         public double GetMinimalAltimetrie()
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
+            var ed = Generic.GetEditor();
 
             double CoteMinimal = double.MaxValue;
             foreach (TerrainPoint terrainPoint in TerrainPoints)

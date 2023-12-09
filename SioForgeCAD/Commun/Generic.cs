@@ -19,6 +19,12 @@ namespace SioForgeCAD.Commun
             File.WriteAllBytes(tofile, ressource_bytes);
         }
 
+        public static void WriteMessage(object message)
+        {
+            Editor ed = GetEditor();
+            ed.WriteMessage(message.ToString() + "\n");
+        }
+
         public static string GetExtensionDLLName()
         {
             return Assembly.GetExecutingAssembly().GetName().Name;

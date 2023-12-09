@@ -11,6 +11,12 @@ namespace SioForgeCAD.Commun.Extensions
 {
     static class BlockReferenceExtensions
     {
+        public static bool IsXref(this BlockReference blockRef)
+        {
+            return (blockRef.BlockTableRecord.GetDBObject() as BlockTableRecord).IsFromExternalReference;
+        }
+
+
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
             if (blockRef.IsDynamicBlock)

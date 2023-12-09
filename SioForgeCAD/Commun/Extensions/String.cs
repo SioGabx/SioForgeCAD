@@ -43,7 +43,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             if (OriginalString.Contains("%"))
             {
-                ed.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être converti en côte.");
+                Generic.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être convertis en cote.");
                 return null;
             }
 

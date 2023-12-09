@@ -41,6 +41,14 @@ namespace SioForgeCAD
         {
             new SioForgeCAD.Functions.CCP().Compute();
         }
+
+        [CommandMethod("CCXREF", CommandFlags.Redraw)]
+        public void CCXREF()
+        {
+            Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
+        }
+
+
         [CommandMethod("trianglecc", CommandFlags.UsePickSet)]
         public void Trianglecc()
         {
@@ -66,13 +74,6 @@ namespace SioForgeCAD
         {
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
-
-        [CommandMethod("CCXREF", CommandFlags.Redraw)]
-        public void CCXREF()
-        {
-            Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
-        }
-
 
         [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public void DRAWPERPENDICULARLINEFROMPOINT()
@@ -100,71 +101,70 @@ namespace SioForgeCAD
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        [CommandMethod("Test_transient", CommandFlags.UsePickSet)]
-        public void Test_transient()
+        [CommandMethod("SelectNestedEntity")]
+        public static void SelectNestedEntity_Method()
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-            var db = doc.Database;
+            Database db = HostApplicationServices.WorkingDatabase;
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
 
-            PromptSelectionResult selResult = ed.GetSelection(new PromptSelectionOptions());
-            if (selResult.Status != PromptStatus.OK)
+            try
             {
-                ed.WriteMessage("No selection. Exiting...\n");
-                return;
-            }
+                PromptNestedEntityOptions nestedEntOpt = new PromptNestedEntityOptions("\nPick a nested entity:");
+                PromptNestedEntityResult nestedEntRes = ed.GetNestedEntity(nestedEntOpt);
 
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                SelectionSet selSet = selResult.Value;
-                DBObjectCollection sds = new DBObjectCollection();
-
-                foreach (ObjectId id in selSet.GetObjectIds())
+                if (nestedEntRes.Status == PromptStatus.OK)
                 {
-                    // Open each selected entity for read
-                    DBObject obj = tr.GetObject(id, OpenMode.ForRead);
-                    sds.Add(obj);
+                    using (Transaction tr = db.TransactionManager.StartTransaction())
+                    {
+                        int level = 0;
+                        Entity ent = tr.GetObject(nestedEntRes.ObjectId, OpenMode.ForRead) as Entity;
+                        ed.WriteMessage(string.Format("\nType of the nested entity: {0}", ent.ToString()));
+                        ed.WriteMessage(string.Format("\n#{0} level - block name: {1}", ++level, ent.BlockName));
+                        foreach (ObjectId id in nestedEntRes.GetContainers())
+                        {
+                            BlockReference container = tr.GetObject(id, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.BlockReference;
+                            ed.WriteMessage(string.Format("\n#{0} level - block name: {1}", ++level, container.Name));
+                        }
+
+                        tr.Commit();
+                    }
                 }
-
-                InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(sds, (_) => { return null; });
-                var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Indiquer l'emplacement du bloc pente à ajouter");
-
+            }
+            catch (System.Exception ex)
+            {
+                ed.WriteMessage(ex.ToString());
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         [CommandMethod("debug_random_point")]
         public static void DBG_Random_Point()

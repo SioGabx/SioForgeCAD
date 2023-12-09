@@ -3,13 +3,16 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Documents;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
     public class CotePoints
     {
+        public static CotePoints Null = null;
         public Points Points { get; }
         public double Altitude { get; }
 
@@ -100,7 +103,7 @@ namespace SioForgeCAD.Commun
                 PointDrawingEntityObjectId = PointDrawingEntity.ObjectId;
                 tr.Commit();
             }
-            PromptDoubleOptions PromptDoubleAltitudeOptions = new PromptDoubleOptions("\n" + "Saississez la côte")
+            PromptDoubleOptions PromptDoubleAltitudeOptions = new PromptDoubleOptions("\n" + "Saississez la cote")
             {
                 AllowNegative = false,
                 AllowNone = false
@@ -124,7 +127,6 @@ namespace SioForgeCAD.Commun
         {
             var doc = AcAp.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
-            var ed = doc.Editor;
             TransactionManager tr = db.TransactionManager;
             DBObject BlocObject = tr.GetObject(BlocObjectId, OpenMode.ForRead);
             return GetAltitudeFromBloc(BlocObject);
@@ -141,7 +143,7 @@ namespace SioForgeCAD.Commun
                 return null;
             }
 
-            foreach (Autodesk.AutoCAD.DatabaseServices.ObjectId AttributeObjectId in blkRef.AttributeCollection)
+            foreach (ObjectId AttributeObjectId in blkRef.AttributeCollection)
             {
                 AttributeReference Attribute = (AttributeReference)tr.GetObject(AttributeObjectId, OpenMode.ForRead);
                 if (Attribute.TextString.Contains("."))
@@ -149,7 +151,7 @@ namespace SioForgeCAD.Commun
                     bool IsDouble = double.TryParse(Attribute.TextString.Trim(), out double Altimetrie);
                     if (IsDouble)
                     {
-                        ed.WriteMessage($"Côte séléctionnée : {Altimetrie}\n");
+                        ed.WriteMessage($"Cote sélectionnée : {FormatAltitude(Altimetrie)}\n");
                         blkRef.RegisterHighlight();
                         return Altimetrie;
                     }
@@ -163,6 +165,79 @@ namespace SioForgeCAD.Commun
             }
             return null;
         }
+
+        public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint)
+        {
+            var ed = Generic.GetEditor();
+            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
+            List<ObjectId> XrefObjectId = XrefSelection.XrefObjectId.ToList();
+            if (XrefSelection.PromptStatus != PromptStatus.OK)
+            {
+                return CotePoints.Null;
+            }
+            if (XrefSelection.SelectedObjectId == ObjectId.Null)
+            {
+                return CotePoints.Null;
+            }
+
+            HightLighter.UnhighlightAll();
+            XrefSelection.SelectedObjectId.RegisterHighlight();
+            DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+            BlockReference blkRef = null;
+
+            if (XrefObject is AttributeReference blkChildAttribute)
+            {
+                var DbObj = blkChildAttribute.OwnerId.GetDBObject();
+                blkRef = DbObj as BlockReference;
+            }
+            else if (XrefObject is BlockReference)
+            {
+                blkRef = XrefObject as BlockReference;
+            }
+            else
+            {
+                foreach (ObjectId objId in XrefSelection.XrefObjectId)
+                {
+                    XrefObjectId.Remove(objId);
+                    XrefObject = objId.GetDBObject();
+
+                    if (XrefObject is BlockReference ParentBlkRef)
+                    {
+                        if (!ParentBlkRef.IsXref())
+                        {
+                            blkRef = XrefObject as BlockReference;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (blkRef is null)
+            {
+                return CotePoints.Null;
+            }
+            double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
+            if (Altimetrie == null)
+            {
+                Altimetrie = blkRef.Position.Z;
+                if (Altimetrie == 0)
+                {
+                    return CotePoints.Null;
+                }
+                PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?");
+                options.Keywords.Add("OUI");
+                options.Keywords.Add("NON");
+                options.AllowNone = true;
+                PromptResult result = ed.GetKeywords(options);
+                if (result.Status == PromptStatus.OK && result.StringResult != "OUI")
+                {
+                    return CotePoints.Null;
+                }
+            }
+
+            Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
+            return new CotePoints(BlockPosition, Altimetrie ?? 0);
+        }
+
 
 
         private static CotePoints GetBloc(string Message)
@@ -179,40 +254,68 @@ namespace SioForgeCAD.Commun
                     TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
                     SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
                     string PromptSelectionKeyWordString = SelectionPointsType.Points.ToString().CapitalizeFirstLetters(2);
-                    PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
+                    PromptEntityOptions PromptBlocSelectionOptions = new PromptEntityOptions($"{Message} [{PromptSelectionKeyWordString}]")
                     {
-                        MessageForAdding = $"{Message} [{PromptSelectionKeyWordString}]",
-                        RejectObjectsOnLockedLayers = false,
-                        SingleOnly = true
+                        AllowNone = false
                     };
                     PromptBlocSelectionOptions.Keywords.Add(PromptSelectionKeyWordString);
-                    PromptBlocSelectionOptions.KeywordInput += delegate (object sender, SelectionTextInputEventArgs e)
-                    {
-                        //Need to throw a exception here to exit the selection promt. Its catched to change the selection method to point and loop back
-                        throw new Autodesk.AutoCAD.Runtime.Exception(Autodesk.AutoCAD.Runtime.ErrorStatus.OK, e.Input);
-                    };
+                    //PromptBlocSelectionOptions.KeywordInput += delegate (object sender, SelectionTextInputEventArgs e)
+                    //{
+                    //    //Need to throw a exception here to exit the selection promt. Its catched to change the selection method to point and loop back
+                    //    throw new Autodesk.AutoCAD.Runtime.Exception(Autodesk.AutoCAD.Runtime.ErrorStatus.OK, e.Input);
+                    //};
 
-                    SelectionSet ObjectSelectionSet;
+
+                    Entity SelectedObject;
+                    PromptEntityResult PromptBlocSelectionResult;
                     do
                     {
-                        PromptSelectionResult PromptBlocSelectionResult = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
+                        PromptBlocSelectionResult = ed.GetEntity(PromptBlocSelectionOptions);
+
                         if (PromptBlocSelectionResult.Status == PromptStatus.Cancel)
                         {
                             tr.Commit();
                             return null;
                         }
-                        ObjectSelectionSet = PromptBlocSelectionResult.Value;
+                        if (PromptBlocSelectionResult.Status == PromptStatus.Keyword)
+                        {
+                            tr.Commit();
+                            throw new Autodesk.AutoCAD.Runtime.Exception(Autodesk.AutoCAD.Runtime.ErrorStatus.OK, PromptBlocSelectionResult.StringResult);
+                        }
+                        SelectedObject = PromptBlocSelectionResult.ObjectId.GetEntity();
 
-                    } while (ObjectSelectionSet == null || ObjectSelectionSet.Count != 1);
-                    ObjectId SelectedBlocObjectId = ObjectSelectionSet.GetObjectIds().FirstOrDefault();
+                    } while (!(SelectedObject is BlockReference));
+                    BlockReference blockReference = SelectedObject as BlockReference;
+                    ObjectId SelectedBlocObjectId = blockReference.ObjectId;
                     double? Altitude = GetAltitudeFromBloc(SelectedBlocObjectId);
+                    Points CoteLocation = new Points(blockReference.Position);
+
+                    if (blockReference.IsXref())
+                    {
+                        CotePoints CotePoint = GetBlockInXref(string.Empty, PromptBlocSelectionResult.PickedPoint);
+                        if (CotePoint != CotePoints.Null)
+                        {
+                            var AskKeepXREFCoteValuesOptions = new PromptKeywordOptions($"La cote {FormatAltitude(CotePoint.Altitude)} a été trouvée dans une XREF. Voulez-vous utiliser cette valeur ?");
+                            AskKeepXREFCoteValuesOptions.Keywords.Add("Oui");
+                            AskKeepXREFCoteValuesOptions.Keywords.Add("Non");
+                            AskKeepXREFCoteValuesOptions.Keywords.Default = "Oui";
+                            AskKeepXREFCoteValuesOptions.AllowNone = true;
+                            var AskKeepXREFCoteValues = ed.GetKeywords(AskKeepXREFCoteValuesOptions);
+                            if ((AskKeepXREFCoteValues.Status == PromptStatus.OK && AskKeepXREFCoteValues.StringResult == "Oui") || AskKeepXREFCoteValues.Status == PromptStatus.None)
+                            {
+                                Altitude = CotePoint.Altitude;
+                                CoteLocation = CotePoint.Points;
+                            }
+                        }
+                    }
+
                     if (Altitude == null)
                     {
                         ed.WriteMessage("Aucune côte détéctée\n");
                         tr.Commit();
                         continue;
                     }
-                    Points CoteLocation = new Points((SelectedBlocObjectId.GetEntity() as BlockReference).Position);
+                    
                     tr.Commit();
                     return new CotePoints(CoteLocation, Altitude ?? 0);
                 }

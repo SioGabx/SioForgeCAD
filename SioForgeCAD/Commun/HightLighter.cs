@@ -7,7 +7,7 @@ namespace SioForgeCAD.Commun
 {
     static class HightLighter
     {
-        private static List<Autodesk.AutoCAD.DatabaseServices.ObjectId> HightLightedObject = new List<Autodesk.AutoCAD.DatabaseServices.ObjectId>();
+        private static readonly List<ObjectId> HightLightedObject = new List<ObjectId>();
         public static void RegisterHighlight(this Autodesk.AutoCAD.DatabaseServices.ObjectId ObjectId)
         {
             if (!HightLightedObject.Contains(ObjectId))

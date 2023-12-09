@@ -1,71 +1,82 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Documents;
 
 namespace SioForgeCAD.Commun
 {
     public static class SelectInXref
     {
-        ///<summary>
-        /// Get the child entity of the first xref in the nested selection.
-        ///</summary>
-        ///<returns>ObjectId of the top-level object from the outer xref.</returns>
-        public static (ObjectId XrefObjectId, ObjectId SelectedObjectId) GetFirstXrefChild(this PromptNestedEntityResult res)
+       
+        public static (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) Select(string Message, Point3d? NonInterractivePickedPoint = null)
         {
-            var retId = ObjectId.Null;
-            var selId = res.ObjectId;
-            var conts = res.GetContainers();
-            var db = selId.Database;
-            ObjectId XrefObjectId = ObjectId.Null;
-            // Use an open-close transaction as we're in a utility function
-            using (var tr = db.TransactionManager.StartOpenCloseTransaction())
-            {
-                // Work backwards through the containers, looking for an xref
-                for (int i = conts.Length - 1; i >= 0; i--)
-                {
-                    var br = tr.GetObject(conts[i], OpenMode.ForRead) as BlockReference;
-                    if (br != null)
-                    {
-                        XrefObjectId = conts[i];
-                        var btr = (BlockTableRecord)tr.GetObject(br.BlockTableRecord, OpenMode.ForRead);
-                        // If we have an xref, we'll return the next container or the
-                        // selected entity in the case we're at the innermost container
-                        if (btr.IsFromExternalReference)
-                        {
-                            if (i > 0)
-                            {
-                                retId = conts[i - 1];
-                            }
-                            else
-                            {
-                                retId = selId;
-                            }
-                            break;
-                        }
-                    }
-                }
-                tr.Commit();
-            }
-            return (XrefObjectId, retId);
-        }
-   
-        public static (ObjectId XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) Select(string Message)
-        {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return (ObjectId.Null,ObjectId.Null, PromptStatus.Other);
-            var ed = doc.Editor;
-            // Select an entity within an xref
-           
-            var pner = ed.GetNestedEntity(Message);
-            if (pner.Status != PromptStatus.OK)
-            {
-                return (ObjectId.Null,ObjectId.Null, PromptStatus.Cancel);
-            }
+            Editor ed = Generic.GetEditor();
 
-            // Get the ID of the entity that we want to select in the xref
-            // (this is the first entity contained by an xref)
-            (ObjectId XrefObjectId, ObjectId SelectedObjectId) selId = pner.GetFirstXrefChild();
-            return (selId.XrefObjectId, selId.SelectedObjectId, pner.Status);
+            PromptNestedEntityOptions nestedEntOpt = new PromptNestedEntityOptions(Message);
+            if (NonInterractivePickedPoint != null)
+            {
+                nestedEntOpt.NonInteractivePickPoint = NonInterractivePickedPoint ?? Point3d.Origin;
+                nestedEntOpt.UseNonInteractivePickPoint = true;
+            }
+            PromptNestedEntityResult nestedEntRes = ed.GetNestedEntity(nestedEntOpt);
+            if (nestedEntRes.Status != PromptStatus.OK)
+            {
+                return (new ObjectId[0], ObjectId.Null, nestedEntRes.Status);
+            }
+            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId) = nestedEntRes.GetEntityInChildXref();
+            return (XrefObjectId, SelectedObjectId, nestedEntRes.Status);
         }
+
+        public static (ObjectId[] XrefObjectId, ObjectId SelectedObjectId) GetEntityInChildXref(this PromptNestedEntityResult res)
+        {
+            return (res.GetContainers(), res.ObjectId);
+        }
+
+        public static string GetEntityPathInChildXref(this PromptNestedEntityResult res)
+        {
+            Database db = HostApplicationServices.WorkingDatabase;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<string> Path = new List<string>();
+                foreach (ObjectId id in res.GetContainers().Reverse())
+                {
+                    BlockReference container = tr.GetObject(id, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.BlockReference;
+
+                    Path.Add(container.Name);
+                }
+                tr.Commit(); 
+                return string.Join(">", Path);
+            }
+            
+        }
+
+
+
+        public static Points TransformPointInXrefsToCurrent(Point3d XrefPosition, IEnumerable<ObjectId> NestedXrefsContainer)
+        {
+            Point3d BlkPosition = XrefPosition;
+            foreach (ObjectId objectId in NestedXrefsContainer)
+            {
+                BlkPosition = Points.From3DPoint(BlockReferenceExtensions.ProjectPointToCurrentSpace(objectId, BlkPosition)).SCG;
+            }
+            return BlkPosition.ToPoints();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

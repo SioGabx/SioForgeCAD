@@ -37,6 +37,7 @@ namespace SioForgeCAD.Commun
             double I_cote = First.Altitude;
 
             double pente = Math.Round((AB_cote_dif / AB_dist_total) * 100.00, 2);
+           
             if (First.Altitude > Second.Altitude)
             {
                 I_cote -= I_dif_to_add_sus;
@@ -46,6 +47,16 @@ namespace SioForgeCAD.Commun
                 I_cote += I_dif_to_add_sus;
             }
             I_cote = Math.Round(I_cote, 2);
+            
+            if (double.IsNaN(I_cote))
+            {
+                I_cote = 0;
+            }
+            if (double.IsNaN(pente))
+            {
+                pente = 0;
+            }
+
             return (I_cote, pente);
         }
 

@@ -106,7 +106,6 @@
   <ItemGroup>
     <Compile Include="Commands.cs" />
     <Compile Include="Commun\Arythmetique.cs" />
-    <Compile Include="Commun\Camera.cs" />
     <Compile Include="Commun\CotationElements.cs" />
     <Compile Include="Commun\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
@@ -131,6 +130,8 @@
     <Compile Include="Forms\InputDialogBox.Designer.cs">
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Functions\CCA.cs" />
+    <Compile Include="Functions\CCD.cs" />
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />
@@ -190,6 +191,6 @@
   </Target>
   -->
   <PropertyGroup>
-   <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-</PropertyGroup>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+  </PropertyGroup>
 </Project>
