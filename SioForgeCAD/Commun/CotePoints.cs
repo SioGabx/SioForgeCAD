@@ -5,7 +5,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Documents;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -303,7 +302,7 @@ namespace SioForgeCAD.Commun
                         tr.Commit();
                         continue;
                     }
-                    
+
                     tr.Commit();
                     return new CotePoints(CoteLocation, Altitude ?? 0);
                 }

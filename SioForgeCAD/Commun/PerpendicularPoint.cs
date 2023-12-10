@@ -36,8 +36,8 @@ namespace SioForgeCAD.Commun
         }
 
 
-      
-       
+
+
 
 
         public static List<Line> GetListOfPerpendicularLinesFromPoint(Points BasePoint, Polyline TargetPolyline, bool CheckForSegmentIntersections = true)
@@ -85,7 +85,7 @@ namespace SioForgeCAD.Commun
             return false;
         }
 
-    
+
 
     }
 }

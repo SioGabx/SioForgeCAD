@@ -1,17 +1,11 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
-using SioForgeCAD.Functions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -40,8 +34,13 @@ namespace SioForgeCAD
         public void CCP()
         {
             new SioForgeCAD.Functions.CCP().Compute();
-        } 
-        
+        }
+        [CommandMethod("CCD")]
+        public void CCD()
+        {
+            new SioForgeCAD.Functions.CCD().Compute();
+        }
+
         [CommandMethod("CCA")]
         public void CCA()
         {

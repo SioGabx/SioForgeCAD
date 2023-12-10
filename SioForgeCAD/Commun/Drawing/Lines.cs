@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -14,6 +13,11 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 return Line.Length;
             }
+        }
+
+        public static double GetLength(Points PointA, Points PointB)
+        {
+            return GetLength(PointA.SCG, PointB.SCG);
         }
 
 

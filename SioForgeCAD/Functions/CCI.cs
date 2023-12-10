@@ -1,6 +1,10 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Generic;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -27,13 +31,11 @@ namespace SioForgeCAD.Functions
                 do
                 {
                     DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
-
+                    ents.Insert(0, Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points));
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         HightLighter.UnhighlightAll();
-
-                        InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
-
+                        CCIInsertionTransientPoints insertionTransientPoints = new CCIInsertionTransientPoints(ents, ComputeValue);
                         Generic.WriteMessage($"Pente : {ComputeValue(FirstPointCote.Points)["PENTE"]}");
                         string[] KeyWords;
                         if (!isMultipleIndermediairePlacement)
@@ -44,7 +46,7 @@ namespace SioForgeCAD.Functions
                         {
                             KeyWords = new string[] { };
                         }
-                        var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("\nIndiquez les emplacements des points cote", KeyWords);
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("\nIndiquez les emplacements des points cote", Points.Null, KeyWords);
                         Points Indermediaire = InsertionTransientPointsValues.Point;
                         PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                         PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
@@ -83,4 +85,43 @@ namespace SioForgeCAD.Functions
             };
         }
     }
+
+
+    internal class CCIInsertionTransientPoints : InsertionTransientPoints
+    {
+        public CCIInsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
+
+        public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+        {
+            foreach (var ent in Drawable)
+            {
+                if (ent is Polyline polyline)
+                {
+                    polyline.SetPointAt(1, moveToPt.ToPoint2d());
+                }
+            }
+            base.UpdateTransGraphics(curPt, moveToPt);
+        }
+
+        public override int GetTransGraphicsColor(Entity Drawable)
+        {
+            if (Drawable is Polyline)
+            {
+                return Settings.TransientSecondaryColorIndex;
+            }
+            return base.GetTransGraphicsColor(Drawable);
+        }
+
+
+        public override void TransformEntities(Entity entity, Matrix3d mat)
+        {
+            if (entity is Polyline)
+            {
+                return;
+            }
+            base.TransformEntities(entity, mat);
+        }
+
+    }
+
 }

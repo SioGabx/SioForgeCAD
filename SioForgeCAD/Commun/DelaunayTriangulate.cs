@@ -1,9 +1,8 @@
-﻿using System;
-using Autodesk.AutoCAD.ApplicationServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using System;
 
 namespace SioForgeCAD.Commun
 {
@@ -89,7 +88,7 @@ namespace SioForgeCAD.Commun
                 return;
             }
             int PtsIndex, j, k, numberOfTriangles, numberOfEdges, thinTriangleFoundCount = 0, IgnoredPointWithSameCoordinatesCount = 0;
-            
+
             // Point coordinates
             double[] xCoordinates = new double[numberOfPoints + 3];
             double[] yCoordinates = new double[numberOfPoints + 3];
@@ -117,7 +116,8 @@ namespace SioForgeCAD.Commun
                     xCoordinates[PtsIndex] = PointElement.Position[0];
                     yCoordinates[PtsIndex] = PointElement.Position[1];
                     zCoordinates[PtsIndex] = PointElement.Position[2];
-                    for (j = 0; j < PtsIndex; j++) { 
+                    for (j = 0; j < PtsIndex; j++)
+                    {
                         if ((xCoordinates[PtsIndex] == xCoordinates[j]) && (yCoordinates[PtsIndex] == yCoordinates[j]))
                         {
                             PtsIndex--; numberOfPoints--; IgnoredPointWithSameCoordinatesCount++;
@@ -197,15 +197,18 @@ namespace SioForgeCAD.Commun
                     j++;
                 }
 
-                for (j = 0; j < numberOfEdges - 1; j++) { 
-                    for (k = j + 1; k < numberOfEdges; k++) { 
+                for (j = 0; j < numberOfEdges - 1; j++)
+                {
+                    for (k = j + 1; k < numberOfEdges; k++)
+                    {
                         if ((edge1[j] == edge2[k]) && (edge2[j] == edge1[k]))
                         {
                             edge1[j] = -1; edge2[j] = -1; edge1[k] = -1; edge2[k] = -1;
                         }
                     }
                 }
-                for (j = 0; j < numberOfEdges; j++) { 
+                for (j = 0; j < numberOfEdges; j++)
+                {
                     if ((edge1[j] >= 0) && (edge2[j] >= 0))
                     {
                         vertexPoint1[numberOfTriangles] = edge1[j]; vertexPoint2[numberOfTriangles] = edge2[j]; vertexPoint3[numberOfTriangles] = PtsIndex;

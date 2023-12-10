@@ -1,14 +1,8 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using System.Collections;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections.Generic;
-using System.Windows.Documents;
+using System.Linq;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.MacroRecorder;
-using System;
-using System.IO;
-using System.Reflection;
 
 namespace SioForgeCAD.Commun
 {
@@ -28,7 +22,12 @@ namespace SioForgeCAD.Commun
             return ObjectEntity;
         }
 
-        public static DBObjectCollection ToDBObjectCollection(this List<Entity> entities)
+        public static DBObjectCollection ToDBObjectCollection(this IEnumerable<Entity> entities)
+        {
+            return entities.Cast<DBObject>().ToDBObjectCollection();
+        }
+
+        public static DBObjectCollection ToDBObjectCollection(this IEnumerable<DBObject> entities)
         {
             var NewDBObjectCollection = new DBObjectCollection();
             foreach (var entity in entities)
@@ -37,6 +36,17 @@ namespace SioForgeCAD.Commun
             }
             return NewDBObjectCollection;
         }
+
+        public static List<DBObject> ToList(this DBObjectCollection entities)
+        {
+            List<DBObject> list = new List<DBObject>();
+            foreach (var ent in entities)
+            {
+                list.Add(ent as DBObject);
+            }
+            return list;
+        }
+
         public static void EraseObject(this ObjectId ObjectToErase)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;

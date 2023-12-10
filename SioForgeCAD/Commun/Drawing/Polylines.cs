@@ -1,9 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -41,7 +39,10 @@ namespace SioForgeCAD.Commun.Drawing
             }
             return polyline;
         }
-
+        public static Polyline GetPolylineFromPoints(params Points[] listOfPoints)
+        {
+            return GetPolylineFromPoints(listOfPoints as IEnumerable<Points>);
+        }
         private static bool CheckPointSide(Polyline BasePolyline, Point3d TargetPoint)
         {
             for (int segmentIndex = 0; segmentIndex < BasePolyline.NumberOfVertices - 1; segmentIndex++)

@@ -1,14 +1,13 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using System.Linq;
-using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
-using System.Windows.Forms;
-using System.Diagnostics;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
+using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
@@ -22,7 +21,7 @@ namespace SioForgeCAD.Functions
 
             ObjectId[] SelectedBlocObjectIdArray;
             var ActualSelection = ed.SelectImplied().Value;
-            
+
             if (ActualSelection != null && ActualSelection.Count > 1)
             {
                 var ListOfUniqueBlockName = new List<string>();
@@ -49,7 +48,7 @@ namespace SioForgeCAD.Functions
             }
             if (ActualSelection == null || ActualSelection.Count <= 0)
             {
-               PromptEntityOptions options = new PromptEntityOptions("Sélectionnez un bloc à renommer : ");
+                PromptEntityOptions options = new PromptEntityOptions("Sélectionnez un bloc à renommer : ");
                 PromptEntityResult selectionResult = ed.GetEntity(options);
                 if (selectionResult.Status != PromptStatus.OK)
                 {
@@ -112,7 +111,7 @@ namespace SioForgeCAD.Functions
 
                     ed.SetImpliedSelection(new ObjectId[0]);
                     ed.SetImpliedSelection(SelectedBlocObjectIdArray.ToArray());
-                    tr.Commit(); 
+                    tr.Commit();
                 }
             }
         }

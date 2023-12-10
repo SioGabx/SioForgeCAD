@@ -6,7 +6,8 @@
         public static string BlocNameAltimetrieCoupes = "_APUd_CP_Altimetries";
         public static string BlocNamePente = "_APUd_COTATIONS_Pentes";
 
-        public static int TransientColorIndex = 252;
+        public static int TransientPrimaryColorIndex { get; } = 252;
+        public static int TransientSecondaryColorIndex { get; } = 255;
 
     }
 }

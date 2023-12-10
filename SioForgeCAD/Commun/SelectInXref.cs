@@ -1,17 +1,15 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Documents;
 
 namespace SioForgeCAD.Commun
 {
     public static class SelectInXref
     {
-       
+
         public static (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) Select(string Message, Point3d? NonInterractivePickedPoint = null)
         {
             Editor ed = Generic.GetEditor();
@@ -48,10 +46,10 @@ namespace SioForgeCAD.Commun
 
                     Path.Add(container.Name);
                 }
-                tr.Commit(); 
+                tr.Commit();
                 return string.Join(">", Path);
             }
-            
+
         }
 
 

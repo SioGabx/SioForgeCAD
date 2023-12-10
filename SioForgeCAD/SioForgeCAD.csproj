@@ -109,6 +109,7 @@
     <Compile Include="Commun\CotationElements.cs" />
     <Compile Include="Commun\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
+    <Compile Include="Commun\Drawing\Colors.cs" />
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />

@@ -6,7 +6,8 @@ namespace SioForgeCAD.Commun
 {
     public class Points
     {
-        public static Points Empty { get; set; } = new Points(new Point3d(0, 0, 0));
+        public static Points Empty { get; } = new Points(new Point3d(0, 0, 0));
+        public const Points Null = null;
         public Point3d SCG { get; }
         public Point3d SCU
         {

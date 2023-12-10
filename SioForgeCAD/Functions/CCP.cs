@@ -33,7 +33,7 @@ namespace SioForgeCAD.Functions
                 {
                     HightLighter.UnhighlightAll();
                     InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, (_) => { return null; });
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Indiquer l'emplacement du bloc pente à ajouter");
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
                     Points Indermediaire = InsertionTransientPointsValues.Point;
                     PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                     PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
@@ -89,7 +89,7 @@ namespace SioForgeCAD.Functions
             Point3d SecondPointCoteLocation = SecondPointCote.Points.SCG.Flatten();
             if (FirstPointCote.Altitude > SecondPointCote.Altitude)
             {
-                StartPoint = FirstPointCoteLocation; 
+                StartPoint = FirstPointCoteLocation;
                 EndPoint = SecondPointCoteLocation;
             }
             else

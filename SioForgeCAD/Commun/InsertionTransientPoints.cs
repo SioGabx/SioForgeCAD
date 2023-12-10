@@ -15,18 +15,22 @@ namespace SioForgeCAD.Commun
         private DBObjectCollection Entities { get; set; }
         public List<Drawable> Drawable { get; }
 
-        public DBObjectCollection SetEntities {
-            set {
+        public DBObjectCollection SetEntities
+        {
+            set
+            {
                 ClearTransGraphics();
                 Entities = value;
                 CreateTransGraphics();
-            } 
-        }  
+            }
+        }
 
-        public DBObjectCollection GetEntities {
-            get {
+        public DBObjectCollection GetEntities
+        {
+            get
+            {
                 return Entities ?? new DBObjectCollection();
-            } 
+            }
         }
 
         public InsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction)
@@ -36,7 +40,7 @@ namespace SioForgeCAD.Commun
             this.Drawable = new List<Drawable>();
         }
 
-        public (Points Point, PromptPointResult PromptPointResult) GetInsertionPoint(string Message, params string[] KeyWords)
+        public (Points Point, PromptPointResult PromptPointResult) GetInsertionPoint(string Message, Points OriginPoint, params string[] KeyWords)
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
@@ -57,9 +61,16 @@ namespace SioForgeCAD.Commun
             PromptPointOptions pointOptions = new PromptPointOptions(Message);
             foreach (string KeyWord in KeyWords)
             {
+                if (string.IsNullOrWhiteSpace(KeyWord)) { continue; }
                 pointOptions.Keywords.Add(KeyWord);
                 pointOptions.AppendKeywordsToMessage = true;
                 pointOptions.AllowArbitraryInput = true;
+            }
+
+            if (OriginPoint != Points.Null)
+            {
+                pointOptions.UseBasePoint = true;
+                pointOptions.BasePoint = OriginPoint.SCU;
             }
             PromptPointResult InsertionPromptPointResult = ed.GetPoint(pointOptions);
             ed.PointMonitor -= handler;
@@ -82,7 +93,6 @@ namespace SioForgeCAD.Commun
             var ed = doc.Editor;
             var db = doc.Database;
 
-            Matrix3d mat = Matrix3d.Displacement(curPt.GetVectorTo(moveToPt));
             Dictionary<string, string> Values = UpdateFunction(new Points(moveToPt));
             for (int i = 0; i < Drawable.Count; i++)
             {
@@ -103,7 +113,7 @@ namespace SioForgeCAD.Commun
                             if (attId is AttributeReference AttributeElement)
                             {
                                 string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
-                                AttributeElement.ColorIndex = Settings.TransientColorIndex;
+                                AttributeElement.ColorIndex = GetTransGraphicsColor(AttributeElement);
                                 if (Values != null && Values.ContainsKey(AttributeDefinitionName))
                                 {
                                     if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
@@ -116,9 +126,16 @@ namespace SioForgeCAD.Commun
                         tr.Commit();
                     }
                 }
-                e.TransformBy(mat);
+
+                Matrix3d mat = Matrix3d.Displacement(curPt.GetVectorTo(moveToPt));
+                TransformEntities(e, mat);
                 RedrawTransEntities(Drawable[i]);
             }
+        }
+
+        public virtual void TransformEntities(Entity entity, Matrix3d mat)
+        {
+            entity.TransformBy(mat);
         }
 
         public void RedrawTransEntities(Drawable entity)
@@ -151,12 +168,22 @@ namespace SioForgeCAD.Commun
             }
             foreach (Entity drawable in Entities)
             {
-                Entity drawableClone = drawable.Clone() as Entity;
-                drawableClone.ColorIndex = Settings.TransientColorIndex;
-                Drawable.Add(drawableClone);
-                TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128, new IntegerCollection());
+                CreateTransGraphicsEntity(drawable);
             }
         }
 
+        public virtual int GetTransGraphicsColor(Entity Drawable)
+        {
+            return Settings.TransientPrimaryColorIndex;
+        }
+
+        public Entity CreateTransGraphicsEntity(Entity EntityToMakeDrawable)
+        {
+            Entity drawableClone = EntityToMakeDrawable.Clone() as Entity;
+            drawableClone.ColorIndex = GetTransGraphicsColor(drawableClone);
+            TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128, new IntegerCollection());
+            Drawable.Add(drawableClone);
+            return drawableClone;
+        }
     }
 }

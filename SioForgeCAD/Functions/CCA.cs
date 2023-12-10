@@ -1,14 +1,7 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -53,7 +46,7 @@ namespace SioForgeCAD.Functions
                     HightLighter.UnhighlightAll();
                     InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
                     string KeyWord = $"[{Altitude - StepValue}+{StepValue}]";
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint($"\nIndiquez l'emplacements du point cote", KeyWord);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint($"\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

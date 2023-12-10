@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
@@ -7,9 +6,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
@@ -71,7 +68,7 @@ namespace SioForgeCAD.Functions
                 this.TerrainBaseAltimetrie = GetMinimalAltimetrie();
 
                 DrawCPTerrainInsertionTransientPoints insertionTransientPoints = new DrawCPTerrainInsertionTransientPoints(GetTerrain, TerrainBasePolyline);
-                var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe");
+                var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe", Points.Null);
                 if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
                 {
                     List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);
