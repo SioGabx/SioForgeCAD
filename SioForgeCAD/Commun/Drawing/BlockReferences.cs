@@ -11,7 +11,7 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class BlockReferences
     {
-        public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection)
+        public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection, Points Origin)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -27,8 +27,12 @@ namespace SioForgeCAD.Commun.Drawing
                 BlockTableRecord btr = new BlockTableRecord
                 {
                     Name = BlockName,
-                    Comments = Description
+                    Comments = Description,
                 };
+                if (Origin != Points.Null)
+                {
+                    btr.Origin = Origin.SCG;
+                }
                 // Add the new block to the block table
                 ObjectId btrId = bt.Add(btr);
                 tr.AddNewlyCreatedDBObject(btr, true);

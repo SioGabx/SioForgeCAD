@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun.Drawing
                     GroupName = $"{Name}_{DuplicateNameIndex}";
                 }
 
-                ObjectId grpId = gd.SetAt(Name, grp);
+                ObjectId grpId = gd.SetAt(GroupName, grp);
                 tr.AddNewlyCreatedDBObject(grp, true);
                 grp.InsertAt(0, EntitiesObjectIdCollection);
                 tr.Commit();

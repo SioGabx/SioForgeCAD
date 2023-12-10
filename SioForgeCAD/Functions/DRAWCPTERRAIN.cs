@@ -79,6 +79,7 @@ namespace SioForgeCAD.Functions
                         ent.Dispose();
                     }
                     Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
+
                 }
                 HightLighter.UnhighlightAll(SelectedCoteBloc);
                 trans.Commit();
