@@ -103,6 +103,12 @@ namespace SioForgeCAD
         {
             Functions.DROPCPOBJECTTOTERRAIN.Project();
         }
+        
+        [CommandMethod("FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
+        public static void FORCELAYERCOLORTOENTITY()
+        {
+            Functions.FORCELAYERCOLORTOENTITY.Convert();
+        }
 
 
 

@@ -27,7 +27,13 @@ namespace SioForgeCAD.Functions
                 MessageForAdding = "Selectionnez les entités à projeter sur le terrain via le UCS courrant"
             };
 
-            var AllSelectedObjectIds = ed.GetSelection(PromptSelectEntitiesOptions).Value.GetObjectIds();
+            var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
+
+            if (AllSelectedObject.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
 
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {

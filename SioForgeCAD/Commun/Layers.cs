@@ -21,8 +21,12 @@ namespace SioForgeCAD.Commun
             return (layerRecord != null && layerRecord.IsLocked);
         }
 
-        public static ObjectId GetLayerIdByName(Database db, string layerName)
+        public static ObjectId GetLayerIdByName(string layerName, Database db = null)
         {
+            if (db == null)
+            {
+                db = Generic.GetDatabase();
+            }
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
                 LayerTable layerTable = trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
@@ -37,5 +41,13 @@ namespace SioForgeCAD.Commun
                 return ObjectId.Null;
             }
         }
+
+        public static Autodesk.AutoCAD.Colors.Color GetLayerColor(ObjectId LayerTableRecordObjId)
+        {
+            LayerTableRecord layerTableRecord = LayerTableRecordObjId.GetDBObject() as LayerTableRecord;
+            return layerTableRecord.Color;
+        }
+
+
     }
 }
