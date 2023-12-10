@@ -28,7 +28,7 @@ namespace SioForgeCAD.Functions
                 ObjectId Line = Commun.Drawing.Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
 
                 var Values = ComputeValue();
-                DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNamePente, Values);
+                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNamePente, Values);
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
@@ -42,7 +42,7 @@ namespace SioForgeCAD.Functions
                     if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                     {
                         Generic.WriteMessage($"Pente : {Values["PENTE"]}");
-                        CotationElements.InsertBlocFromBlocName(Settings.BlocNamePente, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), Values);
+                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), Values);
                     }
                 }
             }

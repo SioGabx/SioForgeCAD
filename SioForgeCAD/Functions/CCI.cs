@@ -30,7 +30,7 @@ namespace SioForgeCAD.Functions
                 bool isMultipleIndermediairePlacement = false;
                 do
                 {
-                    DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
+                    DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
                     ents.Insert(0, Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points));
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
@@ -53,7 +53,7 @@ namespace SioForgeCAD.Functions
 
                         if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                         {
-                            CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(Indermediaire));
+                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(Indermediaire));
                         }
                         else if (IndermediairePromptPointResultStatus == PromptStatus.Keyword)
                         {

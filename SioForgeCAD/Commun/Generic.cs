@@ -11,11 +11,11 @@ namespace SioForgeCAD.Commun
 {
     public static class Generic
     {
-        public static void ReadResource(string name, string tofile)
+        public static void ReadWriteToFileResource(string name, string ToFilePath)
         {
             // Determine path
             byte[] ressource_bytes = Properties.Resources.ResourceManager.GetObject(name) as byte[];
-            File.WriteAllBytes(tofile, ressource_bytes);
+            File.WriteAllBytes(ToFilePath, ressource_bytes);
         }
 
         public static void WriteMessage(object message)

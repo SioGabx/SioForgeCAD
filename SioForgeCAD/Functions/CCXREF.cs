@@ -33,7 +33,7 @@ namespace SioForgeCAD.Functions
                     }
                     else
                     {
-                        CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
+                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
                     }
 
                     tr.Commit();

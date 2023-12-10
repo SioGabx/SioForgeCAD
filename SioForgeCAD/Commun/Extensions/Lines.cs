@@ -22,6 +22,10 @@ namespace SioForgeCAD.Commun.Extensions
                     SingleOnly = true,
                 };
                 PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions);
+                if (polyResult.Status == PromptStatus.Error)
+                {
+                    continue;
+                }
                 if (polyResult.Status != PromptStatus.OK)
                 {
                     return null;

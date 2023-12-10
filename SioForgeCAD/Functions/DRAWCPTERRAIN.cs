@@ -72,11 +72,13 @@ namespace SioForgeCAD.Functions
                 if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
                 {
                     List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);
+                    ObjectIdCollection EntitiesObjectIdCollection = new ObjectIdCollection();
                     foreach (Entity ent in Terrain)
                     {
-                        ent.AddToDrawing();
+                        EntitiesObjectIdCollection.Add(ent.AddToDrawing());
                         ent.Dispose();
                     }
+                    Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
                 }
                 HightLighter.UnhighlightAll(SelectedCoteBloc);
                 trans.Commit();
@@ -189,7 +191,7 @@ namespace SioForgeCAD.Functions
                 string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
                 Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
 
-                var CotationBlockRefObjectId = CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
+                var CotationBlockRefObjectId = Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
                 TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
                 CotationBlockRefObjectId.EraseObject();
             }
@@ -225,6 +227,11 @@ namespace SioForgeCAD.Functions
 
         private bool CheckIfRedrawIsNeeded(Point3d LastPoint, Point3d NewPoint)
         {
+            if (LastPoint == NewPoint)
+            {
+                //first draw
+                return true;
+            }
             //Redraw only if Inversed changed;
             bool IsLastPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, LastPoint);
             bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);

@@ -93,9 +93,9 @@ namespace SioForgeCAD.Functions
                                 ed.WriteMessage("Impossible de definir le block avec un nom vide.\n");
                                 continue;
                             }
-                            // ouvrir la défintion du bloc en écriture
                             BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[blockname], OpenMode.ForWrite);
-                            // changer le nom du bloc
+
+                            NewName = SymbolUtilityServices.RepairSymbolName(NewName, false);
                             try
                             {
                                 btr.Name = NewName;

@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                DBObjectCollection ents = CotationElements.InitBlocForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
+                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
@@ -55,7 +55,7 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                         return;
                     }
-                    CotationElements.InsertBlocFromBlocName(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(NewPointLocation));
+                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(NewPointLocation));
                     tr.Commit();
                 }
             }
