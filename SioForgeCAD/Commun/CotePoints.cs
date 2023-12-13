@@ -255,7 +255,8 @@ namespace SioForgeCAD.Commun
                     string PromptSelectionKeyWordString = SelectionPointsType.Points.ToString().CapitalizeFirstLetters(2);
                     PromptEntityOptions PromptBlocSelectionOptions = new PromptEntityOptions($"{Message} [{PromptSelectionKeyWordString}]")
                     {
-                        AllowNone = false
+                        AllowNone = false,
+                        AllowObjectOnLockedLayer = true,
                     };
                     PromptBlocSelectionOptions.Keywords.Add(PromptSelectionKeyWordString);
                     Entity SelectedObject;
