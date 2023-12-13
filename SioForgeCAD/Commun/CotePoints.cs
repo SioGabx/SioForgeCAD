@@ -233,7 +233,7 @@ namespace SioForgeCAD.Commun
                     }
                 }
 
-                
+
                 return new CotePoints(BlockPosition, Altimetrie ?? 0);
             }
         }

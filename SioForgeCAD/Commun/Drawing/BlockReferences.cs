@@ -1,11 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using System.Collections.Generic;
-using Autodesk.AutoCAD.ApplicationServices;
 using System.Linq;
-
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -48,7 +43,6 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-
         public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null)
         {
             Database db = Generic.GetDatabase();
@@ -63,7 +57,7 @@ namespace SioForgeCAD.Commun.Drawing
                 //Also open modelspace - we'll be adding our BlockReference to it
                 BlockTableRecord ms = bt[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
                 //Create new BlockReference, and link it to our block definition
-                using(BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
+                using (BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
                 {
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;
@@ -71,13 +65,12 @@ namespace SioForgeCAD.Commun.Drawing
                     tr.AddNewlyCreatedDBObject(blockRef, true);
 
                     if (AttributesValues != null)
-                    {                        
+                    {
                         //Settings legacy block attributes
                         foreach (ObjectId id in blockDef)
                         {
                             DBObject obj = id.GetObject(OpenMode.ForRead);
                             AttributeDefinition attDef = obj as AttributeDefinition;
-
                             if ((attDef != null) && (!attDef.Constant))
                             {
                                 string PropertyName = attDef.Tag.ToUpperInvariant();
@@ -228,11 +221,5 @@ namespace SioForgeCAD.Commun.Drawing
             }
             return null;
         }
-
-
-
-
-
-
     }
 }

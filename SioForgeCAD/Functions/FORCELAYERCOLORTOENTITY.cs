@@ -1,11 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
-using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
@@ -38,7 +34,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         public static void ForceColor(ObjectId SelectedObjects)
         {
             Entity SelectedEntity = SelectedObjects.GetEntity(OpenMode.ForWrite);
@@ -57,6 +52,5 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
     }
 }

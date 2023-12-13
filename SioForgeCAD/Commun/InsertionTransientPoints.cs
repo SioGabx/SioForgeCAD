@@ -87,7 +87,7 @@ namespace SioForgeCAD.Commun
         }
 
 
-        virtual public void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+        public virtual void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
