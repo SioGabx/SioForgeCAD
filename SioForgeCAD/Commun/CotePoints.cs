@@ -101,7 +101,7 @@ namespace SioForgeCAD.Commun
                 PointDrawingEntityObjectId = PointDrawingEntity.ObjectId;
                 tr.Commit();
             }
-            PromptDoubleOptions PromptDoubleAltitudeOptions = new PromptDoubleOptions("\n" + "Saississez la cote")
+            PromptDoubleOptions PromptDoubleAltitudeOptions = new PromptDoubleOptions("Saississez la cote\n")
             {
                 AllowNegative = false,
                 AllowNone = false
@@ -222,7 +222,7 @@ namespace SioForgeCAD.Commun
                     {
                         return new CotePoints(BlockPosition, 0);
                     }
-                    PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?");
+                    PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?\n");
                     options.Keywords.Add("OUI");
                     options.Keywords.Add("NON");
                     options.AllowNone = true;
@@ -290,7 +290,7 @@ namespace SioForgeCAD.Commun
                         bool IsAltimetrieDefined = (CotePoint?.Altitude ?? 0) != 0;
                         if (IsCotePointNotNull && IsAltimetrieDefined)
                         {
-                            var AskKeepXREFCoteValuesOptions = new PromptKeywordOptions($"La cote {FormatAltitude(CotePoint.Altitude)} a été trouvée dans une XREF. Voulez-vous utiliser cette valeur ?");
+                            var AskKeepXREFCoteValuesOptions = new PromptKeywordOptions($"La cote {FormatAltitude(CotePoint.Altitude)} a été trouvée dans une XREF. Voulez-vous utiliser cette valeur ?\n");
                             AskKeepXREFCoteValuesOptions.Keywords.Add("Oui");
                             AskKeepXREFCoteValuesOptions.Keywords.Add("Non");
                             AskKeepXREFCoteValuesOptions.Keywords.Default = "Oui";
@@ -320,12 +320,13 @@ namespace SioForgeCAD.Commun
         public static CotePoints GetCotePoints(string Message, Points Origin)
         {
             var ed = Generic.GetEditor();
-            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message} [{SelectionPointsType.Bloc}]", SelectionPointsType.Bloc.ToString());
+            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message}\n", SelectionPointsType.Bloc.ToString());
             if (Origin != null)
             {
                 PromptPointOptions.UseBasePoint = true;
                 PromptPointOptions.BasePoint = Origin.SCG.Flatten();
                 PromptPointOptions.UseDashedLine = true;
+                PromptPointOptions.AppendKeywordsToMessage = true;
             }
 
             bool IsLooping;
