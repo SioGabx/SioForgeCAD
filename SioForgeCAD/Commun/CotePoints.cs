@@ -51,13 +51,13 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static string FormatAltitude(double? Altitude)
+        public static string FormatAltitude(double? Altitude, int NumberOfDecimal = 2)
         {
             if (Altitude == null)
             {
                 Altitude = 0;
             }
-            return Altitude?.ToString("#.00");
+            return Altitude?.ToString($"#.{new string('0', NumberOfDecimal)}");
         }
 
         private static void SaveSelectionPointsType(SelectionPointsType SelectionPointsType)
@@ -163,74 +163,79 @@ namespace SioForgeCAD.Commun
 
         public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint)
         {
-            var ed = Generic.GetEditor();
-            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
-            List<ObjectId> XrefObjectId = XrefSelection.XrefObjectId.ToList();
-            if (XrefSelection.PromptStatus != PromptStatus.OK)
+            while (true)
             {
-                return CotePoints.Null;
-            }
-            if (XrefSelection.SelectedObjectId == ObjectId.Null)
-            {
-                return CotePoints.Null;
-            }
-
-            HightLighter.UnhighlightAll();
-            XrefSelection.SelectedObjectId.RegisterHighlight();
-            DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
-            BlockReference blkRef = null;
-
-            if (XrefObject is AttributeReference blkChildAttribute)
-            {
-                var DbObj = blkChildAttribute.OwnerId.GetDBObject();
-                blkRef = DbObj as BlockReference;
-            }
-            else if (XrefObject is BlockReference)
-            {
-                blkRef = XrefObject as BlockReference;
-            }
-            else
-            {
-                foreach (ObjectId objId in XrefSelection.XrefObjectId)
+                var ed = Generic.GetEditor();
+                (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
+                List<ObjectId> XrefObjectId = XrefSelection.XrefObjectId.ToList();
+                if (XrefSelection.PromptStatus != PromptStatus.OK)
                 {
-                    XrefObjectId.Remove(objId);
-                    XrefObject = objId.GetDBObject();
+                    return CotePoints.Null;
+                }
+                if (XrefSelection.SelectedObjectId == ObjectId.Null)
+                {
+                    return CotePoints.Null;
+                }
 
-                    if (XrefObject is BlockReference ParentBlkRef)
+                HightLighter.UnhighlightAll();
+                XrefSelection.SelectedObjectId.RegisterHighlight();
+                DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+                BlockReference blkRef = null;
+
+                if (XrefObject is AttributeReference blkChildAttribute)
+                {
+                    var DbObj = blkChildAttribute.OwnerId.GetDBObject();
+                    blkRef = DbObj as BlockReference;
+                }
+                else if (XrefObject is BlockReference)
+                {
+                    blkRef = XrefObject as BlockReference;
+                }
+                else
+                {
+                    foreach (ObjectId objId in XrefSelection.XrefObjectId)
                     {
-                        if (!ParentBlkRef.IsXref())
+                        XrefObjectId.Remove(objId);
+                        XrefObject = objId.GetDBObject();
+
+                        if (XrefObject is BlockReference ParentBlkRef)
                         {
-                            blkRef = XrefObject as BlockReference;
-                            break;
+                            if (!ParentBlkRef.IsXref())
+                            {
+                                blkRef = XrefObject as BlockReference;
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            if (blkRef is null)
-            {
-                return CotePoints.Null;
-            }
-            double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
-            if (Altimetrie == null)
-            {
-                Altimetrie = blkRef.Position.Z;
-                if (Altimetrie == 0)
+                if (blkRef is null)
                 {
-                    return CotePoints.Null;
+                    continue;
                 }
-                PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?");
-                options.Keywords.Add("OUI");
-                options.Keywords.Add("NON");
-                options.AllowNone = true;
-                PromptResult result = ed.GetKeywords(options);
-                if (result.Status == PromptStatus.OK && result.StringResult != "OUI")
-                {
-                    return CotePoints.Null;
-                }
-            }
+                double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
+                Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
 
-            Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
-            return new CotePoints(BlockPosition, Altimetrie ?? 0);
+                if (Altimetrie == null)
+                {
+                    Altimetrie = blkRef.Position.Z;
+                    if (Altimetrie == 0)
+                    {
+                        return new CotePoints(BlockPosition, 0);
+                    }
+                    PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?");
+                    options.Keywords.Add("OUI");
+                    options.Keywords.Add("NON");
+                    options.AllowNone = true;
+                    PromptResult result = ed.GetKeywords(options);
+                    if (result.Status == PromptStatus.OK && result.StringResult != "OUI")
+                    {
+                        return new CotePoints(BlockPosition, 0);
+                    }
+                }
+
+                
+                return new CotePoints(BlockPosition, Altimetrie ?? 0);
+            }
         }
 
 
@@ -280,7 +285,9 @@ namespace SioForgeCAD.Commun
                     if (blockReference.IsXref())
                     {
                         CotePoints CotePoint = GetBlockInXref(string.Empty, PromptBlocSelectionResult.PickedPoint);
-                        if (CotePoint != CotePoints.Null)
+                        bool IsCotePointNotNull = CotePoint != CotePoints.Null;
+                        bool IsAltimetrieDefined = (CotePoint?.Altitude ?? 0) != 0;
+                        if (IsCotePointNotNull && IsAltimetrieDefined)
                         {
                             var AskKeepXREFCoteValuesOptions = new PromptKeywordOptions($"La cote {FormatAltitude(CotePoint.Altitude)} a été trouvée dans une XREF. Voulez-vous utiliser cette valeur ?");
                             AskKeepXREFCoteValuesOptions.Keywords.Add("Oui");

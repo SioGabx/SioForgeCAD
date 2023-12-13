@@ -46,7 +46,7 @@ namespace SioForgeCAD.Commun
             {
                 I_cote += I_dif_to_add_sus;
             }
-            I_cote = Math.Round(I_cote, 2);
+            //I_cote = Math.Round(I_cote, 3);
 
             if (double.IsNaN(I_cote))
             {

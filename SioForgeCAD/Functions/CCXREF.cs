@@ -23,9 +23,13 @@ namespace SioForgeCAD.Functions
                     }
                     Points BlockPosition = GetBlockInXref.Points;
                     double Altimetrie = GetBlockInXref.Altitude;
-
+                    if (Altimetrie == 0)
+                    {
+                        continue;
+                    }
                     double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Radians);
                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
+
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
                     if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCG, Settings.BlocNameAltimetrie, AltimetrieStr))
                     {

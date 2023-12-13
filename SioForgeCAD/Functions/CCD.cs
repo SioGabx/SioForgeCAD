@@ -32,7 +32,8 @@ namespace SioForgeCAD.Functions
             double DistanceFromOrigin = Lines.GetLength(OriginCotePoint.Points, NewPoint);
             double NewAltitude = Arythmetique.ComputePointFromSlopePourcentage(OriginAltitude, DistanceFromOrigin, SlopePourcentage);
             return new Dictionary<string, string>() {
-                { "ALTIMETRIE", NewAltitude.ToString("#.00") }
+                {"ALTIMETRIE", CotePoints.FormatAltitude(NewAltitude) },
+                {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(NewAltitude, 3) },
             };
         }
 
@@ -71,7 +72,9 @@ namespace SioForgeCAD.Functions
                     {
                         if (NewPointLocation != null)
                         {
-                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(NewPointLocation));
+                            var ComputedValue = ComputeValue(NewPointLocation);
+                            Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputedValue);
                         }
                         else
                         {

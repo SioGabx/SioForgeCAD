@@ -30,7 +30,7 @@ namespace SioForgeCAD.Functions
                 bool isMultipleIndermediairePlacement = false;
                 do
                 {
-                    DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
+                    DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points));
                     ents.Insert(0, Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points));
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
@@ -53,7 +53,9 @@ namespace SioForgeCAD.Functions
 
                         if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                         {
-                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(Indermediaire));
+                            var ComputedValue = ComputeValue(Indermediaire);
+                            Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputedValue);
                         }
                         else if (IndermediairePromptPointResultStatus == PromptStatus.Keyword)
                         {
@@ -80,7 +82,8 @@ namespace SioForgeCAD.Functions
             double Altitude = ComputeSlopeAndIntermediate.Altitude;
             double Slope = ComputeSlopeAndIntermediate.Slope;
             return new Dictionary<string, string>() {
-                {"ALTIMETRIE", Altitude.ToString("#.00") },
+                {"ALTIMETRIE", CotePoints.FormatAltitude(Altitude) },
+                {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(Altitude, 3) },
                 {"PENTE", $"{Slope}%" },
             };
         }
