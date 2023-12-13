@@ -359,7 +359,7 @@ namespace SioForgeCAD.Commun
                     }
                     catch (Autodesk.AutoCAD.Runtime.Exception ex)
                     {
-                        Autodesk.AutoCAD.Runtime.Exception AutEx = ex as Autodesk.AutoCAD.Runtime.Exception;
+                        Autodesk.AutoCAD.Runtime.Exception AutEx = ex;
                         if (AutEx.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.OK && ex.Message.IgnoreCaseEquals(SelectionPointsType.Points.ToString()))
                         {
                             SaveSelectionPointsType(SelectionPointsType.Points);
@@ -374,7 +374,7 @@ namespace SioForgeCAD.Commun
                 }
             } while (IsLooping);
 
-            return null;
+            return CotePoints.Null;
         }
     }
 }
