@@ -39,13 +39,17 @@ namespace SioForgeCAD.Functions
                     };
                 }
 
-
                 DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
                     InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
-                    string KeyWord = $"[{Altitude - StepValue}+{StepValue}]";
+                    string Signe = string.Empty;
+                    if (StepValue > 0)
+                    {
+                        Signe = "+";
+                    }
+                    string KeyWord = $"{Altitude - StepValue}{Signe}{StepValue}";
                     var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint($"\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
@@ -60,7 +64,6 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
 
         public static double? GetStepValueToAdd()
         {
@@ -82,9 +85,5 @@ namespace SioForgeCAD.Functions
                 return null;
             }
         }
-
-
-
-
     }
 }

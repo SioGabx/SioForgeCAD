@@ -210,7 +210,7 @@ namespace SioForgeCAD.Commun
                 }
                 if (blkRef is null)
                 {
-                    continue;
+                    return CotePoints.Null;
                 }
                 double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
                 Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
@@ -320,7 +320,8 @@ namespace SioForgeCAD.Commun
         public static CotePoints GetCotePoints(string Message, Points Origin)
         {
             var ed = Generic.GetEditor();
-            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message}\n", SelectionPointsType.Bloc.ToString());
+            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message} [{SelectionPointsType.Bloc}]\n", SelectionPointsType.Bloc.ToString());
+
             if (Origin != null)
             {
                 PromptPointOptions.UseBasePoint = true;

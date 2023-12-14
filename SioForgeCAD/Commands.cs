@@ -53,7 +53,6 @@ namespace SioForgeCAD
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
-
         [CommandMethod("trianglecc", CommandFlags.UsePickSet)]
         public void Trianglecc()
         {
