@@ -5,9 +5,9 @@ namespace SioForgeCAD.Commun
 {
     public static class Layers
     {
-        public static string GetCurrentLayerId()
+        public static string GetCurrentLayerName()
         {
-            return (string)AcAp.GetSystemVariable("clayer");
+            return AcAp.GetSystemVariable("clayer").ToString();
         }
 
         public static DataItemCollection GetAllLayersInDrawing()

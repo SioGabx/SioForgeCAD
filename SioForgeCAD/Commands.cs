@@ -109,6 +109,12 @@ namespace SioForgeCAD
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
+        [CommandMethod("SSCL")]
+        public static void SSCL()
+        {
+            Functions.SSCL.Select();
+        }
+
 
 
 
