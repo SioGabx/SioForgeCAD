@@ -137,16 +137,6 @@ namespace SioForgeCAD
 
 
 
-
-
-
-
-
-
-
-
-
-
         [CommandMethod("debug_random_point")]
         public static void DBG_Random_Point()
         {
