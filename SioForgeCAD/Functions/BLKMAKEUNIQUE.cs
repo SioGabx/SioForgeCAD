@@ -4,6 +4,9 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
@@ -25,12 +28,12 @@ namespace SioForgeCAD.Functions
         public void MakeUniqueBlockReferences()
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-            var ActualSelection = ed.SelectImplied().Value;
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
             ObjectId[] selectedBlockIds;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                var ActualSelection = ed.SelectImplied().Value;
                 if (ActualSelection == null || ActualSelection.Count == 0)
                 {
                     PromptSelectionOptions peo = new PromptSelectionOptions()
@@ -45,6 +48,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                     selectedBlockIds = per.Value.GetObjectIds();
+                ed.SetImpliedSelection(new ObjectId[0]);
                 }
                 else
                 {
@@ -71,8 +75,23 @@ namespace SioForgeCAD.Functions
                             }
 
                             // Clone the old block definition and its contents
-                            ObjectId newBtrId = RenameBlockInAnotherDatabase(selectedBlockId, oldName, newName);
-                            RenameblockNewObjectIds.Add(newBtrId);
+                            if (selectedBlockId.IsValid)
+                            {
+                                try
+                                {
+                                    ObjectId newBtrId = RenameBlockInAnotherDatabase(selectedBlockId, oldName, newName);
+                                    if (!newBtrId.IsNull)
+                                    {
+                                        RenameblockNewObjectIds.Add(newBtrId);
+                                    }
+                                }
+                                //catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                                catch (Autodesk.AutoCAD.BoundaryRepresentation.Exception ex)
+                                {
+                                    Debug.WriteLine(ex.Message);
+                                }
+                                
+                            }
                         }
                     }
                 }
@@ -83,9 +102,12 @@ namespace SioForgeCAD.Functions
 
 
         public static ObjectId RenameBlockInAnotherDatabase(ObjectId BlockReferenceObjectId, string OldName, string NewName)
-        {
+        {  if (!BlockReferenceObjectId.IsValid)
+            {
+                return ObjectId.Null;
+            }
             ObjectIdCollection acObjIdColl = new ObjectIdCollection { BlockReferenceObjectId };
-
+          
             Document ActualDocument = Application.DocumentManager.MdiActiveDocument;
             Database ActualDatabase = ActualDocument.Database;
 
@@ -95,21 +117,24 @@ namespace SioForgeCAD.Functions
             {
                 BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
-                ActualDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Ignore, false);
+                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
                 BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(acBlkTblNewDoc[OldName], OpenMode.ForWrite);
                 btr.Name = NewName;
                 MemoryTransaction.Commit();
             }
 
             ObjectId newBlocRefenceId = acIdMap[BlockReferenceObjectId].Value;
-
-            acObjIdColl = new ObjectIdCollection { newBlocRefenceId };
+            if (!newBlocRefenceId.IsValid)
+            {
+                return ObjectId.Null;
+            }
+            ObjectIdCollection acObjIdColl2 = new ObjectIdCollection { newBlocRefenceId };
             IdMapping acIdMap2 = new IdMapping();
             using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRecNewDoc2 = ActualTransaction.GetObject(acBlkTblNewDoc2[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-                ActualDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Ignore, false);
+                ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
                 ActualTransaction.Commit();
             }
             BlockReferenceObjectId.EraseObject();

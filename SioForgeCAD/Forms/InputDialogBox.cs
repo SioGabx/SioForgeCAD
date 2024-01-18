@@ -27,6 +27,20 @@ namespace SioForgeCAD.Forms
             PromptLabel.Text = Prompt;
         }
 
+        public void SetCursorAtEnd()
+        {
+            UserInputBox.Focus();
+            UserInputBox.SelectionStart = UserInputBox.TextLength;
+            UserInputBox.ScrollToCaret();
+        }
+
+        public void SelectAll()
+        {
+            UserInputBox.Focus();
+            UserInputBox.SelectAll();
+        }
+        
+
         private void PromptAcceptButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
