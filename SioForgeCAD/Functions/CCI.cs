@@ -46,7 +46,7 @@ namespace SioForgeCAD.Functions
                         {
                             KeyWords = new string[] { };
                         }
-                        var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("\nIndiquez les emplacements des points cote", Points.Null, KeyWords);
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez les emplacements des points cote", Points.Null, KeyWords);
                         Points Indermediaire = InsertionTransientPointsValues.Point;
                         PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                         PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
@@ -90,7 +90,7 @@ namespace SioForgeCAD.Functions
     }
 
 
-    internal class CCIInsertionTransientPoints : InsertionTransientPoints
+    internal class CCIInsertionTransientPoints : GetPointTransient
     {
         public CCIInsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
 
@@ -106,23 +106,23 @@ namespace SioForgeCAD.Functions
             base.UpdateTransGraphics(curPt, moveToPt);
         }
 
-        public override int GetTransGraphicsColor(Entity Drawable)
+        public override int GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
             if (Drawable is Polyline)
             {
                 return Settings.TransientSecondaryColorIndex;
             }
-            return base.GetTransGraphicsColor(Drawable);
+            return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
         }
 
 
-        public override void TransformEntities(Entity entity, Matrix3d mat)
+        public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
         {
             if (entity is Polyline)
             {
                 return;
             }
-            base.TransformEntities(entity, mat);
+            base.TransformEntities(entity, currentPoint, destinationPoint);
         }
 
     }

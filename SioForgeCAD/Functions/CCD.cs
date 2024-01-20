@@ -48,7 +48,7 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
-                    InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
+                    GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
                     string KeyWord;
                     string GetInsertionPointMessage;
                     if (IsMultiplePlacement)
@@ -61,7 +61,7 @@ namespace SioForgeCAD.Functions
                         KeyWord = "Multiples";
                         GetInsertionPointMessage = "Indiquez l'emplacements du point cote";
                     }
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint($"\n{GetInsertionPointMessage}", PointCote.Points, KeyWord);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\n{GetInsertionPointMessage}", PointCote.Points, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

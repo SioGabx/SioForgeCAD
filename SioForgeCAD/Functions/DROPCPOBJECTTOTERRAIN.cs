@@ -13,9 +13,8 @@ namespace SioForgeCAD.Functions
     {
         public static void Project()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
 
             Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("Sélectionnez une polyligne comme base de terrain");
             if (TerrainBasePolyline == null)

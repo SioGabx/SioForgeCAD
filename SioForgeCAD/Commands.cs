@@ -23,6 +23,31 @@ namespace SioForgeCAD
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Detach();
         }
 
+        [CommandMethod("SIOFORGECAD")]
+        public static void SIOFORGECAD()
+        {
+            var ed = Generic.GetEditor();
+            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une option")
+            {
+                AppendKeywordsToMessage = true
+            };
+            promptKeywordOptions.Keywords.Add("Settings");
+            promptKeywordOptions.Keywords.Add("Register");
+            promptKeywordOptions.Keywords.Add("Unregister");
+            var result = ed.GetKeywords(promptKeywordOptions);
+            switch (result.StringResult)
+            {
+                case "Settings":
+                    break;
+                case "Register":
+                    Commun.PluginRegister.Register();
+                    break;
+                case "Unregister":
+                    Commun.PluginRegister.Unregister();
+                    break;
+            }
+        }
+
 
         [CommandMethod("CCI")]
         public void CCI()
@@ -114,6 +139,28 @@ namespace SioForgeCAD
         {
             Functions.SSCL.Select();
         }
+
+
+        [CommandMethod("RRR2", CommandFlags.UsePickSet)]
+        public static void RRR2()
+        {
+            Functions.RRR.Rotate();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

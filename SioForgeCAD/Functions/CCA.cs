@@ -43,14 +43,14 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
-                    InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, ComputeValue);
+                    GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
                     string Signe = string.Empty;
                     if (StepValue > 0)
                     {
                         Signe = "+";
                     }
                     string KeyWord = $"{Altitude - StepValue}{Signe}{StepValue}";
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint($"\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

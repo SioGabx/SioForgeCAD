@@ -1,12 +1,13 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 
 
 namespace SioForgeCAD.Commun.Extensions
 {
-    internal class LinesExtentions
+    public static class LinesExtentions
     {
         public static Polyline AskForSelection(string Message)
         {
@@ -48,8 +49,6 @@ namespace SioForgeCAD.Commun.Extensions
                 return ProjectionTarget;
             }
         }
-
-
 
     }
 }

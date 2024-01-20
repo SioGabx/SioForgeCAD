@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
 using System.Linq;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -25,6 +26,16 @@ namespace SioForgeCAD.Commun
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<Entity> entities)
         {
             return entities.Cast<DBObject>().ToDBObjectCollection();
+        }
+        public static DBObjectCollection ToDBObjectCollection(this SelectionSet entities)
+        {
+            var ObjectIdsCollection = entities.GetObjectIds();
+            var NewDBObjectCollection = new DBObjectCollection();
+            foreach (var ObjectId in ObjectIdsCollection)
+            {
+                NewDBObjectCollection.Add(ObjectId.GetDBObject());
+            }
+            return NewDBObjectCollection;
         }
 
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<DBObject> entities)

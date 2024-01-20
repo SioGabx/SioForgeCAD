@@ -32,8 +32,8 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
-                    InsertionTransientPoints insertionTransientPoints = new InsertionTransientPoints(ents, (_) => { return null; });
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetInsertionPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
+                    GetPointTransient insertionTransientPoints = new GetPointTransient(ents, null);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
                     Points Indermediaire = InsertionTransientPointsValues.Point;
                     PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                     PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;

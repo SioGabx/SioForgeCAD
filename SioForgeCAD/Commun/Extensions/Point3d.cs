@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.Geometry;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Geometry;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -28,6 +29,13 @@ namespace SioForgeCAD.Commun.Extensions
             double Z = (A.Z + B.Z) / 2;
             double Y = (A.Y + B.Y) / 2;
             return new Point3d(X, Y, Z);
+        }
+
+        public static double GetAngleWith(this  Point3d A, Point3d B) { 
+            using (Line line = new Line(A, B))
+            {
+                return line.Angle;
+            }
         }
     }
 }
