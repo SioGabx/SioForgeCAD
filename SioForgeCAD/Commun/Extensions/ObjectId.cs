@@ -72,5 +72,15 @@ namespace SioForgeCAD.Commun
             }
         }
 
+
+        public static ObjectIdCollection Join(this ObjectIdCollection A, ObjectIdCollection B)
+        {
+            foreach(ObjectId ent in B)
+            {
+                A.Add(ent);
+            }
+            return A;
+        }
+
     }
 }

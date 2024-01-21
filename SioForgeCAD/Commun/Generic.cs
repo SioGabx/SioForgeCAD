@@ -24,6 +24,15 @@ namespace SioForgeCAD.Commun
             ed.WriteMessage(message.ToString() + "\n");
         }
 
+        public static void LoadLispFromStringCommand(string lispCode)
+        {
+            Document doc = Generic.GetDocument();
+            string loadCommand = $"(eval '{lispCode})";
+            doc.SendStringToExecute(loadCommand, true, false, false);
+        }
+
+
+
         public static string GetExtensionDLLName()
         {
             return Assembly.GetExecutingAssembly().GetName().Name;

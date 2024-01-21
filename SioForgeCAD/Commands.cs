@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 
@@ -52,24 +53,24 @@ namespace SioForgeCAD
         [CommandMethod("CCI")]
         public void CCI()
         {
-            new SioForgeCAD.Functions.CCI().Compute();
+            new Functions.CCI().Compute();
         }
 
         [CommandMethod("CCP")]
         public void CCP()
         {
-            new SioForgeCAD.Functions.CCP().Compute();
+            new Functions.CCP().Compute();
         }
         [CommandMethod("CCD")]
         public void CCD()
         {
-            new SioForgeCAD.Functions.CCD().Compute();
+            new Functions.CCD().Compute();
         }
 
         [CommandMethod("CCA")]
         public void CCA()
         {
-            SioForgeCAD.Functions.CCA.Compute();
+            Functions.CCA.Compute();
         }
 
         [CommandMethod("CCXREF", CommandFlags.Redraw)]
@@ -81,16 +82,14 @@ namespace SioForgeCAD
         [CommandMethod("trianglecc", CommandFlags.UsePickSet)]
         public void Trianglecc()
         {
-            SioForgeCAD.Commun.Triangulate.TriangulateCommand();
+            Commun.Triangulate.TriangulateCommand();
         }
-
 
         [CommandMethod("RENBLK", CommandFlags.Redraw)]
         public void RENBLK()
         {
             Functions.RENBLK.RenameBloc();
         }
-
 
         [CommandMethod("BLKMAKEUNIQUE", CommandFlags.Redraw)]
         public void MAKEUNIQUBLK()
@@ -134,18 +133,52 @@ namespace SioForgeCAD
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
-        [CommandMethod("SSCL")]
+        [CommandMethod("SSCL", CommandFlags.Transparent)]
         public static void SSCL()
         {
             Functions.SSCL.Select();
         }
 
-
-        [CommandMethod("RRR2", CommandFlags.UsePickSet)]
-        public static void RRR2()
+        [CommandMethod("RRR", CommandFlags.UsePickSet)]
+        public static void RRR()
         {
             Functions.RRR.Rotate();
         }
+
+        [CommandMethod("BLKINSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
+        public void BLKINSEDIT()
+        {
+            Functions.BLKINSEDIT.MoveBasePoint();
+        }
+
+        [CommandMethod("RP2")]
+        public void RP2()
+        {
+            Functions.RP2.RotateUCS();
+        }
+
+        [CommandMethod("TAREA")]
+        public void TAREA()
+        {
+           throw new NotImplementedException();
+        }
+
+        [CommandMethod("TLEN")]
+        public void TLEN()
+        {
+           throw new NotImplementedException();
+        }
+
+        [CommandMethod("VEGBLOC", CommandFlags.Modal)]
+        public void VEGBLOC()
+        {
+           VegblocDialog vegblocDialog = new VegblocDialog();
+            vegblocDialog.ShowDialog();
+        }
+
+
+
+
 
 
 
