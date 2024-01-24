@@ -133,6 +133,10 @@ namespace SioForgeCAD.Forms
             }
             string data = Clipboard.GetText();
             string[][] clipboardData = ParseCSV(data);
+            if (clipboardData.Length == 0 || clipboardData[0].Length == 0)
+            {
+                return;
+            }
             List<DataGridViewCell> SelectedCells = DataGrid.SelectedCells.ToList();
 
             int minRow = int.MaxValue;

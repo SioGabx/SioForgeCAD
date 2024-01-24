@@ -25,7 +25,7 @@ namespace SioForgeCAD.Functions
             foreach (var Rows in Values)
             {
                 string Name = Rows["NAME"];
-                if (Name is null)
+                if (string.IsNullOrWhiteSpace(Name))
                 {
                     continue;
                 }
@@ -42,7 +42,7 @@ namespace SioForgeCAD.Functions
                     Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
                 }
 
-                string ShortType = Type.Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
+                string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
                 string BlocName = $"_APUd_VEG_{ShortType}_{Name}";
 
                 string BlocDisplayName = GetBlocDisplayName(Name);
@@ -204,7 +204,11 @@ namespace SioForgeCAD.Functions
         private static string GetBlocDisplayName(string Name)
         {
             string BlocName = string.Empty;
-            string[] SplittedName = Name.Split(' ');
+            if (string.IsNullOrEmpty(Name))
+            {
+                return string.Empty;
+            }
+            string[] SplittedName = Name.Trim().Split(' ');
             if (SplittedName.Length > 0)
             {
                 BlocName = SplittedName[0];
