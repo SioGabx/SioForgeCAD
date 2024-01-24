@@ -272,6 +272,9 @@ namespace SioForgeCAD.Forms
             {
                 DataGrid.Rows.Add();
             }
+
+            const int ResizeMargin = 2;
+            this.Width = DataGrid.PreferredSize.Width + ResizeMargin;
         }
 
         private void ValidateButton_Click(object sender, EventArgs e)

@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -91,6 +92,11 @@ namespace SioForgeCAD.Commun
         }
 
 
+        public static Transparency GetTransparencyFromAlpha(int Alpha)
+        {
+            byte AlphaByte = ((byte)(255 * (100 - Alpha) / 100));
+            return new Autodesk.AutoCAD.Colors.Transparency(AlphaByte);
+        }
 
         public enum AngleUnit { Radians, Degrees }
         public static double GetUSCRotation(AngleUnit angleUnit)

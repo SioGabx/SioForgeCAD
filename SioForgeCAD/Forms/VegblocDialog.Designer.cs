@@ -36,11 +36,11 @@
             this.TYPE = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.ValidateButton = new System.Windows.Forms.ToolStripButton();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.ContentPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.DataGrid)).BeginInit();
             this.toolStrip1.SuspendLayout();
-            this.panel1.SuspendLayout();
+            this.ContentPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // DataGrid
@@ -59,7 +59,7 @@
             this.DataGrid.RowHeadersWidth = 51;
             this.DataGrid.RowTemplate.Height = 24;
             this.DataGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.DataGrid.Size = new System.Drawing.Size(800, 423);
+            this.DataGrid.Size = new System.Drawing.Size(676, 423);
             this.DataGrid.TabIndex = 0;
             this.DataGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DataGrid_CellBeginEdit);
             this.DataGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGrid_CellEndEdit);
@@ -117,7 +117,7 @@
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.toolStrip1.ShowItemToolTips = false;
-            this.toolStrip1.Size = new System.Drawing.Size(800, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(676, 27);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -133,15 +133,6 @@
             this.ValidateButton.Text = "Valider";
             this.ValidateButton.Click += new System.EventHandler(this.ValidateButton_Click);
             // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.DataGrid);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 27);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(800, 423);
-            this.panel1.TabIndex = 2;
-            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -150,12 +141,21 @@
             this.toolStripSeparator1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
             // 
+            // ContentPanel
+            // 
+            this.ContentPanel.Controls.Add(this.DataGrid);
+            this.ContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ContentPanel.Location = new System.Drawing.Point(0, 27);
+            this.ContentPanel.Name = "ContentPanel";
+            this.ContentPanel.Size = new System.Drawing.Size(676, 423);
+            this.ContentPanel.TabIndex = 2;
+            // 
             // VegblocDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.panel1);
+            this.ClientSize = new System.Drawing.Size(676, 450);
+            this.Controls.Add(this.ContentPanel);
             this.Controls.Add(this.toolStrip1);
             this.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.Name = "VegblocDialog";
@@ -167,7 +167,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.DataGrid)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.panel1.ResumeLayout(false);
+            this.ContentPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -182,7 +182,7 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn TYPE;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton ValidateButton;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel ContentPanel;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

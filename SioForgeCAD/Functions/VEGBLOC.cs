@@ -39,7 +39,7 @@ namespace SioForgeCAD.Functions
 
                 if (Height > 0)
                 {
-                    Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, false);
+                    Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
                 }
 
                 string ShortType = Type.Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
@@ -47,9 +47,14 @@ namespace SioForgeCAD.Functions
 
                 string BlocDisplayName = GetBlocDisplayName(Name);
                 Color BlocColor = GetRandomColor();
-                Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, true);
+                int Transparence = 20;
+                if (ShortType == "ARBR")
+                {
+                    Transparence = 90;
+                }
+                Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
                 Color HeightColorIndicator = GetColorFromHeight(Height);
-                var BlocEntities = GetBlocGeometry(BlocDisplayName, Width, Height, BlocColor, HeightColorIndicator);
+                var BlocEntities = GetBlocGeometry(BlocDisplayName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
                 if (!BlockReferences.IsBlockExist(BlocName))
                 {
                     BlockReferences.Create(BlocName, $"{Name}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
@@ -87,7 +92,7 @@ namespace SioForgeCAD.Functions
         private static Color GetColorFromHeight(double HeightInMeters)
         {
             Bitmap RainBowRamp = Properties.Resources.RainBowRamp;
-            int HeightInPixel = (int)Math.Floor(HeightInMeters * 120);
+            int HeightInPixel = (int)Math.Floor(HeightInMeters * 100);
             System.Drawing.Color couleurPixel = RainBowRamp.GetPixel(Math.Min(HeightInPixel + 1, RainBowRamp.Width - 1), 0);
 
             byte rouge = couleurPixel.R;
@@ -98,7 +103,7 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(rouge, vert, bleu);
         }
 
-        private static DBObjectCollection GetBlocGeometry(string DisplayNamName, double Width, double Height, Color BlocColor, Color HeightColorIndicator)
+        private static DBObjectCollection GetBlocGeometry(string DisplayNamName, string ShortType, double Width, double Height, Color BlocColor, Color HeightColorIndicator)
         {
             DBObjectCollection BlocGeometry = new DBObjectCollection();
 
@@ -143,7 +148,7 @@ namespace SioForgeCAD.Functions
                 Width = Width,
                 TextHeight = Width / 5,
                 Transparency = new Transparency(255),
-                Color = GetTextColorFromBackgroundColor(BlocColor)
+                Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
             };
             BlocGeometry.Add(TextBlocDisplayName);
 
@@ -177,8 +182,12 @@ namespace SioForgeCAD.Functions
             return BlocGeometry;
         }
 
-        private static Color GetTextColorFromBackgroundColor(Color BlocColor)
+        private static Color GetTextColorFromBackgroundColor(Color BlocColor, string ShortType)
         {
+            if (ShortType == "ARBR")
+            {
+                return Color.FromRgb(0, 0, 0);
+            }
             double IsContrasted = (299 * BlocColor.Red + 587 * BlocColor.Green + 114 * BlocColor.Blue) / 1000;
             if (IsContrasted > 160)
             {

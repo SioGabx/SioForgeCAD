@@ -66,7 +66,7 @@ namespace SioForgeCAD.Commun
 
 
 
-        public static void CreateLayer(string Name, Color Color, LineWeight LineWeight = LineWeight.ByLineWeightDefault, bool IsPlottable = true)
+        public static void CreateLayer(string Name, Color Color, LineWeight LineWeight, Transparency Transparence, bool IsPlottable)
         {
             Document doc = Generic.GetDocument();
             Database db = Generic.GetDatabase();
@@ -86,6 +86,7 @@ namespace SioForgeCAD.Commun
                         acLyrTbl.UpgradeOpen();
                         acLyrTbl.Add(acLyrTblRec);
                         acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
+                        acLyrTblRec.Transparency = Transparence;
                     }
                 }
                 acTrans.Commit();
