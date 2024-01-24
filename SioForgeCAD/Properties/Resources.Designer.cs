@@ -89,5 +89,15 @@ namespace SioForgeCAD.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RainBowRamp {
+            get {
+                object obj = ResourceManager.GetObject("RainBowRamp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

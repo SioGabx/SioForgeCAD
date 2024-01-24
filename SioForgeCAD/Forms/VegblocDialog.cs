@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -69,6 +70,7 @@ namespace SioForgeCAD.Forms
             int minCol = int.MaxValue;
             int maxRow = int.MinValue;
             int maxCol = int.MinValue;
+
             foreach (DataGridViewCell cell in selectedCells)
             {
                 int cellRow = cell.RowIndex;
@@ -77,7 +79,6 @@ namespace SioForgeCAD.Forms
                 minCol = Math.Min(minCol, cellCol);
                 maxRow = Math.Max(maxRow, cellRow);
                 maxCol = Math.Max(maxCol, cellCol);
-
             }
 
             // Check if the selected cells form a contiguous block
@@ -93,67 +94,37 @@ namespace SioForgeCAD.Forms
                     }
                 }
             }
-
             return true;
         }
 
         private void CopySelectedCells()
         {
-            throw new NotImplementedException();
+            var selectedCells = DataGrid.SelectedCells;
+            if (selectedCells.Count > 0)
+            {
+                StringBuilder sb = new StringBuilder();
+                int currentRowIndex = -1;
+                foreach (DataGridViewCell cell in selectedCells)
+                {
+                    if (cell.RowIndex != currentRowIndex)
+                    {
+                        if (currentRowIndex != -1)
+                        {
+                            //first row, newline character to separate rows
+                            sb.Append('\n');
+                        }
+                        currentRowIndex = cell.RowIndex;
+                    }
+                    string RawValue = cell.Value.ToString();
+                    string CellValue = '"' + RawValue.Replace("\"", "\"\"") + '"';
+                    sb.Append(CellValue);
+                    sb.Append('\t');
+                }
+                Clipboard.SetText(sb.ToString().Replace("\t\n", "\n").TrimEnd('\t'));
+            }
         }
 
-
-        //private void PasteIntoCells()
-        //{
-        //    if (!IsContiguousSelection())
-        //    {
-        //        MessageBox.Show("La selection n'est pas contigue");
-        //        return;
-        //    }
-
-        //    string data = Clipboard.GetText();
-        //    string[][] clipboardData = ParseCSV(data);
-
-        //    if (clipboardData.Length == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    DataGridViewCell currentCell = DataGrid.CurrentCell;
-        //    int startRow = currentCell.RowIndex;
-        //    int startCol = currentCell.ColumnIndex;
-
-        //    int rowCountToSelect = Math.Min(DataGrid.RowCount - startRow, clipboardData.Length);
-        //    int colCountToSelect = Math.Min(DataGrid.ColumnCount - startCol, clipboardData[0].Length);
-
-        //    // Clear the current selection
-        //    DataGrid.ClearSelection();
-
-        //    for (int rowIndex = 0; rowIndex < rowCountToSelect; rowIndex++)
-        //    {
-        //        DataGridViewRow row = DataGrid.Rows[startRow + rowIndex];
-        //        string[] rowContent = clipboardData[rowIndex % clipboardData.Length];
-
-        //        for (int colIndex = 0; colIndex < colCountToSelect; colIndex++)
-        //        {
-        //            DataGridViewCell cell = row.Cells[startCol + colIndex];
-        //            string cellContent = rowContent[colIndex % clipboardData[0].Length];
-
-        //            // Set the cell value
-        //            cell.Value = cellContent;
-
-        //            // Select the pasted cell
-        //            cell.Selected = true;
-        //        }
-        //    }
-        //}
-
-
-
-
-
-
-        private async void PasteIntoCells()
+        private void PasteIntoCells()
         {
             if (!IsContiguousSelection())
             {
@@ -176,7 +147,6 @@ namespace SioForgeCAD.Forms
             DataGridViewCell currentCell = SelectedCells.Where(cell => (cell.RowIndex == minRow && cell.ColumnIndex == minCol)).First();
             int NumberOfColumnsSelected = SelectedCells.Select(s => s.ColumnIndex).Distinct().Count();
             int NumberOfRowSelected = SelectedCells.Select(s => s.RowIndex).Distinct().Count();
-
 
             int startRow = currentCell.RowIndex;
             while (startRow + clipboardData.Length > DataGrid.Rows.Count)
@@ -208,7 +178,6 @@ namespace SioForgeCAD.Forms
                 }
             }
 
-
             List<int> selectedcolumns = new List<int>();
             isColumnFound = false;
             for (int i = 0; i < DataGrid.ColumnCount; i++)
@@ -231,11 +200,9 @@ namespace SioForgeCAD.Forms
             }
 
             DataGrid.ClearSelection();
-            //}
             // Adjust the selection to accommodate the clipboard content
             int rowCountToSelect = Math.Max(rows.Length, NumberOfRowSelected);
             int colCountToSelect = Math.Max(columns.Count, NumberOfColumnsSelected);
-
 
             for (int selectedRowIndex = 0; selectedRowIndex < rowCountToSelect; selectedRowIndex++)
             {
@@ -250,7 +217,6 @@ namespace SioForgeCAD.Forms
                     DataGridViewColumn column = null;
                     if ((selectedcolumns.Count) > colIndex)
                     {
-                        //Selected Columns is greater than selection
                         column = DataGrid.Columns[selectedcolumns[colIndex]];
                     }
                     else
@@ -258,7 +224,6 @@ namespace SioForgeCAD.Forms
                         column = DataGrid.Columns[columns[colIndex % columns.Count]];
                     }
                     var newCell = row.Cells[column.Index];
-                    Type type = newCell.GetType();
                     if (newCell is DataGridViewTextBoxCell TextBoxCell)
                     {
                         TextBoxCell.Value = cellContent;
@@ -276,17 +241,9 @@ namespace SioForgeCAD.Forms
                     {
                         newCell.Selected = true;
                     }
-
                 }
             }
         }
-
-
-
-
-
-
-
 
 
         public static string[][] ParseCSV(string input, string delimiter = "\t")
@@ -308,7 +265,7 @@ namespace SioForgeCAD.Forms
 
         private void VegblocDialog_Load(object sender, EventArgs e)
         {
-            int defaultNumberOfRows = 20; 
+            int defaultNumberOfRows = 20;
 
             // Add empty rows to the DataGridView
             for (int i = 0; i < defaultNumberOfRows; i++)
@@ -316,5 +273,59 @@ namespace SioForgeCAD.Forms
                 DataGrid.Rows.Add();
             }
         }
+
+        private void ValidateButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+        }
+
+        public List<Dictionary<string, string>> GetDataGridValues()
+        {
+            var Rows = new List<Dictionary<string, string>>();
+            foreach (DataGridViewRow row in DataGrid.Rows)
+            {
+                Dictionary<string, string> ColumnsValues = new Dictionary<string, string>();
+                foreach (DataGridViewColumn col in DataGrid.Columns)
+                {
+                    var cell = row.Cells[col.Index];
+                    string cellValue = ParseCellValue(cell.Value);
+                    ColumnsValues.Add(col.Name, cellValue);
+                }
+                Rows.Add(ColumnsValues);
+            }
+            return Rows;
+        }
+
+        private string ParseCellValue(object value)
+        {
+            string valueStr = value?.ToString();
+            if (valueStr is null)
+            {
+                return null;
+            }
+            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
+            valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
+
+            valueStr = valueStr.Replace('×', 'x');
+            valueStr = valueStr.Replace('é', 'e');
+            valueStr = valueStr.Replace('ç', 'c');
+            valueStr = valueStr.Replace('\\', '+');
+
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in valueStr)
+            {
+                if ((c >= '0' && c <= '9') || 
+                    (c >= 'A' && c <= 'Z') || 
+                    (c >= 'a' && c <= 'z') || 
+                    c == '.' || c == '_' || c == '-' || c == ' ' || c == '\'' || c == '+')
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
+        }
+
+
     }
 }

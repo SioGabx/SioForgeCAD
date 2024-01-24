@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace SioForgeCAD.Commun.Drawing
 
                 if (bt.Has(BlockName))
                 {
-                    throw new System.Exception($"Le bloc {Name} existe déja dans le dessin");
+                   Generic.WriteMessage($"Le bloc {Name} existe déja dans le dessin");
                 }
 
                 BlockTableRecord btr = new BlockTableRecord
@@ -43,7 +44,18 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null)
+        public static bool IsBlockExist(string BlocName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
+                return bt.Has(BlocName);
+            }
+        }
+
+
+        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -61,6 +73,10 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;
+                    if (!string.IsNullOrEmpty(Layer))
+                    {
+                        blockRef.Layer = Layer;
+                    }
                     ms.AppendEntity(blockRef);
                     tr.AddNewlyCreatedDBObject(blockRef, true);
 
@@ -119,19 +135,19 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-        public static ObjectId InsertFromNameImportIfNotExist(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null)
+        public static ObjectId InsertFromNameImportIfNotExist(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 ImportBlocFromBlocNameIfMissing(BlocName);
-                ObjectId blockRefObjectId = InsertFromName(BlocName, BlocLocation, Angle, AttributesValues);
+                ObjectId blockRefObjectId = InsertFromName(BlocName, BlocLocation, Angle, AttributesValues, Layer);
                 tr.Commit();
                 return blockRefObjectId;
             }
         }
 
-        public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues)
+        public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues, string Layer = null)
         {
             Database db = Generic.GetDatabase();
             DBObjectCollection ents = new DBObjectCollection();
@@ -140,6 +156,10 @@ namespace SioForgeCAD.Commun.Drawing
                 //The first block is added for initialising the process and then deleted. Be sure to add a value.
                 ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, Points.Empty, Generic.GetUSCRotation(Generic.AngleUnit.Radians), InitAttributesValues);
                 DBObject dBObject = blockRef.GetDBObject();
+                if (Layer != null)
+                {
+                    (dBObject as Entity).Layer = Layer;
+                }
                 blockRef.EraseObject();
                 ents.Add(dBObject);
                 tr.Commit();

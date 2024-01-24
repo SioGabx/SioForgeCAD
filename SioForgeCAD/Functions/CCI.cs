@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
@@ -106,11 +107,12 @@ namespace SioForgeCAD.Functions
             base.UpdateTransGraphics(curPt, moveToPt);
         }
 
-        public override int GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+        public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
             if (Drawable is Polyline)
             {
-                return Settings.TransientSecondaryColorIndex;
+                return Color.FromColorIndex(ColorMethod.ByColor, (short)Settings.TransientSecondaryColorIndex);
+
             }
             return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
         }

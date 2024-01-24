@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
@@ -75,12 +76,33 @@ namespace SioForgeCAD.Commun
 
         public static ObjectIdCollection Join(this ObjectIdCollection A, ObjectIdCollection B)
         {
-            foreach(ObjectId ent in B)
+            foreach (ObjectId ent in B)
             {
                 A.Add(ent);
             }
             return A;
         }
+
+        public static Hatch HatchObject(this ObjectId Obj, string Layer)
+        {
+            ObjectIdCollection acObjIdColl = new ObjectIdCollection
+            {
+                Obj
+            };
+            Hatch acHatch = new Hatch();
+
+            acHatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+            acHatch.Associative = true;
+            acHatch.Layer = Layer;
+            acHatch.ColorIndex = 256;
+            acHatch.Transparency = new Transparency(TransparencyMethod.ByBlock);
+            acHatch.AppendLoop(HatchLoopTypes.Outermost, acObjIdColl);
+            acHatch.EvaluateHatch(true);
+            return acHatch;
+
+        }
+
+
 
     }
 }

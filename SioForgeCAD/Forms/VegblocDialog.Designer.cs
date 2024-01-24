@@ -28,12 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VegblocDialog));
             this.DataGrid = new System.Windows.Forms.DataGridView();
             this.NAME = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HEIGHT = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.WIDTH = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TYPE = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.ValidateButton = new System.Windows.Forms.ToolStripButton();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.DataGrid)).BeginInit();
+            this.toolStrip1.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // DataGrid
@@ -52,7 +59,7 @@
             this.DataGrid.RowHeadersWidth = 51;
             this.DataGrid.RowTemplate.Height = 24;
             this.DataGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.DataGrid.Size = new System.Drawing.Size(800, 450);
+            this.DataGrid.Size = new System.Drawing.Size(800, 423);
             this.DataGrid.TabIndex = 0;
             this.DataGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DataGrid_CellBeginEdit);
             this.DataGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGrid_CellEndEdit);
@@ -96,12 +103,60 @@
             this.TYPE.Name = "TYPE";
             this.TYPE.Width = 150;
             // 
+            // toolStrip1
+            // 
+            this.toolStrip1.AllowMerge = false;
+            this.toolStrip1.CanOverflow = false;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ValidateButton,
+            this.toolStripSeparator1});
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.toolStrip1.ShowItemToolTips = false;
+            this.toolStrip1.Size = new System.Drawing.Size(800, 27);
+            this.toolStrip1.TabIndex = 1;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // ValidateButton
+            // 
+            this.ValidateButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.ValidateButton.Image = ((System.Drawing.Image)(resources.GetObject("ValidateButton.Image")));
+            this.ValidateButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ValidateButton.Name = "ValidateButton";
+            this.ValidateButton.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
+            this.ValidateButton.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.ValidateButton.Size = new System.Drawing.Size(99, 24);
+            this.ValidateButton.Text = "Valider";
+            this.ValidateButton.Click += new System.EventHandler(this.ValidateButton_Click);
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.DataGrid);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 27);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(800, 423);
+            this.panel1.TabIndex = 2;
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator1.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            // 
             // VegblocDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.DataGrid);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.toolStrip1);
             this.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.Name = "VegblocDialog";
             this.ShowIcon = false;
@@ -110,7 +165,11 @@
             this.Text = "VEGBLOC";
             this.Load += new System.EventHandler(this.VegblocDialog_Load);
             ((System.ComponentModel.ISupportInitialize)(this.DataGrid)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -121,5 +180,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn HEIGHT;
         private System.Windows.Forms.DataGridViewTextBoxColumn WIDTH;
         private System.Windows.Forms.DataGridViewComboBoxColumn TYPE;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton ValidateButton;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

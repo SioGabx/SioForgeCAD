@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Windows.Data;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
@@ -40,6 +42,63 @@ namespace SioForgeCAD.Commun
 
                 return ObjectId.Null;
             }
+        }
+
+        public static bool CheckIfLayerExist(string layername)
+        {
+            Document doc = Generic.GetDocument();
+            Database db = Generic.GetDatabase();
+            using (Transaction acTrans = doc.TransactionManager.StartTransaction())
+            {
+                LayerTable acLyrTbl;
+                acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                acTrans.Commit();
+                if (acLyrTbl.Has(layername))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+
+
+        public static void CreateLayer(string Name, Color Color, LineWeight LineWeight = LineWeight.ByLineWeightDefault, bool IsPlottable = true)
+        {
+            Document doc = Generic.GetDocument();
+            Database db = Generic.GetDatabase();
+            using (Transaction acTrans = doc.TransactionManager.StartTransaction())
+            {
+                LayerTable acLyrTbl;
+                acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                if (acLyrTbl.Has(Name) == false)
+                {
+                    using (LayerTableRecord acLyrTblRec = new LayerTableRecord())
+                    {
+                        acLyrTblRec.Name = Name;
+                        acLyrTblRec.Color = Color;
+                        acLyrTblRec.IsPlottable = IsPlottable;
+                        acLyrTblRec.LineWeight = LineWeight;
+                        acLyrTbl.UpgradeOpen();
+                        acLyrTbl.Add(acLyrTblRec);
+                        acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
+                    }
+                }
+                acTrans.Commit();
+            }
+        }
+
+
+
+
+        public static Autodesk.AutoCAD.Colors.Color GetLayerColor(string LayerName)
+        {
+            ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(LayerName);
+            return GetLayerColor(LayerTableRecordObjId);
         }
 
         public static Autodesk.AutoCAD.Colors.Color GetLayerColor(ObjectId LayerTableRecordObjId)

@@ -98,7 +98,7 @@ namespace SioForgeCAD.Commun
                             if (attId is AttributeReference AttributeElement)
                             {
                                 string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
-                                AttributeElement.ColorIndex = GetTransGraphicsColor(AttributeElement, false);
+                                AttributeElement.Color = GetTransGraphicsColor(AttributeElement, false);
                                 if (Values != null && Values.ContainsKey(AttributeDefinitionName))
                                 {
                                     if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
@@ -187,9 +187,9 @@ namespace SioForgeCAD.Commun
            
         }
 
-        public virtual int GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+        public virtual Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
-            return Settings.TransientPrimaryColorIndex;
+            return Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, (short)Settings.TransientPrimaryColorIndex);
         }
 
         public virtual Autodesk.AutoCAD.Colors.Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)
@@ -205,7 +205,7 @@ namespace SioForgeCAD.Commun
         public Entity CreateTransGraphicsEntity(Entity EntityToMakeDrawable, int index, bool IsStaticDrawable)
         {
             Entity drawableClone = EntityToMakeDrawable.Clone() as Entity;
-            drawableClone.ColorIndex = GetTransGraphicsColor(drawableClone, IsStaticDrawable);
+            drawableClone.Color = GetTransGraphicsColor(drawableClone, IsStaticDrawable);
             drawableClone.Transparency = GetTransGraphicsTransparency(drawableClone, IsStaticDrawable);
             TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128 - index, new IntegerCollection());
             return drawableClone;
@@ -282,15 +282,15 @@ namespace SioForgeCAD.Commun
         }
 
 
-        public override int GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+        public override Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
             if (IsStaticDrawable)
             {
-                return Settings.TransientPrimaryColorIndex;
+                return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
             }
             else
             {
-                return Drawable.ColorIndex;
+                return Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, (short)Drawable.ColorIndex);
             }
         }
 

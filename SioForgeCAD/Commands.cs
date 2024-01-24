@@ -172,8 +172,7 @@ namespace SioForgeCAD
         [CommandMethod("VEGBLOC", CommandFlags.Modal)]
         public void VEGBLOC()
         {
-           VegblocDialog vegblocDialog = new VegblocDialog();
-            vegblocDialog.ShowDialog();
+            Functions.VEGBLOC.Create();
         }
 
 

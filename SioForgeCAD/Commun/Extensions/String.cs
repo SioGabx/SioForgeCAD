@@ -17,7 +17,15 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
+        public static string Replace(this string BaseStr, IEnumerable<char> chars, char replaceChar)
+        {
+            string ReplaceStr = BaseStr;
+            foreach (char c in chars)
+            {
+                ReplaceStr = ReplaceStr.Replace(c, replaceChar);
+            }
+            return ReplaceStr;
+        }
 
         public static string CapitalizeFirstLetters(this string input, int x)
         {
