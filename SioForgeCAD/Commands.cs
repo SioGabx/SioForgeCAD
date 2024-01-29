@@ -10,6 +10,7 @@ using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -218,32 +219,57 @@ namespace SioForgeCAD
             }
         }
 
+
+        [CommandMethod("AnalyseSelectionInDebbuger", CommandFlags.UsePickSet)]
+        public void AnalyseSelectionInDebbuger()
+        {
+            Database db = Generic.GetDatabase();
+            Document doc = Generic.GetDocument();
+            Editor ed = Generic.GetEditor();
+
+            PromptSelectionResult AllSelectedObject = ed.GetSelection();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var x = AllSelectedObject.Value;
+                var y = x.GetObjectIds();
+                foreach (ObjectId obj in y)
+                {
+                    DBObject dbobj = obj.GetDBObject();
+                    Debug.WriteLine(dbobj.GetType());
+                    Debugger.Break();
+                }
+                Debug.WriteLine(y.Length);
+                tr.Commit();
+            }
+        }
+
         [CommandMethod("DrawExtend", CommandFlags.UsePickSet)]
         public void DrawExtend()
         {
             Database db = Generic.GetDatabase();
             Document doc = Generic.GetDocument();
-            Editor ed = Generic.GetEditor(); 
+            Editor ed = Generic.GetEditor();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                try { 
-                var entity = ed.GetSelection();
-                foreach (var item in entity.Value.GetObjectIds())
+                try
                 {
-                    var obj = item.GetDBObject();
-                    if (obj is Entity ent)
+                    var entity = ed.GetSelection();
+                    foreach (var item in entity.Value.GetObjectIds())
                     {
-                        var GeometricExtents = ent.GeometricExtents;
-                        var TopLeft = GeometricExtents.TopLeft();
-                        var TopRight = GeometricExtents.TopRight();
-                        var BottomLeft = GeometricExtents.BottomLeft();
-                        var BottomRight = GeometricExtents.BottomRight();
-                        Lines.Draw(TopRight, TopLeft, 125);
-                        Lines.Draw(TopLeft, BottomLeft, 55);
-                        Lines.Draw(BottomLeft, BottomRight, 24);
-                        Lines.Draw(BottomRight, TopRight, 48);
+                        var obj = item.GetDBObject();
+                        if (obj is Entity ent)
+                        {
+                            var GeometricExtents = ent.GeometricExtents;
+                            var TopLeft = GeometricExtents.TopLeft();
+                            var TopRight = GeometricExtents.TopRight();
+                            var BottomLeft = GeometricExtents.BottomLeft();
+                            var BottomRight = GeometricExtents.BottomRight();
+                            Lines.Draw(TopRight, TopLeft, 125);
+                            Lines.Draw(TopLeft, BottomLeft, 55);
+                            Lines.Draw(BottomLeft, BottomRight, 24);
+                            Lines.Draw(BottomRight, TopRight, 48);
+                        }
                     }
-                }
                 }
                 finally
                 {
@@ -254,7 +280,6 @@ namespace SioForgeCAD
 
 
         [CommandMethod("TOSTATICBLOCK")]
-
         public static void TOSTATICBLOCK()
         {
             Editor editor = Generic.GetEditor();
@@ -299,12 +324,61 @@ namespace SioForgeCAD
                 tr.Commit();
             }
 
+        }
+
+
+
+        [CommandMethod("GETBOUND")]
+        public static void GETBOUND()
+        {
+            Editor editor = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+            Document doc = Generic.GetDocument();
+            TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "Selectionnez un bloc",
+                SingleOnly = true,
+                SinglePickInSpace = true,
+                RejectObjectsOnLockedLayers = true
+            };
+
+            PromptSelectionResult promptResult;
+
+            while (true)
+            {
+                promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+
+                if (promptResult.Status == PromptStatus.Cancel)
+                {
+                    return;
+                }
+                else if (promptResult.Status == PromptStatus.OK)
+                {
+                    if (promptResult.Value.Count > 0)
+                    {
+                        break;
+                    }
+                }
             }
 
 
 
-            [CommandMethod("MB")]
+            ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
+            var point = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefId);
+            using (var tr2 = doc.TransactionManager.StartTransaction())
+            {
+                Circles.Draw(new Points(point), 0.2, 5);
+                Circles.Draw(new Points(point), 20, 5);
+                tr2.Commit();
+            }
 
+        }
+
+
+
+
+        [CommandMethod("MB")]
         public static void MergeBlocks()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
@@ -363,6 +437,19 @@ namespace SioForgeCAD
             }
 
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

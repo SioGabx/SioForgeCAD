@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -87,7 +88,7 @@ namespace SioForgeCAD.Functions
                         }
 
                         Point3d OriginSelectedPoint = blockRef.Position.TranformToBlockReferenceTransformation(blockRef);
-                        Lines.Draw(Points.Empty, new Points(OriginSelectedPoint));
+                        // Lines.Draw(Points.Empty, new Points(OriginSelectedPoint));
 
                     }
 
@@ -124,8 +125,55 @@ namespace SioForgeCAD.Functions
                 }
                 tr2.Commit();
             }
+        }
 
 
+        public static Point3d GetOriginalBasePointInDynamicBlockWithBasePoint(ObjectId blockRefId)
+        {
+            var ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+            Extents3d OriginalBounds;
+            Extents3d EditedBounds;
+
+            ObjectId newBtrId;
+            BlockReference blockRef;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                blockRef = blockRefId.GetEntity() as BlockReference;
+
+                OriginalBounds = blockRef.GeometricExtents;
+
+            
+                string oldName = blockRef.GetBlockReferenceName();
+                string newName = BlockReferences.GetUniqueBlockName(oldName);
+                newBtrId = BlockReferences.RenameBlockAndInsert(blockRef.ObjectId, oldName, newName);
+
+                ed.Command("_-BEDIT", newName);
+                SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
+                PromptSelectionResult selRes = ed.SelectAll(filter);
+                if (selRes.Status == PromptStatus.OK)
+                {
+                    var objId = selRes.Value.GetObjectIds();
+                    foreach (ObjectId objectId in objId)
+                    {
+                        objectId.GetDBObject();
+                        objectId.EraseObject();
+                        Debug.WriteLine("Erase BASEPOINTPARAMETERENTITY");
+                    }
+                }
+
+                tr.Commit();
+
+            }
+            using (Transaction tr2 = db.TransactionManager.StartTransaction())
+            {
+                ed.Command("_BCLOSE", "E");
+                EditedBounds = newBtrId.GetEntity().GeometricExtents;
+                newBtrId.EraseObject();
+                tr2.Commit();
+            }
+            var Matrix = OriginalBounds.TopLeft() - EditedBounds.TopLeft();
+            return blockRef.Position.TransformBy(Matrix3d.Displacement(Matrix));
         }
     }
 }

@@ -114,6 +114,7 @@
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\Database.cs" />
     <Compile Include="Commun\Extensions\DataGridView.cs" />
     <Compile Include="Commun\Extensions\Extends3d.cs" />
     <Compile Include="Commun\Extensions\Lines.cs" />

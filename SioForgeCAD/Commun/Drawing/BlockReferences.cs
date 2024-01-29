@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.Colors;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,70 @@ namespace SioForgeCAD.Commun.Drawing
                 return btrId;
             }
         }
+
+
+
+        public static ObjectId RenameBlockAndInsert(ObjectId BlockReferenceObjectId, string OldName, string NewName)
+        {
+            if (!BlockReferenceObjectId.IsValid)
+            {
+                return ObjectId.Null;
+            }
+            ObjectIdCollection acObjIdColl = new ObjectIdCollection { BlockReferenceObjectId };
+
+            Document ActualDocument = Generic.GetDocument();
+            Database ActualDatabase = ActualDocument.Database;
+
+            Database MemoryDatabase = new Database(true, true);
+            IdMapping acIdMap = new IdMapping();
+            using (Transaction MemoryTransaction = MemoryDatabase.TransactionManager.StartTransaction())
+            {
+                BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
+                BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(acBlkTblNewDoc[OldName], OpenMode.ForWrite);
+                btr.Name = NewName;
+                MemoryTransaction.Commit();
+            }
+
+            ObjectId newBlocRefenceId = acIdMap[BlockReferenceObjectId].Value;
+            if (!newBlocRefenceId.IsValid)
+            {
+                return ObjectId.Null;
+            }
+            ObjectIdCollection acObjIdColl2 = new ObjectIdCollection { newBlocRefenceId };
+            IdMapping acIdMap2 = new IdMapping();
+            using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
+            {
+                BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRecNewDoc2 = ActualTransaction.GetObject(acBlkTblNewDoc2[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
+                ActualTransaction.Commit();
+            }
+            return acIdMap2[newBlocRefenceId].Value;
+        }
+
+
+
+
+
+        public static string GetUniqueBlockName(string oldName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                string newName = oldName;
+                int index = 1;
+                while (bt.Has(newName))
+                {
+                    newName = $"{oldName}_{index}";
+                    index++;
+                }
+                return newName;
+            }
+        }
+
 
         public static bool IsBlockExist(string BlocName)
         {

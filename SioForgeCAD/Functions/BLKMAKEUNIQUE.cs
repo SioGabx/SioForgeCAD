@@ -2,7 +2,9 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -27,7 +29,6 @@ namespace SioForgeCAD.Functions
 
         public void MakeUniqueBlockReferences()
         {
-            Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
             ObjectId[] selectedBlockIds;
@@ -79,7 +80,8 @@ namespace SioForgeCAD.Functions
                             {
                                 try
                                 {
-                                    ObjectId newBtrId = RenameBlockInAnotherDatabase(selectedBlockId, oldName, newName);
+                                    ObjectId newBtrId = BlockReferences.RenameBlockAndInsert(selectedBlockId, oldName, newName);
+                                    selectedBlockId.EraseObject();
                                     if (!newBtrId.IsNull)
                                     {
                                         RenameblockNewObjectIds.Add(newBtrId);
@@ -100,77 +102,18 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
-        public static ObjectId RenameBlockInAnotherDatabase(ObjectId BlockReferenceObjectId, string OldName, string NewName)
-        {  if (!BlockReferenceObjectId.IsValid)
-            {
-                return ObjectId.Null;
-            }
-            ObjectIdCollection acObjIdColl = new ObjectIdCollection { BlockReferenceObjectId };
-          
-            Document ActualDocument = Application.DocumentManager.MdiActiveDocument;
-            Database ActualDatabase = ActualDocument.Database;
-
-            Database MemoryDatabase = new Database(true, true);
-            IdMapping acIdMap = new IdMapping();
-            using (Transaction MemoryTransaction = MemoryDatabase.TransactionManager.StartTransaction())
-            {
-                BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
-                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
-                BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(acBlkTblNewDoc[OldName], OpenMode.ForWrite);
-                btr.Name = NewName;
-                MemoryTransaction.Commit();
-            }
-
-            ObjectId newBlocRefenceId = acIdMap[BlockReferenceObjectId].Value;
-            if (!newBlocRefenceId.IsValid)
-            {
-                return ObjectId.Null;
-            }
-            ObjectIdCollection acObjIdColl2 = new ObjectIdCollection { newBlocRefenceId };
-            IdMapping acIdMap2 = new IdMapping();
-            using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
-            {
-                BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRecNewDoc2 = ActualTransaction.GetObject(acBlkTblNewDoc2[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-                ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
-                ActualTransaction.Commit();
-            }
-            BlockReferenceObjectId.EraseObject();
-            return acIdMap2[newBlocRefenceId].Value;
-        }
-
-
-
-
-
         private string GetUniqueBlockName(string oldName)
         {
             if (RegroupBlockDefinitionIfSameName && RenamedBlockNames.ContainsKey(oldName))
             {
                 return RenamedBlockNames[oldName];
             }
-            Document doc = AcAp.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+            string newName = BlockReferences.GetUniqueBlockName(oldName);
+            if (RegroupBlockDefinitionIfSameName)
             {
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                string newName = oldName;
-                int index = 1;
-                while (bt.Has(newName))
-                {
-                    newName = $"{oldName}_{index}";
-                    index++;
-                }
-                if (RegroupBlockDefinitionIfSameName)
-                {
-                    RenamedBlockNames.Add(oldName, newName);
-                }
-                return newName;
+                RenamedBlockNames.Add(oldName, newName);
             }
-
-
+            return newName;
         }
     }
 }
