@@ -2,6 +2,8 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Linq;
 
@@ -40,8 +42,13 @@ namespace SioForgeCAD.Functions
                     }
                 }
             }
+
+
+            Vector3d FixPosition;
+            ObjectIdCollection iter;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                var ed = Generic.GetEditor();
                 ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
                 blockRefId.RegisterHighlight();
                 PromptPointOptions pointOptions = new PromptPointOptions("Veuillez sélectionner son nouveau point de base : ");
@@ -51,37 +58,74 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                Point3d selectedPoint = pointResult.Value;
 
-                Vector3d FixPosition;
                 if (!(tr.GetObject(blockRefId, OpenMode.ForWrite) is BlockReference blockRef))
                 {
                     return;
                 }
-                Point3d selectedPointInBlockRefSpace = selectedPoint.TransformBy(blockRef.BlockTransform.Inverse());
-                Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
-                Point3d rotatedPoint = selectedPointInBlockRefSpace.TransformBy(rotationMatrix);
+                Point3d selectedPoint = pointResult.Value;
+                FixPosition = selectedPoint - blockRef.Position;
+
+                Point3d RotatedSelectedPoint = selectedPoint.TranformToBlockReferenceTransformation(blockRef);
+
                 BlockTableRecord blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
 
-                foreach (ObjectId entId in blockDef)
+                if (blockRef.IsDynamicBlock)
                 {
-                    Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
-                    entity?.TransformBy(Matrix3d.Displacement(rotatedPoint.GetAsVector()));
-                }
-                FixPosition = selectedPoint - blockRef.Position;
-                blockRef.DowngradeOpen();
+                    string BlockName = blockRef.GetBlockReferenceName();
+                    iter = BlockReferences.GetDynamicBlockReferences(BlockName);
+                    ed.Command("_-BEDIT", BlockName);
+                    SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
+                    PromptSelectionResult selRes = ed.SelectAll(filter);
+                    if (selRes.Status == PromptStatus.OK)
+                    {
+                        var objId = selRes.Value.GetObjectIds();
+                        foreach (ObjectId objectId in objId)
+                        {
+                            objectId.GetDBObject();
+                            objectId.EraseObject();
+                        }
 
-                ObjectIdCollection iter = blockDef.GetBlockReferenceIds(true, false);
+                        Point3d OriginSelectedPoint = blockRef.Position.TranformToBlockReferenceTransformation(blockRef);
+                        Lines.Draw(Points.Empty, new Points(OriginSelectedPoint));
+
+                    }
+
+
+                    tr.Commit();
+                    ed.Command("_BPARAMETER", "Base", RotatedSelectedPoint * -1);
+                    ed.Command("_POINT", RotatedSelectedPoint * -1);
+                    ed.Command("_BCLOSE", "E");
+                }
+                else
+                {
+                    foreach (ObjectId entId in blockDef)
+                    {
+                        Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
+                        entity?.TransformBy(Matrix3d.Displacement(RotatedSelectedPoint.GetAsVector()));
+                    }
+                    blockRef.DowngradeOpen();
+                    iter = blockDef.GetBlockReferenceIds(true, false);
+                    tr.Commit();
+                }
+            }
+
+            //Transform blockReferences to keep position
+            using (Transaction tr2 = db.TransactionManager.StartTransaction())
+            {
                 foreach (ObjectId entId in iter)
                 {
                     if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                     {
-                        otherBlockRef.TransformBy(Matrix3d.Displacement(FixPosition));
+                        Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
+                        otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
                         otherBlockRef.RecordGraphicsModified(true);
                     }
                 }
-                tr.Commit();
+                tr2.Commit();
             }
+
+
         }
     }
 }

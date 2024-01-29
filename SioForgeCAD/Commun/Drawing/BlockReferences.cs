@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Drawing
@@ -53,7 +55,41 @@ namespace SioForgeCAD.Commun.Drawing
                 return bt.Has(BlocName);
             }
         }
+        public static ObjectIdCollection GetDynamicBlockReferences(string BlockName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)trans.GetObject(db.BlockTableId, OpenMode.ForRead);
+                foreach (ObjectId btrId in bt)
+                {
+                    BlockTableRecord btr = (BlockTableRecord)trans.GetObject(btrId, OpenMode.ForRead);
+                    if (btr.Name != BlockName)
+                    {
+                        continue;
+                    }
+                    if (btr.IsDynamicBlock)
+                    {
+                        //get all anonymous blocks from this dynamic block
+                        ObjectIdCollection anonymousIds = btr.GetAnonymousBlockIds();
+                        ObjectIdCollection dynBlockRefs = new ObjectIdCollection();
+                        foreach (ObjectId anonymousBtrId in anonymousIds)
+                        {
+                            BlockTableRecord anonymousBtr = (BlockTableRecord)trans.GetObject(anonymousBtrId, OpenMode.ForRead);
+                            ObjectIdCollection blockRefIds = anonymousBtr.GetBlockReferenceIds(true, true);
+                            dynBlockRefs.Join(blockRefIds);
+                        }
 
+                        Debug.WriteLine(String.Format("Dynamic block \"{0}\" found with {1} anonymous block and {2} block references\n", btr.Name, anonymousIds.Count, dynBlockRefs.Count));
+
+                        //anonymousIds is block where attributes ares edited
+                        //dynBlockRefs contain all ref
+                        return dynBlockRefs;
+                    }
+                }
+            }
+            return new ObjectIdCollection();
+        }
 
         public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
         {

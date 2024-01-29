@@ -74,13 +74,20 @@ namespace SioForgeCAD.Commun
         }
 
 
-        public static ObjectIdCollection Join(this ObjectIdCollection A, ObjectIdCollection B)
+        public static void Join(this ObjectIdCollection A, ObjectIdCollection B)
         {
             foreach (ObjectId ent in B)
             {
                 A.Add(ent);
             }
-            return A;
+        }
+        public static void Add(this ObjectIdCollection col, ObjectId[] ids)
+        {
+            foreach (var id in ids)
+            {
+                if (!col.Contains(id))
+                    col.Add(id);
+            }
         }
 
         public static Hatch HatchObject(this ObjectId Obj, string Layer)

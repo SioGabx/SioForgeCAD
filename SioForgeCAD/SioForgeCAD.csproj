@@ -115,6 +115,7 @@
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
     <Compile Include="Commun\Extensions\DataGridView.cs" />
+    <Compile Include="Commun\Extensions\Extends3d.cs" />
     <Compile Include="Commun\Extensions\Lines.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
     <Compile Include="Commun\Extensions\Point3d.cs" />
