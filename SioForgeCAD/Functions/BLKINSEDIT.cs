@@ -88,7 +88,8 @@ namespace SioForgeCAD.Functions
             }
             else
             {
-                iter = ChangeBasePointStaticBlock(blockRefId, BlockReferenceTransformedPoint);
+                Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
+                iter = ChangeBasePointStaticBlock(blockRefId, BlockReferenceTransformedPoint.TransformBy(rotationMatrix));
             }
 
 
@@ -124,6 +125,10 @@ namespace SioForgeCAD.Functions
                 string BlockName = blockRef.GetBlockReferenceName();
                 ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockName);
                 ed.Command("_-BEDIT", BlockName);
+
+                ed.Command("_CIRCLE", BlockReferenceTransformedPoint, .05);
+                //tr.Commit();
+                //return new ObjectIdCollection();
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
                 PromptSelectionResult selRes = ed.SelectAll(filter);
                 Point3d ReelBlocOriginInBlocSpace = new Point3d(0, 0, 0);
@@ -136,12 +141,14 @@ namespace SioForgeCAD.Functions
                     }
 
                     ReelBlocOriginInBlocSpace = ReelBlocOrigin.TranformToBlockReferenceTransformation(blockRef);
-                    //ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, 50);
+                    ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, .1);
                 }
+                
+                var BlockReferenceTransformedPointV2 = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector().MultiplyBy(-1)));
+                ed.Command("_CIRCLE", BlockReferenceTransformedPointV2, .02);
 
-                var BlockReferenceTransformedPointV2 = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector() *-1));
                 tr.Commit();
-                ed.Command("_BPARAMETER", "Base", BlockReferenceTransformedPointV2 * -1);
+                ed.Command("_BPARAMETER", "Base", BlockReferenceTransformedPointV2);
                 //ed.Command("_POINT", BlockReferenceTransformedPointV2 * -1);
                 ed.Command("_BCLOSE", "E");
                 return iter;

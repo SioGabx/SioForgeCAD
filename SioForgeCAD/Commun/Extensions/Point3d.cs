@@ -42,8 +42,8 @@ namespace SioForgeCAD.Commun.Extensions
         public static Point3d TranformToBlockReferenceTransformation(this Point3d OriginPoint, BlockReference blkRef)
         {
             Point3d selectedPointInBlockRefSpace = OriginPoint.TransformBy(blkRef.BlockTransform.Inverse());
-            Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
-            return selectedPointInBlockRefSpace.TransformBy(rotationMatrix);
+            // Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
+            return selectedPointInBlockRefSpace;//.TransformBy(rotationMatrix);
         }
 
     }
