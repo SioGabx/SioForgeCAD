@@ -190,7 +190,6 @@ namespace SioForgeCAD
         public void EraseBasePointParameter()
         {
             Database db = Generic.GetDatabase();
-            Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
             //var PromptSelectEntitiesOptions = new PromptSelectionOptions()
             //{
@@ -224,7 +223,6 @@ namespace SioForgeCAD
         public void AnalyseSelectionInDebbuger()
         {
             Database db = Generic.GetDatabase();
-            Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
 
             PromptSelectionResult AllSelectedObject = ed.GetSelection();
@@ -247,7 +245,6 @@ namespace SioForgeCAD
         public void DrawExtend()
         {
             Database db = Generic.GetDatabase();
-            Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -332,7 +329,6 @@ namespace SioForgeCAD
         public static void GETBOUND()
         {
             Editor editor = Generic.GetEditor();
-            Database db = Generic.GetDatabase();
             Document doc = Generic.GetDocument();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
@@ -408,8 +404,10 @@ namespace SioForgeCAD
                             var en2 = btr2.Cast<ObjectId>();
                             ids.Add(en1.ToArray<ObjectId>());
                             ids.Add(en2.ToArray<ObjectId>());
-                            var btr = new BlockTableRecord();
-                            btr.Name = merged;
+                            var btr = new BlockTableRecord
+                            {
+                                Name = merged
+                            };
                             bt.UpgradeOpen();
                             var btrId = bt.Add(btr);
                             tr.AddNewlyCreatedDBObject(btr, true);

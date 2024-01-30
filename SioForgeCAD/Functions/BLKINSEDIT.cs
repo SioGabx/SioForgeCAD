@@ -14,7 +14,7 @@ namespace SioForgeCAD.Functions
     {
         public static void MoveBasePoint()
         {
-            Editor editor = Generic.GetEditor();
+            Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
@@ -26,90 +26,71 @@ namespace SioForgeCAD.Functions
             };
 
             PromptSelectionResult promptResult;
-
-            while (true)
-            {
-                promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
-
-                if (promptResult.Status == PromptStatus.Cancel)
-                {
-                    return;
-                }
-                else if (promptResult.Status == PromptStatus.OK)
-                {
-                    if (promptResult.Value.Count > 0)
-                    {
-                        break;
-                    }
-                }
-            }
-
-
-            Vector3d FixPosition;
-            ObjectIdCollection iter;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var ed = Generic.GetEditor();
-                ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
+                while (true)
+                {
+                    promptResult = ed.GetSelection(selectionOptions, new SelectionFilter(filterList));
+
+                    if (promptResult.Status == PromptStatus.Cancel)
+                    {
+                        tr.Commit();
+                        return;
+                    }
+                    else if (promptResult.Status == PromptStatus.OK)
+                    {
+                        if (promptResult.Value.Count > 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+                tr.Commit();
+            }
+
+            ObjectIdCollection iter;
+            BlockReference blockRef;
+            BlockTableRecord blockDef;
+            PromptPointResult pointResult;
+            bool IsDynamicBlock = false;
+            ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
                 blockRefId.RegisterHighlight();
                 PromptPointOptions pointOptions = new PromptPointOptions("Veuillez sélectionner son nouveau point de base : ");
-                PromptPointResult pointResult = editor.GetPoint(pointOptions);
+                pointResult = ed.GetPoint(pointOptions);
                 blockRefId.RegisterUnhighlight();
                 if (pointResult.Status != PromptStatus.OK)
                 {
                     return;
                 }
 
-                if (!(tr.GetObject(blockRefId, OpenMode.ForWrite) is BlockReference blockRef))
+                if (!(tr.GetObject(blockRefId, OpenMode.ForWrite) is BlockReference blockRefOut))
                 {
                     return;
                 }
-                Point3d selectedPoint = pointResult.Value;
-                FixPosition = selectedPoint - blockRef.Position;
-
-                Point3d RotatedSelectedPoint = selectedPoint.TranformToBlockReferenceTransformation(blockRef);
-
-                BlockTableRecord blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
-
-                if (blockRef.IsDynamicBlock)
-                {
-                    string BlockName = blockRef.GetBlockReferenceName();
-                    iter = BlockReferences.GetDynamicBlockReferences(BlockName);
-                    ed.Command("_-BEDIT", BlockName);
-                    SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
-                    PromptSelectionResult selRes = ed.SelectAll(filter);
-                    if (selRes.Status == PromptStatus.OK)
-                    {
-                        var objId = selRes.Value.GetObjectIds();
-                        foreach (ObjectId objectId in objId)
-                        {
-                            objectId.GetDBObject();
-                            objectId.EraseObject();
-                        }
-
-                        Point3d OriginSelectedPoint = blockRef.Position.TranformToBlockReferenceTransformation(blockRef);
-                        // Lines.Draw(Points.Empty, new Points(OriginSelectedPoint));
-
-                    }
-
-
-                    tr.Commit();
-                    ed.Command("_BPARAMETER", "Base", RotatedSelectedPoint * -1);
-                    ed.Command("_POINT", RotatedSelectedPoint * -1);
-                    ed.Command("_BCLOSE", "E");
-                }
                 else
                 {
-                    foreach (ObjectId entId in blockDef)
-                    {
-                        Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
-                        entity?.TransformBy(Matrix3d.Displacement(RotatedSelectedPoint.GetAsVector()));
-                    }
-                    blockRef.DowngradeOpen();
-                    iter = blockDef.GetBlockReferenceIds(true, false);
-                    tr.Commit();
+                    blockDef = blockRefOut.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                    IsDynamicBlock = blockRefOut.IsDynamicBlock;
+                    blockRef = blockRefOut;
                 }
+                tr.Commit();
             }
+
+            Point3d selectedPoint = pointResult.Value;
+            Vector3d FixPosition = selectedPoint - blockRef.Position;
+            Point3d BlockReferenceTransformedPoint = selectedPoint.TranformToBlockReferenceTransformation(blockRef);
+
+            if (IsDynamicBlock)
+            {
+                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint);
+            }
+            else
+            {
+                iter = ChangeBasePointStaticBlock(blockRefId, BlockReferenceTransformedPoint);
+            }
+
 
             //Transform blockReferences to keep position
             using (Transaction tr2 = db.TransactionManager.StartTransaction())
@@ -118,12 +99,76 @@ namespace SioForgeCAD.Functions
                 {
                     if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                     {
-                        Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                        otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                        //Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
+                        otherBlockRef.TransformBy(Matrix3d.Displacement(FixPosition));
                         otherBlockRef.RecordGraphicsModified(true);
                     }
                 }
                 tr2.Commit();
+            }
+        }
+
+        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint)
+        {
+            Editor ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+
+
+            var ReelBlocOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (!(blockRefObjId.GetDBObject(OpenMode.ForWrite) is BlockReference blockRef))
+                {
+                    return new ObjectIdCollection();
+                }
+                string BlockName = blockRef.GetBlockReferenceName();
+                ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockName);
+                ed.Command("_-BEDIT", BlockName);
+                SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
+                PromptSelectionResult selRes = ed.SelectAll(filter);
+                Point3d ReelBlocOriginInBlocSpace = new Point3d(0, 0, 0);
+                if (selRes.Status == PromptStatus.OK)
+                {
+                    var objId = selRes.Value.GetObjectIds();
+                    foreach (ObjectId objectId in objId)
+                    {
+                        objectId.EraseObject();
+                    }
+
+                    ReelBlocOriginInBlocSpace = ReelBlocOrigin.TranformToBlockReferenceTransformation(blockRef);
+                    //ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, 50);
+                }
+
+                var BlockReferenceTransformedPointV2 = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector() *-1));
+                tr.Commit();
+                ed.Command("_BPARAMETER", "Base", BlockReferenceTransformedPointV2 * -1);
+                //ed.Command("_POINT", BlockReferenceTransformedPointV2 * -1);
+                ed.Command("_BCLOSE", "E");
+                return iter;
+            }
+        }
+
+        private static ObjectIdCollection ChangeBasePointStaticBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (!(blockRefObjId.GetDBObject(OpenMode.ForWrite) is BlockReference blockRef))
+                {
+                    return new ObjectIdCollection();
+                }
+                var blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+
+
+                foreach (ObjectId entId in blockDef)
+                {
+                    Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
+                    entity?.TransformBy(Matrix3d.Displacement(BlockReferenceTransformedPoint.GetAsVector()));
+                }
+                blockRef.DowngradeOpen();
+
+                tr.Commit();
+                return blockDef.GetBlockReferenceIds(true, false);
             }
         }
 
@@ -143,7 +188,7 @@ namespace SioForgeCAD.Functions
 
                 OriginalBounds = blockRef.GeometricExtents;
 
-            
+
                 string oldName = blockRef.GetBlockReferenceName();
                 string newName = BlockReferences.GetUniqueBlockName(oldName);
                 newBtrId = BlockReferences.RenameBlockAndInsert(blockRef.ObjectId, oldName, newName);

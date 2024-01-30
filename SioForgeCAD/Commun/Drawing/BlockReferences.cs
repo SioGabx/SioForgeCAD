@@ -60,7 +60,7 @@ namespace SioForgeCAD.Commun.Drawing
             Document ActualDocument = Generic.GetDocument();
             Database ActualDatabase = ActualDocument.Database;
 
-            Database MemoryDatabase = new Database(true, true);
+            Database MemoryDatabase = new Database(true, false);
             IdMapping acIdMap = new IdMapping();
             using (Transaction MemoryTransaction = MemoryDatabase.TransactionManager.StartTransaction())
             {
