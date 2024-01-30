@@ -84,7 +84,8 @@ namespace SioForgeCAD.Functions
 
             if (IsDynamicBlock)
             {
-                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint);
+                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d ReelBlocOrigin);
+                FixPosition = selectedPoint - blockRef.Position;
             }
             else
             {
@@ -100,8 +101,8 @@ namespace SioForgeCAD.Functions
                 {
                     if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                     {
-                        //Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                        otherBlockRef.TransformBy(Matrix3d.Displacement(FixPosition));
+                        Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
+                        otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
                         otherBlockRef.RecordGraphicsModified(true);
                     }
                 }
@@ -109,13 +110,12 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint)
+        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d ReelBlocOrigin)
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
-
-            var ReelBlocOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
+            ReelBlocOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 if (!(blockRefObjId.GetDBObject(OpenMode.ForWrite) is BlockReference blockRef))
@@ -144,11 +144,11 @@ namespace SioForgeCAD.Functions
                     ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, .1);
                 }
                 
-                var BlockReferenceTransformedPointV2 = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector().MultiplyBy(-1)));
-                ed.Command("_CIRCLE", BlockReferenceTransformedPointV2, .02);
+                var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector().MultiplyBy(-1)));
+                ed.Command("_CIRCLE", ReelBlockReferenceTransformedPoint, .02);
 
                 tr.Commit();
-                ed.Command("_BPARAMETER", "Base", BlockReferenceTransformedPointV2);
+                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint);
                 //ed.Command("_POINT", BlockReferenceTransformedPointV2 * -1);
                 ed.Command("_BCLOSE", "E");
                 return iter;
