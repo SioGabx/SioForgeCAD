@@ -112,6 +112,7 @@
     <Compile Include="Commun\Drawing\Circles.cs" />
     <Compile Include="Commun\Drawing\Colors.cs" />
     <Compile Include="Commun\Drawing\Groups.cs" />
+    <Compile Include="Commun\Drawing\Leaders.cs" />
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />

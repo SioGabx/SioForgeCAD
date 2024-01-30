@@ -134,6 +134,21 @@ namespace SioForgeCAD.Commun
             }
         }
 
+
+        public static ObjectId AddToDrawingCurrentTransaction(this Entity entity)
+        {
+            var db = GetDatabase();
+            Transaction acTrans = db.TransactionManager.TopTransaction;
+
+            BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+            acBlkTblRec.AppendEntity(entity);
+            acTrans.AddNewlyCreatedDBObject(entity, true);
+            return entity.ObjectId;
+
+        }
+
         public static Document GetDocument()
         {
             return Application.DocumentManager.MdiActiveDocument;

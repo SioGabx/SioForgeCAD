@@ -84,38 +84,60 @@ namespace SioForgeCAD.Functions
 
             if (IsDynamicBlock)
             {
-                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d ReelBlocOrigin);
+                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d ReelBlocBasePoint);
+                Leaders.Draw("ReelBlocOriginModelSpace", ReelBlocBasePoint, Point3d.Origin);
                 FixPosition = selectedPoint - blockRef.Position;
+                Leaders.Draw("blockRef.Position", blockRef.Position, Point3d.Origin);
+                Leaders.Draw("selectedPoint", selectedPoint, Point3d.Origin);
+                Leaders.Draw("BlockReferenceTransformedPoint", BlockReferenceTransformedPoint, Point3d.Origin);
+
+                //Transform blockReferences to keep position
+                using (Transaction tr2 = db.TransactionManager.StartTransaction())
+                {
+                    foreach (ObjectId entId in iter)
+                    {
+                        if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
+                        {
+                            Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
+                            otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                            otherBlockRef.RecordGraphicsModified(true);
+                        }
+                    }
+                    tr2.Commit();
+                }
+
+
             }
             else
             {
                 Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
                 iter = ChangeBasePointStaticBlock(blockRefId, BlockReferenceTransformedPoint.TransformBy(rotationMatrix));
-            }
-
-
-            //Transform blockReferences to keep position
-            using (Transaction tr2 = db.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId entId in iter)
+                //Transform blockReferences to keep position
+                using (Transaction tr2 = db.TransactionManager.StartTransaction())
                 {
-                    if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
+                    foreach (ObjectId entId in iter)
                     {
-                        Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                        otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
-                        otherBlockRef.RecordGraphicsModified(true);
+                        if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
+                        {
+                            Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
+                            otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                            otherBlockRef.RecordGraphicsModified(true);
+                        }
                     }
+                    tr2.Commit();
                 }
-                tr2.Commit();
             }
+
+
+          
         }
 
-        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d ReelBlocOrigin)
+        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d ReelBlocBasePointOrigin)
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
-            ReelBlocOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
+            ReelBlocBasePointOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 if (!(blockRefObjId.GetDBObject(OpenMode.ForWrite) is BlockReference blockRef))
@@ -126,9 +148,7 @@ namespace SioForgeCAD.Functions
                 ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockName);
                 ed.Command("_-BEDIT", BlockName);
 
-                ed.Command("_CIRCLE", BlockReferenceTransformedPoint, .05);
-                //tr.Commit();
-                //return new ObjectIdCollection();
+               // ed.Command("_CIRCLE", BlockReferenceTransformedPoint, .05);
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
                 PromptSelectionResult selRes = ed.SelectAll(filter);
                 Point3d ReelBlocOriginInBlocSpace = new Point3d(0, 0, 0);
@@ -140,12 +160,12 @@ namespace SioForgeCAD.Functions
                         objectId.EraseObject();
                     }
 
-                    ReelBlocOriginInBlocSpace = ReelBlocOrigin.TranformToBlockReferenceTransformation(blockRef);
-                    ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, .1);
+                    ReelBlocOriginInBlocSpace = ReelBlocBasePointOrigin.TranformToBlockReferenceTransformation(blockRef);
+                    //ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, .1);
                 }
                 
                 var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector().MultiplyBy(-1)));
-                ed.Command("_CIRCLE", ReelBlockReferenceTransformedPoint, .02);
+                //ed.Command("_CIRCLE", ReelBlockReferenceTransformedPoint, .02);
 
                 tr.Commit();
                 ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint);
