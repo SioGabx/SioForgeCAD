@@ -27,8 +27,6 @@ namespace SioForgeCAD.Functions
                 RejectObjectsOnLockedLayers = true
             };
 
-
-
             PromptSelectionResult promptResult;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -109,8 +107,6 @@ namespace SioForgeCAD.Functions
                     }
                     tr2.Commit();
                 }
-
-
             }
             else
             {
@@ -185,7 +181,7 @@ namespace SioForgeCAD.Functions
                 {
                     PtObjectId = Pt.AddToDrawingCurrentTransaction();
                 }
-                Generic.WriteMessage("Point : " + ReelBlockReferenceTransformedPoint.ToString());
+                //Generic.WriteMessage("Point : " + ReelBlockReferenceTransformedPoint.ToString());
                 //Leaders.Draw("ReelBlockReferenceTransformedPoint", ReelBlockReferenceTransformedPoint, Point3d.Origin);
                 //Commit the delete of the existing BASEPOINTPARAMETERENTITY
                 tr.Commit();
@@ -244,7 +240,6 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
                 insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, oldName, newName);
                 ed.Command("_-BEDIT", newName);
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
@@ -268,7 +263,7 @@ namespace SioForgeCAD.Functions
                 ed.Command("_BCLOSE", "E");
                 ed.Command("_RESETBLOCK", insertedCopyBtrId, "");
                 EditedBounds = insertedCopyBtrId.GetEntity().GeometricExtents;
-                //Cleannup
+                //Cleanup
                 insertedBtrId.EraseObject();
                 insertedCopyBtrId.EraseObject();
                 tr2.Commit();
