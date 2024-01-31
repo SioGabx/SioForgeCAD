@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -25,6 +26,16 @@ namespace SioForgeCAD.Commun.Extensions
         public static Point3d BottomRight(this Extents3d extends)
         {
             return new Point3d(extends.MinPoint.X, extends.MinPoint.Y, 0);
+        }
+
+        public static Size Size(this Extents3d extends)
+        {
+            var Dim = new Size
+            {
+                Width = extends.TopLeft().DistanceTo(extends.TopLeft()),
+                Height = extends.BottomLeft().DistanceTo(extends.BottomRight())
+            };
+            return Dim;
         }
 
 

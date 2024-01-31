@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows;
 
 namespace SioForgeCAD.Functions
 {
@@ -138,7 +139,12 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             //Get the matrix between the fake point and original
-            Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId);
+            Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId, out Extents3d OriginalBounds, out Extents3d EditedBounds);
+            if (OriginalBounds.Size() != EditedBounds.Size())
+            {
+                MessageBox.Show("Impossible de changer le point de base de ce bloc dynamique.","Opération annulée");
+                return new ObjectIdCollection();
+            }
             ObjectIdCollection iter;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -215,12 +221,10 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrix(ObjectId OriginalBlockObjectId)
+        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrix(ObjectId OriginalBlockObjectId, out Extents3d OriginalBounds, out Extents3d EditedBounds)
         {
             var ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-            Extents3d OriginalBounds;
-            Extents3d EditedBounds;
 
             ObjectId insertedBtrId;
             ObjectId insertedCopyBtrId;
@@ -262,6 +266,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr2 = db.TransactionManager.StartTransaction())
             {
                 ed.Command("_BCLOSE", "E");
+                ed.Command("_RESETBLOCK", insertedCopyBtrId, "");
                 EditedBounds = insertedCopyBtrId.GetEntity().GeometricExtents;
                 //Cleannup
                 insertedBtrId.EraseObject();
@@ -269,57 +274,6 @@ namespace SioForgeCAD.Functions
                 tr2.Commit();
             }
             BlockReferences.Purge(newName);
-            var Matrix = OriginalBounds.TopLeft() - EditedBounds.TopLeft();
-            return Matrix;
-        }
-
-
-
-
-        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrixOld(ObjectId blockRefId)
-        {
-            var ed = Generic.GetEditor();
-            Database db = Generic.GetDatabase();
-            Extents3d OriginalBounds;
-            Extents3d EditedBounds;
-
-            ObjectId newBtrId;
-            BlockReference blockRef;
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                blockRef = blockRefId.GetEntity() as BlockReference;
-
-                OriginalBounds = blockRef.GeometricExtents;
-
-
-                string oldName = blockRef.GetBlockReferenceName();
-                string newName = BlockReferences.GetUniqueBlockName(oldName);
-                newBtrId = BlockReferences.RenameBlockAndInsert(blockRef.ObjectId, oldName, newName);
-
-                ed.Command("_-BEDIT", newName);
-                SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
-                PromptSelectionResult selRes = ed.SelectAll(filter);
-                if (selRes.Status == PromptStatus.OK)
-                {
-                    var objId = selRes.Value.GetObjectIds();
-                    foreach (ObjectId objectId in objId)
-                    {
-                        objectId.GetDBObject();
-                        objectId.EraseObject();
-                        Debug.WriteLine("Erase BASEPOINTPARAMETERENTITY");
-                    }
-                }
-
-                tr.Commit();
-
-            }
-            using (Transaction tr2 = db.TransactionManager.StartTransaction())
-            {
-                ed.Command("_BCLOSE", "E");
-                EditedBounds = newBtrId.GetEntity().GeometricExtents;
-                newBtrId.EraseObject();
-                tr2.Commit();
-            }
             var Matrix = OriginalBounds.TopLeft() - EditedBounds.TopLeft();
             return Matrix;
         }
