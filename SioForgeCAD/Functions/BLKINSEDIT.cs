@@ -82,7 +82,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            Point3d selectedPoint = pointResult.Value;
+            Point3d selectedPoint =  Points.GetFromPromptPointResult(pointResult).SCG;
             Vector3d FixPosition = selectedPoint - blockRef.Position;
             Point3d BlockReferenceTransformedPoint = selectedPoint.TranformToBlockReferenceTransformation(blockRef);
 
