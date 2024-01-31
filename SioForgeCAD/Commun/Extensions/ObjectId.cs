@@ -78,7 +78,10 @@ namespace SioForgeCAD.Commun
         {
             foreach (ObjectId ent in B)
             {
-                A.Add(ent);
+                if (!A.Contains(ent))
+                {
+                    A.Add(ent);
+                }
             }
         }
         public static void Add(this ObjectIdCollection col, ObjectId[] ids)

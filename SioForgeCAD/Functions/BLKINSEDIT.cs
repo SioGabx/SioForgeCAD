@@ -26,7 +26,7 @@ namespace SioForgeCAD.Functions
                 RejectObjectsOnLockedLayers = true
             };
 
-           
+
 
             PromptSelectionResult promptResult;
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -75,7 +75,7 @@ namespace SioForgeCAD.Functions
                 else
                 {
                     blockDef = blockRefOut.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
-                    IsDynamicBlock = blockRefOut.IsDynamicBlock;
+                    IsDynamicBlock = blockRefOut.IsDynamicBlock || blockDef.IsDynamicBlock;
                     blockRef = blockRefOut;
                 }
                 tr.Commit();
@@ -89,7 +89,6 @@ namespace SioForgeCAD.Functions
             {
                 iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace);
                 //Leaders.Draw("OriginalBlocBasePointInModelSpace", OriginalBlocBasePointInModelSpace, Point3d.Origin);
-                FixPosition = selectedPoint - blockRef.Position;
                 //Leaders.Draw("selectedPoint", selectedPoint, Point3d.Origin);
 
                 //Transform blockReferences to keep position
@@ -123,17 +122,14 @@ namespace SioForgeCAD.Functions
                     {
                         if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                         {
-                            Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                            otherBlockRef.Position  = otherBlockRef.Position.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                            Vector3d TransformedFixPositionV2 = FixPosition.TransformBy(blockRef.BlockTransform.Inverse()).TransformBy(otherBlockRef.BlockTransform);
+                            otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPositionV2));
                             otherBlockRef.RecordGraphicsModified(true);
                         }
                     }
                     tr2.Commit();
                 }
             }
-
-
-
         }
 
         private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace)
@@ -175,7 +171,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 //Leaders.Draw("SelectedBlockReferenceTransformedPoint", BlockReferenceTransformedPoint, Point3d.Origin);
-                var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(FakeBlocBasePointInBlocSpace - new Point3d(0, 0, 0)));
+                var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(FakeBlocBasePointInBlocSpace - new Point3d(0, 0, 0))).Flatten();
 
                 //Create a temp point at ReelBlockReferenceTransformedPoint to avoid weird placement issue of the _BPARAMETER
                 ObjectId PtObjectId;
@@ -183,12 +179,12 @@ namespace SioForgeCAD.Functions
                 {
                     PtObjectId = Pt.AddToDrawingCurrentTransaction();
                 }
-                
+                Generic.WriteMessage("Point : " + ReelBlockReferenceTransformedPoint.ToString());
                 //Leaders.Draw("ReelBlockReferenceTransformedPoint", ReelBlockReferenceTransformedPoint, Point3d.Origin);
                 //Commit the delete of the existing BASEPOINTPARAMETERENTITY
                 tr.Commit();
                 //Add the BASEPOINTPARAMETERENTITY at the new Position
-                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint.Flatten());
+                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint);
                 PtObjectId.EraseObject();
                 ed.Command("_BCLOSE", "E");
                 return iter;
