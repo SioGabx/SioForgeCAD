@@ -6,16 +6,6 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Circles
     {
-        public static ObjectId DebugDraw(Point3d center, double radius = 0.05, int ColorIndex = 256)
-        {
-            var db = Generic.GetDatabase();
-            using (Transaction tr2 = db.TransactionManager.StartTransaction())
-            {
-                ObjectId obj = Draw(center, radius, ColorIndex);
-                tr2.Commit();
-                return obj;
-            }
-        }
         public static ObjectId Draw(Point3d center, double radius, int ColorIndex = 256)
         {
             return Draw(center, radius, ColorIndex);

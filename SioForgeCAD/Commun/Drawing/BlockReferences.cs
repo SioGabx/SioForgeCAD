@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -20,7 +21,7 @@ namespace SioForgeCAD.Commun.Drawing
 
                 if (bt.Has(BlockName))
                 {
-                   Generic.WriteMessage($"Le bloc {Name} existe déja dans le dessin");
+                    Generic.WriteMessage($"Le bloc {Name} existe déja dans le dessin");
                 }
 
                 BlockTableRecord btr = new BlockTableRecord
@@ -247,6 +248,30 @@ namespace SioForgeCAD.Commun.Drawing
                 return blockRefObjectId;
             }
         }
+
+        public static void Purge(string BlocName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = trans.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
+
+                foreach (ObjectId oid in bt)
+                {
+                    BlockTableRecord btr = trans.GetObject(oid, OpenMode.ForWrite) as BlockTableRecord;
+                    if (btr.Name.Equals(BlocName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (btr.GetBlockReferenceIds(false, false).Count == 0 && !btr.IsLayout)
+                        {
+                            btr.Erase();
+                        }
+                    }
+
+                }
+                trans.Commit();
+            }
+        }
+
 
         public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues, string Layer = null)
         {
