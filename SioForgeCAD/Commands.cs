@@ -325,51 +325,51 @@ namespace SioForgeCAD
 
 
 
-        [CommandMethod("GETBOUND")]
-        public static void GETBOUND()
-        {
-            Editor editor = Generic.GetEditor();
-            Document doc = Generic.GetDocument();
-            TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
-            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
-            {
-                MessageForAdding = "Selectionnez un bloc",
-                SingleOnly = true,
-                SinglePickInSpace = true,
-                RejectObjectsOnLockedLayers = true
-            };
+        //[CommandMethod("GETBOUND")]
+        //public static void GETBOUND()
+        //{
+        //    Editor editor = Generic.GetEditor();
+        //    Document doc = Generic.GetDocument();
+        //    TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
+        //    PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+        //    {
+        //        MessageForAdding = "Selectionnez un bloc",
+        //        SingleOnly = true,
+        //        SinglePickInSpace = true,
+        //        RejectObjectsOnLockedLayers = true
+        //    };
 
-            PromptSelectionResult promptResult;
+        //    PromptSelectionResult promptResult;
 
-            while (true)
-            {
-                promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+        //    while (true)
+        //    {
+        //        promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
 
-                if (promptResult.Status == PromptStatus.Cancel)
-                {
-                    return;
-                }
-                else if (promptResult.Status == PromptStatus.OK)
-                {
-                    if (promptResult.Value.Count > 0)
-                    {
-                        break;
-                    }
-                }
-            }
+        //        if (promptResult.Status == PromptStatus.Cancel)
+        //        {
+        //            return;
+        //        }
+        //        else if (promptResult.Status == PromptStatus.OK)
+        //        {
+        //            if (promptResult.Value.Count > 0)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //    }
 
 
 
-            ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
-            var point = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefId);
-            using (var tr2 = doc.TransactionManager.StartTransaction())
-            {
-                Circles.Draw(new Points(point), 0.2, 5);
-                Circles.Draw(new Points(point), 20, 5);
-                tr2.Commit();
-            }
+        //    ObjectId blockRefId = promptResult.Value.GetObjectIds().First();
+        //    var point = Functions.BLKINSEDIT.GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefId);
+        //    using (var tr2 = doc.TransactionManager.StartTransaction())
+        //    {
+        //        Circles.Draw(new Points(point), 0.2, 5);
+        //        Circles.Draw(new Points(point), 20, 5);
+        //        tr2.Commit();
+        //    }
 
-        }
+        //}
 
 
 

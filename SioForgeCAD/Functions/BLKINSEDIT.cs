@@ -84,12 +84,11 @@ namespace SioForgeCAD.Functions
 
             if (IsDynamicBlock)
             {
-                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d ReelBlocBasePoint);
-                Leaders.Draw("ReelBlocOriginModelSpace", ReelBlocBasePoint, Point3d.Origin);
+                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace);
+                Leaders.Draw("OriginalBlocBasePointInModelSpace", OriginalBlocBasePointInModelSpace, Point3d.Origin);
                 FixPosition = selectedPoint - blockRef.Position;
                 Leaders.Draw("blockRef.Position", blockRef.Position, Point3d.Origin);
                 Leaders.Draw("selectedPoint", selectedPoint, Point3d.Origin);
-                Leaders.Draw("BlockReferenceTransformedPoint", BlockReferenceTransformedPoint, Point3d.Origin);
 
                 //Transform blockReferences to keep position
                 using (Transaction tr2 = db.TransactionManager.StartTransaction())
@@ -129,29 +128,38 @@ namespace SioForgeCAD.Functions
             }
 
 
-          
+
         }
 
-        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d ReelBlocBasePointOrigin)
+        private static ObjectIdCollection ChangeBasePointDynamicBlock(ObjectId blockRefObjId, Point3d BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace)
         {
+            OriginalBlocBasePointInModelSpace = new Point3d(0, 0, 0);
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
+            //Get the matrix between the fake point and original
+            Vector3d FakeOriginalBasePointMatrix = Functions.BLKINSEDIT.GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId);
 
-            ReelBlocBasePointOrigin = Functions.BLKINSEDIT.GetOriginalBasePointInDynamicBlockWithBasePoint(blockRefObjId);
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 if (!(blockRefObjId.GetDBObject(OpenMode.ForWrite) is BlockReference blockRef))
                 {
                     return new ObjectIdCollection();
                 }
-                string BlockName = blockRef.GetBlockReferenceName();
-                ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockName);
-                ed.Command("_-BEDIT", BlockName);
 
-               // ed.Command("_CIRCLE", BlockReferenceTransformedPoint, .05);
+                OriginalBlocBasePointInModelSpace = blockRef.Position.TransformBy(Matrix3d.Displacement(FakeOriginalBasePointMatrix));
+                Point3d FakeBlocBasePointInBlocSpace = new Point3d(0, 0, 0).TransformBy(Matrix3d.Displacement(FakeOriginalBasePointMatrix * -1));
+
+                string BlockName = blockRef.GetBlockReferenceName();
+                //Get all GetDynamicBlockReferences to avoid delay after BEDIT
+                ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockName);
+
+                //Enter block reference edit mode
+                ed.Command("_-BEDIT", BlockName);
+                Leaders.Draw("FakeBlocBasePointInBlocSpace", FakeBlocBasePointInBlocSpace, Point3d.Origin);
+
+                //Can only be a single BASEPOINTPARAMETERENTITY : we Erase the basepoint
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
                 PromptSelectionResult selRes = ed.SelectAll(filter);
-                Point3d ReelBlocOriginInBlocSpace = new Point3d(0, 0, 0);
                 if (selRes.Status == PromptStatus.OK)
                 {
                     var objId = selRes.Value.GetObjectIds();
@@ -159,17 +167,15 @@ namespace SioForgeCAD.Functions
                     {
                         objectId.EraseObject();
                     }
-
-                    ReelBlocOriginInBlocSpace = ReelBlocBasePointOrigin.TranformToBlockReferenceTransformation(blockRef);
-                    //ed.Command("_CIRCLE", ReelBlocOriginInBlocSpace, .1);
                 }
-                
-                var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(ReelBlocOriginInBlocSpace.GetAsVector().MultiplyBy(-1)));
-                //ed.Command("_CIRCLE", ReelBlockReferenceTransformedPoint, .02);
 
+                Leaders.Draw("SelectedBlockReferenceTransformedPoint", BlockReferenceTransformedPoint, Point3d.Origin);
+                var ReelBlockReferenceTransformedPoint = BlockReferenceTransformedPoint.TransformBy(Matrix3d.Displacement(FakeBlocBasePointInBlocSpace - new Point3d(0, 0, 0)));
+                Leaders.Draw("ReelBlockReferenceTransformedPoint", ReelBlockReferenceTransformedPoint, Point3d.Origin);
+                //Commit the delete of the existing BASEPOINTPARAMETERENTITY
                 tr.Commit();
-                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint);
-                //ed.Command("_POINT", BlockReferenceTransformedPointV2 * -1);
+                //Add the BASEPOINTPARAMETERENTITY at the new Position
+                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint.Flatten());
                 ed.Command("_BCLOSE", "E");
                 return iter;
             }
@@ -200,7 +206,7 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static Point3d GetOriginalBasePointInDynamicBlockWithBasePoint(ObjectId blockRefId)
+        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrix(ObjectId blockRefId)
         {
             var ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
@@ -245,7 +251,7 @@ namespace SioForgeCAD.Functions
                 tr2.Commit();
             }
             var Matrix = OriginalBounds.TopLeft() - EditedBounds.TopLeft();
-            return blockRef.Position.TransformBy(Matrix3d.Displacement(Matrix));
+            return Matrix;
         }
     }
 }
