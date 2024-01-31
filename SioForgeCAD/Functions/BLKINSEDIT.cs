@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
@@ -24,6 +25,8 @@ namespace SioForgeCAD.Functions
                 SinglePickInSpace = true,
                 RejectObjectsOnLockedLayers = true
             };
+
+           
 
             PromptSelectionResult promptResult;
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -154,7 +157,7 @@ namespace SioForgeCAD.Functions
                 string BlockName = blockRef.GetBlockReferenceName();
                 //Get all GetDynamicBlockReferences to avoid delay after BEDIT
                 iter = BlockReferences.GetDynamicBlockReferences(BlockName);
-
+                iter.Join((blockRef.BlockTableRecord.GetDBObject() as BlockTableRecord).GetBlockReferenceIds(true, false));
                 //Enter block reference edit mode
                 ed.Command("_-BEDIT", BlockName);
                 //Leaders.Draw("FakeBlocBasePointInBlocSpace", FakeBlocBasePointInBlocSpace, Point3d.Origin);

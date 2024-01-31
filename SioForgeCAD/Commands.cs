@@ -154,7 +154,7 @@ namespace SioForgeCAD
         [CommandMethod("INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
         public void BLKINSEDIT()
         {
-            Functions.BLKINSEDIT.MoveBasePoint();
+            Functions.BLKINSEDIT.MoveBasePoint(); 
         }
 
         [CommandMethod("RP2")]
