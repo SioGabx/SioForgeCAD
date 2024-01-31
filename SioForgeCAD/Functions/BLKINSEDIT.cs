@@ -87,7 +87,6 @@ namespace SioForgeCAD.Functions
                 iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace);
                 Leaders.Draw("OriginalBlocBasePointInModelSpace", OriginalBlocBasePointInModelSpace, Point3d.Origin);
                 FixPosition = selectedPoint - blockRef.Position;
-                Leaders.Draw("blockRef.Position", blockRef.Position, Point3d.Origin);
                 Leaders.Draw("selectedPoint", selectedPoint, Point3d.Origin);
 
                 //Transform blockReferences to keep position
@@ -97,8 +96,11 @@ namespace SioForgeCAD.Functions
                     {
                         if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                         {
-                            Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                            otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                            //Inverse the Vector (if selected on a transformed block and then for each transform the vector to the current block
+                            Vector3d TransformedFixPositionV2 = FixPosition.TransformBy(blockRef.BlockTransform.Inverse()).TransformBy(otherBlockRef.BlockTransform);
+                            Leaders.Draw("blockRef.Position", otherBlockRef.Position, Point3d.Origin); 
+                            Leaders.Draw("TransformedFixPositionV2", otherBlockRef.Position.TransformBy(Matrix3d.Displacement(TransformedFixPositionV2)), Point3d.Origin); 
+                            otherBlockRef.Position = otherBlockRef.Position.TransformBy(Matrix3d.Displacement(TransformedFixPositionV2));
                             otherBlockRef.RecordGraphicsModified(true);
                         }
                     }
@@ -119,7 +121,7 @@ namespace SioForgeCAD.Functions
                         if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                         {
                             Vector3d TransformedFixPosition = FixPosition.TransformBy(otherBlockRef.BlockTransform);
-                            otherBlockRef.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
+                            otherBlockRef.Position  = otherBlockRef.Position.TransformBy(Matrix3d.Displacement(TransformedFixPosition));
                             otherBlockRef.RecordGraphicsModified(true);
                         }
                     }
@@ -137,7 +139,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             //Get the matrix between the fake point and original
-            Vector3d FakeOriginalBasePointMatrix = Functions.BLKINSEDIT.GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId);
+            Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId);
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -206,7 +208,78 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrix(ObjectId blockRefId)
+
+
+
+
+
+
+
+
+
+
+
+        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrix(ObjectId OriginalBlockObjectId)
+        {
+            var ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+            Extents3d OriginalBounds;
+            Extents3d EditedBounds;
+
+            ObjectId insertedBtrId;
+            ObjectId insertedCopyBtrId;
+
+            string oldName;
+            string newName;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockReference OriginalBlockRef = OriginalBlockObjectId.GetEntity() as BlockReference;
+                oldName = OriginalBlockRef.GetBlockReferenceName();
+                newName = BlockReferences.GetUniqueBlockName(oldName);
+                insertedBtrId = BlockReferences.InsertFromName(oldName, new Points(new Point3d(0, 0, 0)), 0, null, null);
+                BlockReference insertedBlockRef = insertedBtrId.GetEntity() as BlockReference;
+                tr.Commit();
+                OriginalBounds = insertedBlockRef.GeometricExtents;
+            }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+
+                insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, oldName, newName);
+                ed.Command("_-BEDIT", newName);
+                SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
+                PromptSelectionResult selRes = ed.SelectAll(filter);
+                if (selRes.Status == PromptStatus.OK)
+                {
+                    var objId = selRes.Value.GetObjectIds();
+                    foreach (ObjectId objectId in objId)
+                    {
+                        objectId.GetDBObject();
+                        objectId.EraseObject();
+                        Debug.WriteLine("Erase BASEPOINTPARAMETERENTITY");
+                    }
+                }
+
+                tr.Commit();
+
+            }
+            using (Transaction tr2 = db.TransactionManager.StartTransaction())
+            {
+                ed.Command("_BCLOSE", "E");
+                EditedBounds = insertedCopyBtrId.GetEntity().GeometricExtents;
+                //Cleannup
+                insertedBtrId.EraseObject();
+                insertedCopyBtrId.EraseObject();
+                tr2.Commit();
+            }
+            var Matrix = OriginalBounds.TopLeft() - EditedBounds.TopLeft();
+            return Matrix;
+        }
+
+
+
+
+        public static Vector3d GetFakeOriginalBasePointInDynamicBlockMatrixOld(ObjectId blockRefId)
         {
             var ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
