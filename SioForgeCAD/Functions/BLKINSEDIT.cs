@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
@@ -80,7 +79,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            Point3d selectedPoint =  Points.GetFromPromptPointResult(pointResult).SCG;
+            Point3d selectedPoint = Points.GetFromPromptPointResult(pointResult).SCG;
             Vector3d FixPosition = selectedPoint - blockRef.Position;
             Point3d BlockReferenceTransformedPoint = selectedPoint.TranformToBlockReferenceTransformation(blockRef);
 
@@ -138,7 +137,7 @@ namespace SioForgeCAD.Functions
             Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId, out Extents3d OriginalBounds, out Extents3d EditedBounds);
             if (OriginalBounds.Size() != EditedBounds.Size())
             {
-                MessageBox.Show("Impossible de changer le point de base de ce bloc dynamique.","Opération annulée");
+                MessageBox.Show("Impossible de changer le point de base de ce bloc dynamique.", "Opération annulée");
                 return new ObjectIdCollection();
             }
             ObjectIdCollection iter;

@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using System;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -32,7 +31,8 @@ namespace SioForgeCAD.Commun.Extensions
             return new Point3d(X, Y, Z);
         }
 
-        public static double GetAngleWith(this  Point3d A, Point3d B) { 
+        public static double GetAngleWith(this Point3d A, Point3d B)
+        {
             using (Line line = new Line(A, B))
             {
                 return line.Angle;

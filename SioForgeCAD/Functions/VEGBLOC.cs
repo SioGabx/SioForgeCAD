@@ -1,15 +1,15 @@
-﻿using SioForgeCAD.Forms;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Forms;
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Autodesk.AutoCAD.EditorInput;
-using SioForgeCAD.Commun;
-using Autodesk.AutoCAD.Colors;
+using System.Drawing;
 using Color = Autodesk.AutoCAD.Colors.Color;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Functions
 {
@@ -70,7 +70,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, BlocName);
-            
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
@@ -265,4 +265,4 @@ namespace SioForgeCAD.Functions
         }
     }
 
-    }
+}

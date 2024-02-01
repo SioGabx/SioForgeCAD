@@ -1,9 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.MacroRecorder;
 using System;
-using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -32,7 +30,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-       
+
 
         public static DynamicBlockReferencePropertyCollection GetDynamicProperties(this BlockReference blockReference)
         {

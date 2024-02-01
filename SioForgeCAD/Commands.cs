@@ -4,14 +4,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
-using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -154,7 +148,7 @@ namespace SioForgeCAD
         [CommandMethod("INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
         public void BLKINSEDIT()
         {
-            Functions.BLKINSEDIT.MoveBasePoint(); 
+            Functions.BLKINSEDIT.MoveBasePoint();
         }
 
         [CommandMethod("RP2")]
@@ -199,7 +193,7 @@ namespace SioForgeCAD
             Functions.BATTLEMENTS.Draw();
         }
 
-       
+
 
 
 

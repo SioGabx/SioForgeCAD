@@ -1,15 +1,10 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
@@ -49,7 +44,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                     selectedBlockIds = per.Value.GetObjectIds();
-                ed.SetImpliedSelection(new ObjectId[0]);
+                    ed.SetImpliedSelection(new ObjectId[0]);
                 }
                 else
                 {
@@ -92,7 +87,7 @@ namespace SioForgeCAD.Functions
                                 {
                                     Debug.WriteLine(ex.Message);
                                 }
-                                
+
                             }
                         }
                     }

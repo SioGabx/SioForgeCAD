@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows.Media;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -184,7 +183,7 @@ namespace SioForgeCAD.Commun
                     StaticDrawable.Add(DrawableClone);
                 }
             }
-           
+
         }
 
         public virtual Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)

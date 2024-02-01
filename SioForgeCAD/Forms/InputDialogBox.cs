@@ -39,7 +39,7 @@ namespace SioForgeCAD.Forms
             UserInputBox.Focus();
             UserInputBox.SelectAll();
         }
-        
+
 
         private void PromptAcceptButton_Click(object sender, EventArgs e)
         {
