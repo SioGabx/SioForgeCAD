@@ -13,5 +13,10 @@ namespace SioForgeCAD.Commun.Extensions
             Lines.Draw(vectorLine);
         }
 
+        public static Vector3d SetLength(this Vector3d vector3d, double Length)
+        {
+            return vector3d.GetNormal().MultiplyBy(Length);
+        }
+
     }
 }
