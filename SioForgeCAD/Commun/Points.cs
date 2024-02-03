@@ -53,5 +53,36 @@ namespace SioForgeCAD.Commun
             return new Points(Point3d);
         }
 
+        public static bool GetPoint(out Points Points, string Message,  Points BasePoint = Points.Null)
+        {
+            Editor ed = Generic.GetEditor();
+
+            PromptPointOptions promptPointOptions = new PromptPointOptions(Message)
+            {
+                AllowNone = false,
+                AllowArbitraryInput = false,
+                UseDashedLine = true,
+                UseBasePoint = false,
+            };
+
+            if (BasePoint != Points.Null)
+            {
+                promptPointOptions.UseBasePoint = true;
+                promptPointOptions.UseDashedLine = true;
+                promptPointOptions.BasePoint = BasePoint.SCU;
+            }
+
+            var SelectedPoint = ed.GetPoint(promptPointOptions);
+            if (SelectedPoint.Status == PromptStatus.OK)
+            {
+                Points = Points.GetFromPromptPointResult(SelectedPoint);
+                return true;
+            }
+            Points = Points.Empty;
+            return false;
+        }
+
+
+
     }
 }

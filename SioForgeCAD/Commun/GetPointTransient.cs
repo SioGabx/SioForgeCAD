@@ -11,7 +11,7 @@ using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
-    public class TransientBase
+    public class TransientBase : IDisposable
     {
         private Func<Points, Dictionary<string, string>> UpdateFunction { get; }
         private DBObjectCollection Entities { get; set; }
@@ -47,6 +47,7 @@ namespace SioForgeCAD.Commun
                 return Entities ?? new DBObjectCollection();
             }
         }
+
         public DBObjectCollection GetStaticEntities
         {
             get
@@ -208,6 +209,11 @@ namespace SioForgeCAD.Commun
             drawableClone.Transparency = GetTransGraphicsTransparency(drawableClone, IsStaticDrawable);
             TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128 - index, new IntegerCollection());
             return drawableClone;
+        }
+
+        public void Dispose()
+        {
+            ClearTransGraphics();
         }
     }
 

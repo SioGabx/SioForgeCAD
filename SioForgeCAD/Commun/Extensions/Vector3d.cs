@@ -7,16 +7,31 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class Vector3dExtensions
     {
-        public static void DrawVector(this Vector3d vector3d, Point3d startPoint)
+        public static void DrawVector(this Vector3d vector3d, Point3d startPoint, int ColorIndex = 0)
         {
             Point3d vectorEndPoint = startPoint.Add(vector3d);
             Line vectorLine = new Line(startPoint, vectorEndPoint);
-            Lines.Draw(vectorLine);
+            Lines.Draw(vectorLine, ColorIndex);
         }
 
         public static Vector3d SetLength(this Vector3d vector3d, double Length)
         {
             return vector3d.GetNormal().MultiplyBy(Length);
+        }
+
+        public static bool IsVectorOnRightSide(this Vector3d vectorToCheckSide, Vector3d referenceVector)
+        {
+            // Normaliser les vecteurs
+            vectorToCheckSide = vectorToCheckSide.GetNormal();
+            referenceVector = referenceVector.GetNormal();
+            Vector3d crossProduct = vectorToCheckSide.CrossProduct(referenceVector);
+            // Vérifier la composante Z du produit vectoriel pour déterminer l'orientation
+            return crossProduct.Z >= 0;
+        }
+
+        public static Vector3d Inverse(this Vector3d vector3D)
+        {
+            return vector3D.MultiplyBy(-1);
         }
 
         public static double GetRotationRelativeToSCG(this Vector3d vector)
