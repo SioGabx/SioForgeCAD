@@ -81,7 +81,7 @@ namespace SioForgeCAD.Functions
                         {
                             Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
                             dialogBox.SetUserInputPlaceholder(blockname);
-                            dialogBox.SetPrompt("Indiquez un nouveau nom de bloc");
+                            dialogBox.SetPrompt($"Indiquez un nouveau nom pour le bloc \"{blockname}\"");
                             dialogBox.SetCursorAtEnd();
                             DialogResult dialogResult = dialogBox.ShowDialog();
                             if (dialogResult != DialogResult.OK)

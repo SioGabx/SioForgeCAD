@@ -281,6 +281,10 @@ namespace SioForgeCAD.Forms
 
         private void ValidateButton_Click(object sender, EventArgs e)
         {
+            if (isCellBeingEdited)
+            {
+                DataGrid.CommitEdit(DataGridViewDataErrorContexts.LeaveControl);
+            }
             this.DialogResult = DialogResult.OK;
         }
 

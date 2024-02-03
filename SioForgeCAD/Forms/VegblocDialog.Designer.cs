@@ -59,7 +59,7 @@
             this.DataGrid.RowHeadersWidth = 51;
             this.DataGrid.RowTemplate.Height = 24;
             this.DataGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.DataGrid.Size = new System.Drawing.Size(676, 423);
+            this.DataGrid.Size = new System.Drawing.Size(676, 419);
             this.DataGrid.TabIndex = 0;
             this.DataGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DataGrid_CellBeginEdit);
             this.DataGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGrid_CellEndEdit);
@@ -117,7 +117,7 @@
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.toolStrip1.ShowItemToolTips = false;
-            this.toolStrip1.Size = new System.Drawing.Size(676, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(676, 31);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -129,7 +129,7 @@
             this.ValidateButton.Name = "ValidateButton";
             this.ValidateButton.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
             this.ValidateButton.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ValidateButton.Size = new System.Drawing.Size(99, 24);
+            this.ValidateButton.Size = new System.Drawing.Size(99, 28);
             this.ValidateButton.Text = "Valider";
             this.ValidateButton.Click += new System.EventHandler(this.ValidateButton_Click);
             // 
@@ -139,15 +139,15 @@
             this.toolStripSeparator1.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // ContentPanel
             // 
             this.ContentPanel.Controls.Add(this.DataGrid);
             this.ContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ContentPanel.Location = new System.Drawing.Point(0, 27);
+            this.ContentPanel.Location = new System.Drawing.Point(0, 31);
             this.ContentPanel.Name = "ContentPanel";
-            this.ContentPanel.Size = new System.Drawing.Size(676, 423);
+            this.ContentPanel.Size = new System.Drawing.Size(676, 419);
             this.ContentPanel.TabIndex = 2;
             // 
             // VegblocDialog
@@ -160,7 +160,6 @@
             this.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.Name = "VegblocDialog";
             this.ShowIcon = false;
-            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "VEGBLOC";
             this.Load += new System.EventHandler(this.VegblocDialog_Load);

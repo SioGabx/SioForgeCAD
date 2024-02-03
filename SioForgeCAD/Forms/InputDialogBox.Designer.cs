@@ -45,6 +45,8 @@
             // 
             // UserInputBox
             // 
+            this.UserInputBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.UserInputBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
             this.UserInputBox.Location = new System.Drawing.Point(8, 38);
             this.UserInputBox.Name = "UserInputBox";
             this.UserInputBox.Size = new System.Drawing.Size(450, 22);

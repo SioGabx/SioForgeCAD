@@ -17,10 +17,9 @@ namespace SioForgeCAD.Functions
     {
         public static void Create()
         {
-            Editor ed = Generic.GetEditor();
             VegblocDialog vegblocDialog = new VegblocDialog();
             vegblocDialog.ShowDialog();
-
+            vegblocDialog.Activate();
             var Values = vegblocDialog.GetDataGridValues();
             foreach (var Rows in Values)
             {
@@ -30,7 +29,7 @@ namespace SioForgeCAD.Functions
                     continue;
                 }
                 string StrHeight = Rows["HEIGHT"] ?? "0";
-                string StrWidth = Rows["WIDTH"] ?? "0";
+                string StrWidth = Rows["WIDTH"] ?? "1";
                 string Type = Rows["TYPE"] ?? "ARBRES";
                 if (!double.TryParse(StrHeight, out double Height) || !double.TryParse(StrWidth, out double Width))
                 {
@@ -103,11 +102,11 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(rouge, vert, bleu);
         }
 
-        private static DBObjectCollection GetBlocGeometry(string DisplayNamName, string ShortType, double Width, double Height, Color BlocColor, Color HeightColorIndicator)
+        private static DBObjectCollection GetBlocGeometry(string DisplayName, string ShortType, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
         {
             DBObjectCollection BlocGeometry = new DBObjectCollection();
-
-            var FirstCircle = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, Width);
+            double WidthRadius = WidthDiameter / 2;
+            var FirstCircle = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, WidthRadius);
             ObjectId FirstCircleId = FirstCircle.AddToDrawing();
             Hatch acHatch = new Hatch();
             acHatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
@@ -129,8 +128,8 @@ namespace SioForgeCAD.Functions
 
             ObjectId Periph_Circle(double x, double y)
             {
-                Point3d cerle_periph_position = new Point3d(0 + (x * Width), 0 + (y * Width), 0);
-                var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, Width);
+                Point3d cerle_periph_position = new Point3d(0 + (x * WidthRadius), 0 + (y * WidthRadius), 0);
+                var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius);
                 Circle.Layer = "0";
                 Circle.LineWeight = LineWeight.LineWeight000;
                 Circle.ColorIndex = 7;
@@ -141,12 +140,12 @@ namespace SioForgeCAD.Functions
 
             var TextBlocDisplayName = new MText
             {
-                Contents = DisplayNamName,
+                Contents = DisplayName,
                 Layer = "0",
                 Location = new Point3d(0, 0, 0),
                 Attachment = AttachmentPoint.MiddleCenter,
-                Width = Width,
-                TextHeight = Width / 5,
+                Width = WidthRadius,
+                TextHeight = WidthRadius / 5,
                 Transparency = new Transparency(255),
                 Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
             };
@@ -155,7 +154,7 @@ namespace SioForgeCAD.Functions
 
             if (Height > 0)
             {
-                var CircleHeightColorIndicator = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, Width)
+                var CircleHeightColorIndicator = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, WidthRadius)
                 {
                     Layer = Settings.VegblocLayerHeightName,
                     Color = HeightColorIndicator,
@@ -169,10 +168,10 @@ namespace SioForgeCAD.Functions
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
 
-                    Location = new Point3d(0, 0 - Width * 0.7, 0),
+                    Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
-                    Width = Width,
-                    TextHeight = Width / 10,
+                    Width = WidthRadius,
+                    TextHeight = WidthRadius / 10,
                     Transparency = new Transparency(255),
                     Color = HeightColorIndicator
 
