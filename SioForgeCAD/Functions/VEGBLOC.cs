@@ -129,11 +129,13 @@ namespace SioForgeCAD.Functions
             ObjectId Periph_Circle(double x, double y)
             {
                 Point3d cerle_periph_position = new Point3d(0 + (x * WidthRadius), 0 + (y * WidthRadius), 0);
-                var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius);
-                Circle.Layer = "0";
-                Circle.LineWeight = LineWeight.LineWeight000;
-                Circle.ColorIndex = 7;
-                Circle.Transparency = new Transparency((byte)255);
+                var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
+                {
+                    Layer = "0",
+                    LineWeight = LineWeight.LineWeight000,
+                    ColorIndex = 7,
+                    Transparency = new Transparency((byte)255)
+                };
                 BlocGeometry.Add(Circle);
                 return Circle.ObjectId;
             }

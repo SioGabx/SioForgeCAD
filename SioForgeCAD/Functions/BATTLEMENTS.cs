@@ -7,6 +7,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -97,6 +98,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
+            using (Polyline polyline = new Polyline())
             {
                 var AskBaseLine = ed.GetEntity("Selectionnez une ligne de base");
                 if (AskBaseLine.Status != PromptStatus.OK)
@@ -121,110 +123,141 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                /*
-                This is a triangle rectangle at B = A^BC
-                B_________C
-                |        /
-                |      /
-                |    /
-                |  /
-                |/
-                A
 
-                */
-
-                Vector3d ACVector = BaseLine.GetVector3d();
-                double BaseLineDirectionAngle = ACVector.GetRotationRelativeToSCG();
-                double DirectionLineDirectionAngle = DirectionLine.GetVector3d().GetRotationRelativeToSCG();
-             
-                double InvertABVector = 1;
-                double InvertBCVector = 1;
-                if (BaseLineDirectionAngle >= 0 && BaseLineDirectionAngle < 90) { InvertABVector = 1; InvertBCVector = 1; }
-                if (BaseLineDirectionAngle >= 90 && BaseLineDirectionAngle < 180) { InvertABVector = -1; InvertBCVector = 1; }
-                if (BaseLineDirectionAngle >= 180 && BaseLineDirectionAngle < 270) { InvertABVector = -1; InvertBCVector = -1; }
-                if (BaseLineDirectionAngle >= 270 && BaseLineDirectionAngle < 360) { InvertABVector = 1; InvertBCVector = -1; }
-                Vector3d ABVector = DirectionLine.GetVector3d().GetPerpendicularVector().MultiplyBy(InvertABVector);
-                Vector3d BCVector = DirectionLine.GetVector3d().MultiplyBy(InvertBCVector);
-                
-                if (DirectionLineDirectionAngle > 180)
-                {
-                    ACVector = ACVector.MultiplyBy(-1);
-                    ABVector = ABVector.MultiplyBy(-1);
-                    BCVector = BCVector.MultiplyBy(-1);
-                }
-                //ACVector.DrawVector(BaseLine.StartPoint);
-                //ABVector.DrawVector(BaseLine.StartPoint);
-                //BCVector.DrawVector(BaseLine.StartPoint);
-                //tr.Commit();
-                //return;
-
+                var TriangleVectors = GetTriangleVectorsBasedFromVectors(BaseLine, DirectionLine);
 
                 Point3d LastDiagonalPoint = BaseLine.StartPoint;
                 Point3d LastDrawingPoint = BaseLine.StartPoint;
-
-                double BaseLineHeight = (ABVector * -1).FindProjectedIntersection(BaseLine.EndPoint, BCVector, BaseLine.StartPoint).DistanceTo(BaseLine.EndPoint);
+                double BaseLineHeight = (TriangleVectors.ABVector * -1).FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, BaseLine.StartPoint).DistanceTo(BaseLine.EndPoint);
                 int NumberOfGrid = (int)Math.Ceiling(BaseLineHeight / Largeur);
 
                 for (int i = 0; i < NumberOfGrid; i++)
                 {
-                    // Calcul du point C
-                    Point3d pointA = LastDiagonalPoint;
-                    Point3d pointB = LastDiagonalPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(Largeur)));
-                    Point3d pointC = ACVector.FindProjectedIntersection(pointA, BCVector, pointB);
-
-                    LastDiagonalPoint = pointC;
-                    using (Polyline Triangle = new Polyline())
-                    {
-                        Triangle.AddVertexAt(0, pointA.ToPoint2d(), 0, 0, 0);
-                        Triangle.AddVertexAt(1, pointB.ToPoint2d(), 0, 0, 0);
-                        Triangle.AddVertexAt(2, pointC.ToPoint2d(), 0, 0, 0);
-                        Triangle.Color = Color.FromColorIndex(ColorMethod.ByColor, 100);
-                        Triangle.Transparency = Generic.GetTransparencyFromAlpha(50);
-                        Triangle.AddToDrawing();
-                    }
-
-
-                    Point3d DrawingPoint = LastDrawingPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(Largeur)));
-
-                    Lines.Draw(pointC, DrawingPoint, 50);
-                    Lines.Draw(DrawingPoint, DrawingPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(5))), 170);
-                    double GabBetweenBaseLineAndGrid = DrawingPoint.DistanceTo(pointC);
-
-
-                    if (GabBetweenBaseLineAndGrid > Largeur)
-                    {
-                        var GabNumberOfTimeWidth = Math.Floor(GabBetweenBaseLineAndGrid / Largeur);
-                        DrawingPoint = DrawingPoint.TransformBy(Matrix3d.Displacement(BCVector.SetLength(GabNumberOfTimeWidth * Largeur)));
-                    }
-                    LastDrawingPoint = DrawingPoint;
-                    Lines.Draw(DrawingPoint, DrawingPoint.TransformBy(Matrix3d.Displacement(DirectionLine.GetVector3d().SetLength(1))));
-
+                    Point3d DrawingPoint = GetPointOnGridNearestFromBaseLine(TriangleVectors.ACVector, TriangleVectors.ABVector, TriangleVectors.BCVector, Largeur, ref LastDiagonalPoint, ref LastDrawingPoint);
 
                     double BattlementLength = randomSelector.SelectItem().Value;
+                    Point3d BattlementPoint = DrawingPoint.TransformBy(Matrix3d.Displacement(DirectionLine.GetVector3d().SetLength(BattlementLength))); // use DirectionLine.GetVector3d() instead of BCVector to keep the direction of the initial vector (no rotate)
+                    Point3d BattlementWidthPoint = BattlementPoint.TransformBy(Matrix3d.Displacement(TriangleVectors.ABVector.SetLength(Largeur)));
+                    //Lines.Draw(DrawingPoint, BattlementPoint);
+                    //Lines.Draw(BattlementPoint, BattlementWidthPoint);
+                    polyline.AddVertexIfNotExist(BattlementPoint);
+                    polyline.AddVertexIfNotExist(BattlementWidthPoint);
                 }
+                polyline.Cleanup();
+                polyline.AddToDrawingCurrentTransaction();
                 tr.Commit();
             }
         }
 
+        public static Point3d GetPointOnGridNearestFromBaseLine(Vector3d ACVector, Vector3d ABVector, Vector3d BCVector, double Largeur, ref Point3d LastDiagonalPoint, ref Point3d LastDrawingPoint)
+        {
+            // Calcul du point C
+            Point3d pointA = LastDiagonalPoint;
+            Point3d pointB = LastDiagonalPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(Largeur)));
+            Point3d pointC = ACVector.FindProjectedIntersection(pointA, BCVector, pointB);
 
+            LastDiagonalPoint = pointC;
+            using (Polyline Triangle = new Polyline())
+            {
+                Triangle.AddVertexAt(0, pointA.ToPoint2d(), 0, 0, 0);
+                Triangle.AddVertexAt(1, pointB.ToPoint2d(), 0, 0, 0);
+                Triangle.AddVertexAt(2, pointC.ToPoint2d(), 0, 0, 0);
+                Triangle.Color = Color.FromColorIndex(ColorMethod.ByColor, 100);
+                Triangle.Transparency = Generic.GetTransparencyFromAlpha(50);
+                Triangle.AddToDrawing();
+            }
 
+            Point3d DrawingPoint = LastDrawingPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(Largeur)));
 
+            Lines.Draw(pointC, DrawingPoint, 50);
+            Lines.Draw(DrawingPoint, DrawingPoint.TransformBy(Matrix3d.Displacement(ABVector.SetLength(5))), 170);
+            double GabBetweenBaseLineAndGrid = DrawingPoint.DistanceTo(pointC);
 
+            if (GabBetweenBaseLineAndGrid > Largeur)
+            {
+                var GabNumberOfTimeWidth = Math.Floor(GabBetweenBaseLineAndGrid / Largeur);
+                DrawingPoint = DrawingPoint.TransformBy(Matrix3d.Displacement(BCVector.SetLength(GabNumberOfTimeWidth * Largeur)));
+            }
+            LastDrawingPoint = DrawingPoint;
+            return DrawingPoint;
+        }
 
+        public static (Vector3d ACVector, Vector3d ABVector, Vector3d BCVector) GetTriangleVectorsBasedFromVectors(Line BaseLine, Line DirectionLine)
+        {
+            /*
+            This is a triangle rectangle at B = A^BC
+            B_________C
+            |        /
+            |      /
+            |    /
+            |  /
+            |/
+            A
 
-        //public static Point3d FindProjectedIntersection(Point3d startPoint1, Vector3d direction1, Point3d startPoint2, Vector3d direction2)
+            */
+            Vector3d ACVector = BaseLine.GetVector3d();
+            double BaseLineDirectionAngle = ACVector.GetRotationRelativeToSCG();
+            double DirectionLineDirectionAngle = DirectionLine.GetVector3d().GetRotationRelativeToSCG();
+            Debug.WriteLine("DirectionLineDirectionAngle : " + DirectionLineDirectionAngle);
+            Debug.WriteLine("BaseLineDirectionAngle : " + BaseLineDirectionAngle);
+            double InvertABVector = 1;
+            double InvertBCVector = 1;
+            if (BaseLineDirectionAngle > 0 && BaseLineDirectionAngle < 90) { InvertABVector = 1; InvertBCVector = 1; }
+            if (BaseLineDirectionAngle > 90 && BaseLineDirectionAngle < 180) { InvertABVector = -1; InvertBCVector = 1; }
+            if (BaseLineDirectionAngle > 180 && BaseLineDirectionAngle < 270) { InvertABVector = -1; InvertBCVector = -1; }
+            if (BaseLineDirectionAngle > 270 && BaseLineDirectionAngle < 360) { InvertABVector = 1; InvertBCVector = -1; }
+
+            Vector3d ABVector = DirectionLine.GetVector3d().GetPerpendicularVector().MultiplyBy(InvertABVector);
+            Vector3d BCVector = DirectionLine.GetVector3d().MultiplyBy(InvertBCVector);
+
+            if (DirectionLineDirectionAngle > 180)
+            {
+                ACVector = ACVector.MultiplyBy(-1);
+                ABVector = ABVector.MultiplyBy(-1);
+                BCVector = BCVector.MultiplyBy(-1);
+            }
+
+            return (ACVector, ABVector, BCVector);
+        } 
+        
+        
+        //public static (Vector3d ACVector, Vector3d ABVector, Vector3d BCVector) GetTriangleVectorsBasedFromVectors(Line BaseLine, Line DirectionLine)
         //{
-        //    Vector3d deltaStartPoints = startPoint1 - startPoint2;
-        //    double a = direction1.DotProduct(direction1);
-        //    double b = direction1.DotProduct(direction2);
-        //    double c = direction2.DotProduct(direction2);
-        //    double d = direction1.DotProduct(deltaStartPoints);
-        //    double e = direction2.DotProduct(deltaStartPoints);
-        //    double s = (a * e - b * d) / (a * c - b * b);
-        //    return startPoint2 + s * direction2;
+        //    /*
+        //    This is a triangle rectangle at B = A^BC
+        //    B_________C
+        //    |        /
+        //    |      /
+        //    |    /
+        //    |  /
+        //    |/
+        //    A
+
+        //    */
+        //    Vector3d ACVector = BaseLine.GetVector3d();
+        //    double BaseLineDirectionAngle = ACVector.GetRotationRelativeToSCG();
+        //    double DirectionLineDirectionAngle = DirectionLine.GetVector3d().GetRotationRelativeToSCG();
+        //    Debug.WriteLine("DirectionLineDirectionAngle : " + DirectionLineDirectionAngle);
+        //    Debug.WriteLine("BaseLineDirectionAngle : " + BaseLineDirectionAngle);
+        //    double InvertABVector = 1;
+        //    double InvertBCVector = 1;
+        //    if (BaseLineDirectionAngle > 0 && BaseLineDirectionAngle < 90) { InvertABVector = 1; InvertBCVector = 1; }
+        //    if (BaseLineDirectionAngle > 90 && BaseLineDirectionAngle < 180) { InvertABVector = -1; InvertBCVector = 1; }
+        //    if (BaseLineDirectionAngle > 180 && BaseLineDirectionAngle < 270) { InvertABVector = -1; InvertBCVector = -1; }
+        //    if (BaseLineDirectionAngle > 270 && BaseLineDirectionAngle < 360) { InvertABVector = 1; InvertBCVector = -1; }
+
+        //    Vector3d ABVector = DirectionLine.GetVector3d().GetPerpendicularVector().MultiplyBy(InvertABVector);
+        //    Vector3d BCVector = DirectionLine.GetVector3d().MultiplyBy(InvertBCVector);
+
+        //    if (DirectionLineDirectionAngle > 180)
+        //    {
+        //        ACVector = ACVector.MultiplyBy(-1);
+        //        ABVector = ABVector.MultiplyBy(-1);
+        //        BCVector = BCVector.MultiplyBy(-1);
+        //    }
+
+        //    return (ACVector, ABVector, BCVector);
         //}
-
-
 
         private static bool GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur)
         {
@@ -273,6 +306,7 @@ namespace SioForgeCAD.Functions
             {
                 return false;
             }
+            Largeur = GetLargeurValue.Value;
             return true;
         }
 
