@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Linq;

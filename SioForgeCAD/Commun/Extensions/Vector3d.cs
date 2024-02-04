@@ -39,7 +39,7 @@ namespace SioForgeCAD.Commun.Extensions
             Vector2d xAxisWCS = new Vector2d(0, 1);
             var dot = DotProduct(vector.ToVector2d(), xAxisWCS); //vector.X * xAxisWCS.X + vector.Y * xAxisWCS.Y;      // Dot product between [x1, y1] and [x2, y2]
             var det = CrossProduct(vector.ToVector2d(), xAxisWCS); //vector.X * xAxisWCS.Y - vector.Y * xAxisWCS.X;     
-            var angle = Math.Atan2(det, dot); 
+            var angle = Math.Atan2(det, dot);
             double angleDegrees = angle * (180.0 / Math.PI);
             angleDegrees = (angleDegrees < 0) ? (360.0 + angleDegrees) : angleDegrees;
             return angleDegrees;
@@ -60,7 +60,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static double DotProduct(this Vector2d v1, Vector2d v2)
         {
             return v1.X * v2.X + v1.Y * v2.Y;
-        } 
+        }
 
         /// <summary>
         /// Gets the cross produc of two Vector2ds.

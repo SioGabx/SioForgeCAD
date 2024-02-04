@@ -18,8 +18,7 @@ namespace SioForgeCAD.Functions
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
-            vegblocDialog.ShowDialog();
-            vegblocDialog.Activate();
+            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
             var Values = vegblocDialog.GetDataGridValues();
             foreach (var Rows in Values)
             {
@@ -31,8 +30,16 @@ namespace SioForgeCAD.Functions
                 string StrHeight = Rows["HEIGHT"] ?? "0";
                 string StrWidth = Rows["WIDTH"] ?? "1";
                 string Type = Rows["TYPE"] ?? "ARBRES";
-                if (!double.TryParse(StrHeight, out double Height) || !double.TryParse(StrWidth, out double Width))
+                const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
+
+                if (!double.TryParse(StrHeight, out double Height))
                 {
+                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
+                    continue;
+                }
+                if (!double.TryParse(StrWidth, out double Width))
+                {
+                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
                     continue;
                 }
 

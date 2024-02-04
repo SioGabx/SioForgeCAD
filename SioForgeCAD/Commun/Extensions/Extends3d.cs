@@ -79,7 +79,7 @@ namespace SioForgeCAD.Commun.Extensions
             return entIds.GetExtents().GetCenter();
         }
 
-      
+
 
     }
 }
