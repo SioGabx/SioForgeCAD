@@ -36,25 +36,42 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static double GetRotationRelativeToSCG(this Vector3d vector)
         {
-            Vector3d xAxisWCS = new Vector3d(0, 1, 0);
-            var dot = vector.X * xAxisWCS.X + vector.Y * xAxisWCS.Y;      // Dot product between [x1, y1] and [x2, y2]
-            var det = vector.X * xAxisWCS.Y - vector.Y * xAxisWCS.X;      //Determinant
-            var angle = Math.Atan2(det, dot);  //atan2(y, x) or atan2(sin, cos)
+            Vector2d xAxisWCS = new Vector2d(0, 1);
+            var dot = DotProduct(vector.ToVector2d(), xAxisWCS); //vector.X * xAxisWCS.X + vector.Y * xAxisWCS.Y;      // Dot product between [x1, y1] and [x2, y2]
+            var det = CrossProduct(vector.ToVector2d(), xAxisWCS); //vector.X * xAxisWCS.Y - vector.Y * xAxisWCS.X;     
+            var angle = Math.Atan2(det, dot); 
             double angleDegrees = angle * (180.0 / Math.PI);
             angleDegrees = (angleDegrees < 0) ? (360.0 + angleDegrees) : angleDegrees;
             return angleDegrees;
         }
 
+        public static Vector2d ToVector2d(this Vector3d vector)
+        {
+            return new Vector2d(vector.X, vector.Y);
+        }
 
 
+        /// <summary>
+        /// Gets the dot produc of two Vector2ds.
+        /// </summary>
+        /// <param name="v1">The vector 1.</param>
+        /// <param name="v2">The vector 2.</param>
+        /// <returns>The dot product.</returns>
+        public static double DotProduct(this Vector2d v1, Vector2d v2)
+        {
+            return v1.X * v2.X + v1.Y * v2.Y;
+        } 
 
-
-
-
-
-
-
-
+        /// <summary>
+        /// Gets the cross produc of two Vector2ds.
+        /// </summary>
+        /// <param name="v1">The vector 1.</param>
+        /// <param name="v2">The vector 2.</param>
+        /// <returns>The cross product.</returns>
+        public static double CrossProduct(this Vector2d v1, Vector2d v2)
+        {
+            return v1.X * v2.Y - v1.Y * v2.X;
+        }
 
         public static Point3d FindProjectedIntersection(this Vector3d FirstVector, Point3d FirstVectorBasePoint, Vector3d SecondVector, Point3d SecondVectorBasePoint)
         {

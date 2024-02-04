@@ -115,10 +115,14 @@
     <Compile Include="Commun\Drawing\Leaders.cs" />
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
+    <Compile Include="Commun\Extensions\Arcs.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\Curves.cs" />
     <Compile Include="Commun\Extensions\Database.cs" />
     <Compile Include="Commun\Extensions\DataGridView.cs" />
+    <Compile Include="Commun\Extensions\Entity.cs" />
     <Compile Include="Commun\Extensions\Extends3d.cs" />
+    <Compile Include="Commun\Extensions\Hatchs.cs" />
     <Compile Include="Commun\Extensions\Lines.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
     <Compile Include="Commun\Extensions\Point3d.cs" />

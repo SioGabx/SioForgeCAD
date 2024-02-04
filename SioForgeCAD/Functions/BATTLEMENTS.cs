@@ -17,6 +17,7 @@ namespace SioForgeCAD.Functions
             static readonly Random Random = new Random();
             private readonly List<(T Value, int Pourcentage)> percentageItemsDict;
             public string BaseSettings = string.Empty;
+            public double BattlementWidth = 1;
 
 
             public ProportionalRandomSelector() => percentageItemsDict = new List<(T, int)>() { };
@@ -54,12 +55,12 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (!getDrawingVector(out Line BaseLine, out Line DirectionLine))
+                if (!GetDrawingVector(out Line BaseLine, out Line DirectionLine))
                 {
                     return;
                 }
 
-                if (!GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur))
+                if (!GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur, "10%0;25%0.25;25%0.5;25%0.75;10%1", 0.25))
                 {
                     return;
                 }
@@ -112,7 +113,7 @@ namespace SioForgeCAD.Functions
                             {
                                 if (InsertionTransientPointsValues.PromptPointResult.StringResult == "Paramètres")
                                 {
-                                    if (!GetBattlementsParameters(out randomSelector, out Largeur))
+                                    if (!GetBattlementsParameters(out randomSelector, out Largeur, randomSelector.BaseSettings, randomSelector.BattlementWidth))
                                     {
                                         return;
                                     }
@@ -192,16 +193,16 @@ namespace SioForgeCAD.Functions
             return (ACVector, ABVector, BCVector);
         }
 
-        private static bool GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur, string BaseSettings = "")
+        private static bool GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur, string BaseSettings, double BattlementWidth)
         {
             Editor ed = Generic.GetEditor();
             //Battlement length
             randomSelector = new ProportionalRandomSelector<double>();
-            Largeur = 0.25;
+            Largeur = BattlementWidth;
 
             var getStringOption = new PromptStringOptions("Entrez les valeurs : \nex : 25%0.25;75%2")
             {
-                DefaultValue = "10%0;25%0.25;25%0.5;25%0.75;10%1",
+                DefaultValue = BaseSettings,
                 UseDefaultValue = true,
                 AllowSpaces = false
             };
@@ -244,7 +245,7 @@ namespace SioForgeCAD.Functions
             return true;
         }
 
-        private static bool getDrawingVector(out Line BaseLine, out Line DirectionLine)
+        private static bool GetDrawingVector(out Line BaseLine, out Line DirectionLine)
         {
             if (!Points.GetPoint(out Points StartPoint, "Selectionnez le point de départ") ||
                 !Points.GetPoint(out Points EndPoint, "Selectionnez le point de fin", StartPoint) ||

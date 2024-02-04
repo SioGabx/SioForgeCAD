@@ -4,6 +4,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 
 namespace SioForgeCAD.Commun.Extensions
@@ -43,6 +45,187 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+        public static IEnumerable<Point3d> GetPolyPoints(this Polyline poly)
+        {
+            for (int i = 0; i < poly.NumberOfVertices; i++)
+            {
+                yield return poly.GetPoint3dAt(i);
+            }
+        }
+
+
+        /// <summary>
+        /// Determines if the polyline is self-intersecting.
+        /// </summary>
+        /// <param name="poly">The polyline.</param>
+        /// <returns>The result.</returns>
+        public static bool IsSelfIntersecting(this Polyline poly)
+        {
+            var points = poly.GetPolyPoints().ToList();
+            for (int i = 0; i < points.Count - 3; i++)
+            {
+                var a1 = points[i].ToPoint2d();
+                var a2 = points[i + 1].ToPoint2d();
+                for (var j = i + 2; j < points.Count - 1; j++)
+                {
+                    var b1 = points[j].ToPoint2d();
+                    var b2 = points[j + 1].ToPoint2d();
+                    if (IsLineSegIntersect(a1, a2, b1, b2))
+                    {
+                        if (i == 0 && j == points.Count - 2)
+                        {
+                            // NOTE: If they happen to be the first and the last, check if polyline is closed. A closed polyline is not considered self-intersecting.
+                            if (points.First().DistanceTo(points.Last()) > Tolerance.Global.EqualPoint)
+                            {
+                                return true;
+                            }
+                            continue;
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if two line segments intersect.
+        /// </summary>
+        /// <param name="a1">Line a point 1.</param>
+        /// <param name="a2">Line a point 2.</param>
+        /// <param name="b1">Line b point 1.</param>
+        /// <param name="b2">Line b point 2.</param>
+        /// <returns>The result.</returns>
+        public static bool IsLineSegIntersect(Point2d a1, Point2d a2, Point2d b1, Point2d b2)
+        {
+            if ((a1 - a2).CrossProduct(b1 - b2) == 0)
+            {
+                return false;
+            }
+
+            double lambda;
+            double miu;
+
+            if (b1.X == b2.X)
+            {
+                lambda = (b1.X - a1.X) / (a2.X - b1.X);
+                double Y = (a1.Y + lambda * a2.Y) / (1 + lambda);
+                miu = (Y - b1.Y) / (b2.Y - Y);
+            }
+            else if (a1.X == a2.X)
+            {
+                miu = (a1.X - b1.X) / (b2.X - a1.X);
+                double Y = (b1.Y + miu * b2.Y) / (1 + miu);
+                lambda = (Y - a1.Y) / (a2.Y - Y);
+            }
+            else if (b1.Y == b2.Y)
+            {
+                lambda = (b1.Y - a1.Y) / (a2.Y - b1.Y);
+                double X = (a1.X + lambda * a2.X) / (1 + lambda);
+                miu = (X - b1.X) / (b2.X - X);
+            }
+            else if (a1.Y == a2.Y)
+            {
+                miu = (a1.Y - b1.Y) / (b2.Y - a1.Y);
+                double X = (b1.X + miu * b2.X) / (1 + miu);
+                lambda = (X - a1.X) / (a2.X - X);
+            }
+            else
+            {
+                lambda = (b1.X * a1.Y - b2.X * a1.Y - a1.X * b1.Y + b2.X * b1.Y + a1.X * b2.Y - b1.X * b2.Y) / (-b1.X * a2.Y + b2.X * a2.Y + a2.X * b1.Y - b2.X * b1.Y - a2.X * b2.Y + b1.X * b2.Y);
+                miu = (-a2.X * a1.Y + b1.X * a1.Y + a1.X * a2.Y - b1.X * a2.Y - a1.X * b1.Y + a2.X * b1.Y) / (a2.X * a1.Y - b2.X * a1.Y - a1.X * a2.Y + b2.X * a2.Y + a1.X * b2.Y - a2.X * b2.Y); // from Mathematica
+            }
+
+            bool result = false;
+            if (lambda >= 0 || double.IsInfinity(lambda))
+            {
+                if (miu >= 0 || double.IsInfinity(miu))
+                {
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+
+        /// <summary>
+        /// Cuts a closed polyline into two closed halves with a straight line
+        /// </summary>
+        /// <param name="loop">The closed polyline.</param>
+        /// <param name="cut">The cutting line.</param>
+        /// <returns>The result.</returns>
+        public static Polyline[] CutLoopToHalves(Polyline loop, Line cut)
+        {
+            if (loop.EndPoint != loop.StartPoint)
+            {
+                return new Polyline[0];
+            }
+            var points = new Point3dCollection();
+            loop.IntersectWith3264bit(cut, Autodesk.AutoCAD.DatabaseServices.Intersect.ExtendArgument, points);
+            if (points.Count != 2)
+            {
+                return new Polyline[0];
+            }
+            double a, b;
+            if (loop.GetParamAtPointX(points[0]) < loop.GetParamAtPointX(points[1]))
+            {
+                a = loop.GetParamAtPointX(points[0]);
+                b = loop.GetParamAtPointX(points[1]);
+            }
+            else
+            {
+                a = loop.GetParamAtPointX(points[1]);
+                b = loop.GetParamAtPointX(points[0]);
+            }
+            var poly1 = new Polyline();
+            var poly2 = new Polyline();
+
+            // The half without the polyline start/end point.
+            poly2.AddVertexAt(0, loop.GetPointAtParameter(a).ToPoint2d(), loop.GetBulgeBetween(a, Math.Ceiling(a)), 0, 0);
+            int i = 1;
+            for (int n = (int)Math.Ceiling(a); n < b - 1; n++)
+            {
+                poly2.AddVertexAt(i, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
+                i++;
+            }
+            poly2.AddVertexAt(i, loop.GetPointAtParameter(Math.Floor(b)).ToPoint2d(), loop.GetBulgeBetween(Math.Floor(b), b), 0, 0);
+            poly2.AddVertexAt(i + 1, loop.GetPointAtParameter(b).ToPoint2d(), 0, 0, 0);
+            poly2.AddVertexAt(i + 2, loop.GetPointAtParameter(a).ToPoint2d(), 0, 0, 0);
+
+            // The half with the polyline start/end point.
+            poly1.AddVertexAt(0, loop.GetPointAtParameter(b).ToPoint2d(), loop.GetBulgeBetween(b, Math.Ceiling(b)), 0, 0);
+            int j = 1;
+            for (int n = (int)Math.Ceiling(b); n < loop.EndParam; n++)
+            {
+                poly1.AddVertexAt(j, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
+                j++;
+            }
+            for (int n = 0; n < a - 1; n++)
+            {
+                poly1.AddVertexAt(j, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
+                j++;
+            }
+            poly1.AddVertexAt(j, loop.GetPointAtParameter(Math.Floor(a)).ToPoint2d(), loop.GetBulgeBetween(Math.Floor(a), a), 0, 0);
+            poly1.AddVertexAt(j + 1, loop.GetPointAtParameter(a).ToPoint2d(), 0, 0, 0);
+            poly1.AddVertexAt(j + 2, loop.GetPointAtParameter(b).ToPoint2d(), 0, 0, 0);
+
+            return new Polyline[] { poly1, poly2 };
+        }
+
+        /// <summary>
+        /// Gets the bulge between two parameters within the same arc segment of a polyline.
+        /// </summary>
+        /// <param name="poly">The polyline.</param>
+        /// <param name="startParam">The start parameter.</param>
+        /// <param name="endParam">The end parameter.</param>
+        /// <returns>The bulge.</returns>
+        public static double GetBulgeBetween(this Polyline poly, double startParam, double endParam)
+        {
+            double total = poly.GetBulgeAt((int)Math.Floor(startParam));
+            return (endParam - startParam) * total;
+        }
+
         public static void AddVertex(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
         {
             Poly.AddVertexAt(Poly.NumberOfVertices, point.ToPoint2d(), bulge, startWidth, endWidth);
@@ -60,7 +243,49 @@ namespace SioForgeCAD.Commun.Extensions
             AddVertex(Poly, point, bulge, startWidth, endWidth);
         }
 
+        /// <summary>
+        /// Converts line to polyline.
+        /// </summary>
+        /// <param name="line">The line.</param>
+        /// <returns>A polyline.</returns>
+        public static Polyline ToPolyline(this Line line)
+        {
+            var poly = new Polyline();
+            poly.AddVertexAt(0, line.StartPoint.ToPoint2d(), 0, 0, 0);
+            poly.AddVertexAt(1, line.EndPoint.ToPoint2d(), 0, 0, 0);
+            return poly;
+        }
 
+        /// <summary>
+        /// Converts arc to polyline.
+        /// </summary>
+        /// <param name="arc">The arc.</param>
+        /// <returns>A polyline.</returns>
+        public static Polyline ToPolyline(this Arc arc)
+        {
+            var poly = new Polyline();
+            poly.AddVertexAt(0, arc.StartPoint.ToPoint2d(), arc.GetArcBulge(arc.StartPoint), 0, 0);
+            poly.AddVertexAt(1, arc.EndPoint.ToPoint2d(), 0, 0, 0);
+            return poly;
+        }
+
+        /// <summary>
+        /// Connects polylines.
+        /// </summary>
+        /// <param name="poly">The base polyline.</param>
+        /// <param name="poly1">The other polyline.</param>
+        public static void JoinPolyline(this Polyline poly, Polyline poly1)
+        {
+            int index = poly.GetPolyPoints().Count();
+            int index1 = 0;
+            var Points = poly1.GetPoints();
+            foreach (var point in Points)
+            {
+                poly.AddVertexAt(index, point.ToPoint2d(), poly1.GetBulgeAt(index1), 0, 0);
+                index++;
+                index1++;
+            }
+        }
 
         public static Polyline AskForSelection(string Message)
         {
