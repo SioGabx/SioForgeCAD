@@ -249,6 +249,7 @@ namespace SioForgeCAD.Commun.Drawing
 
         public static void Purge(string BlocName)
         {
+            //From https://adndevblog.typepad.com/autocad/2013/01/purging-anonymous-blocks-using-vba.html
             Database db = Generic.GetDatabase();
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
