@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -67,21 +68,21 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
-                    string blockname = OriginalBlk.GetBlockReferenceName();
-                    if (ArealdyRenamedBlock.Contains(blockname))
+                    string OldName = OriginalBlk.GetBlockReferenceName();
+                    if (ArealdyRenamedBlock.Contains(OldName))
                     {
                         continue;
                     }
                     // ouvrir la table des blocs en lecture
                     BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                     // vérifier si la table contient bien le bloc à renommer
-                    if (bt.Has(blockname))
+                    if (bt.Has(OldName))
                     {
                         while (true)
                         {
                             Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
-                            dialogBox.SetUserInputPlaceholder(blockname);
-                            dialogBox.SetPrompt($"Indiquez un nouveau nom pour le bloc \"{blockname}\"");
+                            dialogBox.SetUserInputPlaceholder(OldName);
+                            dialogBox.SetPrompt($"Indiquez un nouveau nom pour le bloc \"{OldName}\"");
                             dialogBox.SetCursorAtEnd();
                             DialogResult dialogResult = dialogBox.ShowDialog();
                             if (dialogResult != DialogResult.OK)
@@ -94,13 +95,14 @@ namespace SioForgeCAD.Functions
                                 ed.WriteMessage("Impossible de definir le block avec un nom vide.\n");
                                 continue;
                             }
-                            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[blockname], OpenMode.ForWrite);
+                            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[OldName], OpenMode.ForWrite);
 
                             NewName = SymbolUtilityServices.RepairSymbolName(NewName, false);
                             try
                             {
                                 btr.Name = NewName;
                                 ArealdyRenamedBlock.Add(NewName);
+                                BlockReferences.Purge(OldName);
                                 break;
                             }
                             catch (Exception ex)
