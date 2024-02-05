@@ -185,9 +185,9 @@ namespace SioForgeCAD.Functions
                 //Commit the delete of the existing BASEPOINTPARAMETERENTITY
                 tr.Commit();
                 //Add the BASEPOINTPARAMETERENTITY at the new Position
-                ed.Command("_BPARAMETER", "Base", ReelBlockReferenceTransformedPoint);
+                ed.Command("_BPARAMETER", "_Base", ReelBlockReferenceTransformedPoint);
                 PtObjectId.EraseObject();
-                ed.Command("_BCLOSE", "E");
+                ed.Command("_BCLOSE", "_S");
                 return iter;
             }
         }
@@ -259,7 +259,7 @@ namespace SioForgeCAD.Functions
             }
             using (Transaction tr2 = db.TransactionManager.StartTransaction())
             {
-                ed.Command("_BCLOSE", "E");
+                ed.Command("_BCLOSE", "_Save");
                 ed.Command("_RESETBLOCK", insertedCopyBtrId, "");
                 EditedBounds = insertedCopyBtrId.GetEntity().GeometricExtents;
                 //Cleanup
