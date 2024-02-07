@@ -42,6 +42,9 @@ namespace SioForgeCAD.Functions
                     {
                         continue;
                     }
+
+                    //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
+                    //if ent is block, then we move the point, else if entity, first get extend and then move it
                     using (Entity SelectedEntity = SelectedObjectId.GetEntity(OpenMode.ForWrite))
                     {
                         if (SelectedEntity is BlockReference blkRef)
@@ -70,8 +73,8 @@ namespace SioForgeCAD.Functions
                 var PolylineSegment = Polylines.GetSegmentPoint(TerrainBasePolyline, PolylineSegmentIndex);
                 Vector3d PerpendicularVector = GetUCSPerpendicularVector(TerrainBasePolyline);
                 Vector3d PerpendicularVectorIntersection = PerpendicularVector.MultiplyBy(Lines.GetLength(PolylineSegment.PolylineSegmentStart, blkRef.Position));
-                using (Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd))
-                using (Line PerpendicularLine = new Line(blkRef.Position.Add(-PerpendicularVectorIntersection), blkRef.Position.Add(PerpendicularVectorIntersection)))
+                using (Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart.Flatten(), PolylineSegment.PolylineSegmentEnd.Flatten()))
+                using (Line PerpendicularLine = new Line(blkRef.Position.Add(-PerpendicularVectorIntersection).Flatten(), blkRef.Position.Add(PerpendicularVectorIntersection).Flatten()))
                 {
                     if (!Lines.AreLinesCutting(SegmentLine, PerpendicularLine, out Point3dCollection IntersectionPointsFounds))
                     {
