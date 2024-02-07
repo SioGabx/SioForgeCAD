@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
 using System;
 
 namespace SioForgeCAD.Commun
@@ -288,18 +289,26 @@ namespace SioForgeCAD.Commun
                     Point3d vertex1 = new Point3d(xCoordinates[vertexPoint1[PtsIndex]], yCoordinates[vertexPoint1[PtsIndex]], zCoordinates[vertexPoint1[PtsIndex]]);
                     Point3d vertex2 = new Point3d(xCoordinates[vertexPoint2[PtsIndex]], yCoordinates[vertexPoint2[PtsIndex]], zCoordinates[vertexPoint2[PtsIndex]]);
                     Point3d vertex3 = new Point3d(xCoordinates[vertexPoint3[PtsIndex]], yCoordinates[vertexPoint3[PtsIndex]], zCoordinates[vertexPoint3[PtsIndex]]);
+                    using (Polyline3d poly = new Polyline3d())
+                    {
+                        poly.AddToDrawingCurrentTransaction();
+                        poly.AddVertex(vertex1);
+                        poly.AddVertex(vertex2);
+                        poly.AddVertex(vertex3);
+                        poly.Closed = true;
+                    }
 
-                    Line line1 = new Line(vertex1, vertex2);
-                    Line line2 = new Line(vertex2, vertex3);
-                    Line line3 = new Line(vertex3, vertex1);
+                    //Line line1 = new Line(vertex1, vertex2);
+                    //Line line2 = new Line(vertex2, vertex3);
+                    //Line line3 = new Line(vertex3, vertex1);
 
-                    btr.AppendEntity(line1);
-                    btr.AppendEntity(line2);
-                    btr.AppendEntity(line3);
+                        //btr.AppendEntity(line1);
+                        //btr.AppendEntity(line2);
+                        //btr.AppendEntity(line3);
 
-                    tr.AddNewlyCreatedDBObject(line1, true);
-                    tr.AddNewlyCreatedDBObject(line2, true);
-                    tr.AddNewlyCreatedDBObject(line3, true);
+                        //tr.AddNewlyCreatedDBObject(line1, true);
+                        //tr.AddNewlyCreatedDBObject(line2, true);
+                        //tr.AddNewlyCreatedDBObject(line3, true);
                 }
 
                 tr.Commit();

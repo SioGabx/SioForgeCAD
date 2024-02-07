@@ -77,12 +77,6 @@ namespace SioForgeCAD
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
-        [CommandMethod("trianglecc", CommandFlags.UsePickSet)]
-        public void Trianglecc()
-        {
-            Commun.Triangulate.TriangulateCommand();
-        }
-
         [CommandMethod("RENBLK", CommandFlags.Redraw)]
         public void RENBLK()
         {
@@ -203,11 +197,16 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
+        public void TRIANGLECC()
+        {
+            Commun.Triangulate.TriangulateCommand();
+        }
 
 
-
-        [CommandMethod("debug_random_point")]
-        public static void DBG_Random_Point()
+#if DEBUG
+        [CommandMethod("DEBUG","RANDOM_POINTS", CommandFlags.Transparent)]
+        public static void DEBUG_RANDOM_POINTS()
         {
             Random _random = new Random();
 
@@ -225,12 +224,14 @@ namespace SioForgeCAD
                     double x = RandomNumber(-200, 200);
                     double y = RandomNumber(-50, 50);
                     double alti = RandomNumber(100, 120) + RandomNumber(0, 99) * 0.01;
-                    Point3d point = new Point3d(x, y, 0);
+                    Point3d point = new Point3d(x, y, alti);
                     Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), Generic.GetUSCRotation(Generic.AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
                 }
                 tr.Commit();
             }
             ed.Command("_PLAN", "");
         }
+
+#endif
     }
 }
