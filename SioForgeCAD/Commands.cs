@@ -197,6 +197,15 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("DEBUG", "COPYOVERRULE", CommandFlags.UsePickSet)]
+        public void COPYOVERRULE()
+        {
+            Commun.Overrules.CopyGripOverrule.CopyGripOverrule.Instance.HideOriginals = true;
+            Commun.Overrules.CopyGripOverrule.CopyGripOverrule.Instance.EnableOverrule(true);
+            Generic.WriteMessage("COPYOVERRULE is on");
+        }
+        
+
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public void TRIANGLECC()
         {

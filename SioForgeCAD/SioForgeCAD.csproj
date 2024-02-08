@@ -134,6 +134,10 @@
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Generic.cs" />
     <Compile Include="Commun\Layers.cs" />
+    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
+    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
+    <Compile Include="Commun\Overrules\GripOverruleBase.cs" />
+    <Compile Include="Commun\Overrules\SetOverruledEntityHelper.cs" />
     <Compile Include="Commun\PerpendicularPoint.cs" />
     <Compile Include="Commun\PluginRegister.cs" />
     <Compile Include="Commun\SelectInXref.cs" />
