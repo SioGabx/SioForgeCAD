@@ -35,15 +35,27 @@ namespace SioForgeCAD.Commun.Extensions
             return Dim;
         }
 
+
+        public static Extents3d GetExtents(this Entity entity)
+        {
+            if (entity != null && entity.Bounds.HasValue)
+            {
+                return entity.GeometricExtents;
+            }
+            return new Extents3d();
+        }
+
         public static Extents3d GetExtents(this IEnumerable<Entity> entities)
         {
             var extent = entities.First().GeometricExtents;
             foreach (var ent in entities)
             {
-                extent.AddExtents(ent.GeometricExtents);
+                extent.AddExtents(ent.GetExtents());
             }
             return extent;
         }
+
+
         public static Extents3d GetExtents(this IEnumerable<ObjectId> entities)
         {
             List<Entity> list = new List<Entity>();
@@ -60,7 +72,9 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3d GetCenter(this Extents3d extents)
         {
-            return Point3d.Origin + 0.5 * (extents.MinPoint.GetAsVector() + extents.MaxPoint.GetAsVector());
+            var x = extents.MinPoint.X + (extents.MaxPoint.X - extents.MinPoint.X) / 2.0;
+            var y = extents.MinPoint.Y + (extents.MaxPoint.Y - extents.MinPoint.Y) / 2.0;
+            return new Point3d(x, y, extents.MaxPoint.Z);
         }
         public static Extents3d Expand(this Extents3d extents, double factor)
         {

@@ -180,6 +180,12 @@ namespace SioForgeCAD
             Functions.BATTLEMENTS.Draw();
         }
 
+        [CommandMethod("PURGEALL")]
+        public static void PURGEALL()
+        {
+            Functions.PURGEALL.Purge();
+        }
+
 
 
 
@@ -200,11 +206,19 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "COPYOVERRULE", CommandFlags.UsePickSet)]
         public void COPYOVERRULE()
         {
-            Commun.Overrules.CopyGripOverrule.CopyGripOverrule.Instance.HideOriginals = true;
-            Commun.Overrules.CopyGripOverrule.CopyGripOverrule.Instance.EnableOverrule(true);
+            Func<Entity, bool> func = (Entity) =>
+            {
+                if (Entity is BlockReference)
+                {
+                    return true;
+                }
+                return false;
+            };
+            var BlockCopyOverrule = new Commun.Overrules.CopyGripOverrule.CopyGripOverrule(typeof(BlockReference), func, false);
+            BlockCopyOverrule.EnableOverrule(true);
             Generic.WriteMessage("COPYOVERRULE is on");
         }
-        
+
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public void TRIANGLECC()
@@ -214,7 +228,7 @@ namespace SioForgeCAD
 
 
 #if DEBUG
-        [CommandMethod("DEBUG","RANDOM_POINTS", CommandFlags.Transparent)]
+        [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS()
         {
             Random _random = new Random();

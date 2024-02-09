@@ -30,6 +30,14 @@ namespace SioForgeCAD.Commun.Extensions
             double Y = (A.Y + B.Y) / 2;
             return new Point3d(X, Y, Z);
         }
+        
+        public static Point3d GetIntermediatePoint(this Point3d A, Point3d B, double Pourcentage)
+        {
+            double X = A.X.IntermediatePercentage(B.X, Pourcentage);
+            double Z = A.Z.IntermediatePercentage(B.Z, Pourcentage);
+            double Y = A.Y.IntermediatePercentage(B.Y, Pourcentage);
+            return new Point3d(X, Y, Z);
+        }
 
         public static double GetAngleWith(this Point3d A, Point3d B)
         {

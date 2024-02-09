@@ -302,13 +302,13 @@ namespace SioForgeCAD.Commun
                     //Line line2 = new Line(vertex2, vertex3);
                     //Line line3 = new Line(vertex3, vertex1);
 
-                        //btr.AppendEntity(line1);
-                        //btr.AppendEntity(line2);
-                        //btr.AppendEntity(line3);
+                    //btr.AppendEntity(line1);
+                    //btr.AppendEntity(line2);
+                    //btr.AppendEntity(line3);
 
-                        //tr.AddNewlyCreatedDBObject(line1, true);
-                        //tr.AddNewlyCreatedDBObject(line2, true);
-                        //tr.AddNewlyCreatedDBObject(line3, true);
+                    //tr.AddNewlyCreatedDBObject(line1, true);
+                    //tr.AddNewlyCreatedDBObject(line2, true);
+                    //tr.AddNewlyCreatedDBObject(line3, true);
                 }
 
                 tr.Commit();

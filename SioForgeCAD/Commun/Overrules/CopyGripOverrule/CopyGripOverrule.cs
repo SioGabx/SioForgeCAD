@@ -1,11 +1,8 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
 {
@@ -13,21 +10,18 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
     {
         private bool _enabled = false;
         private bool _originalOverruling = false;
-        private static CopyGripOverrule _instance = null;
 
-        public static CopyGripOverrule Instance
+        private readonly Type _targetType;
+        private readonly bool _hideOriginals;
+        private readonly Func<Entity, bool> _filterFunction;
+
+        public CopyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, bool HideOriginals = true)
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new CopyGripOverrule();
-                }
-                return _instance;
-            }
+            this._targetType = TargetType;
+            this._filterFunction = FilterFunction;
+            this._hideOriginals = HideOriginals;
         }
 
-        public bool HideOriginals { get; set; } = true;
 
         public void EnableOverrule(bool enable)
         {
@@ -35,18 +29,15 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
             {
                 if (_enabled) return;
                 _originalOverruling = Overrule.Overruling;
-                AddOverrule(RXClass.GetClass(typeof(Polyline)), this, false);
-                //SetIdFilter([IdArray]);
-                //SetXDataFilter("MyXDataAppName");
+                AddOverrule(RXClass.GetClass(_targetType), this, false);
                 SetCustomFilter();
-
                 Overrule.Overruling = true;
                 _enabled = true;
             }
             else
             {
                 if (!_enabled) return;
-                RemoveOverrule(RXClass.GetClass(typeof(Polyline)), this);
+                RemoveOverrule(RXClass.GetClass(_targetType), this);
                 Overrule.Overruling = _originalOverruling;
                 _enabled = false;
             }
@@ -54,31 +45,32 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
 
         public override bool IsApplicable(RXObject overruledSubject)
         {
-            var poly = overruledSubject as Polyline;
-            if (poly != null)
+            var ent = overruledSubject as Entity;
+            return IsApplicable(ent);
+        }
+
+        public bool IsApplicable(Entity ent)
+        {
+            if (ent != null)
             {
-                return poly.Closed;
+                return _filterFunction(ent);
             }
             return false;
         }
 
-        public override void GetGripPoints(
-            Entity entity,
-            GripDataCollection grips,
-            double curViewUnitSize,
-            int gripSize,
-            Vector3d curViewDir,
-            GetGripPointsFlags bitFlags)
+
+        public override void GetGripPoints(Entity entity, GripDataCollection grips, double curViewUnitSize, int gripSize, Vector3d curViewDir, GetGripPointsFlags bitFlags)
         {
-            var poly = entity as Polyline;
-            if (poly != null && poly.Closed)
+            if (IsApplicable(entity))
             {
                 using (var tran = entity.Database.TransactionManager.StartTransaction())
                 {
-                    var pt = GetPolygonExtentsCenter(poly);
+                    var Extends = entity.GetExtents();
+                    var entityMiddleCenter = Extends.GetCenter();
+                    var bottomMiddleCenter = Extends.BottomLeft().GetMiddlePoint(Extends.BottomRight());
                     var grip = new CopyGrip()
                     {
-                        GripPoint = pt,
+                        GripPoint = entityMiddleCenter.GetIntermediatePoint(bottomMiddleCenter, 35),
                         EntityId = entity.ObjectId
                     };
                     grips.Add(grip);
@@ -86,24 +78,14 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                     tran.Commit();
                 }
 
-                if (!HideOriginals)
+                if (!_hideOriginals)
                 {
-                    base.GetGripPoints(
-                        entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
+                    base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
                 }
                 return;
             }
 
-            base.GetGripPoints(
-                entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
-        }
-
-        private Point3d GetPolygonExtentsCenter(Polyline poly)
-        {
-            var ext = poly.GeometricExtents;
-            var x = ext.MinPoint.X + (ext.MaxPoint.X - ext.MinPoint.X) / 2.0;
-            var y = ext.MinPoint.Y + (ext.MaxPoint.Y - ext.MinPoint.Y) / 2.0;
-            return new Point3d(x, y, ext.MaxPoint.Z);
+            base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
         }
     }
 }

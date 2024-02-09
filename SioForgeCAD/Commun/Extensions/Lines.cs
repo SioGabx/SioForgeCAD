@@ -1,5 +1,4 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.BoundaryRepresentation;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -230,7 +229,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             Poly.AddVertexAt(Poly.NumberOfVertices, point.ToPoint2d(), bulge, startWidth, endWidth);
         }
-        
+
         public static void AddVertex(this Polyline3d Poly, Point3d point)
         {
             var Vertex = new PolylineVertex3d(point);
