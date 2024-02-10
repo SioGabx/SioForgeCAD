@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
+using System;
 using CadApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Overrules
@@ -20,6 +21,7 @@ namespace SioForgeCAD.Commun.Overrules
         }
 
         public ObjectId EntityId { get; set; } = ObjectId.Null;
+        public Action<ObjectId> OnHotGripAction { get; set; } = (ObjectId) => { Generic.WriteMessage("GRIPPED"); } ;
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
@@ -107,8 +109,7 @@ namespace SioForgeCAD.Commun.Overrules
             var dwg = CadApp.DocumentManager.MdiActiveDocument;
             using (dwg.LockDocument())
             {
-                Generic.WriteMessage("GRIPED");
-
+                OnHotGripAction(entityId);
             }
 
             return ReturnValue.Ok;

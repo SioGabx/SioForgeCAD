@@ -9,17 +9,20 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
     public class CopyGripOverrule : GripOverrule
     {
         private bool _enabled = false;
+        public bool IsEnabled => _enabled;
         private bool _originalOverruling = false;
 
         private readonly Type _targetType;
         private readonly bool _hideOriginals;
         private readonly Func<Entity, bool> _filterFunction;
+        private readonly Action<ObjectId> _onHotGripAction;
 
-        public CopyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, bool HideOriginals = true)
+        public CopyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, Action<ObjectId> OnHotGripAction, bool HideOriginals = true)
         {
             this._targetType = TargetType;
             this._filterFunction = FilterFunction;
             this._hideOriginals = HideOriginals;
+            this._onHotGripAction = OnHotGripAction;
         }
 
 
@@ -71,7 +74,8 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                     var grip = new CopyGrip()
                     {
                         GripPoint = entityMiddleCenter.GetIntermediatePoint(bottomMiddleCenter, 35),
-                        EntityId = entity.ObjectId
+                        EntityId = entity.ObjectId,
+                        OnHotGripAction = _onHotGripAction
                     };
                     grips.Add(grip);
 

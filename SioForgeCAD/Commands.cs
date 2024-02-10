@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -168,6 +169,12 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
+        [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.Redraw)]
+        public void VEGBLOCCOPYGRIP()
+        {
+            Functions.VEGBLOCCOPYGRIP.AddGrip();
+        }
+
         [CommandMethod("BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK()
         {
@@ -199,25 +206,6 @@ namespace SioForgeCAD
 
 
 
-
-
-
-
-        [CommandMethod("DEBUG", "COPYOVERRULE", CommandFlags.UsePickSet)]
-        public void COPYOVERRULE()
-        {
-            Func<Entity, bool> func = (Entity) =>
-            {
-                if (Entity is BlockReference)
-                {
-                    return true;
-                }
-                return false;
-            };
-            var BlockCopyOverrule = new Commun.Overrules.CopyGripOverrule.CopyGripOverrule(typeof(BlockReference), func, false);
-            BlockCopyOverrule.EnableOverrule(true);
-            Generic.WriteMessage("COPYOVERRULE is on");
-        }
 
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]

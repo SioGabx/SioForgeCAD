@@ -10,5 +10,6 @@
         public static int TransientSecondaryColorIndex { get; } = 255;
 
         public static string VegblocLayerHeightName { get; } = "-APUd_VEG_HAUTEURS";
+        public static string VegblocLayerPrefix { get; } = "_APUd_VEG_";
     }
 }

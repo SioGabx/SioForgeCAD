@@ -49,7 +49,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
-                string BlocName = $"_APUd_VEG_{ShortType}_{Name}";
+                string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{Name}";
 
                 string BlocDisplayName = GetBlocDisplayName(Name);
                 Color BlocColor = GetRandomColor();
@@ -70,12 +70,12 @@ namespace SioForgeCAD.Functions
 
         }
 
-        private static void AskInsertVegBloc(string BlocName)
+        public static bool AskInsertVegBloc(string BlocName, string Layer = null)
         {
 
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-            DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, BlocName);
+            DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, Layer ?? BlocName);
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -87,11 +87,12 @@ namespace SioForgeCAD.Functions
                 if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
                 {
                     tr.Commit();
-                    return;
+                    return false;
                 }
-                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), null, BlocName);
+                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), null, Layer ?? BlocName);
                 tr.Commit();
             }
+            return true;
         }
 
 
