@@ -9,21 +9,28 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static bool IsXref(this BlockReference blockRef)
         {
-            return (blockRef.BlockTableRecord.GetDBObject() as BlockTableRecord).IsFromExternalReference;
+            return (blockRef?.BlockTableRecord.GetDBObject() as BlockTableRecord)?.IsFromExternalReference ?? false;
         }
 
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
-            if (blockRef.IsDynamicBlock)
+            if (blockRef.IsDynamicBlock )
             {
-                // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
-                using (DBObject openResult = blockRef.DynamicBlockTableRecord.GetObject(OpenMode.ForRead))
+                try
                 {
+                    // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
+                    DBObject openResult = blockRef.DynamicBlockTableRecord.GetDBObject(OpenMode.ForRead);
+
                     if (openResult is BlockTableRecord btr)
                     {
                         return btr.Name;
                     }
+                }
+
+                catch (Exception)
+                {
+                    return blockRef.Name;
                 }
             }
             return blockRef.Name;

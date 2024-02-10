@@ -64,23 +64,22 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
 
         public override void GetGripPoints(Entity entity, GripDataCollection grips, double curViewUnitSize, int gripSize, Vector3d curViewDir, GetGripPointsFlags bitFlags)
         {
+
             if (IsApplicable(entity))
             {
-                using (var tran = entity.Database.TransactionManager.StartTransaction())
+                //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
+                var Extends = entity.GetExtents();
+                var entityMiddleCenter = Extends.GetCenter();
+                var bottomMiddleCenter = Extends.BottomLeft().GetMiddlePoint(Extends.BottomRight());
+                var grip = new CopyGrip()
                 {
-                    var Extends = entity.GetExtents();
-                    var entityMiddleCenter = Extends.GetCenter();
-                    var bottomMiddleCenter = Extends.BottomLeft().GetMiddlePoint(Extends.BottomRight());
-                    var grip = new CopyGrip()
-                    {
-                        GripPoint = entityMiddleCenter.GetIntermediatePoint(bottomMiddleCenter, 35),
-                        EntityId = entity.ObjectId,
-                        OnHotGripAction = _onHotGripAction
-                    };
-                    grips.Add(grip);
+                    GripPoint = entityMiddleCenter.GetIntermediatePoint(bottomMiddleCenter, 35),
+                    EntityId = entity.ObjectId,
+                    OnHotGripAction = _onHotGripAction
+                };
 
-                    tran.Commit();
-                }
+                grips.Add(grip);
+
 
                 if (!_hideOriginals)
                 {

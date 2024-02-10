@@ -27,7 +27,6 @@ namespace SioForgeCAD.Commun.Overrules
         {
             var unit = worldDraw.Viewport.GetNumPixelsInUnitSquare(GripPoint);
             var gripHeight = 2.5 * gripSizeInPixels / unit.X;
-            Generic.WriteMessage(gripSizeInPixels + " / " + gripHeight);
 
             var x = GripPoint.X;
             var y = GripPoint.Y;
