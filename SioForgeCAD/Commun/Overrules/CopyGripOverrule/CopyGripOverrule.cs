@@ -68,12 +68,17 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
             if (IsApplicable(entity))
             {
                 //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
+                Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
+                Vector3d yAxis =-ucs.CoordinateSystem3d.Yaxis;
                 var Extends = entity.GetExtents();
                 var entityMiddleCenter = Extends.GetCenter();
-                var bottomMiddleCenter = Extends.BottomLeft().GetMiddlePoint(Extends.BottomRight());
+                var entityHeight = Extends.Size().Height;
+
+                var GripPoint = entityMiddleCenter.TransformBy(Matrix3d.Displacement(yAxis.SetLength((entityHeight / 2) * 0.35)));
+
                 var grip = new CopyGrip()
                 {
-                    GripPoint = entityMiddleCenter.GetIntermediatePoint(bottomMiddleCenter, 35),
+                    GripPoint = GripPoint,
                     EntityId = entity.ObjectId,
                     OnHotGripAction = _onHotGripAction
                 };

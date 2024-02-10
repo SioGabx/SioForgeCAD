@@ -169,7 +169,7 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
-        [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.Redraw)]
+        [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public void VEGBLOCCOPYGRIP()
         {
             Functions.VEGBLOCCOPYGRIP.AddGrip();

@@ -72,9 +72,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3d GetCenter(this Extents3d extents)
         {
-            var x = extents.MinPoint.X + (extents.MaxPoint.X - extents.MinPoint.X) / 2.0;
-            var y = extents.MinPoint.Y + (extents.MaxPoint.Y - extents.MinPoint.Y) / 2.0;
-            return new Point3d(x, y, extents.MaxPoint.Z);
+            Point3d TopLeft = new Point3d(extents.MinPoint.X, extents.MaxPoint.Y, 0);
+            Point3d BottomRight = new Point3d(extents.MaxPoint.X, extents.MinPoint.Y, 0);
+           
+            return TopLeft.GetMiddlePoint(BottomRight);
         }
         public static Extents3d Expand(this Extents3d extents, double factor)
         {

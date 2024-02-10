@@ -54,5 +54,11 @@ namespace SioForgeCAD.Commun.Extensions
             return selectedPointInBlockRefSpace;//.TransformBy(rotationMatrix);
         }
 
+
+        public static Point3d Displacement(this Point3d point, Vector3d Vector, double Distance)
+        {
+            return point.TransformBy(Matrix3d.Displacement(Vector.GetNormal().MultiplyBy(Distance)));
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using CadApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -27,7 +28,6 @@ namespace SioForgeCAD.Commun.Overrules
         {
             var unit = worldDraw.Viewport.GetNumPixelsInUnitSquare(GripPoint);
             var gripHeight = 2.5 * gripSizeInPixels / unit.X;
-
             var x = GripPoint.X;
             var y = GripPoint.Y;
             var offset = gripHeight / 2.0;
@@ -44,17 +44,27 @@ namespace SioForgeCAD.Commun.Overrules
             double WidthCross = ((gripHeight / 3) / 2) * 0.8;
 
             Point3d Origin = new Point3d(x, y, 0.0);
-            Point3d OriginTop = new Point3d(x, y + offset, 0.0);
-            Point3d OriginBottom = new Point3d(x, y - offset, 0.0);
-            Point3d OriginLeft = new Point3d(x - offset, y, 0.0);
-            Point3d OriginRight = new Point3d(x + offset, y, 0.0);
 
-            Vector3d YVector = Vector3d.YAxis;
-            Vector3d XVector = Vector3d.XAxis;
+
+            Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
+            Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
+            Vector3d XVector = ucs.CoordinateSystem3d.Xaxis;
+
+            //Point3d OriginTop = new Point3d(x, y + offset, 0.0);
+            //Point3d OriginBottom = new Point3d(x, y - offset, 0.0);
+            //Point3d OriginLeft = new Point3d(x - offset, y, 0.0);
+            //Point3d OriginRight = new Point3d(x + offset, y, 0.0);
+
+            Point3d OriginTop = Origin.Displacement(YVector, offset);
+            Point3d OriginBottom = Origin.Displacement(-YVector, offset);
+            Point3d OriginLeft = Origin.Displacement(-XVector, offset);
+            Point3d OriginRight = Origin.Displacement(XVector, offset);
+
+
 
             Point3d Transform(Point3d point, Vector3d Vector)
             {
-                return point.TransformBy(Matrix3d.Displacement(Vector.GetNormal().MultiplyBy(WidthCross)));
+                return point.Displacement(Vector, WidthCross);
             }
 
             var points = new Point3dCollection
@@ -96,7 +106,7 @@ namespace SioForgeCAD.Commun.Overrules
             if (type == DrawType.WarmGrip)
             {
                 worldDraw.SubEntityTraits.FillType = FillType.FillNever;
-                worldDraw.SubEntityTraits.Color = 0;
+                worldDraw.SubEntityTraits.Color = 251;
                 worldDraw.Geometry.Polygon(points);
             }
 
