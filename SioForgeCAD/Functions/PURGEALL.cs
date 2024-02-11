@@ -7,7 +7,6 @@ namespace SioForgeCAD.Functions
     {
         public static void Purge()
         {
-            Editor ed = Generic.GetEditor();
             Generic.Command("_-PURGE", "_ALL", "*", "N");
             Generic.Command("_-PURGE", "_REGAPPS", "*", "N");
         }

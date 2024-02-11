@@ -85,7 +85,7 @@ namespace SioForgeCAD.Functions
 
             if (IsDynamicBlock)
             {
-                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out Point3d OriginalBlocBasePointInModelSpace);
+                iter = ChangeBasePointDynamicBlock(blockRefId, BlockReferenceTransformedPoint, out _);
                 //Leaders.Draw("OriginalBlocBasePointInModelSpace", OriginalBlocBasePointInModelSpace, Point3d.Origin);
                 //Leaders.Draw("selectedPoint", selectedPoint, Point3d.Origin);
 

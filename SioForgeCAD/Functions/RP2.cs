@@ -11,7 +11,6 @@ namespace SioForgeCAD.Functions
         public static void RotateUCS()
         {
             Document doc = Generic.GetDocument();
-            Editor ed = Generic.GetEditor();
 
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {

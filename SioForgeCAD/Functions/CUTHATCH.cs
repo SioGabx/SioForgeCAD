@@ -114,7 +114,7 @@ namespace SioForgeCAD.Functions
             {
                 using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
                 {
-                    getCutHatchLinePointTransient.polyline = polyline;
+                    getCutHatchLinePointTransient.Polyline = polyline;
                     var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
                     if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                     {
@@ -192,7 +192,7 @@ namespace SioForgeCAD.Functions
 
         public class GetCutHatchLinePointTransient : GetPointTransient
         {
-            public Polyline polyline { get; set; }
+            public Polyline Polyline { get; set; }
             public Points Origin { get; set; }
 
             public GetCutHatchLinePointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction)
@@ -204,7 +204,7 @@ namespace SioForgeCAD.Functions
             {
                 var ObjectCollection = new DBObjectCollection();
 
-                var NearestPt = FoundNearestPointOnPolyline(polyline, moveToPt);
+                var NearestPt = FoundNearestPointOnPolyline(Polyline, moveToPt);
                 double CircleRadius = 0.05;
                 if (Origin is Points.Null)
                 {
@@ -215,7 +215,7 @@ namespace SioForgeCAD.Functions
                 }
                 else
                 {
-                    var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
+                    var OriginNearestPt = FoundNearestPointOnPolyline(Polyline, Origin.SCG);
                     Line Line = new Line(OriginNearestPt, NearestPt);
                     Circle OriginCircle = new Circle(OriginNearestPt, Vector3d.ZAxis, CircleRadius);
                     DBPoint OriginPoint = new DBPoint(OriginNearestPt);
@@ -254,7 +254,7 @@ namespace SioForgeCAD.Functions
                     return base.IsValidPoint(pointResult);
                 }
                 var Pt = Points.GetFromPromptPointResult(pointResult);
-                return GetCutPolyline(polyline, Origin, Pt).Length > 1;
+                return GetCutPolyline(Polyline, Origin, Pt).Length > 1;
             }
         }
     }
