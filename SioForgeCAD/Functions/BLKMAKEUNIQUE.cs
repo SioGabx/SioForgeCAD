@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
                     PromptSelectionResult per = ed.GetSelection(peo);
                     if (per.Status != PromptStatus.OK)
                     {
-                        ed.WriteMessage("\nErreur, veuillez réesayer.");
+                        Generic.WriteMessage("\nErreur, veuillez réesayer.");
                         return;
                     }
                     selectedBlockIds = per.Value.GetObjectIds();
@@ -66,7 +66,7 @@ namespace SioForgeCAD.Functions
 
                             if (string.IsNullOrEmpty(newName))
                             {
-                                ed.WriteMessage($"\nInvalid or duplicate block name: {oldName}.");
+                                Generic.WriteMessage($"\nInvalid or duplicate block name: {oldName}.");
                                 return;
                             }
 

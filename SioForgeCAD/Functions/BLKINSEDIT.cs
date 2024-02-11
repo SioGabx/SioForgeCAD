@@ -156,7 +156,7 @@ namespace SioForgeCAD.Functions
                 iter = BlockReferences.GetDynamicBlockReferences(BlockName);
                 iter.Join((blockRef.BlockTableRecord.GetDBObject() as BlockTableRecord).GetBlockReferenceIds(true, false));
                 //Enter block reference edit mode
-                ed.Command("_-BEDIT", BlockName);
+                Generic.Command("_-BEDIT", BlockName);
                 //Leaders.Draw("FakeBlocBasePointInBlocSpace", FakeBlocBasePointInBlocSpace, Point3d.Origin);
 
                 //Can only be a single BASEPOINTPARAMETERENTITY : we Erase the basepoint
@@ -185,9 +185,9 @@ namespace SioForgeCAD.Functions
                 //Commit the delete of the existing BASEPOINTPARAMETERENTITY
                 tr.Commit();
                 //Add the BASEPOINTPARAMETERENTITY at the new Position
-                ed.Command("_BPARAMETER", "_Base", ReelBlockReferenceTransformedPoint);
+                Generic.Command("_BPARAMETER", "_Base", ReelBlockReferenceTransformedPoint);
                 PtObjectId.EraseObject();
-                ed.Command("_BCLOSE", "_S");
+                Generic.Command("_BCLOSE", "_S");
                 return iter;
             }
         }
@@ -240,7 +240,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, oldName, newName);
-                ed.Command("_-BEDIT", newName);
+                Generic.Command("_-BEDIT", newName);
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
                 PromptSelectionResult selRes = ed.SelectAll(filter);
                 if (selRes.Status == PromptStatus.OK)
@@ -259,8 +259,8 @@ namespace SioForgeCAD.Functions
             }
             using (Transaction tr2 = db.TransactionManager.StartTransaction())
             {
-                ed.Command("_BCLOSE", "_Save");
-                ed.Command("_RESETBLOCK", insertedCopyBtrId, "");
+                Generic.Command("_BCLOSE", "_Save");
+                Generic.Command("_RESETBLOCK", insertedCopyBtrId, "");
                 EditedBounds = insertedCopyBtrId.GetEntity().GeometricExtents;
                 //Cleanup
                 insertedBtrId.EraseObject();

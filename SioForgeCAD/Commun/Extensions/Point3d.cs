@@ -1,5 +1,7 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.BoundaryRepresentation;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -60,6 +62,24 @@ namespace SioForgeCAD.Commun.Extensions
             return point.TransformBy(Matrix3d.Displacement(Vector.GetNormal().MultiplyBy(Distance)));
         }
 
+        public static bool IsInsidePolyline(this Point3d point, Polyline polyline)
+        {
+            try
+            {
+                using (DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline }))
+                using (Brep brepEnt = new Brep(Reg[0] as Region))
+                {
+                    brepEnt.GetPointContainment(point, out PointContainment pointCont);
+                    Reg[0].Dispose();
+                    return pointCont != PointContainment.Outside;
+                }
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return false;
+            }
+        }
 
         public static Point3dCollection OrderByDistance(this Point3dCollection collection, Point3d Origin)
         {

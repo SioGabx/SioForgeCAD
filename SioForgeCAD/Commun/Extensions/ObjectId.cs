@@ -64,6 +64,10 @@ namespace SioForgeCAD.Commun
             Document doc = Application.DocumentManager.MdiActiveDocument;
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
+                if (ObjectToErase.IsErased)
+                {
+                    return;
+                }
                 Entity ent = (Entity)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
                 if (!ent.IsErased)
                 {

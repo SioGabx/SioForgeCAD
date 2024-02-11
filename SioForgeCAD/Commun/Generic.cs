@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun
 {
@@ -143,9 +144,9 @@ namespace SioForgeCAD.Commun
             BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
             BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
-            acBlkTblRec.AppendEntity(entity);
+            var objid = acBlkTblRec.AppendEntity(entity);
             acTrans.AddNewlyCreatedDBObject(entity, true);
-            return entity.ObjectId;
+            return objid;
 
         }
 
@@ -175,5 +176,25 @@ namespace SioForgeCAD.Commun
         {
             return GetDocument().Editor;
         }
+
+        public static void Command(params object[] args)
+        {
+            short cmdecho = (short)Application.GetSystemVariable("CMDECHO");
+            Application.SetSystemVariable("CMDECHO", 0);
+            Editor ed = GetEditor();
+            ed.Command(args);
+            Application.SetSystemVariable("CMDECHO", cmdecho);
+        }
+
+        public static async Task CommandAsync(params object[] args)
+        {
+            short cmdecho = (short)Application.GetSystemVariable("CMDECHO");
+            Application.SetSystemVariable("CMDECHO", 0);
+            Editor ed = GetEditor();
+            await ed.CommandAsync(args);
+            Application.SetSystemVariable("CMDECHO", cmdecho);
+        }
+
+
     }
 }

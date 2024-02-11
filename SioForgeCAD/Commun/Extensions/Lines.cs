@@ -42,7 +42,7 @@ namespace SioForgeCAD.Commun.Extensions
                     }
 
 
-                    if (polyline.Closed == false && polyline.GetPoint3dAt(0).IsEqualTo(polyline.GetPoint3dAt(polyline.NumberOfVertices -1)))
+                    if (polyline.Closed == false && polyline.GetPoint3dAt(0).IsEqualTo(polyline.GetPoint3dAt(polyline.NumberOfVertices - 1)))
                     {
                         polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
                         polyline.Closed = true;
@@ -51,6 +51,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
 
 
         public static IEnumerable<Point3d> GetPolyPoints(this Polyline poly)
@@ -156,69 +157,6 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        /// <summary>
-        /// Cuts a closed polyline into two closed halves with a straight line
-        /// </summary>
-        /// <param name="loop">The closed polyline.</param>
-        /// <param name="cut">The cutting line.</param>
-        /// <returns>The result.</returns>
-        public static Polyline[] CutLoopToHalves(this Polyline loop, Line cut)
-        {
-            if (loop.EndPoint != loop.StartPoint)
-            {
-                return new Polyline[0];
-            }
-            var points = new Point3dCollection();
-            loop.IntersectWith3264bit(cut, Autodesk.AutoCAD.DatabaseServices.Intersect.ExtendArgument, points);
-            if (points.Count != 2)
-            {
-                return new Polyline[0];
-            }
-            double a, b;
-            if (loop.GetParamAtPointX(points[0]) < loop.GetParamAtPointX(points[1]))
-            {
-                a = loop.GetParamAtPointX(points[0]);
-                b = loop.GetParamAtPointX(points[1]);
-            }
-            else
-            {
-                a = loop.GetParamAtPointX(points[1]);
-                b = loop.GetParamAtPointX(points[0]);
-            }
-            var poly1 = new Polyline();
-            var poly2 = new Polyline();
-
-            // The half without the polyline start/end point.
-            poly2.AddVertexAt(0, loop.GetPointAtParameter(a).ToPoint2d(), loop.GetBulgeBetween(a, Math.Ceiling(a)), 0, 0);
-            int i = 1;
-            for (int n = (int)Math.Ceiling(a); n < b - 1; n++)
-            {
-                poly2.AddVertexAt(i, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
-                i++;
-            }
-            poly2.AddVertexAt(i, loop.GetPointAtParameter(Math.Floor(b)).ToPoint2d(), loop.GetBulgeBetween(Math.Floor(b), b), 0, 0);
-            poly2.AddVertexAt(i + 1, loop.GetPointAtParameter(b).ToPoint2d(), 0, 0, 0);
-            poly2.AddVertexAt(i + 2, loop.GetPointAtParameter(a).ToPoint2d(), 0, 0, 0);
-
-            // The half with the polyline start/end point.
-            poly1.AddVertexAt(0, loop.GetPointAtParameter(b).ToPoint2d(), loop.GetBulgeBetween(b, Math.Ceiling(b)), 0, 0);
-            int j = 1;
-            for (int n = (int)Math.Ceiling(b); n < loop.EndParam; n++)
-            {
-                poly1.AddVertexAt(j, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
-                j++;
-            }
-            for (int n = 0; n < a - 1; n++)
-            {
-                poly1.AddVertexAt(j, loop.GetPointAtParameter(n).ToPoint2d(), loop.GetBulgeAt(n), 0, 0);
-                j++;
-            }
-            poly1.AddVertexAt(j, loop.GetPointAtParameter(Math.Floor(a)).ToPoint2d(), loop.GetBulgeBetween(Math.Floor(a), a), 0, 0);
-            poly1.AddVertexAt(j + 1, loop.GetPointAtParameter(a).ToPoint2d(), 0, 0, 0);
-            poly1.AddVertexAt(j + 2, loop.GetPointAtParameter(b).ToPoint2d(), 0, 0, 0);
-
-            return new Polyline[] { poly1, poly2 };
-        }
 
         /// <summary>
         /// Gets the bulge between two parameters within the same arc segment of a polyline.
@@ -244,6 +182,27 @@ namespace SioForgeCAD.Commun.Extensions
             Poly.AppendVertex(Vertex);
         }
 
+        public static bool HasAtLeastOnPointInCommun(this Polyline PolyA, Polyline PolyB)
+        {
+            return (
+                PolyA.StartPoint.IsEqualTo(PolyB.StartPoint) ||
+                PolyA.StartPoint.IsEqualTo(PolyB.EndPoint) ||
+                PolyA.EndPoint.IsEqualTo(PolyB.StartPoint) ||
+                PolyA.EndPoint.IsEqualTo(PolyB.EndPoint));
+        }
+
+        /*
+         if ((cutedPolyligne.StartPoint.IsEqualTo(PolySegment.StartPoint) && cutedPolyligne.EndPoint.IsEqualTo(PolySegment.EndPoint)) ||
+                        (cutedPolyligne.EndPoint.IsEqualTo(PolySegment.StartPoint) && cutedPolyligne.StartPoint.IsEqualTo(PolySegment.EndPoint)))
+        */
+        public static bool IsLineCanCloseAPolyline(this Polyline PolyA, Polyline PolyB)
+        {
+            return ((PolyA.StartPoint.IsEqualTo(PolyB.StartPoint) && PolyA.EndPoint.IsEqualTo(PolyB.EndPoint)) ||
+                 (PolyA.StartPoint.IsEqualTo(PolyB.EndPoint) && PolyA.EndPoint.IsEqualTo(PolyB.StartPoint))
+                );
+        }
+
+
         public static void AddVertexIfNotExist(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
         {
             for (int i = 0; i < Poly.NumberOfVertices; i++)
@@ -268,7 +227,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-       
+
 
         /// <summary>
         /// Converts line to polyline.
@@ -348,7 +307,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 if (!(SelectedEntity is Polyline ProjectionTarget))
                 {
-                    ed.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
+                    Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
                     continue;
                 }
                 return ProjectionTarget;

@@ -74,7 +74,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             Point3d TopLeft = new Point3d(extents.MinPoint.X, extents.MaxPoint.Y, 0);
             Point3d BottomRight = new Point3d(extents.MaxPoint.X, extents.MinPoint.Y, 0);
-           
+
             return TopLeft.GetMiddlePoint(BottomRight);
         }
         public static Extents3d Expand(this Extents3d extents, double factor)

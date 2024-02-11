@@ -1,17 +1,11 @@
-﻿using Autodesk.AutoCAD.BoundaryRepresentation;
-using Autodesk.AutoCAD.Colors;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun
 {
@@ -20,140 +14,118 @@ namespace SioForgeCAD.Commun
         private static bool IsSegmentIntersecting(this Polyline polyline, Line CutLine, out Point3dCollection IntersectionPointsFounds)
         {
             IntersectionPointsFounds = new Point3dCollection();
-            polyline.IntersectWith(CutLine, Intersect.ExtendArgument, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
+            polyline.IntersectWith(CutLine, Intersect.OnBothOperands, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
             return IntersectionPointsFounds.Count > 0;
         }
 
-        public static List<Polyline> Cut(this Polyline polyline, Line CutLine)
+        private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Line CutLine, out DBObjectCollection InsideCutLines)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
-            DBObjectCollection cutedDBObjectsCollection = polyline.GetSplitCurves(IntersectionPointsFounds);
+            if (IntersectionPointsFounds.Count == 0)
+            {
+                InsideCutLines = new DBObjectCollection();
+                return new DBObjectCollection();
+            }
             Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistance(CutLine.StartPoint);
+            DBObjectCollection SplittedPolylines = polyline.GetSplitCurves(IntersectionPointsFounds);
 
-            DBObjectCollection ValidCutLines = new DBObjectCollection();
+            InsideCutLines = new DBObjectCollection();
             for (var segIndex = 0; segIndex < OrderedIntersectionPointsFounds.Count; segIndex++)
             {
                 Point3d StartPoint = OrderedIntersectionPointsFounds[segIndex];
                 Point3d EndPoint = OrderedIntersectionPointsFounds[segIndex + 1];
-
                 Point3d MiddlePoint = StartPoint.GetMiddlePoint(EndPoint);
-
-                DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline });
-                Brep brepEnt = new Brep(Reg[0] as Region);
-                brepEnt.GetPointContainment(MiddlePoint, out PointContainment pointCont);
-                if (pointCont != PointContainment.Outside)
+                if (MiddlePoint.IsInsidePolyline(polyline))
                 {
                     Polyline PolySegment = new Polyline();
                     PolySegment.AddVertex(StartPoint);
                     PolySegment.AddVertex(EndPoint);
-                    ValidCutLines.Add(PolySegment);
+                    InsideCutLines.Add(PolySegment);
                 }
+            }
+            return SplittedPolylines;
+        }
 
+
+
+
+        public static List<Polyline> Cut(this Polyline BasePolyline, Line CutLine)
+        {
+            DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
+            foreach (Entity polyline in SplittedPolylines)
+            {
+                var ent = (polyline.Clone() as Entity); ent.ColorIndex = 0; ent.AddToDrawing();
             }
 
-
-            foreach (Polyline cutedPolyligne in cutedDBObjectsCollection)
+            DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
+            DBObjectCollection ClosedPolyline = new DBObjectCollection();
+            foreach (Polyline polyline in SplittedPolylines)
             {
-                if (!cutedPolyligne.IsClockwise())
+                foreach (Polyline PolySegment in InsideCutLines)
                 {
-                    cutedPolyligne.ReverseCurve();
-                }
-
-
-                foreach (Polyline PolySegment in ValidCutLines)
-                {
-
-                    if ((cutedPolyligne.StartPoint.IsEqualTo(PolySegment.StartPoint) && cutedPolyligne.EndPoint.IsEqualTo(PolySegment.EndPoint)) ||
-                        (cutedPolyligne.EndPoint.IsEqualTo(PolySegment.StartPoint) && cutedPolyligne.StartPoint.IsEqualTo(PolySegment.EndPoint)))
+                    if (polyline.IsLineCanCloseAPolyline(PolySegment))
                     {
-                        cutedPolyligne.Closed = true;
+                        polyline.Closed = true;
                     }
                 }
             }
 
-            List<DBObject> Polylines = cutedDBObjectsCollection.Join(ValidCutLines).ToList();
+
+            List<DBObject> Polylines = SplittedPolylines.ToList();
             List<DBObject> ClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == true).ToList();
             List<DBObject> NotClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == false).ToList();
+
             int index = 0;
             while (NotClosedPolylines.Count > index)
             {
-                if (!(NotClosedPolylines[index] is Polyline cutedPolyligne))
+                if (!(NotClosedPolylines[Math.Max(index, 0)] is Polyline PolyligneA))
                 {
                     continue;
                 }
 
-                foreach (Polyline subCutedPolyligne in NotClosedPolylines.ToArray().Cast<Polyline>())
+                var AvailableNotClosedEntities = NotClosedPolylines.ToList();
+                AvailableNotClosedEntities.AddRange(InsideCutLines.ToList());
+
+                foreach (Polyline PolyligneB in AvailableNotClosedEntities.Cast<Polyline>())
                 {
-                    if (subCutedPolyligne == cutedPolyligne) { continue; }
-                    if (subCutedPolyligne.StartPoint.IsEqualTo(cutedPolyligne.StartPoint) || subCutedPolyligne.StartPoint.IsEqualTo(cutedPolyligne.EndPoint) || subCutedPolyligne.EndPoint.IsEqualTo(cutedPolyligne.StartPoint) || subCutedPolyligne.EndPoint.IsEqualTo(cutedPolyligne.EndPoint))
+                    if (PolyligneA == PolyligneB) { continue; }
+                    if (PolyligneA.HasAtLeastOnPointInCommun(PolyligneB))
                     {
-                        cutedPolyligne.JoinEntity(subCutedPolyligne);
-                        NotClosedPolylines.Remove(subCutedPolyligne);
+                        try
+                        {
+                            PolyligneA.JoinEntity(PolyligneB);
+                            NotClosedPolylines.Remove(PolyligneB);
+                            index--;
+
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
+
                     }
                 }
 
-                cutedPolyligne.Cleanup();
-                if (cutedPolyligne.Closed)
+                PolyligneA.Cleanup();
+                if (PolyligneA.Closed)
                 {
-                    ClosedPolylines.Add(cutedPolyligne);
+                    ClosedPolylines.Add(PolyligneA);
                 }
                 index++;
 
             }
 
-
-            //foreach (Polyline cutedPolyligne in NotClosedPolylines)
-            //{
-            //    foreach (Polyline subCutedPolyligne in NotClosedPolylines)
-            //    {
-            //        if (subCutedPolyligne == cutedPolyligne) { continue; }
-            //        if (subCutedPolyligne.StartPoint.IsEqualTo(cutedPolyligne.StartPoint) || subCutedPolyligne.StartPoint.IsEqualTo(cutedPolyligne.EndPoint) || subCutedPolyligne.EndPoint.IsEqualTo(cutedPolyligne.StartPoint) || subCutedPolyligne.EndPoint.IsEqualTo(cutedPolyligne.EndPoint))
-            //        {
-            //            try {
-            //            cutedPolyligne.JoinEntity(subCutedPolyligne);
-            //            }catch (Exception ex)
-            //            {
-            //                Debug.WriteLine(ex.ToString());
-            //            }
-            //        }
-            //    }
-            //    cutedPolyligne.Cleanup();
-            //    if (cutedPolyligne.Closed)
-            //    {
-            //        ClosedPolylines.Add(cutedPolyligne);
-            //    }
-            //}
-
-
-
-            foreach (DBObject cutedDbObject in ClosedPolylines)
+            List<Polyline> CutedClosePolyligne = new List<Polyline>();
+            foreach (Polyline polyligne in ClosedPolylines.Cast<Polyline>())
             {
-                if (cutedDbObject is Entity ent)
+                if (polyligne.Closed && polyligne.Area > 0 && !CutedClosePolyligne.Contains(polyligne))
                 {
-                    ent.ColorIndex = 5;
-                    ent.AddToDrawing();
+                    CutedClosePolyligne.Add(polyligne);
                 }
             }
-            return new List<Polyline>() { polyline };
 
+            return CutedClosePolyligne;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     }
 }

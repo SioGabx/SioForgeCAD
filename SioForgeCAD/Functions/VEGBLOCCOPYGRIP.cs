@@ -22,7 +22,7 @@ namespace SioForgeCAD.Functions
 
 
         public static void AddGrip()
-        {            
+        {
             if (!Instance.IsEnabled)
             {
                 Instance.EnableOverrule(true);

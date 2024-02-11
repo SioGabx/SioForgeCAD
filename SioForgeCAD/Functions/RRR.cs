@@ -30,7 +30,7 @@ namespace SioForgeCAD.Functions
 
             try
             {
-                await ed.CommandAsync("_rotate", selectionResult.Value, "", Editor.PauseToken, "_reference", "@");
+                await Generic.CommandAsync("_rotate", selectionResult.Value, "", Editor.PauseToken, "_reference", "@");
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
             {

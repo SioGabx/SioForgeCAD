@@ -43,7 +43,16 @@ namespace SioForgeCAD.Commun.Drawing
         {
             return GetPolylineFromPoints(listOfPoints as IEnumerable<Points>);
         }
-        private static bool CheckPointSide(Polyline BasePolyline, Point3d TargetPoint)
+
+        public enum PolylineSide
+        {
+            Right,
+            Left,
+            Collinear
+        }
+
+
+        public static PolylineSide CheckPointSide(this Polyline BasePolyline, Point3d TargetPoint)
         {
             for (int segmentIndex = 0; segmentIndex < BasePolyline.NumberOfVertices - 1; segmentIndex++)
             {
@@ -59,19 +68,26 @@ namespace SioForgeCAD.Commun.Drawing
                 if (crossProduct < 0)
                 {
                     //left
-                    return true;
+                    return PolylineSide.Left;
+                }
+                else if (crossProduct > 0)
+                {
+                    // Right
+                    return PolylineSide.Right;
                 }
             }
-            //right or collinear
-            return false;
+            //collinear
+            return PolylineSide.Collinear;
         }
+
+
         public static bool IsAtLeftSide(this Polyline BasePolyline, Point3d TargetPoint)
         {
-            return CheckPointSide(BasePolyline, TargetPoint);
+            return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Left;
         }
         public static bool IsAtRightSide(this Polyline BasePolyline, Point3d TargetPoint)
         {
-            return !CheckPointSide(BasePolyline, TargetPoint);
+            return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Right;
         }
 
 

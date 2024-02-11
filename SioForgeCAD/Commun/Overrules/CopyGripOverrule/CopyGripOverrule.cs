@@ -69,7 +69,7 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
             {
                 //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
                 Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
-                Vector3d yAxis =-ucs.CoordinateSystem3d.Yaxis;
+                Vector3d yAxis = -ucs.CoordinateSystem3d.Yaxis;
                 var Extends = entity.GetExtents();
                 var entityMiddleCenter = Extends.GetCenter();
                 var entityHeight = Extends.Size().Height;

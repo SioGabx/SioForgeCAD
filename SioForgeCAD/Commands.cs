@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -194,14 +193,13 @@ namespace SioForgeCAD
         }
 
 
-
-        [CommandMethod("CUTHATCH")]
+        [CommandMethod("CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH()
         {
             Functions.CUTHATCH.Cut();
         }
 
-          
+
 
 
 
@@ -234,7 +232,6 @@ namespace SioForgeCAD
             {
                 return _random.Next(min, max);
             }
-            var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -248,7 +245,7 @@ namespace SioForgeCAD
                 }
                 tr.Commit();
             }
-            ed.Command("_PLAN", "");
+            Generic.Command("_PLAN", "");
         }
 
 #endif

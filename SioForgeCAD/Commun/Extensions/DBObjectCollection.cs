@@ -1,9 +1,4 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -20,5 +15,18 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return A;
         }
+
+        public static void DeepDispose(this DBObjectCollection collection)
+        {
+            foreach (DBObject item in collection)
+            {
+                if (item != null && !item.IsDisposed)
+                {
+                    item.Dispose();
+                }
+            }
+            collection.Dispose();
+        }
+
     }
 }

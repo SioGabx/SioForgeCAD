@@ -53,7 +53,7 @@ namespace SioForgeCAD.Functions
                 PromptEntityResult selectionResult = ed.GetEntity(options);
                 if (selectionResult.Status != PromptStatus.OK)
                 {
-                    ed.WriteMessage("Sélection de bloc annulée ou invalide.");
+                    Generic.WriteMessage("Sélection de bloc annulée ou invalide.");
                     return;
                 }
                 SelectedBlocObjectIdArray = new ObjectId[] { selectionResult.ObjectId };
@@ -92,7 +92,7 @@ namespace SioForgeCAD.Functions
                             string NewName = dialogBox.GetUserInput();
                             if (string.IsNullOrWhiteSpace(NewName))
                             {
-                                ed.WriteMessage("Impossible de definir le block avec un nom vide.\n");
+                                Generic.WriteMessage("Impossible de definir le block avec un nom vide.\n");
                                 continue;
                             }
                             BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[OldName], OpenMode.ForWrite);
@@ -107,7 +107,7 @@ namespace SioForgeCAD.Functions
                             }
                             catch (Exception ex)
                             {
-                                ed.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
+                                Generic.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
                             }
                         }
                     }

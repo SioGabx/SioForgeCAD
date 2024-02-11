@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -37,7 +38,7 @@ namespace SioForgeCAD.Functions
             }
             if (!(SelectedEntity is Polyline ProjectionTarget))
             {
-                ed.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
+                Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
                 return;
             }
             while (true)

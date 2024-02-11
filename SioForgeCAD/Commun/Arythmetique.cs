@@ -29,7 +29,6 @@ namespace SioForgeCAD.Commun
             double AB_dist_total = Math.Sqrt(AB_dist_horizontal + AB_dist_vertical);
 
             double AIB_dist_total = AI_dist_total + IB_dist_total;
-            //ed.WriteMessage("Distance : " + Math.Round(AIB_dist_total, 2) + "\n");
 
             double AI_pourcent = AI_dist_total / AIB_dist_total;
             double AB_cote_dif = Math.Abs(First.Altitude - Second.Altitude);

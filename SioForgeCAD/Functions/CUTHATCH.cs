@@ -6,50 +6,112 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
     public static class CUTHATCH
     {
+
+        public static bool GetHatch(out Hatch Hachure, out Polyline Polyline)
+        {
+
+            Hachure = null;
+            Polyline = null;
+
+            Editor ed = Generic.GetEditor();
+            var option = new PromptEntityOptions("\nSelectionnez une hachure")
+            {
+                AllowNone = false,
+                AllowObjectOnLockedLayer = false,
+            };
+            option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
+            option.AddAllowedClass(typeof(Hatch), false);
+            var Result = ed.GetEntity(option);
+            if (Result.Status != PromptStatus.OK)
+            {
+                return true;
+            }
+
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (Result.ObjectId.GetDBObject() is Hatch hatch)
+                {
+                    Hachure = hatch;
+                }
+                else
+                {
+                    return false;
+                }
+
+                if (!Hachure.Associative)
+                {
+                    Hachure.ReGenerateBoundaryCommand();
+                    Hachure.GetAssociatedBoundary(out Polyline);
+                    Hachure.CopyPropertiesTo(Polyline);
+                }
+                else
+                {
+
+                    var NumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline BaseBoundary);
+                    if (NumberOfBoundary > 1)
+                    {
+                        Hachure.ReGenerateBoundaryCommand();
+                        double NewNumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline);
+                        if (NewNumberOfBoundary > 1)
+                        {
+                            var objectIdCollection = Hachure.GetAssociatedObjectIds();
+                            Polyline = null;
+                            foreach (ObjectId BoundaryElementObjectId in objectIdCollection)
+                            {
+                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity() as Polyline;
+                                if (Polyline == null)
+                                {
+                                    Polyline = BoundaryElementEntity;
+                                }
+                                else
+                                {
+                                    Polyline.JoinPolyline(BoundaryElementEntity);
+                                }
+                            }
+                            Polyline.Cleanup();
+                        }
+
+                        BaseBoundary.CopyPropertiesTo(Polyline);
+                    }
+                    else
+                    {
+                        Polyline = BaseBoundary;
+                    }
+                }
+                tr.Commit();
+
+                if (Polyline is null)
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+
+
+
         public static void Cut()
         {
-            Editor ed = Generic.GetEditor();
-            var option = new PromptSelectionOptions()
+            if (!GetHatch(out Hatch hachure, out Polyline polyline))
             {
-                MessageForAdding = "Selectionnez une polyligne",
-            };
-            var Result = ed.GetSelection(option);
-            if (Result.Status != PromptStatus.OK)
+                return;
+            }
+            if (hachure is null || polyline is null)
             {
                 return;
             }
 
-            Hatch hachure = null;
-            Polyline polyline = null;
+
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (var objectId in Result.Value.GetObjectIds())
-                {
-                    DBObject ent = objectId.GetDBObject();
-                    if (ent is Polyline)
-                    {
-                        polyline = ent as Polyline;
-                    }
-                    else if (ent is Hatch)
-                    {
-                        hachure = ent as Hatch;
-                    }
-                }
-                if (polyline is null)
-                {
-                    return;
-                }
-                Generic.WriteMessage("Polyligne is clockwise : " + polyline.IsClockwise());
-
                 using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
                 {
                     getCutHatchLinePointTransient.polyline = polyline;
@@ -62,14 +124,9 @@ namespace SioForgeCAD.Functions
                         if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
                         {
                             Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult);
-                            /*var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
+                            var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
                             Generic.WriteMessage(Cuted.Length);
-                            foreach (var item in Cuted)
-                            {
-                               // item.AddToDrawingCurrentTransaction();
-                            }
-                            */
-                            //TODO
+                            ApplyCutting(polyline, hachure, Cuted);
                         }
                     }
                 }
@@ -80,8 +137,41 @@ namespace SioForgeCAD.Functions
         }
 
 
+        public static void ApplyCutting(Polyline polyline, Hatch hachure, Polyline[] Cuts)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.TopTransaction)
+            {
+                foreach (var item in Cuts)
+                {
+                    ObjectId ModelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(db);
+                    BlockTableRecord btr = tr.GetObject(ModelSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+                    polyline.CopyPropertiesTo(item);
 
-       public static Point3d FoundNearestPointOnPolyline(Polyline polyline, Point3d point)
+                    var Loop = btr.AppendEntity(item);
+                    tr.AddNewlyCreatedDBObject(item, true);
+
+                    ObjectIdCollection ObjIds = new ObjectIdCollection
+                    {
+                        Loop
+                    };
+                    Hatch oHatch = new Hatch();
+                    btr.AppendEntity(oHatch);
+                    tr.AddNewlyCreatedDBObject(oHatch, true);
+                    oHatch.Associative = true;
+                    oHatch.AppendLoop((int)HatchLoopTypes.Default, ObjIds);
+                    oHatch.EvaluateHatch(true);
+                    hachure.CopyPropertiesTo(oHatch);
+                }
+
+                polyline.ObjectId.EraseObject();
+                hachure.ObjectId.EraseObject();
+            }
+        }
+
+
+
+        public static Point3d FoundNearestPointOnPolyline(Polyline polyline, Point3d point)
         {
             return polyline.GetClosestPointTo(point, false);
         }
@@ -90,12 +180,14 @@ namespace SioForgeCAD.Functions
         {
             var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
             var NearestPt = FoundNearestPointOnPolyline(polyline, EndPoint.SCG);
-            using (Line line = new Line(OriginNearestPt, NearestPt))
+
+            Vector3d LineVector = OriginNearestPt - NearestPt;
+
+            using (Line line = new Line(OriginNearestPt.Displacement(LineVector, .1), NearestPt.Displacement(-LineVector, .1)))
             {
-                polyline.Cut(line);
-                //return polyline.CutLoopToHalves(line);
+                //line.AddToDrawing();
+                return polyline.Cut(line).ToArray();
             }
-            return new Polyline[] { polyline, polyline };
         }
 
         public class GetCutHatchLinePointTransient : GetPointTransient
@@ -113,20 +205,32 @@ namespace SioForgeCAD.Functions
                 var ObjectCollection = new DBObjectCollection();
 
                 var NearestPt = FoundNearestPointOnPolyline(polyline, moveToPt);
-
+                double CircleRadius = 0.05;
                 if (Origin is Points.Null)
                 {
-                    Circle circle = new Circle(NearestPt, Vector3d.ZAxis, 0.5);
-                    ObjectCollection.Add(circle);
+                    Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
+                    DBPoint Point = new DBPoint(NearestPt);
+                    ObjectCollection.Add(Point);
+                    ObjectCollection.Add(Circle);
                 }
                 else
                 {
                     var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
-                    Line line = new Line(OriginNearestPt, NearestPt);
-                    ObjectCollection.Add(line);
+                    Line Line = new Line(OriginNearestPt, NearestPt);
+                    Circle OriginCircle = new Circle(OriginNearestPt, Vector3d.ZAxis, CircleRadius);
+                    DBPoint OriginPoint = new DBPoint(OriginNearestPt);
+
+                    Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
+                    DBPoint Point = new DBPoint(NearestPt);
+
+                    ObjectCollection.Add(Line);
+                    ObjectCollection.Add(OriginCircle);
+                    ObjectCollection.Add(OriginPoint);
+                    ObjectCollection.Add(Circle);
+                    ObjectCollection.Add(Point);
                 }
 
-                foreach(DBObject Ent in GetStaticEntities)
+                foreach (DBObject Ent in GetStaticEntities)
                 {
                     Ent.Dispose();
                 }
@@ -138,7 +242,10 @@ namespace SioForgeCAD.Functions
                     RedrawTransEntities(entity);
                 }
             }
-
+            public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+            {
+                return Color.FromColorIndex(ColorMethod.ByColor, 0);
+            }
 
             public override bool IsValidPoint(PromptPointResult pointResult)
             {
@@ -149,14 +256,7 @@ namespace SioForgeCAD.Functions
                 var Pt = Points.GetFromPromptPointResult(pointResult);
                 return GetCutPolyline(polyline, Origin, Pt).Length > 1;
             }
-
-
-
-
         }
-
-
-
     }
 
 }

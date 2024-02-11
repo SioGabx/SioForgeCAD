@@ -17,9 +17,9 @@ namespace SioForgeCAD.Functions
             {
                 double viewSize = (double)Application.GetSystemVariable("VIEWSIZE");
                 Point3d viewCenter = (Point3d)Application.GetSystemVariable("VIEWCTR");
-                ed.Command("_WORLDUCS");
-                ed.Command("_PLAN", "");
-                ed.Command("_ZOOM", "_C", viewCenter, viewSize);
+                Generic.Command("_WORLDUCS");
+                Generic.Command("_PLAN", "");
+                Generic.Command("_ZOOM", "_C", viewCenter, viewSize);
                 tr.Commit();
             }
         }

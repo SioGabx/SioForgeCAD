@@ -156,6 +156,28 @@ namespace SioForgeCAD.Commun
             StaticEntities?.Clear();
         }
 
+        public void DisposeEntities()
+        {
+            if (Entities != null)
+            {
+                foreach (DBObject item in Entities)
+                {
+                    item.Dispose();
+                }
+            }
+        }
+
+        public void DisposeStaticEntities()
+        {
+            if (StaticEntities != null)
+            {
+                foreach (DBObject item in StaticEntities)
+                {
+                    item.Dispose();
+                }
+            }
+        }
+
         public virtual void ClearTransGraphics()
         {
             // Clear the transient graphics for our drawables
@@ -213,6 +235,8 @@ namespace SioForgeCAD.Commun
 
         public void Dispose()
         {
+            DisposeEntities();
+            DisposeStaticEntities();
             ClearTransGraphics();
         }
     }
@@ -223,7 +247,7 @@ namespace SioForgeCAD.Commun
         {
         }
 
-        public (Points Point, PromptPointResult PromptPointResult) GetPoint(string Message, Points OriginPoint, params string[] KeyWords)
+        public (Points Point, PromptPointResult PromptPointResult) GetPoint(object Message, Points OriginPoint, params string[] KeyWords)
         {
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
@@ -240,7 +264,7 @@ namespace SioForgeCAD.Commun
             }
 
             ed.PointMonitor += handler;
-            PromptPointOptions pointOptions = new PromptPointOptions(Message);
+            PromptPointOptions pointOptions = new PromptPointOptions("\n" + Message.ToString());
             foreach (string KeyWord in KeyWords)
             {
                 if (string.IsNullOrWhiteSpace(KeyWord)) { continue; }
@@ -259,7 +283,14 @@ namespace SioForgeCAD.Commun
             while (IsNotValid)
             {
                 InsertionPromptPointResult = ed.GetPoint(pointOptions);
-                IsNotValid = !IsValidPoint(InsertionPromptPointResult);
+                if (InsertionPromptPointResult.Status == PromptStatus.OK)
+                {
+                    IsNotValid = !IsValidPoint(InsertionPromptPointResult);
+                }
+                else
+                {
+                    break;
+                }
             }
 
             ed.PointMonitor -= handler;

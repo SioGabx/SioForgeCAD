@@ -22,7 +22,7 @@ namespace SioForgeCAD.Commun.Overrules
         }
 
         public ObjectId EntityId { get; set; } = ObjectId.Null;
-        public Action<ObjectId> OnHotGripAction { get; set; } = (ObjectId) => { Generic.WriteMessage("GRIPPED"); } ;
+        public Action<ObjectId> OnHotGripAction { get; set; } = (ObjectId) => { Generic.WriteMessage("GRIPPED"); };
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {

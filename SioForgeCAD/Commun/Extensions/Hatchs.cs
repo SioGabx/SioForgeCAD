@@ -7,6 +7,23 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class HatchsExtensions
     {
+        public static double GetAssociatedBoundary(this Hatch Hachure, out Polyline Boundary)
+        {
+            var objectIdCollection = Hachure.GetAssociatedObjectIds();
+            Boundary = null;
+            if (objectIdCollection.Count >= 1)
+            {
+                Boundary = objectIdCollection[0].GetDBObject(OpenMode.ForWrite) as Polyline;
+            }
+            return objectIdCollection.Count;
+        }
+        public static void ReGenerateBoundaryCommand(this Hatch Hachure)
+        {
+            Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
+        }
+
+
+
         /// <summary>
         /// Converts hatch to polyline.
         /// </summary>
