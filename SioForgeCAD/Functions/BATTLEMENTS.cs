@@ -51,8 +51,6 @@ namespace SioForgeCAD.Functions
         public static void Draw()
         {
             Database db = Generic.GetDatabase();
-
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 if (!GetDrawingVector(out Line BaseLine, out Line DirectionLine))

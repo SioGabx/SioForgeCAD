@@ -254,7 +254,14 @@ namespace SioForgeCAD.Commun
                 pointOptions.UseBasePoint = true;
                 pointOptions.BasePoint = OriginPoint.SCU;
             }
-            PromptPointResult InsertionPromptPointResult = ed.GetPoint(pointOptions);
+            bool IsNotValid = true;
+            PromptPointResult InsertionPromptPointResult = null;
+            while (IsNotValid)
+            {
+                InsertionPromptPointResult = ed.GetPoint(pointOptions);
+                IsNotValid = !IsValidPoint(InsertionPromptPointResult);
+            }
+
             ed.PointMonitor -= handler;
             var InsertionPointResult = Points.GetFromPromptPointResult(InsertionPromptPointResult);
             ClearTransGraphics();
@@ -267,6 +274,12 @@ namespace SioForgeCAD.Commun
                 return (null, InsertionPromptPointResult);
             }
         }
+
+        public virtual bool IsValidPoint(PromptPointResult pointResult)
+        {
+            return true;
+        }
+
 
         public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
         {

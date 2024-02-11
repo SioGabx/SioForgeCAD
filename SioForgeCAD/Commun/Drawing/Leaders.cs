@@ -7,7 +7,7 @@ namespace SioForgeCAD.Commun.Drawing
     public static class Leaders
     {
 
-        public static void Draw(string Content, Point3d BasePointArgs, Point3d TextPositionArgs)
+        public static void Draw(object Content, Point3d BasePointArgs, Point3d TextPositionArgs)
         {
             // Start a transaction
             var db = Generic.GetDatabase();
@@ -17,7 +17,7 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 using (MText acMText = new MText())
                 {
-                    acMText.Contents = Content;
+                    acMText.Contents = Content.ToString();
                     acMText.Width = 2;
                     acMText.TextHeight = 0.05;
                     if (TextPositionArgs == Point3d.Origin)

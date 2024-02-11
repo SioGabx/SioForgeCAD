@@ -195,6 +195,14 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("CUTHATCH")]
+        public static void CUTHATCH()
+        {
+            Functions.CUTHATCH.Cut();
+        }
+
+          
+
 
 
 

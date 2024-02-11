@@ -16,8 +16,5 @@ namespace SioForgeCAD.Functions
             ed.Command("_-PURGE", "_ALL", "*", "N");
             ed.Command("_-PURGE", "_REGAPPS", "*", "N");
         }
-
-
-
     }
 }

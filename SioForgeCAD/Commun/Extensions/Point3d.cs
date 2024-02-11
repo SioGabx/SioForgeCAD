@@ -30,7 +30,7 @@ namespace SioForgeCAD.Commun.Extensions
             double Y = (A.Y + B.Y) / 2;
             return new Point3d(X, Y, Z);
         }
-        
+
         public static Point3d GetIntermediatePoint(this Point3d A, Point3d B, double Pourcentage)
         {
             double X = A.X.IntermediatePercentage(B.X, Pourcentage);
@@ -59,6 +59,35 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return point.TransformBy(Matrix3d.Displacement(Vector.GetNormal().MultiplyBy(Distance)));
         }
+
+
+        public static Point3dCollection OrderByDistance(this Point3dCollection collection, Point3d Origin)
+        {
+            var newCollection = new Point3dCollection();
+            foreach (Point3d point in collection)
+            {
+                double distance = point.DistanceTo(Origin);
+                bool inserted = false;
+                for (int i = 0; i < newCollection.Count; i++)
+                {
+                    if (newCollection[i].DistanceTo(Origin) > distance)
+                    {
+                        newCollection.Insert(i, point);
+                        inserted = true;
+                        break;
+                    }
+                }
+
+                if (!inserted)
+                {
+                    newCollection.Add(point);
+                }
+
+            }
+
+            return newCollection;
+        }
+
 
     }
 }

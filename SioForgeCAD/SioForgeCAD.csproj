@@ -120,6 +120,7 @@
     <Compile Include="Commun\Extensions\Curves.cs" />
     <Compile Include="Commun\Extensions\Database.cs" />
     <Compile Include="Commun\Extensions\DataGridView.cs" />
+    <Compile Include="Commun\Extensions\DBObjectCollection.cs" />
     <Compile Include="Commun\Extensions\Entity.cs" />
     <Compile Include="Commun\Extensions\Extends3d.cs" />
     <Compile Include="Commun\Extensions\Hatchs.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="Commun\PerpendicularPoint.cs" />
     <Compile Include="Commun\PluginRegister.cs" />
     <Compile Include="Commun\SelectInXref.cs" />
+    <Compile Include="Commun\SlicePolygon.cs" />
     <Compile Include="Forms\VegblocDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -163,6 +165,7 @@
     <Compile Include="Commun\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
+    <Compile Include="Functions\CUTHATCH.cs" />
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />

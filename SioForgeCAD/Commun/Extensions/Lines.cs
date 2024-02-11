@@ -40,6 +40,14 @@ namespace SioForgeCAD.Commun.Extensions
                         lastPoint = currentPoint;
                         index++;
                     }
+
+
+                    if (polyline.Closed == false && polyline.GetPoint3dAt(0).IsEqualTo(polyline.GetPoint3dAt(polyline.NumberOfVertices -1)))
+                    {
+                        polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
+                        polyline.Closed = true;
+                    }
+
                 }
             }
         }
@@ -154,7 +162,7 @@ namespace SioForgeCAD.Commun.Extensions
         /// <param name="loop">The closed polyline.</param>
         /// <param name="cut">The cutting line.</param>
         /// <returns>The result.</returns>
-        public static Polyline[] CutLoopToHalves(Polyline loop, Line cut)
+        public static Polyline[] CutLoopToHalves(this Polyline loop, Line cut)
         {
             if (loop.EndPoint != loop.StartPoint)
             {
@@ -247,8 +255,20 @@ namespace SioForgeCAD.Commun.Extensions
             }
             AddVertex(Poly, point, bulge, startWidth, endWidth);
         }
+        public static bool IsClockwise(this Polyline poly)
+        {
+            double sum = 0;
+            for (var i = 0; i < poly.NumberOfVertices - 1; i++)
+            {
+                var cur = poly.GetPoint2dAt(i);
+                var next = poly.GetPoint2dAt(i + 1);
+                sum += (next.X - cur.X) * (next.Y + cur.Y);
+            }
+            return sum > 0;
+        }
 
 
+       
 
         /// <summary>
         /// Converts line to polyline.
