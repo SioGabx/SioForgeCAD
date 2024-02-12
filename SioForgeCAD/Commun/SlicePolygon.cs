@@ -18,6 +18,14 @@ namespace SioForgeCAD.Commun
             return IntersectionPointsFounds.Count > 0;
         }
 
+        //public static DBObjectCollection BreakPolyligne(Polyline polyline, Point3d Point)
+        //{
+        //    var param = polyline.GetParamAtPointX(Point);
+        //    var splits = polyline.GetSplitCurves(new DoubleCollection(new[] { param, param }));
+        //}
+
+
+
         private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Line CutLine, out DBObjectCollection InsideCutLines)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
@@ -27,19 +35,17 @@ namespace SioForgeCAD.Commun
                 return new DBObjectCollection();
             }
 
-            Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistance(CutLine.StartPoint);
-            DBObjectCollection SplittedPolylines = polyline.GetSplitCurves(IntersectionPointsFounds);
 
-            //var CopyList = SplittedPolylines.ToList();
-            //for (int i = 0; i < SplittedPolylines.Count - 1; i++)
-            //{
-            //    Polyline SplittedPolyA = CopyList[i] as Polyline;
-            //    Polyline SplittedPolyB = CopyList[i + 1] as Polyline;
-            //    if (SplittedPolyA.GetPoints().IsEqualTo(SplittedPolyB.GetPoints()))
-            //    {
-            //        SplittedPolylines.Remove(SplittedPolyB);
-            //    }
-            //}
+            Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistance(CutLine.StartPoint);
+
+            DoubleCollection DblCollection = new DoubleCollection();
+            foreach (Point3d Point in IntersectionPointsFounds)
+            {
+                var param = polyline.GetParamAtPointX(Point);
+                DblCollection.Add(param);
+                DblCollection.Add(param);
+            }
+            DBObjectCollection SplittedPolylines = polyline.GetSplitCurves(DblCollection);
 
             InsideCutLines = new DBObjectCollection();
             for (var segIndex = 0; segIndex < OrderedIntersectionPointsFounds.Count; segIndex++)
