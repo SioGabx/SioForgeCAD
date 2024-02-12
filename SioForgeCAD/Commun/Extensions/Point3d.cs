@@ -1,7 +1,9 @@
 ﻿using Autodesk.AutoCAD.BoundaryRepresentation;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -48,6 +50,23 @@ namespace SioForgeCAD.Commun.Extensions
                 return line.Angle;
             }
         }
+
+        public static bool IsEqualTo(this IEnumerable<Point3d> A, IEnumerable<Point3d> B)
+        {
+            
+            if (A.Count() != B.Count()) { return false; }
+            Point3d[] ArrayA = A.ToArray();
+            Point3d[] ArrayB = B.ToArray();
+            for (int i = 0; i < A.Count(); i++)
+            {
+                if (!ArrayA[i].IsEqualTo(ArrayB[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
 
         public static Point3d TranformToBlockReferenceTransformation(this Point3d OriginPoint, BlockReference blkRef)
         {

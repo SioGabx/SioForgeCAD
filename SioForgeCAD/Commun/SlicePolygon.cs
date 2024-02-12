@@ -26,8 +26,20 @@ namespace SioForgeCAD.Commun
                 InsideCutLines = new DBObjectCollection();
                 return new DBObjectCollection();
             }
+
             Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistance(CutLine.StartPoint);
             DBObjectCollection SplittedPolylines = polyline.GetSplitCurves(IntersectionPointsFounds);
+
+            //var CopyList = SplittedPolylines.ToList();
+            //for (int i = 0; i < SplittedPolylines.Count - 1; i++)
+            //{
+            //    Polyline SplittedPolyA = CopyList[i] as Polyline;
+            //    Polyline SplittedPolyB = CopyList[i + 1] as Polyline;
+            //    if (SplittedPolyA.GetPoints().IsEqualTo(SplittedPolyB.GetPoints()))
+            //    {
+            //        SplittedPolylines.Remove(SplittedPolyB);
+            //    }
+            //}
 
             InsideCutLines = new DBObjectCollection();
             for (var segIndex = 0; segIndex < OrderedIntersectionPointsFounds.Count; segIndex++)
@@ -48,15 +60,9 @@ namespace SioForgeCAD.Commun
 
 
 
-
         public static List<Polyline> Cut(this Polyline BasePolyline, Line CutLine)
         {
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
-            foreach (Entity polyline in SplittedPolylines)
-            {
-                var ent = (polyline.Clone() as Entity); ent.ColorIndex = 0; ent.AddToDrawing();
-            }
-
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
             DBObjectCollection ClosedPolyline = new DBObjectCollection();
             foreach (Polyline polyline in SplittedPolylines)

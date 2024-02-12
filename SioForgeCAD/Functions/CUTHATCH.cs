@@ -185,7 +185,6 @@ namespace SioForgeCAD.Functions
 
             using (Line line = new Line(OriginNearestPt.Displacement(LineVector, .1), NearestPt.Displacement(-LineVector, .1)))
             {
-                //line.AddToDrawing();
                 return polyline.Cut(line).ToArray();
             }
         }
