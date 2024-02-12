@@ -282,7 +282,7 @@ namespace SioForgeCAD.Commun
             PromptPointResult InsertionPromptPointResult = null;
             while (IsNotValid)
             {
-                InsertionPromptPointResult = ed.GetPoint(pointOptions);
+                InsertionPromptPointResult = ed.GetPoint(SetPromptPointOptions(pointOptions));
                 if (InsertionPromptPointResult.Status == PromptStatus.OK)
                 {
                     IsNotValid = !IsValidPoint(InsertionPromptPointResult);
@@ -304,6 +304,11 @@ namespace SioForgeCAD.Commun
             {
                 return (null, InsertionPromptPointResult);
             }
+        }
+
+        public virtual PromptPointOptions SetPromptPointOptions(PromptPointOptions PromptPointOptions)
+        {
+            return PromptPointOptions;
         }
 
         public virtual bool IsValidPoint(PromptPointResult pointResult)

@@ -6,28 +6,62 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace SioForgeCAD.Functions
 {
     public static class CUTHATCH
     {
+        public static bool AskSelectHatch(out ObjectId HatchObjectId)
+        {
+            Editor ed = Generic.GetEditor();
+            HatchObjectId = ObjectId.Null;
+            SelectionSet BaseSelection = ed.SelectImplied()?.Value;
+            if (BaseSelection != null && BaseSelection.Count > 0)
+            {
+                Database db = Generic.GetDatabase();
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    foreach (ObjectId item in BaseSelection.GetObjectIds())
+                    {
+                        DBObject Obj = item.GetDBObject();
+                        if (Obj is Hatch)
+                        {
+                            HatchObjectId = item;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (HatchObjectId == ObjectId.Null)
+            {
+                var option = new PromptEntityOptions("\nSelectionnez une hachure")
+                {
+                    AllowNone = false,
+                    AllowObjectOnLockedLayer = false,
+                };
+                option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
+                option.AddAllowedClass(typeof(Hatch), false);
+                var Result = ed.GetEntity(option);
+                if (Result.Status != PromptStatus.OK)
+                {
+                    return false;
+                }
+                HatchObjectId = Result.ObjectId;
+            }
+            return true;
+        }
+
+
+
 
         public static bool GetHatch(out Hatch Hachure, out Polyline Polyline)
         {
-
             Hachure = null;
             Polyline = null;
 
-            Editor ed = Generic.GetEditor();
-            var option = new PromptEntityOptions("\nSelectionnez une hachure")
-            {
-                AllowNone = false,
-                AllowObjectOnLockedLayer = false,
-            };
-            option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
-            option.AddAllowedClass(typeof(Hatch), false);
-            var Result = ed.GetEntity(option);
-            if (Result.Status != PromptStatus.OK)
+            if (!AskSelectHatch(out ObjectId HatchObjectId))
             {
                 return true;
             }
@@ -35,7 +69,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (Result.ObjectId.GetDBObject() is Hatch hatch)
+                if (HatchObjectId.GetDBObject() is Hatch hatch)
                 {
                     Hachure = hatch;
                 }
@@ -107,32 +141,40 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-
-
             Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+
+            using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
             {
-                using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
+                getCutHatchLinePointTransient.Polyline = polyline;
+                var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
+                if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                 {
-                    getCutHatchLinePointTransient.Polyline = polyline;
-                    var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
-                    if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
+                    Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult);
+                    getCutHatchLinePointTransient.Origin = Origin;
+                    var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
+                    DBPoint dBPoint = new DBPoint(OriginNearestPt);
+                    var dBPointObjectId = dBPoint.AddToDrawing();
+                    (Points Point, PromptPointResult PromptPointResult) getCutHatchLinePointResultTwo;
+                    try
                     {
-                        Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult);
-                        getCutHatchLinePointTransient.Origin = Origin;
-                        var getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
-                        if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
+                        getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", Origin);
+                    }
+                    finally
+                    {
+                        dBPointObjectId.EraseObject();
+                    }
+                    if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
+                    {
+                        using (Transaction tr = db.TransactionManager.StartTransaction())
                         {
                             Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult);
                             var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
-                            Generic.WriteMessage(Cuted.Length);
                             ApplyCutting(polyline, hachure, Cuted);
+                            Generic.WriteMessage($"La hachure à été divisée en {Cuted.Length}");
+                            tr.Commit();
                         }
                     }
                 }
-
-
-                tr.Commit();
             }
         }
 
@@ -142,27 +184,34 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
             {
+                ObjectId ModelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(db);
+                BlockTableRecord btr = tr.GetObject(ModelSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+                DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
+                ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
+
                 foreach (var item in Cuts)
                 {
-                    ObjectId ModelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(db);
-                    BlockTableRecord btr = tr.GetObject(ModelSpaceId, OpenMode.ForWrite) as BlockTableRecord;
                     polyline.CopyPropertiesTo(item);
-
-                    var Loop = btr.AppendEntity(item);
+                    var polylineObjectId = btr.AppendEntity(item);
+                    DrawOrderCollection.Add(polylineObjectId);
                     tr.AddNewlyCreatedDBObject(item, true);
 
                     ObjectIdCollection ObjIds = new ObjectIdCollection
                     {
-                        Loop
+                        polylineObjectId
                     };
                     Hatch oHatch = new Hatch();
-                    btr.AppendEntity(oHatch);
+                    var oHatchObjectId = btr.AppendEntity(oHatch);
                     tr.AddNewlyCreatedDBObject(oHatch, true);
                     oHatch.Associative = true;
                     oHatch.AppendLoop((int)HatchLoopTypes.Default, ObjIds);
                     oHatch.EvaluateHatch(true);
                     hachure.CopyPropertiesTo(oHatch);
+                    DrawOrderCollection.Add(oHatchObjectId);
+                    orderTable.MoveAbove(ObjIds, oHatchObjectId);
                 }
+                //Keep same draw order as old hatch
+                orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
 
                 polyline.ObjectId.EraseObject();
                 hachure.ObjectId.EraseObject();
@@ -198,6 +247,12 @@ namespace SioForgeCAD.Functions
             {
             }
 
+            public override PromptPointOptions SetPromptPointOptions(PromptPointOptions PromptPointOptions)
+            {
+                PromptPointOptions.UseBasePoint = false;
+                PromptPointOptions.UseDashedLine = false;
+                return base.SetPromptPointOptions(PromptPointOptions);
+            }
 
             public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
             {
@@ -208,9 +263,11 @@ namespace SioForgeCAD.Functions
                 if (Origin is Points.Null)
                 {
                     Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
+                    Circle CircleBig = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius * 10);
                     DBPoint Point = new DBPoint(NearestPt);
                     ObjectCollection.Add(Point);
                     ObjectCollection.Add(Circle);
+                    ObjectCollection.Add(CircleBig);
                 }
                 else
                 {
@@ -220,12 +277,14 @@ namespace SioForgeCAD.Functions
                     DBPoint OriginPoint = new DBPoint(OriginNearestPt);
 
                     Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
+                    Circle CircleBig = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius * 10);
                     DBPoint Point = new DBPoint(NearestPt);
 
                     ObjectCollection.Add(Line);
                     ObjectCollection.Add(OriginCircle);
                     ObjectCollection.Add(OriginPoint);
                     ObjectCollection.Add(Circle);
+                    ObjectCollection.Add(CircleBig);
                     ObjectCollection.Add(Point);
                 }
 
