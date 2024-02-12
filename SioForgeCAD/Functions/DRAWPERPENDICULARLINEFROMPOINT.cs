@@ -61,6 +61,7 @@ namespace SioForgeCAD.Functions
                         Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault();
                         Lines.Draw(NearestPointPerpendicularLine, null);
                     }
+                    ListOfPerpendicularLines.DeepDispose();
                     trans.Commit();
                 }
 

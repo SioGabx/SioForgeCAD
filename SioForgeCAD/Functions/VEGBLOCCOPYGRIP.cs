@@ -55,12 +55,13 @@ namespace SioForgeCAD.Functions
                 if (objectid.GetDBObject() is BlockReference blockReference)
                 {
                     string BlkName = blockReference.GetBlockReferenceName();
+                    Points Origin = blockReference.Position.ToPoints();
                     tr.Commit();
 
                     bool IsInsertSuccess = true;
                     while (IsInsertSuccess)
                     {
-                        IsInsertSuccess = Functions.VEGBLOC.AskInsertVegBloc(BlkName, blockReference.Layer);
+                        IsInsertSuccess = Functions.VEGBLOC.AskInsertVegBloc(BlkName, blockReference.Layer, Origin);
                     }
                 }
             }

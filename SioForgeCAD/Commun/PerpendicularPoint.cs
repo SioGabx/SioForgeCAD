@@ -22,7 +22,7 @@ namespace SioForgeCAD.Commun
             return intersectionPoint;
         }
 
-        public static Line GetPerpendicularLinePointProjection(Point3d LineStartPointSCG, Point3d LineEndPointSCG, Point3d PerpendicularPointCurrentSCU)
+        public static Vector3d GetPerpendicularLinePointProjectionVector(Point3d LineStartPointSCG, Point3d LineEndPointSCG, Point3d PerpendicularPointCurrentSCU)
         {
             Point3d PolyStart = new Points(LineStartPointSCG).SCG;
             Point3d PolyEnd = new Points(LineEndPointSCG).SCG;
@@ -32,7 +32,7 @@ namespace SioForgeCAD.Commun
             double m_perp = (m_AB != 0) ? -1 / m_AB : double.PositiveInfinity;
             // Appliquer la transformation au vecteur directeur de la ligne perpendiculaire
             Vector3d perpVector = (m_perp != double.PositiveInfinity) ? new Vector3d(1, m_perp, 0) : new Vector3d(0, 1, 0);
-            return new Line(PerpendicularPointCurrentSCU, PerpendicularPointCurrentSCU + perpVector);
+            return PerpendicularPointCurrentSCU - (PerpendicularPointCurrentSCU + perpVector);
         }
 
 
@@ -51,19 +51,25 @@ namespace SioForgeCAD.Commun
             {
                 var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
 
-                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjection(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCG).GetVector3d();
+                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjectionVector(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCG);
 
-                Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd);
-                Point3d IntersectionPoint = FindIntersection(BasePoint.SCG, PerpendicularVectorLine, SegmentLine);
-                if (IntersectionPoint == Point3d.Origin)
+                using (Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd))
                 {
-                    continue;
-                }
-                Line PerpendicularLine = new Line(BasePoint.SCG, IntersectionPoint);
-                bool IsLineIsIntersectingOtherSegments = CheckForSegmentIntersections && CheckIfLineIsIntersectingOtherSegments(TargetPolyline, PerpendicularLine, PolylineSegmentIndex);
-                if (!IsLineIsIntersectingOtherSegments && SegmentLine.IsLinePassesThroughPoint(IntersectionPoint))
-                {
-                    PerpendicularLinesCollection.Add(PerpendicularLine);
+                    Point3d IntersectionPoint = FindIntersection(BasePoint.SCG, PerpendicularVectorLine, SegmentLine);
+                    if (IntersectionPoint == Point3d.Origin)
+                    {
+                        continue;
+                    }
+                    Line PerpendicularLine = new Line(BasePoint.SCG, IntersectionPoint);
+                    bool IsLineIsIntersectingOtherSegments = CheckForSegmentIntersections && CheckIfLineIsIntersectingOtherSegments(TargetPolyline, PerpendicularLine, PolylineSegmentIndex);
+                    if (!IsLineIsIntersectingOtherSegments && SegmentLine.IsLinePassesThroughPoint(IntersectionPoint))
+                    {
+                        PerpendicularLinesCollection.Add(PerpendicularLine);
+                    }
+                    else
+                    {
+                        PerpendicularLine.Dispose();
+                    }
                 }
             }
             List<Line> PerpendicularLinesCollectionSorted = PerpendicularLinesCollection.OrderBy(line => line.Length).ToList();
@@ -79,8 +85,10 @@ namespace SioForgeCAD.Commun
                     continue;
                 }
                 var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
-                Line SegmentLineIntersectTest = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd);
-                return Lines.AreLinesCutting(SegmentLineIntersectTest, PerpendicularLine);
+                using (Line SegmentLineIntersectTest = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd))
+                {
+                    return Lines.AreLinesCutting(SegmentLineIntersectTest, PerpendicularLine);
+                }
             }
             return false;
         }

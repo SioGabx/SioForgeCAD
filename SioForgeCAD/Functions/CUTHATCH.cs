@@ -12,6 +12,53 @@ namespace SioForgeCAD.Functions
 {
     public static class CUTHATCH
     {
+        public static void Cut()
+        {
+            if (!GetHatch(out Hatch hachure, out Polyline polyline))
+            {
+                return;
+            }
+            if (hachure is null || polyline is null)
+            {
+                return;
+            }
+            Database db = Generic.GetDatabase();
+
+            using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
+            {
+                getCutHatchLinePointTransient.Polyline = polyline;
+                var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
+                if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
+                {
+                    Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult);
+                    getCutHatchLinePointTransient.Origin = Origin;
+                    var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
+                    DBPoint dBPoint = new DBPoint(OriginNearestPt);
+                    var dBPointObjectId = dBPoint.AddToDrawing();
+                    (Points Point, PromptPointResult PromptPointResult) getCutHatchLinePointResultTwo;
+                    try
+                    {
+                        getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", Origin);
+                    }
+                    finally
+                    {
+                        dBPointObjectId.EraseObject();
+                    }
+                    if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
+                    {
+                        using (Transaction tr = db.TransactionManager.StartTransaction())
+                        {
+                            Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult);
+                            var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
+                            ApplyCutting(polyline, hachure, Cuted);
+                            Generic.WriteMessage($"La hachure à été divisée en {Cuted.Length}");
+                            tr.Commit();
+                        }
+                    }
+                }
+            }
+        }
+
         public static bool AskSelectHatch(out ObjectId HatchObjectId)
         {
             Editor ed = Generic.GetEditor();
@@ -52,9 +99,6 @@ namespace SioForgeCAD.Functions
             }
             return true;
         }
-
-
-
 
         public static bool GetHatch(out Hatch Hachure, out Polyline Polyline)
         {
@@ -128,57 +172,6 @@ namespace SioForgeCAD.Functions
             }
             return true;
         }
-
-
-
-        public static void Cut()
-        {
-            if (!GetHatch(out Hatch hachure, out Polyline polyline))
-            {
-                return;
-            }
-            if (hachure is null || polyline is null)
-            {
-                return;
-            }
-            Database db = Generic.GetDatabase();
-
-            using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
-            {
-                getCutHatchLinePointTransient.Polyline = polyline;
-                var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
-                if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
-                {
-                    Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult);
-                    getCutHatchLinePointTransient.Origin = Origin;
-                    var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
-                    DBPoint dBPoint = new DBPoint(OriginNearestPt);
-                    var dBPointObjectId = dBPoint.AddToDrawing();
-                    (Points Point, PromptPointResult PromptPointResult) getCutHatchLinePointResultTwo;
-                    try
-                    {
-                        getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", Origin);
-                    }
-                    finally
-                    {
-                        dBPointObjectId.EraseObject();
-                    }
-                    if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
-                    {
-                        using (Transaction tr = db.TransactionManager.StartTransaction())
-                        {
-                            Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult);
-                            var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
-                            ApplyCutting(polyline, hachure, Cuted);
-                            Generic.WriteMessage($"La hachure à été divisée en {Cuted.Length}");
-                            tr.Commit();
-                        }
-                    }
-                }
-            }
-        }
-
-
         public static void ApplyCutting(Polyline polyline, Hatch hachure, Polyline[] Cuts)
         {
             Database db = Generic.GetDatabase();
@@ -217,8 +210,6 @@ namespace SioForgeCAD.Functions
                 hachure.ObjectId.EraseObject();
             }
         }
-
-
 
         public static Point3d FoundNearestPointOnPolyline(Polyline polyline, Point3d point)
         {
@@ -259,40 +250,30 @@ namespace SioForgeCAD.Functions
                 var ObjectCollection = new DBObjectCollection();
 
                 var NearestPt = FoundNearestPointOnPolyline(Polyline, moveToPt);
-                double CircleRadius = 0.05;
-                if (Origin is Points.Null)
-                {
-                    Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
-                    Circle CircleBig = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius * 10);
-                    DBPoint Point = new DBPoint(NearestPt);
-                    ObjectCollection.Add(Point);
-                    ObjectCollection.Add(Circle);
-                    ObjectCollection.Add(CircleBig);
-                }
-                else
+
+                //Set the diameter to 1.5% of the current View height
+                double CircleRadius = Generic.GetCurrentViewSize().Height * (1.5 / 100) / 2;
+
+                Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
+                DBPoint Point = new DBPoint(NearestPt);
+                ObjectCollection.Add(Point);
+                ObjectCollection.Add(Circle);
+
+                if (!(Origin is Points.Null))
                 {
                     var OriginNearestPt = FoundNearestPointOnPolyline(Polyline, Origin.SCG);
                     Line Line = new Line(OriginNearestPt, NearestPt);
                     Circle OriginCircle = new Circle(OriginNearestPt, Vector3d.ZAxis, CircleRadius);
                     DBPoint OriginPoint = new DBPoint(OriginNearestPt);
-
-                    Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
-                    Circle CircleBig = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius * 10);
-                    DBPoint Point = new DBPoint(NearestPt);
-
                     ObjectCollection.Add(Line);
                     ObjectCollection.Add(OriginCircle);
                     ObjectCollection.Add(OriginPoint);
                     ObjectCollection.Add(Circle);
-                    ObjectCollection.Add(CircleBig);
                     ObjectCollection.Add(Point);
                 }
 
-                foreach (DBObject Ent in GetStaticEntities)
-                {
-                    Ent.Dispose();
-                }
-
+                DisposeStaticEntities();
+                DisposeStaticDrawable();
 
                 SetStaticEntities = ObjectCollection;
                 foreach (Autodesk.AutoCAD.GraphicsInterface.Drawable entity in StaticDrawable)
@@ -312,7 +293,10 @@ namespace SioForgeCAD.Functions
                     return base.IsValidPoint(pointResult);
                 }
                 var Pt = Points.GetFromPromptPointResult(pointResult);
-                return GetCutPolyline(Polyline, Origin, Pt).Length > 1;
+                Polyline[] CuttedPolyline = GetCutPolyline(Polyline, Origin, Pt);
+                int NumberOfPolyline = CuttedPolyline.Length;
+                CuttedPolyline.DeepDispose();
+                return NumberOfPolyline > 1;
             }
         }
     }

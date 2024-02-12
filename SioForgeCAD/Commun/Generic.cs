@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -67,6 +69,20 @@ namespace SioForgeCAD.Commun
                 return newTextStyleTable[font];
             }
         }
+
+        public static Size GetCurrentViewSize()
+        {
+            //https://drive-cad-with-code.blogspot.com/2013/04/how-to-get-current-view-size.html
+            //Get current view height
+            double h = (double)Application.GetSystemVariable("VIEWSIZE");
+            //Get current view width,
+            //by calculate current view's width-height ratio
+            Point2d screen = (Point2d)Application.GetSystemVariable("SCREENSIZE");
+            double w = h * (screen.X / screen.Y);
+            return new Size(w, h);
+        }
+
+
 
         public static DBObjectCollection Explode(IEnumerable<ObjectId> ObjectsToExplode, bool EraseOriginal = true)
         {

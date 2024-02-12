@@ -137,23 +137,27 @@ namespace SioForgeCAD.Commun
 
         public void DisposeDrawable()
         {
-            foreach (Drawable Entity in Drawable)
+            if (Drawable != null)
             {
-                Entity.Dispose();
+                foreach (Drawable Entity in Drawable)
+                {
+                    Entity.Dispose();
+                }
+                Drawable?.Clear();
             }
-            Drawable?.Clear();
-            Entities?.Clear();
         }
 
         public void DisposeStaticDrawable()
         {
-            foreach (Drawable Entity in StaticDrawable)
+            if (StaticDrawable != null)
             {
-                Entity.Dispose();
+                foreach (Drawable Entity in StaticDrawable)
+                {
+                    Entity.Dispose();
+                }
+                StaticDrawable?.Clear();
             }
-
-            StaticDrawable?.Clear();
-            StaticEntities?.Clear();
+            
         }
 
         public void DisposeEntities()
@@ -164,6 +168,7 @@ namespace SioForgeCAD.Commun
                 {
                     item.Dispose();
                 }
+                Entities?.Clear();
             }
         }
 
@@ -175,6 +180,7 @@ namespace SioForgeCAD.Commun
                 {
                     item.Dispose();
                 }
+                StaticEntities?.Clear();
             }
         }
 
@@ -237,6 +243,10 @@ namespace SioForgeCAD.Commun
         {
             DisposeEntities();
             DisposeStaticEntities();
+
+            DisposeDrawable();
+            DisposeStaticDrawable();
+
             ClearTransGraphics();
         }
     }

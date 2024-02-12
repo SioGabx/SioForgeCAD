@@ -70,7 +70,7 @@ namespace SioForgeCAD.Functions
 
         }
 
-        public static bool AskInsertVegBloc(string BlocName, string Layer = null)
+        public static bool AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {
 
             Editor ed = Generic.GetEditor();
@@ -80,7 +80,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
-                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\nIndiquez l'emplacements du bloc", Points.Null);
+                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\nIndiquez l'emplacements du bloc", Origin);
                 Points NewPointLocation = InsertionTransientPointsValues.Point;
                 PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

@@ -18,14 +18,6 @@ namespace SioForgeCAD.Commun
             return IntersectionPointsFounds.Count > 0;
         }
 
-        //public static DBObjectCollection BreakPolyligne(Polyline polyline, Point3d Point)
-        //{
-        //    var param = polyline.GetParamAtPointX(Point);
-        //    var splits = polyline.GetSplitCurves(new DoubleCollection(new[] { param, param }));
-        //}
-
-
-
         private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Line CutLine, out DBObjectCollection InsideCutLines)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
@@ -70,7 +62,7 @@ namespace SioForgeCAD.Commun
         {
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
-            DBObjectCollection ClosedPolyline = new DBObjectCollection();
+            //DBObjectCollection ClosedPolyline = new DBObjectCollection();
             foreach (Polyline polyline in SplittedPolylines)
             {
                 foreach (Polyline PolySegment in InsideCutLines)
@@ -136,6 +128,11 @@ namespace SioForgeCAD.Commun
                 }
             }
 
+            SplittedPolylinesWithInsideCutLines.ToList()
+                .Where(polyligne => !(CutedClosePolyligne
+                .Contains(polyligne)))
+                .ToList()
+                .DeepDispose();
             return CutedClosePolyligne;
         }
 

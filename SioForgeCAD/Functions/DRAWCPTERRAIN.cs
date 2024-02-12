@@ -29,15 +29,22 @@ namespace SioForgeCAD.Functions
 
         private Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
         {
-            var ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(BasePoint, Terrain, true);
-            if (ListOfPerpendicularLines.Count > 0)
+            List<Line> ListOfPerpendicularLines = null;
+            try
             {
-                using (Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault())
+                ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(BasePoint, Terrain, true);
+                if (ListOfPerpendicularLines.Count > 0)
                 {
-                    return NearestPointPerpendicularLine.EndPoint.ToPoints();
+                    Points ProjectedPoint = ListOfPerpendicularLines.FirstOrDefault().EndPoint.ToPoints();
+
+                    return ProjectedPoint;
                 }
+                return null;
             }
-            return null;
+            finally
+            {
+                ListOfPerpendicularLines.DeepDispose();
+            }
         }
 
         public void DrawTerrainFromSelectedPoints()
@@ -81,6 +88,7 @@ namespace SioForgeCAD.Functions
                     Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
 
                 }
+                insertionTransientPoints.Dispose();
                 HightLighter.UnhighlightAll(SelectedCoteBloc);
                 trans.Commit();
             }
@@ -244,6 +252,11 @@ namespace SioForgeCAD.Functions
         {
             if (CheckIfRedrawIsNeeded(moveToPt, curPt))
             {
+                DisposeEntities();
+                DisposeDrawable();
+                DisposeStaticEntities();
+                DisposeStaticDrawable();
+
                 SetEntities = UpdateFunction(moveToPt.ToPoints()).ToDBObjectCollection();
                 foreach (Autodesk.AutoCAD.GraphicsInterface.Drawable entity in Drawable)
                 {
@@ -251,15 +264,5 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
-        public override void ClearTransGraphics()
-        {
-            foreach (Entity entity in GetEntities)
-            {
-                entity.Dispose();
-            }
-            base.ClearTransGraphics();
-        }
-
     }
 }
