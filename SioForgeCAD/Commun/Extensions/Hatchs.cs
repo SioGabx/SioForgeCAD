@@ -22,6 +22,66 @@ namespace SioForgeCAD.Commun.Extensions
             Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
         }
 
+        public static bool GetHatchPolyline(this Hatch Hachure, out Polyline Polyline)
+        {
+            Polyline = null;
+
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (!Hachure.Associative)
+                {
+                    Hachure.ReGenerateBoundaryCommand();
+                    Hachure.GetAssociatedBoundary(out Polyline);
+                    Hachure.CopyPropertiesTo(Polyline);
+                }
+                else
+                {
+
+                    var NumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline BaseBoundary);
+                    if (NumberOfBoundary > 1)
+                    {
+                        Hachure.ReGenerateBoundaryCommand();
+                        double NewNumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline);
+                        if (NewNumberOfBoundary > 1)
+                        {
+                            var objectIdCollection = Hachure.GetAssociatedObjectIds();
+                            Polyline = null;
+                            foreach (ObjectId BoundaryElementObjectId in objectIdCollection)
+                            {
+                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity() as Polyline;
+                                if (Polyline == null)
+                                {
+                                    Polyline = BoundaryElementEntity;
+                                }
+                                else
+                                {
+                                    Polyline.JoinPolyline(BoundaryElementEntity);
+                                }
+                            }
+                            Polyline.Cleanup();
+                        }
+
+                        BaseBoundary.CopyPropertiesTo(Polyline);
+                    }
+                    else
+                    {
+                        Polyline = BaseBoundary;
+                    }
+                }
+                tr.Commit();
+
+                if (Polyline is null)
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+
+
+
 
 
         /// <summary>

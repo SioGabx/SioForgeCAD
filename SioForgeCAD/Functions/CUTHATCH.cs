@@ -110,68 +110,20 @@ namespace SioForgeCAD.Functions
                 return true;
             }
 
-            Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+            if (HatchObjectId.GetDBObject() is Hatch hatch)
             {
-                if (HatchObjectId.GetDBObject() is Hatch hatch)
-                {
-                    Hachure = hatch;
-                }
-                else
-                {
-                    return false;
-                }
-
-                if (!Hachure.Associative)
-                {
-                    Hachure.ReGenerateBoundaryCommand();
-                    Hachure.GetAssociatedBoundary(out Polyline);
-                    Hachure.CopyPropertiesTo(Polyline);
-                }
-                else
-                {
-
-                    var NumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline BaseBoundary);
-                    if (NumberOfBoundary > 1)
-                    {
-                        Hachure.ReGenerateBoundaryCommand();
-                        double NewNumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline);
-                        if (NewNumberOfBoundary > 1)
-                        {
-                            var objectIdCollection = Hachure.GetAssociatedObjectIds();
-                            Polyline = null;
-                            foreach (ObjectId BoundaryElementObjectId in objectIdCollection)
-                            {
-                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity() as Polyline;
-                                if (Polyline == null)
-                                {
-                                    Polyline = BoundaryElementEntity;
-                                }
-                                else
-                                {
-                                    Polyline.JoinPolyline(BoundaryElementEntity);
-                                }
-                            }
-                            Polyline.Cleanup();
-                        }
-
-                        BaseBoundary.CopyPropertiesTo(Polyline);
-                    }
-                    else
-                    {
-                        Polyline = BaseBoundary;
-                    }
-                }
-                tr.Commit();
-
-                if (Polyline is null)
-                {
-                    return false;
-                }
-
+                Hachure = hatch;
             }
+            else
+            {
+                return false;
+            }
+
+            hatch.GetHatchPolyline(out Polyline);
             return true;
         }
+
+
         public static void ApplyCutting(Polyline polyline, Hatch hachure, Polyline[] Cuts)
         {
             Database db = Generic.GetDatabase();

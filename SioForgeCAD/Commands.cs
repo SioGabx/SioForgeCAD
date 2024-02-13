@@ -201,6 +201,12 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("MERGEHATCH", CommandFlags.UsePickSet)]
+        public static void MERGEHATCH()
+        {
+            Functions.MERGEHATCH.Merge();
+        }
+
 
 
 

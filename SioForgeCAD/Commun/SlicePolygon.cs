@@ -56,8 +56,6 @@ namespace SioForgeCAD.Commun
             return SplittedPolylines;
         }
 
-
-
         public static List<Polyline> Cut(this Polyline BasePolyline, Line CutLine)
         {
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
@@ -74,7 +72,6 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-
 
             List<DBObject> Polylines = SplittedPolylines.ToList();
             List<DBObject> ClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == true).ToList();

@@ -172,6 +172,7 @@
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
+    <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\PURGEALL.cs" />
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Functions\RP2.cs" />

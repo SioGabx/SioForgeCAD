@@ -77,11 +77,12 @@ namespace SioForgeCAD.Commun.Extensions
 
             return TopLeft.GetMiddlePoint(BottomRight);
         }
-        public static Extents3d Expand(this Extents3d extents, double factor)
+        public static void Expand(this ref Extents3d extents, double factor)
         {
             var center = extents.GetCenter();
-            return new Extents3d(center + factor * (extents.MinPoint - center), center + factor * (extents.MaxPoint - center));
+            extents = new Extents3d(center + factor * (extents.MinPoint - center), center + factor * (extents.MaxPoint - center));
         }
+
         public static bool IsPointIn(this Extents3d extents, Point3d point)
         {
             return point.X >= extents.MinPoint.X && point.X <= extents.MaxPoint.X
@@ -94,7 +95,16 @@ namespace SioForgeCAD.Commun.Extensions
             return entIds.GetExtents().GetCenter();
         }
 
-
+        public static Polyline GetGeometry(this Extents3d extents3D)
+        {
+            var outline = new Polyline();
+            outline.AddVertex(extents3D.TopLeft());
+            outline.AddVertex(extents3D.TopRight());
+            outline.AddVertex(extents3D.BottomRight());
+            outline.AddVertex(extents3D.BottomLeft());
+            outline.Closed = true;
+            return outline;
+        }
 
     }
 }
