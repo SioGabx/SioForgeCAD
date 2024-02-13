@@ -70,6 +70,7 @@ namespace SioForgeCAD.Commun
                     if (polyline.IsLineCanCloseAPolyline(PolySegment))
                     {
                         polyline.Closed = true;
+                        polyline.SetBulgeAt(polyline.NumberOfVertices - 1, 0);
                     }
                 }
             }
