@@ -28,7 +28,9 @@ namespace SioForgeCAD.Functions
                     continue;
                 }
                 string StrHeight = Rows["HEIGHT"] ?? "0";
+                StrHeight = StrHeight.Replace(",", ".");
                 string StrWidth = Rows["WIDTH"] ?? "1";
+                StrWidth = StrWidth.Replace(",", ".");
                 string Type = Rows["TYPE"] ?? "ARBRES";
                 const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
 
