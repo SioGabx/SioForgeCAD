@@ -39,6 +39,13 @@ namespace SioForgeCAD.Commun.Extensions
 
             return firstXLetters + restOfTheString;
         }
+
+        public static string UcFirst(this string input)
+        {
+            return input.CapitalizeFirstLetters(1);
+        }
+
+
         public static bool IgnoreCaseEquals(this string str1, string str2)
         {
             return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);

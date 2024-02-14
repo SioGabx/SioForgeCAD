@@ -4,11 +4,14 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.Windows;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
 namespace SioForgeCAD.Functions
@@ -27,19 +30,21 @@ namespace SioForgeCAD.Functions
                 {
                     continue;
                 }
+                NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
                 string StrHeight = Rows["HEIGHT"] ?? "0";
                 StrHeight = StrHeight.Replace(",", ".");
                 string StrWidth = Rows["WIDTH"] ?? "1";
                 StrWidth = StrWidth.Replace(",", ".");
+
                 string Type = Rows["TYPE"] ?? "ARBRES";
                 const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
 
-                if (!double.TryParse(StrHeight, out double Height))
+                if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
                 {
                     Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
                     continue;
                 }
-                if (!double.TryParse(StrWidth, out double Width))
+                if (!double.TryParse(StrWidth, NumberStyle, CultureInfo.InvariantCulture, out double Width))
                 {
                     Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
                     continue;
@@ -142,7 +147,7 @@ namespace SioForgeCAD.Functions
                 var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
                 {
                     Layer = "0",
-                    LineWeight = LineWeight.LineWeight000,
+                    LineWeight = LineWeight.ByLineWeightDefault,
                     ColorIndex = 7,
                     Transparency = new Transparency((byte)255)
                 };
@@ -219,31 +224,65 @@ namespace SioForgeCAD.Functions
             {
                 return string.Empty;
             }
-            string[] SplittedName = Name.Trim().Split(' ');
-            if (SplittedName.Length > 0)
+            Name = Name.Replace(',', '.');
+            Name = Name.Replace("' ", "'");
+
+            //"ssp." == zoologie | "subsp." == botanique
+            Name = Name.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
+            Name = Name.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
+            Name = Name.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
+            Name = Name.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
+            Name = Name.Replace(" subsp ", " subsp. ");
+
+            string[] SplittedName = Name.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+            int index = 0;
+            //Genre
+            if (SplittedName.Length > index)
             {
-                BlocName = SplittedName[0];
-            }
-            if (SplittedName.Length > 1)
-            {
-                BlocName += " " + SplittedName[1][0];
-            }
-            if (SplittedName.Length > 2)
-            {
-                BlocName += " " + SplittedName[2][0];
-            }
-            if (SplittedName.Length > 3)
-            {
-                var SplittedThirdPart = SplittedName[3][0];
-                if (SplittedThirdPart != '\'')
-                {
-                    BlocName += " " + SplittedThirdPart;
-                }
+                BlocName = SplittedName[index].ToLowerInvariant().UcFirst();
             }
 
-            if (BlocName.Substring(BlocName.Length - 1) != "'")
+            //Espece if specified : dont run if Paeonia 'Adzuma Nishiki' for exemple
+            index++;
+            if (SplittedName.Length > index && !SplittedName[index].StartsWith("'"))
             {
-                if (BlocName.Contains("'"))
+                if (Name.Contains("'"))
+                {
+                    BlocName += " " + SplittedName[index][0];
+                }
+                else
+                {
+                    BlocName += " " + SplittedName[index];
+                }
+                index++;
+            }
+
+            //Cultivar
+            while (SplittedName.Length > index)
+            {
+                if (!BlocName.Contains("\'"))
+                {
+                    //the name of the vegetal is longer than expected : Sedum telephium subsp. 'Maximum'
+                    BlocName += " ";
+                    string Part = SplittedName[index].ToLowerInvariant();
+                    if (Part.Contains("'"))
+                    {
+                        Part = "'" + Part.Replace("'", "").UcFirst();
+                    }
+                    BlocName += Part;
+
+                }
+                else
+                {
+                    BlocName += " " + SplittedName[index].ToUpperInvariant()[0];
+                }
+                index++;
+            }
+
+            if (!BlocName.EndsWith("'"))
+            {
+                if (BlocName.Contains("\'"))
                 {
                     BlocName += "'";
                 }

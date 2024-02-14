@@ -318,6 +318,7 @@ namespace SioForgeCAD.Forms
             valueStr = valueStr.Replace('×', 'x');
             valueStr = valueStr.Replace('é', 'e');
             valueStr = valueStr.Replace('ç', 'c');
+            valueStr = valueStr.Replace(":", string.Empty);
             valueStr = valueStr.Replace('\\', '+');
 
             StringBuilder sb = new StringBuilder();
