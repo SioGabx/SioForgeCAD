@@ -42,6 +42,17 @@ namespace SioForgeCAD.Functions
             box.GetGeometry().AddToDrawing();
 
 
+            var reg = Region.CreateFromCurves(entities.ToDBObjectCollection());
+            Region RegionZero = reg[0] as Region;
+            for (int i = 1; i < reg.Count; i++)
+            {
+                RegionZero.BooleanOperation(BooleanOperationType.BoolUnite, reg[i] as Region);
+                //https://www.theswamp.org/index.php?action=post;quote=607106;topic=31865.30;last_msg=617675
+                //https://www.theswamp.org/index.php?topic=31865.30
+
+            }
+
+
         }
 
 
