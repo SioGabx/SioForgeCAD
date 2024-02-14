@@ -56,9 +56,10 @@ namespace SioForgeCAD.Functions
                 }
 
                 string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
-                string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{Name}";
+                GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
+                string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
 
-                string BlocDisplayName = GetBlocDisplayName(Name);
+                
                 Color BlocColor = GetRandomColor();
                 int Transparence = 20;
                 if (ShortType == "ARBR")
@@ -67,10 +68,10 @@ namespace SioForgeCAD.Functions
                 }
                 Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
                 Color HeightColorIndicator = GetColorFromHeight(Height);
-                var BlocEntities = GetBlocGeometry(BlocDisplayName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+                var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
                 if (!BlockReferences.IsBlockExist(BlocName))
                 {
-                    BlockReferences.Create(BlocName, $"{Name}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
+                    BlockReferences.Create(BlocName, $"{CompleteName}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
                 }
                 AskInsertVegBloc(BlocName);
             }
@@ -217,81 +218,89 @@ namespace SioForgeCAD.Functions
 
 
 
-        private static string GetBlocDisplayName(string Name)
+        private static void GetBlocDisplayName(string OriginalName, out string ShortName, out string CompleteName)
         {
-            string BlocName = string.Empty;
-            if (string.IsNullOrEmpty(Name))
+            ShortName = string.Empty;
+            CompleteName = string.Empty;
+            if (string.IsNullOrEmpty(OriginalName))
             {
-                return string.Empty;
+                return;
             }
-            Name = Name.Replace(',', '.');
-            Name = Name.Replace("' ", "'");
+            OriginalName = OriginalName.Replace(',', '.');
+            OriginalName = OriginalName.Replace("' ", "'");
+            OriginalName = OriginalName.Replace("' ", "'");
 
             //"ssp." == zoologie | "subsp." == botanique
-            Name = Name.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
-            Name = Name.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
-            Name = Name.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
-            Name = Name.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
-            Name = Name.Replace(" subsp ", " subsp. ");
+            OriginalName = OriginalName.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
+            OriginalName = OriginalName.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
+            OriginalName = OriginalName.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
+            OriginalName = OriginalName.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
+            OriginalName = OriginalName.Replace(" subsp ", " subsp. ");
 
-            string[] SplittedName = Name.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            string[] SplittedName = OriginalName.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
             int index = 0;
             //Genre
             if (SplittedName.Length > index)
             {
-                BlocName = SplittedName[index].ToLowerInvariant().UcFirst();
+                var Genre = SplittedName[index].ToLowerInvariant().UcFirst();
+                ShortName = Genre;
+                CompleteName = Genre;
             }
 
             //Espece if specified : dont run if Paeonia 'Adzuma Nishiki' for exemple
             index++;
             if (SplittedName.Length > index && !SplittedName[index].StartsWith("'"))
             {
-                if (Name.Contains("'"))
+                string Espece = SplittedName[index];
+                if (OriginalName.Contains("'"))
                 {
-                    BlocName += " " + SplittedName[index][0];
+                    ShortName += " " + Espece[0];
                 }
                 else
                 {
-                    BlocName += " " + SplittedName[index];
+                    ShortName += " " + Espece;
                 }
+                CompleteName += " " + Espece;
                 index++;
             }
 
             //Cultivar
             while (SplittedName.Length > index)
             {
-                if (!BlocName.Contains("\'"))
+                ShortName += " ";
+                string Cultivar;
+                if (!ShortName.Contains("\'"))
                 {
                     //the name of the vegetal is longer than expected : Sedum telephium subsp. 'Maximum'
-                    BlocName += " ";
-                    string Part = SplittedName[index].ToLowerInvariant();
-                    if (Part.Contains("'"))
+                    Cultivar = SplittedName[index].ToLowerInvariant();
+                    if (Cultivar.Contains("'"))
                     {
-                        Part = "'" + Part.Replace("'", "").UcFirst();
+                        Cultivar = "'" + Cultivar.Replace("'", "").UcFirst();
                     }
-                    BlocName += Part;
-
+                    ShortName += Cultivar;
                 }
                 else
                 {
-                    BlocName += " " + SplittedName[index].ToUpperInvariant()[0];
+                    Cultivar = SplittedName[index].UcFirst();
+                    ShortName += " " + Cultivar[0];
                 }
+
+                CompleteName += " " + Cultivar;
                 index++;
             }
 
-            if (!BlocName.EndsWith("'"))
+            if (!ShortName.EndsWith("'"))
             {
-                if (BlocName.Contains("\'"))
+                if (ShortName.Contains("\'"))
                 {
-                    BlocName += "'";
+                    ShortName += "'";
+                    CompleteName += "'";
                 }
             }
 
-            return BlocName;
+            return;
         }
-
-
 
         private static Color GetRandomColor()
         {
