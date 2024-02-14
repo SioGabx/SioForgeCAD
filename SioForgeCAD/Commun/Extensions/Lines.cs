@@ -197,9 +197,15 @@ namespace SioForgeCAD.Commun.Extensions
         */
         public static bool IsLineCanCloseAPolyline(this Polyline PolyA, Polyline PolyB)
         {
-            return ((PolyA.StartPoint.IsEqualTo(PolyB.StartPoint) && PolyA.EndPoint.IsEqualTo(PolyB.EndPoint)) ||
-                 (PolyA.StartPoint.IsEqualTo(PolyB.EndPoint) && PolyA.EndPoint.IsEqualTo(PolyB.StartPoint))
-                );
+            Point3d StartPointA = PolyA.StartPoint.Flatten();
+            Point3d EndPointA = PolyA.EndPoint.Flatten();
+
+            Point3d StartPointB = PolyB.StartPoint.Flatten();
+            Point3d EndPointB = PolyB.EndPoint.Flatten();
+
+            return (StartPointA.IsEqualTo(StartPointB) && EndPointA.IsEqualTo(EndPointB)) ||
+                 (StartPointA.IsEqualTo(EndPointB) && EndPointA.IsEqualTo(StartPointB))
+                ;
         }
 
 

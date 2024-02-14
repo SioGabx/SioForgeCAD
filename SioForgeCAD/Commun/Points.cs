@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -81,8 +82,14 @@ namespace SioForgeCAD.Commun
             Points = Points.Empty;
             return false;
         }
-
-
-
     }
+
+    public static class PointsExtensions
+    {
+        public static Points Flatten(this Points point)
+        {
+            return new Points(point.SCG.Flatten());
+        }
+    }
+
 }

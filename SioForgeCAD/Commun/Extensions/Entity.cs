@@ -28,7 +28,7 @@ namespace SioForgeCAD.Commun.Extensions
                     TargetHatch.BackgroundColor = OriginHatch.BackgroundColor;
                     TargetHatch.Normal = OriginHatch.Normal;
                     TargetHatch.Origin = OriginHatch.Origin;
-
+                    TargetHatch.Elevation = OriginHatch.Elevation;
                 }
             }
 

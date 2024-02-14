@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
@@ -30,7 +31,8 @@ namespace SioForgeCAD.Functions
                 var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
                 if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                 {
-                    Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult);
+                    Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult).Flatten();
+                    
                     getCutHatchLinePointTransient.Origin = Origin;
                     var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
                     DBPoint dBPoint = new DBPoint(OriginNearestPt);
@@ -48,7 +50,7 @@ namespace SioForgeCAD.Functions
                     {
                         using (Transaction tr = db.TransactionManager.StartTransaction())
                         {
-                            Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult);
+                            Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult).Flatten();
                             var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
                             ApplyCutting(polyline, hachure, Cuted);
                             Generic.WriteMessage($"La hachure à été divisée en {Cuted.Length}");
@@ -66,17 +68,13 @@ namespace SioForgeCAD.Functions
             SelectionSet BaseSelection = ed.SelectImplied()?.Value;
             if (BaseSelection != null && BaseSelection.Count > 0)
             {
-                Database db = Generic.GetDatabase();
-                using (Transaction tr = db.TransactionManager.StartTransaction())
+                foreach (ObjectId item in BaseSelection.GetObjectIds())
                 {
-                    foreach (ObjectId item in BaseSelection.GetObjectIds())
+                    DBObject Obj = item.GetDBObject();
+                    if (Obj is Hatch)
                     {
-                        DBObject Obj = item.GetDBObject();
-                        if (Obj is Hatch)
-                        {
-                            HatchObjectId = item;
-                            break;
-                        }
+                        HatchObjectId = item;
+                        break;
                     }
                 }
             }
@@ -104,22 +102,33 @@ namespace SioForgeCAD.Functions
         {
             Hachure = null;
             Polyline = null;
-
-            if (!AskSelectHatch(out ObjectId HatchObjectId))
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                return true;
+                try
+                {
+
+                    if (!AskSelectHatch(out ObjectId HatchObjectId))
+                    {
+                        return true;
+                    }
+
+                    if (HatchObjectId.GetDBObject() is Hatch hatch)
+                    {
+                        Hachure = hatch;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
+                }
             }
 
-            if (HatchObjectId.GetDBObject() is Hatch hatch)
-            {
-                Hachure = hatch;
-            }
-            else
-            {
-                return false;
-            }
-
-            hatch.GetHatchPolyline(out Polyline);
+            Hachure?.GetHatchPolyline(out Polyline);
             return true;
         }
 
@@ -210,6 +219,7 @@ namespace SioForgeCAD.Functions
                 DBPoint Point = new DBPoint(NearestPt);
                 ObjectCollection.Add(Point);
                 ObjectCollection.Add(Circle);
+                ObjectCollection.Add(Polyline.Clone() as Polyline);
 
                 if (!(Origin is Points.Null))
                 {

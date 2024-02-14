@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -15,6 +16,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
+    
             if (blockRef.IsDynamicBlock)
             {
                 try
@@ -28,15 +30,14 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
 
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Debug.WriteLine(ex);
                     return blockRef.Name;
                 }
             }
             return blockRef.Name;
         }
-
-
 
 
         public static DynamicBlockReferencePropertyCollection GetDynamicProperties(this BlockReference blockReference)

@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -19,15 +20,23 @@ namespace SioForgeCAD.Commun
         public static DBObject GetDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
         {
             var db = Generic.GetDatabase();
+            return db.TransactionManager.GetObject(objectId, openMode);
+        }
+
+        public static DBObject GetNoTransactionDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
+        {
+            var db = Generic.GetDatabase();
             if (db.TransactionManager.NumberOfActiveTransactions == 0)
             {
                 using (db.TransactionManager.StartTransaction())
                 {
-                    return db.TransactionManager.GetObject(objectId, openMode);
+                    return objectId.GetDBObject(openMode);
                 }
             }
-            return db.TransactionManager.GetObject(objectId, openMode);
-
+            else
+            {
+                return objectId.GetDBObject();
+            }
         }
 
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<Entity> entities)
@@ -67,7 +76,7 @@ namespace SioForgeCAD.Commun
 
         public static void EraseObject(this ObjectId ObjectToErase)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Generic.GetDocument();
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
                 if (ObjectToErase.IsErased)
@@ -119,10 +128,7 @@ namespace SioForgeCAD.Commun
             acHatch.AppendLoop(HatchLoopTypes.Outermost, acObjIdColl);
             acHatch.EvaluateHatch(true);
             return acHatch;
-
         }
-
-
 
     }
 }
