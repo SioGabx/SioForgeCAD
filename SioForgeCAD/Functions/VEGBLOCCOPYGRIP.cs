@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Overrules.CopyGripOverrule;
@@ -64,8 +66,16 @@ namespace SioForgeCAD.Functions
                     {
                         IsInsertSuccess = Functions.VEGBLOC.AskInsertVegBloc(BlkName, blockReference.Layer, Origin);
                     }
+
+                    if (Settings.VegblocCopyGripDeselectAfterCopy)
+                    {
+                        //Send ESCAPE to disable the current selection
+                        Document doc = Generic.GetDocument();
+                        doc.SendStringToExecute($"{(char)27}", false, false, false);
+                    }
                 }
             }
+
         }
     }
 }

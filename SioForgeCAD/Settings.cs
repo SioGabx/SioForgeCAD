@@ -11,5 +11,6 @@
 
         public static string VegblocLayerHeightName { get; } = "-APUd_VEG_HAUTEURS";
         public static string VegblocLayerPrefix { get; } = "_APUd_VEG_";
+        public static bool VegblocCopyGripDeselectAfterCopy { get; } = true;
     }
 }
