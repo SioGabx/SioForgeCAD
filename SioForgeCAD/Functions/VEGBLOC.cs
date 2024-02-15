@@ -155,7 +155,7 @@ namespace SioForgeCAD.Functions
                     LineWeight = LineWeight.ByLineWeightDefault,
                     ColorIndex = 7,
                     Transparency = new Transparency((byte)255)
-                };
+                }; 
                 BlocGeometry.Add(Circle);
                 return Circle.ObjectId;
             }
