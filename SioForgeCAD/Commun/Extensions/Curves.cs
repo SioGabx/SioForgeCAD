@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -69,6 +71,44 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+
+
+        /// <summary>
+        /// Order the collection by contiguous curves ([n].EndPoint equals to [n+1].StartPoint)
+        /// </summary>
+        /// <param name="source">Collection this method applies to.</param>
+        /// <returns>Ordered array of Curve3d.</returns>
+        public static Curve3d[] ToOrderedArray(this IEnumerable<Curve3d> source)
+        {
+            var list = source.ToList();
+            int count = list.Count;
+            var array = new Curve3d[count];
+            int i = 0;
+            array[0] = list[0];
+            list.RemoveAt(0);
+            int index;
+            while (i < count - 1)
+            {
+                var pt = array[i++].EndPoint;
+                if ((index = list.FindIndex(c => c.StartPoint.IsEqualTo(pt))) != -1)
+                {
+
+                    array[i] = list[index];
+                }
+                else if ((index = list.FindIndex(c => c.EndPoint.IsEqualTo(pt))) != -1)
+                {
+                    array[i] = list[index].GetReverseParameterCurve();
+                }
+                else
+                {
+                    Debug.WriteLine("Not contiguous curves.");
+                    return new Curve3d[0];
+                }
+                list.RemoveAt(index);
+            }
+            return array;
+        }
 
     }
 }

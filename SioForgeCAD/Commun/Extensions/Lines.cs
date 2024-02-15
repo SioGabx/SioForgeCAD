@@ -54,14 +54,14 @@ namespace SioForgeCAD.Commun.Extensions
 
 
 
-        public static IEnumerable<Point3d> GetPolyPoints(this Polyline poly)
+        public static IEnumerable<Point2d> GetPolyPoints(this Polyline poly)
         {
             for (int i = 0; i < poly.NumberOfVertices; i++)
             {
-                yield return poly.GetPoint3dAt(i);
+                yield return poly.GetPoint2dAt(i);
             }
         }
-
+       
 
         /// <summary>
         /// Determines if the polyline is self-intersecting.
@@ -73,18 +73,18 @@ namespace SioForgeCAD.Commun.Extensions
             var points = poly.GetPolyPoints().ToList();
             for (int i = 0; i < points.Count - 3; i++)
             {
-                var a1 = points[i].ToPoint2d();
-                var a2 = points[i + 1].ToPoint2d();
+                var a1 = points[i];
+                var a2 = points[i + 1];
                 for (var j = i + 2; j < points.Count - 1; j++)
                 {
-                    var b1 = points[j].ToPoint2d();
-                    var b2 = points[j + 1].ToPoint2d();
+                    var b1 = points[j];
+                    var b2 = points[j + 1];
                     if (IsLineSegIntersect(a1, a2, b1, b2))
                     {
                         if (i == 0 && j == points.Count - 2)
                         {
                             // NOTE: If they happen to be the first and the last, check if polyline is closed. A closed polyline is not considered self-intersecting.
-                            if (points.First().DistanceTo(points.Last()) > Tolerance.Global.EqualPoint)
+                            if (points.First().GetDistanceTo(points.Last()) > Tolerance.Global.EqualPoint)
                             {
                                 return true;
                             }

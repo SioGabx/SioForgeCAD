@@ -53,7 +53,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsEqualTo(this IEnumerable<Point3d> A, IEnumerable<Point3d> B)
         {
-            
+
             if (A.Count() != B.Count()) { return false; }
             Point3d[] ArrayA = A.ToArray();
             Point3d[] ArrayB = B.ToArray();
@@ -66,7 +66,14 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return true;
         }
-
+        public static bool Contains(this IEnumerable<Point3d> points, Point3d Point)
+        {
+            foreach (var item in points)
+            {
+                if (item.IsEqualTo(Point)) { return true; }
+            }
+            return false;
+        }
 
         public static Point3d TranformToBlockReferenceTransformation(this Point3d OriginPoint, BlockReference blkRef)
         {
