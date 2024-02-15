@@ -59,7 +59,7 @@ namespace SioForgeCAD.Functions
                 GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
                 string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
 
-                
+
                 Color BlocColor = GetRandomColor();
                 int Transparence = 20;
                 if (ShortType == "ARBR")
@@ -135,14 +135,18 @@ namespace SioForgeCAD.Functions
             FirstCircleId.EraseObject();
             BlocGeometry.Add(acHatch);
 
-            Periph_Circle(0, 0);
-            Periph_Circle(0.084, -0.05);
-            Periph_Circle(0.015, -0.1);
-            Periph_Circle(-0.1, 0.065);
-            Periph_Circle(-0.09, -0.06);
-            Periph_Circle(0.045, 0.05);
+            GetCircle(0, 0);
 
-            ObjectId Periph_Circle(double x, double y)
+            if (Settings.VegblocGeneratePeripheryCircles)
+            {
+                GetCircle(0.084, -0.05);
+                GetCircle(0.015, -0.1);
+                GetCircle(-0.1, 0.065);
+                GetCircle(-0.09, -0.06);
+                GetCircle(0.045, 0.05);
+            }
+
+            ObjectId GetCircle(double x, double y)
             {
                 Point3d cerle_periph_position = new Point3d(0 + (x * WidthRadius), 0 + (y * WidthRadius), 0);
                 var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
@@ -177,7 +181,7 @@ namespace SioForgeCAD.Functions
                     Layer = Settings.VegblocLayerHeightName,
                     Color = HeightColorIndicator,
                     LineWeight = LineWeight.ByLayer,
-                    Transparency = new Transparency((byte)255)
+                    Transparency = new Transparency(255)
                 };
                 BlocGeometry.Add(CircleHeightColorIndicator);
 
@@ -186,13 +190,12 @@ namespace SioForgeCAD.Functions
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
 
-                    Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
+                    Location = new Point3d(0, 0 - WidthRadius * 0.6, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,
                     TextHeight = WidthRadius / 10,
                     Transparency = new Transparency(255),
                     Color = HeightColorIndicator
-
                 };
                 BlocGeometry.Add(TextHeightColorIndicator);
             }
