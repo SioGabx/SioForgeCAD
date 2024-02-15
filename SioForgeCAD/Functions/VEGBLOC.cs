@@ -129,7 +129,7 @@ namespace SioForgeCAD.Functions
             acHatch.Associative = false;
             acHatch.Layer = "0";
             acHatch.ColorIndex = 0;
-            acHatch.Transparency = new Transparency(TransparencyMethod.ByBlock);
+            acHatch.Transparency = new Transparency(TransparencyMethod.ByLayer);
             acHatch.AppendLoop(HatchLoopTypes.Outermost, new ObjectIdCollection { FirstCircleId });
             acHatch.EvaluateHatch(true);
             FirstCircleId.EraseObject();
