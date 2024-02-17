@@ -29,7 +29,7 @@ namespace SioForgeCAD.Functions
                 return;
 
             SelectionSet sel = selRes.Value;
-            List<Polyline> Curves = new List<Polyline>();
+            List<Curve> Curves = new List<Curve>();
 
             //ed.GetPoint("Indiquez un point");
             //var CurrentViewSave = ed.GetCurrentView();
@@ -39,9 +39,11 @@ namespace SioForgeCAD.Functions
             {
                 foreach (ObjectId selectedObjectId in sel.GetObjectIds())
                 {
-                    if (selectedObjectId.GetDBObject() is Polyline poly)
+                    DBObject ent = selectedObjectId.GetDBObject();
+                    if (ent is Polyline || ent is Circle)
                     {
-                        Curves.Add(poly.Clone() as Polyline);
+                        Curve curv = ent.Clone() as Curve;
+                        Curves.Add(curv);
                     }
                 }
                 if (Curves.Count <= 0)
@@ -50,13 +52,13 @@ namespace SioForgeCAD.Functions
                 }
 
                 MergePolylinePoints(Curves);
-                List<Polyline> MergedCurves = Curves.Merge();
+                List<Curve> MergedCurves = Curves.Merge();
 
                 if (MergedCurves.Count > 1)
                 {
-                    List<Polyline> OffsetCurves = Curves.OffsetPolyline(Margin, false);
-                    List<Polyline> OffsetCurvesWithIntersections = OffsetCurves.Merge();
-                    List<Polyline> UndoOffsetCurves = OffsetCurvesWithIntersections.OffsetPolyline(Margin, true);
+                    List<Curve> OffsetCurves = Curves.OffsetPolyline(Margin, false);
+                    List<Curve> OffsetCurvesWithIntersections = OffsetCurves.Merge();
+                    List<Curve> UndoOffsetCurves = OffsetCurvesWithIntersections.OffsetPolyline(Margin, true);
 
                     MergedCurves = UndoOffsetCurves;
                 }
@@ -64,7 +66,16 @@ namespace SioForgeCAD.Functions
 
 
 
-                MergedCurves.AddToDrawing(); MergePolylinePoints(MergedCurves);
+                MergedCurves.AddToDrawing(); 
+                MergePolylinePoints(MergedCurves);
+                foreach (Curve curve in MergedCurves)
+                {
+                    if (curve is Polyline poly)
+                    {
+                        poly.Cleanup();
+                    }
+                }
+
                 tr.Commit();
                 return;
             }
@@ -77,8 +88,11 @@ namespace SioForgeCAD.Functions
 
 
 
-        private static void MergePolylinePoints(List<Polyline> polylines)
+        private static void MergePolylinePoints(List<Curve> curves)
         {
+            List<Polyline> polylines = curves.Where(ent => ent is Polyline).Cast<Polyline>().ToList();
+
+
             // Parcourir chaque paire de polylignes
             for (int i = 0; i < polylines.Count - 1; i++)
             {

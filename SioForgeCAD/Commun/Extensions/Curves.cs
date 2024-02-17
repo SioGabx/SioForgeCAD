@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -113,6 +114,54 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return array;
         }
+
+
+        public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance, bool OffsetToInside)
+        {
+            List<Curve> OffsetCurves = new List<Curve>();
+            if (OffsetToInside)
+            {
+                OffsetDistance = -Math.Abs(OffsetDistance);
+            }
+            foreach (var ent in Curves)
+            {
+                DBObjectCollection OffsetCurve = new DBObjectCollection();
+                if (ent is Polyline)
+                {
+                    OffsetCurve = ent.GetOffsetCurves((ent as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
+                }
+                else if (ent is Ellipse || ent is Circle)
+                {
+                    OffsetCurve = ent.GetOffsetCurves(OffsetDistance);
+                }
+
+                OffsetCurves.AddRange(OffsetCurve.ToList().Cast<Curve>());
+            }
+            Curves.DeepDispose();
+            return OffsetCurves;
+        }
+
+        public static List<Curve> Merge(this IEnumerable<Curve> Curves)
+        {
+            var reg = Region.CreateFromCurves(Curves.ToDBObjectCollection());
+            if (reg.Count > 0)
+            {
+                Region RegionZero = reg[0] as Region;
+                for (int i = 1; i < reg.Count; i++)
+                {
+                    RegionZero.BooleanOperation(BooleanOperationType.BoolUnite, reg[i] as Region);
+                }
+                var MergedCurves = RegionZero.GetPolylines();
+                return MergedCurves.Cast<Curve>().ToList();
+            }
+            else
+            {
+                return Curves.ToList();
+            }
+        }
+
+
+
 
     }
 }

@@ -7,6 +7,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void CopyPropertiesTo(this Entity Origin, Entity Target)
         {
+            if (Origin == null || Target == null)
+            {
+                return;
+            }
             if (Origin.GetType() == Target.GetType())
             {
                 if (Origin is Hatch OriginHatch)

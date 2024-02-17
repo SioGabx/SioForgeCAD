@@ -67,40 +67,9 @@ namespace SioForgeCAD.Commun.Extensions
 
 
 
-        public static List<Polyline> OffsetPolyline(this IEnumerable<Polyline> Curves, double OffsetDistance, bool OffsetToInside)
-        {
-            List<Polyline> OffsetCurves = new List<Polyline>();
-            if (OffsetToInside)
-            {
-                OffsetDistance = -Math.Abs(OffsetDistance);
-            }
-            foreach (var ent in Curves)
-            {
-                var OffsetCurve = ent.GetOffsetCurves(ent.GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
-                OffsetCurves.AddRange(OffsetCurve.ToList().Cast<Polyline>());
-            }
-            Curves.DeepDispose();
-            return OffsetCurves;
-        }
+       
 
-        public static List<Polyline> Merge(this IEnumerable<Polyline> Curves)
-        {
-            var reg = Region.CreateFromCurves(Curves.ToDBObjectCollection());
-            if (reg.Count > 0)
-            {
-                Region RegionZero = reg[0] as Region;
-                for (int i = 1; i < reg.Count; i++)
-                {
-                    RegionZero.BooleanOperation(BooleanOperationType.BoolUnite, reg[i] as Region);
-                }
-                var MergedCurves = RegionZero.GetPolylines();
-                return MergedCurves.Cast<Polyline>().ToList();
-            }
-            else
-            {
-                return Curves.ToList();
-            }
-        }
+       
     }
 
 

@@ -271,6 +271,7 @@ namespace SioForgeCAD.Commun.Extensions
             int index = poly.GetPolyPoints().Count();
             int index1 = 0;
             var Points = poly1.GetPoints();
+            poly.UpgradeOpen();
             foreach (var point in Points)
             {
                 poly.AddVertexAt(index, point.ToPoint2d(), poly1.GetBulgeAt(index1), 0, 0);

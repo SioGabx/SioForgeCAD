@@ -20,8 +20,9 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            if (hachure is null || polyline is null)
+            if (hachure is null || polyline is null || Math.Floor(polyline.Area) != Math.Floor(hachure.Area))
             {
+                Generic.WriteMessage("Impossible de découpper cette hachure.");
                 return;
             }
             Database db = Generic.GetDatabase();

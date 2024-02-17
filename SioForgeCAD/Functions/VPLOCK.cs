@@ -19,7 +19,6 @@ namespace SioForgeCAD.Functions
             TypedValue[] viewportFilter = { new TypedValue((int)DxfCode.Start, "Viewport") };
             try
             {
-                
                 PromptSelectionResult viewportSelection = ed.SelectAll(new SelectionFilter(viewportFilter));
                 SelectionSet selectionSet = viewportSelection.Value;
                 using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -32,9 +31,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                 }
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception) { }
         }
 
 
