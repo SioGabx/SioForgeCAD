@@ -7,29 +7,6 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Polylines
     {
-        public static int GetVerticesMaximum(Polyline TargetPolyline)
-        {
-            int NumberOfVertices = (TargetPolyline.NumberOfVertices - 1);
-            if (TargetPolyline.Closed)
-            {
-                NumberOfVertices++;
-            }
-            return NumberOfVertices;
-        }
-
-        public static (Point3d PolylineSegmentStart, Point3d PolylineSegmentEnd) GetSegmentPoint(Polyline TargetPolyline, int Index)
-        {
-            int NumberOfVertices = TargetPolyline.NumberOfVertices;
-            var PolylineSegmentStart = TargetPolyline.GetPoint3dAt(Index);
-            Index += 1;
-            if (Index >= NumberOfVertices)
-            {
-                Index = 0;
-            }
-            var PolylineSegmentEnd = TargetPolyline.GetPoint3dAt(Index);
-            return (PolylineSegmentStart, PolylineSegmentEnd);
-        }
-
         public static Polyline GetPolylineFromPoints(IEnumerable<Points> listOfPoints)
         {
             Polyline polyline = new Polyline();

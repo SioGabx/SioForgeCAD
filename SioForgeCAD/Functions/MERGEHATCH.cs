@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace SioForgeCAD.Functions
 {
     public static class MERGEHATCH
     {
+        const double Margin = 0.01;
         public static void Merge()
         {
             Editor ed = Generic.GetEditor();
@@ -27,7 +29,7 @@ namespace SioForgeCAD.Functions
                 return;
 
             SelectionSet sel = selRes.Value;
-            List<Polyline> entities = new List<Polyline>();
+            List<Polyline> Curves = new List<Polyline>();
 
             //ed.GetPoint("Indiquez un point");
             //var CurrentViewSave = ed.GetCurrentView();
@@ -39,55 +41,34 @@ namespace SioForgeCAD.Functions
                 {
                     if (selectedObjectId.GetDBObject() is Polyline poly)
                     {
-                        entities.Add(poly.Clone() as Polyline);
+                        Curves.Add(poly.Clone() as Polyline);
                     }
                 }
-
-                MergePolylinePoints(entities);
-
-                /*
-                Set list of projected list,
-                For each segment, check if intersect, add point if yes and delete the line
-
-                */
-                //AdjustPointsAtIntersections(entities);
-
-                foreach (var item in entities)
+                if (Curves.Count <= 0)
                 {
-                    item.ColorIndex = 1;
-                    item.AddToDrawing();
+                    return;
                 }
+
+                MergePolylinePoints(Curves);
+                List<Polyline> MergedCurves = Curves.Merge();
+
+                if (MergedCurves.Count > 1)
+                {
+                    List<Polyline> OffsetCurves = Curves.OffsetPolyline(Margin, false);
+                    List<Polyline> OffsetCurvesWithIntersections = OffsetCurves.Merge();
+                    List<Polyline> UndoOffsetCurves = OffsetCurvesWithIntersections.OffsetPolyline(Margin, true);
+
+                    MergedCurves = UndoOffsetCurves;
+                }
+
+
+
+
+                MergedCurves.AddToDrawing(); MergePolylinePoints(MergedCurves);
                 tr.Commit();
                 return;
-                //Extents3d box = entities.GetExtents();
-                //box.Expand(1.2);
-                //box.GetGeometry().AddToDrawing();
-
-
-                var reg = Region.CreateFromCurves(entities.ToDBObjectCollection());
-                Region RegionZero = reg[0] as Region;
-                for (int i = 1; i < reg.Count; i++)
-                {
-                    RegionZero.BooleanOperation(BooleanOperationType.BoolUnite, reg[i] as Region);
-                }
-
-                var curves = RegionZero.GetCurves();
-                foreach (var item in curves)
-                {
-                    item.AddToDrawing();
-                }
-
-
-                tr.Commit();
             }
         }
-
-
-
-
-
-
-
 
 
 
@@ -117,7 +98,7 @@ namespace SioForgeCAD.Functions
                             Point2d pointB = polylineB.GetPoint2dAt(l);
 
                             // Vérifier si la distance entre les points est inférieure à 0.005
-                            if (pointA.GetDistanceTo(pointB) < 0.01)
+                            if (pointA.GetDistanceTo(pointB) < Margin)
                             {
                                 // Ajuster le point de la polyligne A pour coïncider avec celui de la polyligne B
                                 polylineA.SetPointAt(k, pointB);

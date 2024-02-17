@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Autodesk.AutoCAD.Geometry;
+using System;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -30,7 +31,7 @@ namespace SioForgeCAD.Commun.Extensions
             return intermediatePercentage;
         }
 
-
+      
 
     }
 }

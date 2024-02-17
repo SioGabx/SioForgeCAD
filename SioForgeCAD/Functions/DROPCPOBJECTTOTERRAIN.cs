@@ -68,12 +68,12 @@ namespace SioForgeCAD.Functions
         private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef)
         {
             List<Point3d> ListOfPossibleIntersections = new List<Point3d>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TerrainBasePolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < TerrainBasePolyline.GetReelNumberOfVertices(); PolylineSegmentIndex++)
             {
-                var PolylineSegment = Polylines.GetSegmentPoint(TerrainBasePolyline, PolylineSegmentIndex);
+                var PolylineSegment = TerrainBasePolyline.GetSegmentAt(PolylineSegmentIndex);
                 Vector3d PerpendicularVector = GetUCSPerpendicularVector(TerrainBasePolyline);
-                Vector3d PerpendicularVectorIntersection = PerpendicularVector.MultiplyBy(Lines.GetLength(PolylineSegment.PolylineSegmentStart, blkRef.Position));
-                using (Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart.Flatten(), PolylineSegment.PolylineSegmentEnd.Flatten()))
+                Vector3d PerpendicularVectorIntersection = PerpendicularVector.MultiplyBy(Lines.GetLength(PolylineSegment.StartPoint, blkRef.Position));
+                using (Line SegmentLine = new Line(PolylineSegment.StartPoint.Flatten(), PolylineSegment.EndPoint.Flatten()))
                 using (Line PerpendicularLine = new Line(blkRef.Position.Add(-PerpendicularVectorIntersection).Flatten(), blkRef.Position.Add(PerpendicularVectorIntersection).Flatten()))
                 {
                     if (!Lines.AreLinesCutting(SegmentLine, PerpendicularLine, out Point3dCollection IntersectionPointsFounds))

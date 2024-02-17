@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -47,13 +48,13 @@ namespace SioForgeCAD.Commun
             Editor ed = doc.Editor;
 
             List<Line> PerpendicularLinesCollection = new List<Line>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < TargetPolyline.GetReelNumberOfVertices(); PolylineSegmentIndex++)
             {
-                var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
+                var PolylineSegment = TargetPolyline.GetSegmentAt(PolylineSegmentIndex);
 
-                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjectionVector(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd, BasePoint.SCG);
+                Vector3d PerpendicularVectorLine = GetPerpendicularLinePointProjectionVector(PolylineSegment.StartPoint, PolylineSegment.EndPoint, BasePoint.SCG);
 
-                using (Line SegmentLine = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd))
+                using (Line SegmentLine = new Line(PolylineSegment.StartPoint, PolylineSegment.EndPoint))
                 {
                     Point3d IntersectionPoint = FindIntersection(BasePoint.SCG, PerpendicularVectorLine, SegmentLine);
                     if (IntersectionPoint == Point3d.Origin)
@@ -78,14 +79,14 @@ namespace SioForgeCAD.Commun
 
         public static bool CheckIfLineIsIntersectingOtherSegments(Polyline TargetPolyline, Line PerpendicularLine, int CurrentIndex = -1)
         {
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < Polylines.GetVerticesMaximum(TargetPolyline); PolylineSegmentIndex++)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < TargetPolyline.GetReelNumberOfVertices(); PolylineSegmentIndex++)
             {
                 if (PolylineSegmentIndex == CurrentIndex)
                 {
                     continue;
                 }
-                var PolylineSegment = Drawing.Polylines.GetSegmentPoint(TargetPolyline, PolylineSegmentIndex);
-                using (Line SegmentLineIntersectTest = new Line(PolylineSegment.PolylineSegmentStart, PolylineSegment.PolylineSegmentEnd))
+                var PolylineSegment = TargetPolyline.GetSegmentAt(PolylineSegmentIndex);
+                using (Line SegmentLineIntersectTest = new Line(PolylineSegment.StartPoint, PolylineSegment.EndPoint))
                 {
                     return Lines.AreLinesCutting(SegmentLineIntersectTest, PerpendicularLine);
                 }

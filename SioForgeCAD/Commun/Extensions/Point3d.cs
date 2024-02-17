@@ -134,6 +134,12 @@ namespace SioForgeCAD.Commun.Extensions
             return newCollection;
         }
 
+        public static double GetArea(Point2d pt1, Point2d pt2, Point2d pt3)
+        {
+            return (((pt2.X - pt1.X) * (pt3.Y - pt1.Y)) -
+                        ((pt3.X - pt1.X) * (pt2.Y - pt1.Y))) / 2.0;
+        }
+
 
     }
 }

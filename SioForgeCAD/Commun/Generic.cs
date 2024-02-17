@@ -130,41 +130,7 @@ namespace SioForgeCAD.Commun
             return ucs_angle_degres;
         }
 
-        public static ObjectId AddToDrawing(this Entity entity)
-        {
-            var db = GetDatabase();
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-                BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-
-                // Check if the entity is already in the database
-                if (entity.IsErased)
-                {
-                    acTrans.Abort();
-                    return ObjectId.Null;
-                }
-                acBlkTblRec.AppendEntity(entity);
-                acTrans.AddNewlyCreatedDBObject(entity, true);
-                acTrans.Commit();
-                return entity.ObjectId;
-            }
-        }
-
-
-        public static ObjectId AddToDrawingCurrentTransaction(this Entity entity)
-        {
-            var db = GetDatabase();
-            Transaction acTrans = db.TransactionManager.TopTransaction;
-
-            BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-            BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-
-            var objid = acBlkTblRec.AppendEntity(entity);
-            acTrans.AddNewlyCreatedDBObject(entity, true);
-            return objid;
-
-        }
+     
 
         /// <summary>
         /// For each loop.

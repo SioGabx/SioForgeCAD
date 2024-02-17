@@ -1,8 +1,10 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -220,10 +222,45 @@ namespace SioForgeCAD
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public void TRIANGLECC()
         {
             Commun.Triangulate.TriangulateCommand();
+        }
+
+        [CommandMethod("DEBUG", "ISCLOCKWISE", CommandFlags.UsePickSet)]
+        public void ISCLOCKWISE()
+        {
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            var result = ed.GetEntity("Selectionnez une polyligne");
+            if (result.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (result.ObjectId.GetDBObject() is Polyline poly)
+                {
+                    Generic.WriteMessage("Polyligne is clockwise : " + poly.IsClockwise());
+                }
+            }
         }
 
 

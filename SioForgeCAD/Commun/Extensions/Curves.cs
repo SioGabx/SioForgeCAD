@@ -37,6 +37,10 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+       
+
+
         /// <summary>
         /// Gets the point at a specified parameter on curve.
         /// </summary>

@@ -111,12 +111,14 @@
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
     <Compile Include="Commun\Drawing\Colors.cs" />
+    <Compile Include="Commun\Drawing\Entities.cs" />
     <Compile Include="Commun\Drawing\Groups.cs" />
     <Compile Include="Commun\Drawing\Leaders.cs" />
     <Compile Include="Commun\Drawing\Lines.cs" />
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\Arcs.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\CircularArc2d.cs" />
     <Compile Include="Commun\Extensions\Curves.cs" />
     <Compile Include="Commun\Extensions\Database.cs" />
     <Compile Include="Commun\Extensions\DataGridView.cs" />
@@ -129,6 +131,7 @@
     <Compile Include="Commun\Extensions\List.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
     <Compile Include="Commun\Extensions\Point3d.cs" />
+    <Compile Include="Commun\Extensions\Polylines.cs" />
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
     <Compile Include="Commun\Mist\CsvReader.cs" />
@@ -181,6 +184,7 @@
     <Compile Include="Functions\SSCL.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
+    <Compile Include="Functions\VPLOCK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
