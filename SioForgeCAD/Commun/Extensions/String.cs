@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -45,65 +47,21 @@ namespace SioForgeCAD.Commun.Extensions
             return input.CapitalizeFirstLetters(1);
         }
 
+        public static string RemoveDiacritics(this string str)
+        {
+            if (null == str) return null;
+            var chars = str
+                .Normalize(NormalizationForm.FormD)
+                .ToCharArray()
+                .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                .ToArray();
+
+            return new string(chars).Normalize(NormalizationForm.FormC);
+        }
 
         public static bool IgnoreCaseEquals(this string str1, string str2)
         {
             return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static double? ExtractDoubleInStringFromPoint(this string OriginalString)
-        {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-
-            if (OriginalString.Contains("%"))
-            {
-                Generic.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être convertis en cote.");
-                return null;
-            }
-
-            int[] StringPointPosition = OriginalString.AllIndexesOf(".").ToArray();
-            string NumberValueBeforePoint = "";
-            string NumberValueAfterPoint = "";
-
-            foreach (int index in StringPointPosition)
-            {
-
-                int n = index;
-                while (n > 0 && char.IsDigit(OriginalString[n - 1]))
-                {
-                    NumberValueBeforePoint = OriginalString[n - 1].ToString() + NumberValueBeforePoint;
-                    n--;
-                }
-
-                n = index;
-                while (OriginalString.Length > n + 1 && char.IsDigit(OriginalString[n + 1]))
-                {
-                    NumberValueAfterPoint += OriginalString[n + 1].ToString();
-                    n++;
-                }
-
-                if (string.IsNullOrWhiteSpace(NumberValueBeforePoint) || string.IsNullOrWhiteSpace(NumberValueAfterPoint))
-                {
-                    //Not sure if this is a cote
-                    return null;
-                }
-
-                string FinalNumberString = $"{NumberValueBeforePoint}.{NumberValueAfterPoint}";
-                bool IsValidNumber = double.TryParse(FinalNumberString, out double FinalNumberDouble);
-                if (IsValidNumber)
-                {
-                    ed.WriteMessage($"Côte détéctée : {FinalNumberString}\n");
-                    return FinalNumberDouble;
-                }
-                else
-                {
-                    //No number found
-                    return null;
-                }
-            }
-            //Foreach return 0 element
-            return null;
         }
     }
 }

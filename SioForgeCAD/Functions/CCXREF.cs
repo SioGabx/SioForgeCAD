@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace SioForgeCAD.Functions
             while (true)
             {
                 Database db = Generic.GetDatabase();
+                Editor ed = Generic.GetEditor();
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
@@ -27,7 +29,7 @@ namespace SioForgeCAD.Functions
                     {
                         continue;
                     }
-                    double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Radians);
+                    double USCRotation = ed.GetUSCRotation(AngleUnit.Radians);
                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
 
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };

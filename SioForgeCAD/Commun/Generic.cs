@@ -70,43 +70,11 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static Size GetCurrentViewSize()
-        {
-            //https://drive-cad-with-code.blogspot.com/2013/04/how-to-get-current-view-size.html
-            //Get current view height
-            double h = (double)Application.GetSystemVariable("VIEWSIZE");
-            //Get current view width,
-            //by calculate current view's width-height ratio
-            Point2d screen = (Point2d)Application.GetSystemVariable("SCREENSIZE");
-            double w = h * (screen.X / screen.Y);
-            return new Size(w, h);
-        }
+   
 
 
 
-        public static DBObjectCollection Explode(IEnumerable<ObjectId> ObjectsToExplode, bool EraseOriginal = true)
-        {
-            Database db = GetDatabase();
-            Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
 
-            // Collect our exploded objects in a single collection
-
-            DBObjectCollection objs = new DBObjectCollection();
-
-            // Loop through the selected objects
-            foreach (ObjectId ObjectToExplode in ObjectsToExplode)
-            {
-                Entity ent = (Entity)tr.GetObject(ObjectToExplode, OpenMode.ForRead);
-                // Explode the object into our collection
-                ent.Explode(objs);
-                if (EraseOriginal)
-                {
-                    ent.UpgradeOpen();
-                    ent.Erase();
-                }
-            }
-            return objs;
-        }
 
 
         public static Transparency GetTransparencyFromAlpha(int Alpha)
@@ -115,36 +83,11 @@ namespace SioForgeCAD.Commun
             return new Autodesk.AutoCAD.Colors.Transparency(AlphaByte);
         }
 
-        public enum AngleUnit { Radians, Degrees }
-        public static double GetUSCRotation(AngleUnit angleUnit)
-        {
-            var ed = GetEditor();
-            Matrix3d ucsCur = ed.CurrentUserCoordinateSystem;
-            CoordinateSystem3d cs = ucsCur.CoordinateSystem3d;
-            double ucs_rotAngle = cs.Xaxis.AngleOnPlane(new Plane(Point3d.Origin, Vector3d.ZAxis));
-            if (angleUnit == AngleUnit.Radians)
-            {
-                return ucs_rotAngle;
-            }
-            double ucs_angle_degres = ucs_rotAngle * 180 / Math.PI;
-            return ucs_angle_degres;
-        }
+    
 
      
 
-        /// <summary>
-        /// For each loop.
-        /// </summary>
-        /// <typeparam name="T">The element type of source.</typeparam>
-        /// <param name="source">The source collection.</param>
-        /// <param name="action">The action.</param>
-        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
-        {
-            foreach (var element in source)
-            {
-                action(element);
-            }
-        }
+    
 
         public static Document GetDocument()
         {

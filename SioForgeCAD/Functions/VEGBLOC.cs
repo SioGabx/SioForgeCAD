@@ -21,11 +21,15 @@ namespace SioForgeCAD.Functions
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
-            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
+            var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
+            if (DialogResult != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
             var Values = vegblocDialog.GetDataGridValues();
             foreach (var Rows in Values)
             {
-                string Name = Rows["NAME"];
+                string Name = Rows["NAME"];//.RemoveDiacritics();
                 if (string.IsNullOrWhiteSpace(Name))
                 {
                     continue;
@@ -57,8 +61,8 @@ namespace SioForgeCAD.Functions
 
                 string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
                 GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
-                string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
-
+                string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
+                string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false); ;
 
                 Color BlocColor = GetRandomColor();
                 int Transparence = 20;
@@ -97,7 +101,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                     return false;
                 }
-                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), null, Layer ?? BlocName);
+                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
                 tr.Commit();
             }
             return true;

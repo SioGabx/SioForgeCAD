@@ -95,7 +95,7 @@ namespace SioForgeCAD.Forms
             return true;
         }
 
-        private void CopySelectedCells()
+        private void CopySelectedCellsOld()
         {
             var selectedCells = DataGrid.SelectedCells;
             if (selectedCells.Count > 0)
@@ -119,6 +119,43 @@ namespace SioForgeCAD.Forms
                     sb.Append('\t');
                 }
                 Clipboard.SetText(sb.ToString().Replace("\t\n", "\n").TrimEnd('\t'));
+            }
+        }
+
+        private void CopySelectedCells()
+        {
+            var selectedCells = DataGrid.SelectedCells;
+            if (selectedCells.Count > 0)
+            {
+                StringBuilder sb = new StringBuilder();
+                int minRowIndex = selectedCells.Cast<DataGridViewCell>().Min(c => c.RowIndex);
+                int minColumnIndex = selectedCells.Cast<DataGridViewCell>().Min(c => c.ColumnIndex);
+                int maxRowIndex = selectedCells.Cast<DataGridViewCell>().Max(c => c.RowIndex);
+                int maxColumnIndex = selectedCells.Cast<DataGridViewCell>().Max(c => c.ColumnIndex);
+
+                for (int i = minRowIndex; i <= maxRowIndex; i++)
+                {
+                    if (i > minRowIndex)
+                    {
+                        // Add newline between rows except for the first row
+                        sb.AppendLine();
+                    }
+
+                    for (int j = minColumnIndex; j <= maxColumnIndex; j++)
+                    {
+                        var cell = DataGrid[j, i];
+                        string rawValue = cell.Value?.ToString() ?? "";
+                        string cellValue = '"' + rawValue.Replace("\"", "\"\"") + '"';
+                        sb.Append(cellValue);
+                        if (j < maxColumnIndex)
+                        {
+                            // Add tab between cells except for the last cell
+                            sb.Append('\t'); 
+                        }
+                    }
+                }
+
+                Clipboard.SetText(sb.ToString());
             }
         }
 
@@ -215,7 +252,12 @@ namespace SioForgeCAD.Forms
 
                 for (int colIndex = 0; colIndex < colCountToSelect; colIndex++)
                 {
-                    string cellContent = rowContent[colIndex % columns.Count];
+                    int ModuloRowIndex = colIndex % columns.Count;
+                    if (ModuloRowIndex < 0 || ModuloRowIndex >= rowContent.Length)
+                    {
+                        ModuloRowIndex = 0;
+                    }
+                    string cellContent = rowContent[ModuloRowIndex];
                     DataGridViewColumn column = null;
                     if ((selectedcolumns.Count) > colIndex)
                     {
@@ -315,9 +357,7 @@ namespace SioForgeCAD.Forms
             string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
             valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
 
-            valueStr = valueStr.Replace('×', 'x');
-            valueStr = valueStr.Replace('é', 'e');
-            valueStr = valueStr.Replace('ç', 'c');
+            valueStr = valueStr.RemoveDiacritics();
             valueStr = valueStr.Replace(":", string.Empty);
             valueStr = valueStr.Replace('\\', '+');
 

@@ -16,6 +16,7 @@ namespace SioForgeCAD.Commun
         {
             return AcAp.UIBindings.Collections.Layers;
         }
+
         public static bool IsLayerLocked(ObjectId entity)
         {
             ObjectId layerId = entity.GetEntity().LayerId;
@@ -72,8 +73,7 @@ namespace SioForgeCAD.Commun
             Database db = Generic.GetDatabase();
             using (Transaction acTrans = doc.TransactionManager.StartTransaction())
             {
-                LayerTable acLyrTbl;
-                acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                LayerTable acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
 
                 if (acLyrTbl.Has(Name) == false)
                 {

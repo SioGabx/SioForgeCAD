@@ -210,12 +210,13 @@ namespace SioForgeCAD.Functions
 
             public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
             {
-                var ObjectCollection = new DBObjectCollection();
+                Editor ed = Generic.GetEditor();
 
+                var ObjectCollection = new DBObjectCollection();
                 var NearestPt = FoundNearestPointOnPolyline(Polyline, moveToPt);
 
                 //Set the diameter to 1.5% of the current View height
-                double CircleRadius = Generic.GetCurrentViewSize().Height * (1.5 / 100) / 2;
+                double CircleRadius = ed.GetCurrentViewSize().Height * (1.5 / 100) / 2;
 
                 Circle Circle = new Circle(NearestPt, Vector3d.ZAxis, CircleRadius);
                 DBPoint Point = new DBPoint(NearestPt);

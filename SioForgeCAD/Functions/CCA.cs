@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
@@ -26,6 +27,7 @@ namespace SioForgeCAD.Functions
         public static void PlacePoint(CotePoints PointCote, double StepValue)
         {
             Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
             int NumberOfPointArealdyInserted = 0;
 
             while (true)
@@ -59,7 +61,7 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                         return;
                     }
-                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputeValue(NewPointLocation));
+                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
                     tr.Commit();
                 }
             }

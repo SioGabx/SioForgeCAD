@@ -39,6 +39,31 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static DBObjectCollection Explode(this IEnumerable<ObjectId> ObjectsToExplode, bool EraseOriginal = true)
+        {
+            Database db = Generic.GetDatabase();
+            Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
+
+            // Collect our exploded objects in a single collection
+
+            DBObjectCollection objs = new DBObjectCollection();
+
+            // Loop through the selected objects
+            foreach (ObjectId ObjectToExplode in ObjectsToExplode)
+            {
+                Entity ent = (Entity)tr.GetObject(ObjectToExplode, OpenMode.ForRead);
+                // Explode the object into our collection
+                ent.Explode(objs);
+                if (EraseOriginal)
+                {
+                    ent.UpgradeOpen();
+                    ent.Erase();
+                }
+            }
+            return objs;
+        }
+
+
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<Entity> entities)
         {
             return entities.Cast<DBObject>().ToDBObjectCollection();
