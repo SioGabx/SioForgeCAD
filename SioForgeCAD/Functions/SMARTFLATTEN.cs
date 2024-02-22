@@ -52,14 +52,6 @@ namespace SioForgeCAD.Functions
                     {
                         hatch.Elevation = 0;
                     }
-                    //if (entity is Autodesk.AutoCAD.DatabaseServices.Curve curve)
-                    //{
-                    //    for (var param = 0d; param <= curve.EndParam; param ++)
-                    //    {
-                    //        curve.GetPointAtParam
-                    //        yield return cv.GetPointAtParam(param);
-                    //    }
-                    //}
                     if (entity is Autodesk.AutoCAD.DatabaseServices.DBText dbtext)
                     {
                         dbtext.Position = dbtext.Position.Flatten();

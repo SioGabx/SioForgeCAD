@@ -206,8 +206,13 @@ namespace SioForgeCAD.Commun
 
         public static Autodesk.AutoCAD.Colors.Color GetLayerColor(ObjectId LayerTableRecordObjId)
         {
-            LayerTableRecord layerTableRecord = LayerTableRecordObjId.GetDBObject() as LayerTableRecord;
-            return layerTableRecord.Color;
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTableRecord layerTableRecord = LayerTableRecordObjId.GetDBObject() as LayerTableRecord;
+                trans.Commit();
+                return layerTableRecord.Color;
+            }
         }
 
 
