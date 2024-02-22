@@ -95,33 +95,6 @@ namespace SioForgeCAD.Forms
             return true;
         }
 
-        private void CopySelectedCellsOld()
-        {
-            var selectedCells = DataGrid.SelectedCells;
-            if (selectedCells.Count > 0)
-            {
-                StringBuilder sb = new StringBuilder();
-                int currentRowIndex = -1;
-                foreach (DataGridViewCell cell in selectedCells)
-                {
-                    if (cell.RowIndex != currentRowIndex)
-                    {
-                        if (currentRowIndex != -1)
-                        {
-                            //first row, newline character to separate rows
-                            sb.Append('\n');
-                        }
-                        currentRowIndex = cell.RowIndex;
-                    }
-                    string RawValue = cell.Value.ToString();
-                    string CellValue = '"' + RawValue.Replace("\"", "\"\"") + '"';
-                    sb.Append(CellValue);
-                    sb.Append('\t');
-                }
-                Clipboard.SetText(sb.ToString().Replace("\t\n", "\n").TrimEnd('\t'));
-            }
-        }
-
         private void CopySelectedCells()
         {
             var selectedCells = DataGrid.SelectedCells;
@@ -339,42 +312,14 @@ namespace SioForgeCAD.Forms
                 foreach (DataGridViewColumn col in DataGrid.Columns)
                 {
                     var cell = row.Cells[col.Index];
-                    string cellValue = ParseCellValue(cell.Value);
-                    ColumnsValues.Add(col.Name, cellValue);
+                    ColumnsValues.Add(col.Name, cell.Value?.ToString());
                 }
                 Rows.Add(ColumnsValues);
             }
             return Rows;
         }
 
-        private string ParseCellValue(object value)
-        {
-            string valueStr = value?.ToString();
-            if (valueStr is null)
-            {
-                return null;
-            }
-            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
-            valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
-
-            valueStr = valueStr.RemoveDiacritics();
-            valueStr = valueStr.Replace(":", string.Empty);
-            valueStr = valueStr.Replace('\\', '+');
-
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in valueStr)
-            {
-                if ((c >= '0' && c <= '9') ||
-                    (c >= 'A' && c <= 'Z') ||
-                    (c >= 'a' && c <= 'z') ||
-                    c == '.' || c == '_' || c == '-' || c == ' ' || c == '\'' || c == '+')
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString();
-        }
+        
 
 
     }

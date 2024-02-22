@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Text;
 using System.Windows;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
@@ -164,6 +165,8 @@ namespace SioForgeCAD.Functions
                 return Circle.ObjectId;
             }
 
+
+            const double TextBlocDisplayNameSizeReduceRatios = 0.15;
             var TextBlocDisplayName = new MText
             {
                 Contents = DisplayName,
@@ -171,7 +174,7 @@ namespace SioForgeCAD.Functions
                 Location = new Point3d(0, 0, 0),
                 Attachment = AttachmentPoint.MiddleCenter,
                 Width = WidthRadius,
-                TextHeight = WidthRadius / 5,
+                TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                 Transparency = new Transparency(255),
                 Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
             };
@@ -189,15 +192,16 @@ namespace SioForgeCAD.Functions
                 };
                 BlocGeometry.Add(CircleHeightColorIndicator);
 
+                const double TextHeightColorIndicatorSizeReduceRatio = 0.1;
                 MText TextHeightColorIndicator = new MText
                 {
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
 
-                    Location = new Point3d(0, 0 - WidthRadius * 0.6, 0),
+                    Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,
-                    TextHeight = WidthRadius / 10,
+                    TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
                     Transparency = new Transparency(255),
                     Color = HeightColorIndicator
                 };
@@ -233,16 +237,7 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            OriginalName = OriginalName.Replace(',', '.');
-            OriginalName = OriginalName.Replace("' ", "'");
-            OriginalName = OriginalName.Replace("' ", "'");
-
-            //"ssp." == zoologie | "subsp." == botanique
-            OriginalName = OriginalName.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
-            OriginalName = OriginalName.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
-            OriginalName = OriginalName.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
-            OriginalName = OriginalName.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
-            OriginalName = OriginalName.Replace(" subsp ", " subsp. ");
+            OriginalName = ParseNameValue(OriginalName);
 
             string[] SplittedName = OriginalName.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -260,13 +255,14 @@ namespace SioForgeCAD.Functions
             if (SplittedName.Length > index && !SplittedName[index].StartsWith("'"))
             {
                 string Espece = SplittedName[index];
+                ShortName += " ";
                 if (OriginalName.Contains("'"))
                 {
-                    ShortName += " " + Espece[0];
+                    ShortName += Espece[0];
                 }
                 else
                 {
-                    ShortName += " " + Espece;
+                    ShortName += Espece;
                 }
                 CompleteName += " " + Espece;
                 index++;
@@ -290,7 +286,18 @@ namespace SioForgeCAD.Functions
                 else
                 {
                     Cultivar = SplittedName[index].UcFirst();
-                    ShortName += " " + Cultivar[0];
+                    ShortName += " ";
+                    
+                    if (Cultivar.Length <= 8 && SplittedName.Length == (index + 1))
+                    {
+                        //if it is the last one and the length is <= as 8 char then we show complete
+                        ShortName += Cultivar;
+                    }
+                    else
+                    {
+                        ShortName += Cultivar[0];
+                    }
+                    
                 }
 
                 CompleteName += " " + Cultivar;
@@ -308,6 +315,37 @@ namespace SioForgeCAD.Functions
 
             return;
         }
+
+
+        private static string ParseNameValue(object value)
+        {
+            string valueStr = value?.ToString();
+            if (valueStr is null)
+            {
+                return null;
+            }
+            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
+            valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
+
+            valueStr = valueStr.RemoveDiacritics();
+            valueStr = valueStr.Replace(":", string.Empty);
+            valueStr = valueStr.Replace('\\', '+');
+
+            valueStr = valueStr.Replace(',', '.');
+            valueStr = valueStr.Replace("' ", "'");
+            valueStr = valueStr.Replace("' ", "'");
+
+            //"ssp." == zoologie | "subsp." == botanique
+            valueStr = valueStr.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
+            valueStr = valueStr.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
+            valueStr = valueStr.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
+            valueStr = valueStr.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
+            valueStr = valueStr.Replace(" subsp ", " subsp. ");
+
+            return valueStr;
+        }
+
+
 
         private static Color GetRandomColor()
         {
