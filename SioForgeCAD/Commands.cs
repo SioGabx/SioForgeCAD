@@ -171,6 +171,12 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
+        [CommandMethod("VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
+        public void VEGBLOCEDIT()
+        {
+            Functions.VEGBLOCEDIT.Edit();
+        }
+
         [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public void VEGBLOCCOPYGRIP()
         {
@@ -332,7 +338,8 @@ namespace SioForgeCAD
             {
                 return _random.Next(min, max);
             }
-            var db = Generic.GetDatabase();
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 for (int i = 0; i < 150; i++)
@@ -341,7 +348,7 @@ namespace SioForgeCAD
                     double y = RandomNumber(-50, 50);
                     double alti = RandomNumber(100, 120) + RandomNumber(0, 99) * 0.01;
                     Point3d point = new Point3d(x, y, alti);
-                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), Generic.GetUSCRotation(Generic.AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
+                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
                 }
                 tr.Commit();
             }

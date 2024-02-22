@@ -6,11 +6,13 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
+using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Text;
 using System.Windows;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
@@ -21,62 +23,98 @@ namespace SioForgeCAD.Functions
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
-            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
+            var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
+            if (DialogResult != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
             var Values = vegblocDialog.GetDataGridValues();
             foreach (var Rows in Values)
             {
                 string Name = Rows["NAME"];
-                if (string.IsNullOrWhiteSpace(Name))
-                {
-                    continue;
-                }
-                NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
-                string StrHeight = Rows["HEIGHT"] ?? "0";
-                StrHeight = StrHeight.Replace(",", ".");
-                string StrWidth = Rows["WIDTH"] ?? "1";
-                StrWidth = StrWidth.Replace(",", ".");
-
+                string Height = Rows["HEIGHT"] ?? "0";
+                string Width = Rows["WIDTH"] ?? "1";
                 string Type = Rows["TYPE"] ?? "ARBRES";
-                const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
-
-                if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
+                string BlocName = CreateBlockFromData(Name, Height, Width, Type);
+                if (string.IsNullOrEmpty(BlocName))
                 {
-                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
                     continue;
-                }
-                if (!double.TryParse(StrWidth, NumberStyle, CultureInfo.InvariantCulture, out double Width))
-                {
-                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
-                    continue;
-                }
-
-                if (Height > 0)
-                {
-                    Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
-                }
-
-                string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
-                GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
-                string BlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
-
-
-                Color BlocColor = GetRandomColor();
-                int Transparence = 20;
-                if (ShortType == "ARBR")
-                {
-                    Transparence = 90;
-                }
-                Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
-                Color HeightColorIndicator = GetColorFromHeight(Height);
-                var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
-                if (!BlockReferences.IsBlockExist(BlocName))
-                {
-                    BlockReferences.Create(BlocName, $"{CompleteName}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
                 }
                 AskInsertVegBloc(BlocName);
             }
 
         }
+
+
+        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type)
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                return string.Empty;
+            }
+            StrHeight = StrHeight.Replace(",", ".");
+            StrWidth = StrWidth.Replace(",", ".");
+
+            const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
+
+            NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
+            if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
+            {
+                Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
+                return string.Empty;
+            }
+            if (!double.TryParse(StrWidth, NumberStyle, CultureInfo.InvariantCulture, out double Width))
+            {
+                Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
+                return string.Empty;
+            }
+
+            if (Height > 0)
+            {
+                Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
+            }
+
+            string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
+            GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
+            string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
+            string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false); ;
+
+            Color BlocColor = GetRandomColor();
+            int Transparence = 20;
+            if (ShortType == "ARBR")
+            {
+                Transparence = 90;
+            }
+            Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
+            Color HeightColorIndicator = GetColorFromHeight(Height);
+            //If the layer arealdy exist; we need to get the real color
+            BlocColor = Layers.GetLayerColor(BlocName);
+            var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+            if (!BlockReferences.IsBlockExist(BlocName))
+            {
+                string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
+                BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
+            }
+            return BlocName;
+        }
+
+
+        public static string GetDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
+        {
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "BlocName", BlocName },
+                { "CompleteName", CompleteName },
+                { "Height", Height.ToString() },
+                { "Width", Width.ToString() },
+                { "Type", Type },
+                { "VegblocVersion", "2" },
+            };
+            return data.ToJson();
+        }
+
+
+
 
         public static bool AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {
@@ -97,7 +135,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                     return false;
                 }
-                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), null, Layer ?? BlocName);
+                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
                 tr.Commit();
             }
             return true;
@@ -155,11 +193,13 @@ namespace SioForgeCAD.Functions
                     LineWeight = LineWeight.ByLineWeightDefault,
                     ColorIndex = 7,
                     Transparency = new Transparency((byte)255)
-                }; 
+                };
                 BlocGeometry.Add(Circle);
                 return Circle.ObjectId;
             }
 
+
+            const double TextBlocDisplayNameSizeReduceRatios = 0.15;
             var TextBlocDisplayName = new MText
             {
                 Contents = DisplayName,
@@ -167,7 +207,7 @@ namespace SioForgeCAD.Functions
                 Location = new Point3d(0, 0, 0),
                 Attachment = AttachmentPoint.MiddleCenter,
                 Width = WidthRadius,
-                TextHeight = WidthRadius / 5,
+                TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                 Transparency = new Transparency(255),
                 Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
             };
@@ -185,15 +225,16 @@ namespace SioForgeCAD.Functions
                 };
                 BlocGeometry.Add(CircleHeightColorIndicator);
 
+                const double TextHeightColorIndicatorSizeReduceRatio = 0.1;
                 MText TextHeightColorIndicator = new MText
                 {
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
 
-                    Location = new Point3d(0, 0 - WidthRadius * 0.6, 0),
+                    Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,
-                    TextHeight = WidthRadius / 10,
+                    TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
                     Transparency = new Transparency(255),
                     Color = HeightColorIndicator
                 };
@@ -229,16 +270,7 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            OriginalName = OriginalName.Replace(',', '.');
-            OriginalName = OriginalName.Replace("' ", "'");
-            OriginalName = OriginalName.Replace("' ", "'");
-
-            //"ssp." == zoologie | "subsp." == botanique
-            OriginalName = OriginalName.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
-            OriginalName = OriginalName.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
-            OriginalName = OriginalName.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
-            OriginalName = OriginalName.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
-            OriginalName = OriginalName.Replace(" subsp ", " subsp. ");
+            OriginalName = ParseNameValue(OriginalName);
 
             string[] SplittedName = OriginalName.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -256,13 +288,14 @@ namespace SioForgeCAD.Functions
             if (SplittedName.Length > index && !SplittedName[index].StartsWith("'"))
             {
                 string Espece = SplittedName[index];
+                ShortName += " ";
                 if (OriginalName.Contains("'"))
                 {
-                    ShortName += " " + Espece[0];
+                    ShortName += Espece[0];
                 }
                 else
                 {
-                    ShortName += " " + Espece;
+                    ShortName += Espece;
                 }
                 CompleteName += " " + Espece;
                 index++;
@@ -286,7 +319,18 @@ namespace SioForgeCAD.Functions
                 else
                 {
                     Cultivar = SplittedName[index].UcFirst();
-                    ShortName += " " + Cultivar[0];
+                    ShortName += " ";
+
+                    if (Cultivar.Length <= 8 && SplittedName.Length == (index + 1))
+                    {
+                        //if it is the last one and the length is <= as 8 char then we show complete
+                        ShortName += Cultivar;
+                    }
+                    else
+                    {
+                        ShortName += Cultivar[0];
+                    }
+
                 }
 
                 CompleteName += " " + Cultivar;
@@ -304,6 +348,37 @@ namespace SioForgeCAD.Functions
 
             return;
         }
+
+
+        private static string ParseNameValue(object value)
+        {
+            string valueStr = value?.ToString();
+            if (valueStr is null)
+            {
+                return null;
+            }
+            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
+            valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
+
+            valueStr = valueStr.RemoveDiacritics();
+            valueStr = valueStr.Replace(":", string.Empty);
+            valueStr = valueStr.Replace('\\', '+');
+
+            valueStr = valueStr.Replace(',', '.');
+            valueStr = valueStr.Replace("' ", "'");
+            valueStr = valueStr.Replace("' ", "'");
+
+            //"ssp." == zoologie | "subsp." == botanique
+            valueStr = valueStr.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
+            valueStr = valueStr.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
+            valueStr = valueStr.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
+            valueStr = valueStr.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
+            valueStr = valueStr.Replace(" subsp ", " subsp. ");
+
+            return valueStr;
+        }
+
+
 
         private static Color GetRandomColor()
         {

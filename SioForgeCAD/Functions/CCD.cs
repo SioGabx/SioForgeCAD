@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
@@ -44,6 +45,7 @@ namespace SioForgeCAD.Functions
             do
             {
                 Database db = Generic.GetDatabase();
+                Editor ed = Generic.GetEditor();
                 DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
@@ -74,7 +76,7 @@ namespace SioForgeCAD.Functions
                         {
                             var ComputedValue = ComputeValue(NewPointLocation);
                             Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
-                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputedValue);
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
                         }
                         else
                         {

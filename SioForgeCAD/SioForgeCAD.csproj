@@ -124,9 +124,11 @@
     <Compile Include="Commun\Extensions\DataGridView.cs" />
     <Compile Include="Commun\Extensions\DBObject.cs" />
     <Compile Include="Commun\Extensions\DBObjectCollection.cs" />
+    <Compile Include="Commun\Extensions\Editor.cs" />
     <Compile Include="Commun\Extensions\Entity.cs" />
     <Compile Include="Commun\Extensions\Extends3d.cs" />
     <Compile Include="Commun\Extensions\Hatchs.cs" />
+    <Compile Include="Commun\Extensions\IEnumerable.cs" />
     <Compile Include="Commun\Extensions\Lines.cs" />
     <Compile Include="Commun\Extensions\List.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
@@ -141,12 +143,20 @@
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Generic.cs" />
     <Compile Include="Commun\Layers.cs" />
+    <Compile Include="Commun\Mist\JSONParser.cs" />
+    <Compile Include="Commun\Mist\JSONWriter.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
     <Compile Include="Commun\PerpendicularPoint.cs" />
     <Compile Include="Commun\PluginRegister.cs" />
     <Compile Include="Commun\SelectInXref.cs" />
     <Compile Include="Commun\SlicePolygon.cs" />
+    <Compile Include="Forms\VegblocEditDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\VegblocEditDialog.Designer.cs">
+      <DependentUpon>VegblocEditDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\VegblocDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -184,6 +194,7 @@
     <Compile Include="Functions\SSCL.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
+    <Compile Include="Functions\VEGBLOCEDIT.cs" />
     <Compile Include="Functions\VPLOCK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -205,6 +216,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\VegblocDialog.resx">
       <DependentUpon>VegblocDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\VegblocEditDialog.resx">
+      <DependentUpon>VegblocEditDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

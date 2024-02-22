@@ -19,9 +19,9 @@ namespace SioForgeCAD.Functions
         {
             while (true)
             {
-                Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
-                var ed = doc.Editor;
-                var db = doc.Database;
+
+                Editor ed = Generic.GetEditor();
+                Database db = Generic.GetDatabase();
                 FirstPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un premier point", null);
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
                 SecondPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
@@ -56,7 +56,7 @@ namespace SioForgeCAD.Functions
                         {
                             var ComputedValue = ComputeValue(Indermediaire);
                             Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
-                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), ComputedValue);
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
                         }
                         else if (IndermediairePromptPointResultStatus == PromptStatus.Keyword)
                         {

@@ -101,24 +101,34 @@ namespace SioForgeCAD.Forms
             if (selectedCells.Count > 0)
             {
                 StringBuilder sb = new StringBuilder();
-                int currentRowIndex = -1;
-                foreach (DataGridViewCell cell in selectedCells)
+                int minRowIndex = selectedCells.Cast<DataGridViewCell>().Min(c => c.RowIndex);
+                int minColumnIndex = selectedCells.Cast<DataGridViewCell>().Min(c => c.ColumnIndex);
+                int maxRowIndex = selectedCells.Cast<DataGridViewCell>().Max(c => c.RowIndex);
+                int maxColumnIndex = selectedCells.Cast<DataGridViewCell>().Max(c => c.ColumnIndex);
+
+                for (int i = minRowIndex; i <= maxRowIndex; i++)
                 {
-                    if (cell.RowIndex != currentRowIndex)
+                    if (i > minRowIndex)
                     {
-                        if (currentRowIndex != -1)
-                        {
-                            //first row, newline character to separate rows
-                            sb.Append('\n');
-                        }
-                        currentRowIndex = cell.RowIndex;
+                        // Add newline between rows except for the first row
+                        sb.AppendLine();
                     }
-                    string RawValue = cell.Value.ToString();
-                    string CellValue = '"' + RawValue.Replace("\"", "\"\"") + '"';
-                    sb.Append(CellValue);
-                    sb.Append('\t');
+
+                    for (int j = minColumnIndex; j <= maxColumnIndex; j++)
+                    {
+                        var cell = DataGrid[j, i];
+                        string rawValue = cell.Value?.ToString() ?? "";
+                        string cellValue = '"' + rawValue.Replace("\"", "\"\"") + '"';
+                        sb.Append(cellValue);
+                        if (j < maxColumnIndex)
+                        {
+                            // Add tab between cells except for the last cell
+                            sb.Append('\t'); 
+                        }
+                    }
                 }
-                Clipboard.SetText(sb.ToString().Replace("\t\n", "\n").TrimEnd('\t'));
+
+                Clipboard.SetText(sb.ToString());
             }
         }
 
@@ -215,7 +225,12 @@ namespace SioForgeCAD.Forms
 
                 for (int colIndex = 0; colIndex < colCountToSelect; colIndex++)
                 {
-                    string cellContent = rowContent[colIndex % columns.Count];
+                    int ModuloRowIndex = colIndex % columns.Count;
+                    if (ModuloRowIndex < 0 || ModuloRowIndex >= rowContent.Length)
+                    {
+                        ModuloRowIndex = 0;
+                    }
+                    string cellContent = rowContent[ModuloRowIndex];
                     DataGridViewColumn column = null;
                     if ((selectedcolumns.Count) > colIndex)
                     {
@@ -297,44 +312,14 @@ namespace SioForgeCAD.Forms
                 foreach (DataGridViewColumn col in DataGrid.Columns)
                 {
                     var cell = row.Cells[col.Index];
-                    string cellValue = ParseCellValue(cell.Value);
-                    ColumnsValues.Add(col.Name, cellValue);
+                    ColumnsValues.Add(col.Name, cell.Value?.ToString());
                 }
                 Rows.Add(ColumnsValues);
             }
             return Rows;
         }
 
-        private string ParseCellValue(object value)
-        {
-            string valueStr = value?.ToString();
-            if (valueStr is null)
-            {
-                return null;
-            }
-            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
-            valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
-
-            valueStr = valueStr.Replace('×', 'x');
-            valueStr = valueStr.Replace('é', 'e');
-            valueStr = valueStr.Replace('ç', 'c');
-            valueStr = valueStr.Replace(":", string.Empty);
-            valueStr = valueStr.Replace('\\', '+');
-
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in valueStr)
-            {
-                if ((c >= '0' && c <= '9') ||
-                    (c >= 'A' && c <= 'Z') ||
-                    (c >= 'a' && c <= 'z') ||
-                    c == '.' || c == '_' || c == '-' || c == ' ' || c == '\'' || c == '+')
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString();
-        }
+        
 
 
     }

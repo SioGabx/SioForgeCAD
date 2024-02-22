@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
             {
                 foreach (ObjectId SelectedObjectId in AllSelectedObjectIds)
                 {
-                    if (Layers.IsLayerLocked(SelectedObjectId))
+                    if (Layers.IsEntityOnLockedLayer(SelectedObjectId))
                     {
                         continue;
                     }

@@ -18,9 +18,8 @@ namespace SioForgeCAD.Functions
         {
             while (true)
             {
-                Document doc = AcAp.DocumentManager.MdiActiveDocument;
-                var ed = doc.Editor;
-                var db = doc.Database;
+                Editor ed = Generic.GetEditor();
+                Database db = Generic.GetDatabase();
                 FirstPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un premier point", null);
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
                 SecondPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
@@ -42,7 +41,7 @@ namespace SioForgeCAD.Functions
                     if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                     {
                         Generic.WriteMessage($"Pente : {Values["PENTE"]}");
-                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, Generic.GetUSCRotation(Generic.AngleUnit.Radians), Values);
+                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), Values);
                     }
                 }
             }
@@ -115,7 +114,7 @@ namespace SioForgeCAD.Functions
             int BlocInverseState = 0;
 
             double DegreesAngles = PointsAngleVectorInRadians * 180 / Math.PI;
-            double USCRotation = Generic.GetUSCRotation(Generic.AngleUnit.Degrees);
+            double USCRotation = Generic.GetEditor().GetUSCRotation(AngleUnit.Degrees);
             DegreesAngles -= 1 * USCRotation;
             if (DegreesAngles > 90 + USCRotation && DegreesAngles < 270 + USCRotation)
             {

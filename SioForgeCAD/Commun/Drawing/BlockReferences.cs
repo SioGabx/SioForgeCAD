@@ -1,5 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -105,7 +107,7 @@ namespace SioForgeCAD.Commun.Drawing
                     newName = $"{oldName}_{index}";
                     index++;
                 }
-                return newName;
+                return SymbolUtilityServices.RepairSymbolName(newName, false);
             }
         }
 
@@ -275,11 +277,12 @@ namespace SioForgeCAD.Commun.Drawing
         public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues, string Layer = null)
         {
             Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
             DBObjectCollection ents = new DBObjectCollection();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 //The first block is added for initialising the process and then deleted. Be sure to add a value.
-                ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, Points.Empty, Generic.GetUSCRotation(Generic.AngleUnit.Radians), InitAttributesValues);
+                ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, Points.Empty, ed.GetUSCRotation(AngleUnit.Radians), InitAttributesValues);
                 DBObject dBObject = blockRef.GetDBObject();
                 if (Layer != null)
                 {
