@@ -4,6 +4,8 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Forms;
+using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,18 +57,39 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            string Name = "SioGabx sioforgecad 'Test'";
-            string Width = "2.5";
-            string Height = "3.1";
-            string Type = "ARBUSTE";
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var EditObject = promptResult.Value.GetObjectIds().First();
-
-
-
                 BlockReference BlkRef = EditObject.GetDBObject() as BlockReference;
+                var rawJSON = BlkRef.GetDescription();
+
+                var Json = rawJSON.FromJson<Dictionary<string, string>>();
+
+                VegblocEditDialog EditDialog = new VegblocEditDialog();
+                if (Json != null)
+                {
+                    if (Json["BlocName"] == BlkRef.GetBlockReferenceName())
+                    {
+                        EditDialog.NameInput.Text = Json["CompleteName"];
+                        EditDialog.HeightInput.Text = Json["Height"];
+                        EditDialog.WidthInput.Text = Json["Width"];
+                        EditDialog.TypeInput.Text = Json["Type"];
+                    }
+                }
+
+
+                var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, EditDialog, true);
+                if (DialogResult != System.Windows.Forms.DialogResult.OK)
+                {
+                    return;
+                }
+
+                string Name = EditDialog.NameInput.Text;
+                string Width = EditDialog.WidthInput.Text;
+                string Height = EditDialog.HeightInput.Text;
+                string Type = EditDialog.TypeInput.Text;
+
+
                 if (BlkRef.IsEntityOnLockedLayer())
                 {
                     MessageBox.Show("Le bloc séléctionné est sur un calque vérrouillé");
@@ -75,13 +98,27 @@ namespace SioForgeCAD.Functions
 
                 string OldBlockName = BlkRef.GetBlockReferenceName();
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type);
-                if (NewBlockName == OldBlockName) {
+                if (string.IsNullOrWhiteSpace(NewBlockName))
+                {
                     return;
                 }
-                Layers.SetLayerColor(BlkRef.Layer, Layers.GetLayerColor(BlkRef.Layer));
 
+                Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
 
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                string OldBlockNewRenameName = OldBlockName;
+
+                //If user is only changing size, -> the name dont change but we need to replace old references
+                if (OldBlockName == NewBlockName)
+                {
+                    BlockTableRecord Renbtr = (BlockTableRecord)tr.GetObject(bt[OldBlockName], OpenMode.ForWrite);
+                    OldBlockNewRenameName = SymbolUtilityServices.RepairSymbolName(OldBlockName + "_" + DateTime.Now.Ticks.ToString(), false);
+                    Renbtr.Name = OldBlockNewRenameName;
+                    //Recreate the block;
+                    NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type);
+                }
+
+
                 BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
                 foreach (ObjectId objId in btr)
                 {
@@ -89,7 +126,7 @@ namespace SioForgeCAD.Functions
 
                     if (ent is BlockReference br)
                     {
-                        if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
+                        if (br.GetBlockReferenceName() == OldBlockNewRenameName) // If the BlockReference matches the one to replace
                         {
                             BlockReferences.InsertFromNameImportIfNotExist(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
                             if (!br.IsErased)
@@ -99,8 +136,10 @@ namespace SioForgeCAD.Functions
                         }
                     }
                 }
+                BlockReferences.Purge(OldBlockNewRenameName);
                 Layers.Merge(OldBlockName, NewBlockName);
                 tr.Commit();
+                
             }
         }
 

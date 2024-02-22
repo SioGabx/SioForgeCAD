@@ -184,12 +184,15 @@ namespace SioForgeCAD.Commun
 
                 ObjectId sourceLayerId = lt[sourceLayerName];
                 LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
-                if (GetCurrentLayerName() == sourceLayerName)
+                if (sourceLayerName != targetLayerName)
                 {
-                    SetCurrentLayerName(targetLayerName);
+                    if (GetCurrentLayerName() == sourceLayerName)
+                    {
+                        SetCurrentLayerName(targetLayerName);
+                    }
+                    sourceLayer.Erase();
                 }
-                sourceLayer.Erase();
-
+                
                 trans.Commit();
             }
         }

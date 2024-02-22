@@ -39,6 +39,11 @@ namespace SioForgeCAD.Commun.Extensions
             return blockRef.Name;
         }
 
+        public static string GetDescription(this BlockReference blkRef)
+        {
+            BlockTableRecord blockDef = blkRef.BlockTableRecord.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+            return blockDef.Comments?.ToString();
+        }
 
         public static DynamicBlockReferencePropertyCollection GetDynamicProperties(this BlockReference blockReference)
         {

@@ -6,6 +6,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
+using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -86,12 +87,30 @@ namespace SioForgeCAD.Functions
             }
             Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
             Color HeightColorIndicator = GetColorFromHeight(Height);
+            //If the layer arealdy exist; we need to get the real color
+            BlocColor = Layers.GetLayerColor(BlocName);
             var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
             if (!BlockReferences.IsBlockExist(BlocName))
             {
-                BlockReferences.Create(BlocName, $"{CompleteName}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
+                string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
+                BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
             }
             return BlocName;
+        }
+
+
+        public static string GetDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
+        {
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "BlocName", BlocName },
+                { "CompleteName", CompleteName },
+                { "Height", Height.ToString() },
+                { "Width", Width.ToString() },
+                { "Type", Type },
+                { "VegblocVersion", "2" },
+            };
+            return data.ToJson();
         }
 
 
@@ -174,7 +193,7 @@ namespace SioForgeCAD.Functions
                     LineWeight = LineWeight.ByLineWeightDefault,
                     ColorIndex = 7,
                     Transparency = new Transparency((byte)255)
-                }; 
+                };
                 BlocGeometry.Add(Circle);
                 return Circle.ObjectId;
             }
@@ -301,7 +320,7 @@ namespace SioForgeCAD.Functions
                 {
                     Cultivar = SplittedName[index].UcFirst();
                     ShortName += " ";
-                    
+
                     if (Cultivar.Length <= 8 && SplittedName.Length == (index + 1))
                     {
                         //if it is the last one and the length is <= as 8 char then we show complete
@@ -311,7 +330,7 @@ namespace SioForgeCAD.Functions
                     {
                         ShortName += Cultivar[0];
                     }
-                    
+
                 }
 
                 CompleteName += " " + Cultivar;

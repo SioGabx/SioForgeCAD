@@ -37,9 +37,10 @@
             // PromptLabel
             // 
             this.PromptLabel.AutoSize = true;
-            this.PromptLabel.Location = new System.Drawing.Point(8, 19);
+            this.PromptLabel.Location = new System.Drawing.Point(6, 15);
+            this.PromptLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.PromptLabel.Name = "PromptLabel";
-            this.PromptLabel.Size = new System.Drawing.Size(84, 16);
+            this.PromptLabel.Size = new System.Drawing.Size(66, 13);
             this.PromptLabel.TabIndex = 0;
             this.PromptLabel.Text = "PromptLabel";
             // 
@@ -47,17 +48,19 @@
             // 
             this.UserInputBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.UserInputBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.UserInputBox.Location = new System.Drawing.Point(8, 38);
+            this.UserInputBox.Location = new System.Drawing.Point(6, 31);
+            this.UserInputBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.UserInputBox.Name = "UserInputBox";
-            this.UserInputBox.Size = new System.Drawing.Size(450, 22);
+            this.UserInputBox.Size = new System.Drawing.Size(405, 20);
             this.UserInputBox.TabIndex = 1;
             this.UserInputBox.Validated += new System.EventHandler(this.UserInputBox_Validated);
             // 
             // PromptAcceptButton
             // 
-            this.PromptAcceptButton.Location = new System.Drawing.Point(216, 85);
+            this.PromptAcceptButton.Location = new System.Drawing.Point(230, 69);
+            this.PromptAcceptButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PromptAcceptButton.Name = "PromptAcceptButton";
-            this.PromptAcceptButton.Size = new System.Drawing.Size(118, 33);
+            this.PromptAcceptButton.Size = new System.Drawing.Size(88, 27);
             this.PromptAcceptButton.TabIndex = 2;
             this.PromptAcceptButton.Text = "&Ok";
             this.PromptAcceptButton.UseVisualStyleBackColor = true;
@@ -66,9 +69,10 @@
             // PromptCancelButton
             // 
             this.PromptCancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.PromptCancelButton.Location = new System.Drawing.Point(340, 85);
+            this.PromptCancelButton.Location = new System.Drawing.Point(322, 69);
+            this.PromptCancelButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PromptCancelButton.Name = "PromptCancelButton";
-            this.PromptCancelButton.Size = new System.Drawing.Size(118, 33);
+            this.PromptCancelButton.Size = new System.Drawing.Size(88, 27);
             this.PromptCancelButton.TabIndex = 3;
             this.PromptCancelButton.Text = "&Cancel";
             this.PromptCancelButton.UseVisualStyleBackColor = true;
@@ -77,16 +81,18 @@
             // InputDialogBox
             // 
             this.AcceptButton = this.PromptAcceptButton;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.PromptCancelButton;
-            this.ClientSize = new System.Drawing.Size(466, 126);
+            this.ClientSize = new System.Drawing.Size(417, 102);
             this.Controls.Add(this.PromptAcceptButton);
             this.Controls.Add(this.UserInputBox);
             this.Controls.Add(this.PromptCancelButton);
             this.Controls.Add(this.PromptLabel);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "InputDialogBox";
-            this.Padding = new System.Windows.Forms.Padding(5);
+            this.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.ResumeLayout(false);
