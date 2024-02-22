@@ -30,58 +30,72 @@ namespace SioForgeCAD.Functions
             var Values = vegblocDialog.GetDataGridValues();
             foreach (var Rows in Values)
             {
-                string Name = Rows["NAME"];//.RemoveDiacritics();
-                if (string.IsNullOrWhiteSpace(Name))
-                {
-                    continue;
-                }
-                NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
-                string StrHeight = Rows["HEIGHT"] ?? "0";
-                StrHeight = StrHeight.Replace(",", ".");
-                string StrWidth = Rows["WIDTH"] ?? "1";
-                StrWidth = StrWidth.Replace(",", ".");
-
+                string Name = Rows["NAME"];
+                string Height = Rows["HEIGHT"] ?? "0";
+                string Width = Rows["WIDTH"] ?? "1";
                 string Type = Rows["TYPE"] ?? "ARBRES";
-                const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
-
-                if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
+                string BlocName = CreateBlockFromData(Name, Height, Width, Type);
+                if (string.IsNullOrEmpty(BlocName))
                 {
-                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
                     continue;
-                }
-                if (!double.TryParse(StrWidth, NumberStyle, CultureInfo.InvariantCulture, out double Width))
-                {
-                    Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
-                    continue;
-                }
-
-                if (Height > 0)
-                {
-                    Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
-                }
-
-                string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
-                GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
-                string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
-                string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false); ;
-
-                Color BlocColor = GetRandomColor();
-                int Transparence = 20;
-                if (ShortType == "ARBR")
-                {
-                    Transparence = 90;
-                }
-                Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
-                Color HeightColorIndicator = GetColorFromHeight(Height);
-                var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
-                if (!BlockReferences.IsBlockExist(BlocName))
-                {
-                    BlockReferences.Create(BlocName, $"{CompleteName}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
                 }
                 AskInsertVegBloc(BlocName);
             }
 
         }
+
+
+        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type)
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                return string.Empty;
+            }
+            StrHeight = StrHeight.Replace(",", ".");
+            StrWidth = StrWidth.Replace(",", ".");
+
+            const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
+
+            NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
+            if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
+            {
+                Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
+                return string.Empty;
+            }
+            if (!double.TryParse(StrWidth, NumberStyle, CultureInfo.InvariantCulture, out double Width))
+            {
+                Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
+                return string.Empty;
+            }
+
+            if (Height > 0)
+            {
+                Layers.CreateLayer(Settings.VegblocLayerHeightName, Color.FromRgb(0, 0, 0), LineWeight.LineWeight120, Generic.GetTransparencyFromAlpha(0), false);
+            }
+
+            string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
+            GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
+            string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
+            string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false); ;
+
+            Color BlocColor = GetRandomColor();
+            int Transparence = 20;
+            if (ShortType == "ARBR")
+            {
+                Transparence = 90;
+            }
+            Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
+            Color HeightColorIndicator = GetColorFromHeight(Height);
+            var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+            if (!BlockReferences.IsBlockExist(BlocName))
+            {
+                BlockReferences.Create(BlocName, $"{CompleteName}\nLargeur : {Width}\nHauteur : {Height}", BlocEntities, Points.Empty);
+            }
+            return BlocName;
+        }
+
+
+
 
         public static bool AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {

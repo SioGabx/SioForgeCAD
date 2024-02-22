@@ -1,7 +1,9 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Windows.Data;
+using System.Windows.Controls;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
 {
@@ -11,17 +13,45 @@ namespace SioForgeCAD.Commun
         {
             return AcAp.GetSystemVariable("clayer").ToString();
         }
+        public static void SetCurrentLayerName(string LayerName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable ltb = (LayerTable)db.LayerTableId.GetDBObject(OpenMode.ForRead);
+                db.Clayer = ltb[LayerName];
+                tr.Commit();
+            }
+        }
 
         public static DataItemCollection GetAllLayersInDrawing()
         {
             return AcAp.UIBindings.Collections.Layers;
         }
 
-        public static bool IsLayerLocked(ObjectId entity)
+        public static bool IsEntityOnLockedLayer(ObjectId entity)
         {
-            ObjectId layerId = entity.GetEntity().LayerId;
+            return IsEntityOnLockedLayer(entity.GetEntity());
+        }
+
+        public static bool IsEntityOnLockedLayer(this Entity entity)
+        {
+            ObjectId layerId = entity.LayerId;
             LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
             return (layerRecord != null && layerRecord.IsLocked);
+        }
+        public static bool IsLayerLocked(string Name)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                ObjectId layerId = layerTable[Name];
+                LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
+                trans.Commit();
+                bool IsLocked = layerRecord != null && layerRecord.IsLocked;
+                return IsLocked;
+            }
         }
 
         public static ObjectId GetLayerIdByName(string layerName, Database db = null)
@@ -93,7 +123,76 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static void Rename(string OldName, string NewName)
+        {
+            Database db = Generic.GetDatabase();
 
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                string layerName = OldName;
+                string newLayerName = NewName;
+
+                // Renommer le calque
+                LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
+                if (lt.Has(layerName))
+                {
+                    LayerTableRecord ltr = (LayerTableRecord)trans.GetObject(lt[layerName], OpenMode.ForWrite);
+                    ltr.Name = newLayerName;
+                }
+                trans.Commit();
+            }
+        }
+
+        public static void SetLayerColor(string LayerName, Autodesk.AutoCAD.Colors.Color color)
+        {
+            Database db = Generic.GetDatabase();
+
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                // Renommer le calque
+                LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
+                if (lt.Has(LayerName))
+                {
+                    LayerTableRecord ltr = (LayerTableRecord)trans.GetObject(lt[LayerName], OpenMode.ForWrite);
+                    ltr.Color = color;
+                }
+                trans.Commit();
+            }
+        }
+
+        public static void Merge(string sourceLayerName, string targetLayerName)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord btr = trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
+                if (lt.Has(sourceLayerName) && lt.Has(targetLayerName))
+                {
+                    // Iterate through all entities in the drawing
+                    foreach (ObjectId objId in btr)
+                    {
+                        Entity ent = objId.GetEntity(OpenMode.ForRead);
+                        if (ent.Layer == sourceLayerName)
+                        {
+                            ent.UpgradeOpen();
+                            ent.Layer = targetLayerName;
+                        }
+                    }
+                }
+
+                ObjectId sourceLayerId = lt[sourceLayerName];
+                LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
+                if (GetCurrentLayerName() == sourceLayerName)
+                {
+                    SetCurrentLayerName(targetLayerName);
+                }
+                sourceLayer.Erase();
+
+                trans.Commit();
+            }
+        }
 
 
         public static Autodesk.AutoCAD.Colors.Color GetLayerColor(string LayerName)

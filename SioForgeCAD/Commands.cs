@@ -171,6 +171,12 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
+        [CommandMethod("VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
+        public void VEGBLOCEDIT()
+        {
+            Functions.VEGBLOCEDIT.Edit();
+        }
+
         [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public void VEGBLOCCOPYGRIP()
         {

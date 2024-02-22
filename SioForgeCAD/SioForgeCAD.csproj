@@ -186,6 +186,7 @@
     <Compile Include="Functions\SSCL.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
+    <Compile Include="Functions\VEGBLOCEDIT.cs" />
     <Compile Include="Functions\VPLOCK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
