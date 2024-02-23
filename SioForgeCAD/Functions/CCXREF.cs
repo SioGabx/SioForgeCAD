@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
                     if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCG, Settings.BlocNameAltimetrie, AltimetrieStr))
                     {
-                        Generic.WriteMessage("Un block ayant la même valeur existe déja à cette position");
+                        Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
                     }
                     else
                     {

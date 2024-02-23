@@ -269,7 +269,8 @@ namespace SioForgeCAD.Commun
                 }
                 if (blkRef is null)
                 {
-                    return CotePoints.Null;
+                    HightLighter.UnhighlightAll();
+                    continue;
                 }
                 double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
                 Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());

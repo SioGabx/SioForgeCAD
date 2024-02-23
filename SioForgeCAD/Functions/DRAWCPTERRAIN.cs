@@ -236,7 +236,7 @@ namespace SioForgeCAD.Functions
 
         private bool CheckIfRedrawIsNeeded(Point3d LastPoint, Point3d NewPoint)
         {
-            if (LastPoint == NewPoint)
+            if (LastPoint == NewPoint || NewPoint == Point3d.Origin)
             {
                 //first draw
                 return true;

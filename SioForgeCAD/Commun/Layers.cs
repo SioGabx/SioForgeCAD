@@ -53,6 +53,32 @@ namespace SioForgeCAD.Commun
                 bool IsLocked = layerRecord != null && layerRecord.IsLocked;
                 return IsLocked;
             }
+        }  
+        
+        public static Transparency GetTransparency(string Name)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                ObjectId layerId = layerTable[Name];
+                LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
+                trans.Commit();
+                return layerRecord.Transparency;
+            }
+        }
+        
+        public static void SetTransparency(string Name, Transparency transparency)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                ObjectId layerId = layerTable[Name];
+                LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
+                layerRecord.Transparency = transparency;
+                trans.Commit();
+            }
         }
 
         public static void SetLock(string Name, bool Lock)

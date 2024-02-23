@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.BoundaryRepresentation;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -9,8 +8,6 @@ using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace SioForgeCAD.Functions
@@ -146,14 +143,11 @@ namespace SioForgeCAD.Functions
 
 
 
-
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type);
                 if (string.IsNullOrWhiteSpace(NewBlockName))
                 {
                     return;
                 }
-
-                Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
 
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 string OldBlockNewRenameName = OldBlockName;
@@ -166,6 +160,12 @@ namespace SioForgeCAD.Functions
                     Renbtr.Name = OldBlockNewRenameName;
                     //Recreate the block;
                     NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type);
+                }
+                else
+                {
+                    //Not same layer, we should copy properties of the old one
+                    Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
+                   //Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
 
 
