@@ -136,7 +136,7 @@ namespace SioForgeCAD.Forms
         {
             if (!IsContiguousSelection())
             {
-                MessageBox.Show("La selection n'est pas contigue");
+                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("La selection n'est pas contigue");
                 return;
             }
             string data = Clipboard.GetText();

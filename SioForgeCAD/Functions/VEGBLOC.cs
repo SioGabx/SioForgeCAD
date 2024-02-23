@@ -230,7 +230,6 @@ namespace SioForgeCAD.Functions
                 {
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
-
                     Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,

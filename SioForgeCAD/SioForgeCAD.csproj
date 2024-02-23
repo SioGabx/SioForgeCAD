@@ -124,6 +124,7 @@
     <Compile Include="Commun\Extensions\DataGridView.cs" />
     <Compile Include="Commun\Extensions\DBObject.cs" />
     <Compile Include="Commun\Extensions\DBObjectCollection.cs" />
+    <Compile Include="Commun\Extensions\Dictionnary.cs" />
     <Compile Include="Commun\Extensions\Editor.cs" />
     <Compile Include="Commun\Extensions\Entity.cs" />
     <Compile Include="Commun\Extensions\Extends3d.cs" />

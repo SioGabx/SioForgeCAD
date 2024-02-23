@@ -137,7 +137,7 @@ namespace SioForgeCAD.Functions
             Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId, out Extents3d OriginalBounds, out Extents3d EditedBounds);
             if (OriginalBounds.Size() != EditedBounds.Size())
             {
-                MessageBox.Show("Impossible de changer le point de base de ce bloc dynamique.", "Opération annulée");
+                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("Impossible de changer le point de base de ce bloc dynamique.");
                 return new ObjectIdCollection();
             }
             ObjectIdCollection iter;

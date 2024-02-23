@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.MacroRecorder;
+using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -19,8 +20,36 @@ namespace SioForgeCAD.Forms
             this.DialogResult = DialogResult.Cancel;
         }
 
+
+        private bool HasError(Control Ctrl)
+        {
+            string value = null;
+            if (Ctrl is TextBox)
+            {
+                value = ((TextBox)Ctrl).Text;
+            }
+
+            if (Ctrl is ComboBox)
+            {
+                value = ((ComboBox)Ctrl).Text;
+            }
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("Veuillez completer l'ensemble des champs");
+                Ctrl.Focus();
+                return true;
+            }
+            return false;
+        }
+
         private void PromptAcceptButton_Click(object sender, EventArgs e)
         {
+            if (HasError(NameInput) || HasError(HeightInput) || HasError(WidthInput) || HasError(TypeInput))
+            {
+                return;
+            }
+
+
             this.DialogResult = DialogResult.OK;
         }
 
