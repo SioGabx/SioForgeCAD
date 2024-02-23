@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Windows.Data;
+using System.Diagnostics;
 using System.Windows.Controls;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
@@ -181,7 +182,7 @@ namespace SioForgeCAD.Commun
                         }
                     }
                 }
-
+                try { 
                 ObjectId sourceLayerId = lt[sourceLayerName];
                 LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
                 if (sourceLayerName != targetLayerName)
@@ -192,7 +193,10 @@ namespace SioForgeCAD.Commun
                     }
                     sourceLayer.Erase();
                 }
-                
+                }catch(System.Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
                 trans.Commit();
             }
         }

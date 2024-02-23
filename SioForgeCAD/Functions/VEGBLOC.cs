@@ -108,7 +108,7 @@ namespace SioForgeCAD.Functions
                 { "Height", Height.ToString() },
                 { "Width", Width.ToString() },
                 { "Type", Type },
-                { "VegblocVersion", "2" },
+                { "VegblocVersion", "3" },
             };
             return data.ToJson();
         }
@@ -118,7 +118,6 @@ namespace SioForgeCAD.Functions
 
         public static bool AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {
-
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, Layer ?? BlocName);

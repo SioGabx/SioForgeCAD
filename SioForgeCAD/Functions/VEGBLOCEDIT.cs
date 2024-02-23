@@ -134,6 +134,19 @@ namespace SioForgeCAD.Functions
                 }
 
                 string OldBlockName = BlkRef.GetBlockReferenceName();
+                if (OldBlockName != BlkRef.Layer)
+                {
+                    var ContinueWithNotGoodLayerName = MessageBox.Show("Le bloc sélectionné n'est peut-être pas sur le bon calque, voulez-vous continuer l'opération ?", Generic.GetExtensionDLLName(), MessageBoxButton.YesNo);
+                    if (ContinueWithNotGoodLayerName != MessageBoxResult.Yes)
+                    {
+                        Generic.WriteMessage("Opération annulée");
+                        return;
+                    }
+                }
+
+
+
+
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type);
                 if (string.IsNullOrWhiteSpace(NewBlockName))
                 {
