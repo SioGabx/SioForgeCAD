@@ -55,6 +55,21 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static void SetLock(string Name, bool Lock)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = trans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                ObjectId layerId = layerTable[Name];
+                LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForWrite) as LayerTableRecord;
+                layerRecord.IsLocked = Lock;
+                trans.Commit();
+            }
+        }
+
+
+
         public static ObjectId GetLayerIdByName(string layerName, Database db = null)
         {
             if (db == null)
@@ -182,18 +197,20 @@ namespace SioForgeCAD.Commun
                         }
                     }
                 }
-                try { 
-                ObjectId sourceLayerId = lt[sourceLayerName];
-                LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
-                if (sourceLayerName != targetLayerName)
+                try
                 {
-                    if (GetCurrentLayerName() == sourceLayerName)
+                    ObjectId sourceLayerId = lt[sourceLayerName];
+                    LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
+                    if (sourceLayerName != targetLayerName)
                     {
-                        SetCurrentLayerName(targetLayerName);
+                        if (GetCurrentLayerName() == sourceLayerName)
+                        {
+                            SetCurrentLayerName(targetLayerName);
+                        }
+                        sourceLayer.Erase();
                     }
-                    sourceLayer.Erase();
                 }
-                }catch(System.Exception ex)
+                catch (System.Exception ex)
                 {
                     Debug.WriteLine(ex.Message);
                 }

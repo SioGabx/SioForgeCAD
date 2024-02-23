@@ -29,6 +29,13 @@ namespace SioForgeCAD.Functions
                 return;
             }
             var Values = vegblocDialog.GetDataGridValues();
+
+            string CurrentLayerName = Layers.GetCurrentLayerName();
+            bool IsCurrentLayerLocked = Layers.IsLayerLocked(CurrentLayerName);
+            if (IsCurrentLayerLocked)
+            {
+                Layers.SetLock(CurrentLayerName, false);
+            }
             foreach (var Rows in Values)
             {
                 string Name = Rows["NAME"];
@@ -41,6 +48,10 @@ namespace SioForgeCAD.Functions
                     continue;
                 }
                 AskInsertVegBloc(BlocName);
+            }
+            if (IsCurrentLayerLocked)
+            {
+                Layers.SetLock(CurrentLayerName, true);
             }
 
         }
@@ -77,7 +88,7 @@ namespace SioForgeCAD.Functions
             string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
             GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
             string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
-            string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false); ;
+            string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false);
 
             Color BlocColor = GetRandomColor();
             int Transparence = 20;
