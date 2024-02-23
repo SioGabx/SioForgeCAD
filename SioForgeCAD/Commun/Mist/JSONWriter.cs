@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -33,7 +32,7 @@ namespace SioForgeCAD.JSONParser
             {
                 stringBuilder.Append('"');
                 string str = (string)item;
-                for (int i = 0; i<str.Length; ++i)
+                for (int i = 0; i < str.Length; ++i)
                     if (str[i] < ' ' || str[i] == '"' || str[i] == '\\')
                     {
                         stringBuilder.Append('\\');
@@ -81,7 +80,7 @@ namespace SioForgeCAD.JSONParser
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
             {
                 Type keyType = type.GetGenericArguments()[0];
-                
+
                 //Refuse to output dictionary keys that aren't of type string
                 if (keyType != typeof(string))
                 {
@@ -130,7 +129,7 @@ namespace SioForgeCAD.JSONParser
                     }
                 }
                 PropertyInfo[] propertyInfo = type.GetProperties();
-                for (int i = 0; i<propertyInfo.Length; i++)
+                for (int i = 0; i < propertyInfo.Length; i++)
                 {
                     if (propertyInfo[i].CanRead)
                     {

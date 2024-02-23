@@ -1,11 +1,6 @@
-﻿using Autodesk.AutoCAD.BoundaryRepresentation;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -431,7 +426,7 @@ namespace SioForgeCAD.Commun.Extensions
                 // If the curve is clockwise, we negate the bulge
 
 
-                if (clockwise) 
+                if (clockwise)
 
                     bulge = -bulge;
 

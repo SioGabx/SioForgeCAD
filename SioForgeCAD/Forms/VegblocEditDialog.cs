@@ -1,14 +1,5 @@
-﻿using Autodesk.AutoCAD.MacroRecorder;
-using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Windows.Forms;
-using System.Windows.Input;
 
 namespace SioForgeCAD.Forms
 {

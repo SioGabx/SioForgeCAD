@@ -1,10 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Windows.Data;
 using System.Diagnostics;
-using System.Windows.Controls;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
 {
@@ -53,8 +51,8 @@ namespace SioForgeCAD.Commun
                 bool IsLocked = layerRecord != null && layerRecord.IsLocked;
                 return IsLocked;
             }
-        }  
-        
+        }
+
         public static Transparency GetTransparency(string Name)
         {
             Database db = Generic.GetDatabase();
@@ -67,7 +65,7 @@ namespace SioForgeCAD.Commun
                 return layerRecord.Transparency;
             }
         }
-        
+
         public static void SetTransparency(string Name, Transparency transparency)
         {
             Database db = Generic.GetDatabase();

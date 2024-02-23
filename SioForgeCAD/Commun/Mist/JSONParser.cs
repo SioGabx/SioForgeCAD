@@ -63,7 +63,7 @@ namespace SioForgeCAD.JSONParser
         static int AppendUntilStringEnd(bool appendEscapeCharacter, int startIdx, string json)
         {
             stringBuilder.Append(json[startIdx]);
-            for (int i = startIdx+1; i<json.Length; i++)
+            for (int i = startIdx + 1; i < json.Length; i++)
             {
                 if (json[i] == '\\')
                 {
@@ -88,11 +88,11 @@ namespace SioForgeCAD.JSONParser
         {
             List<string> splitArray = splitArrayPool.Count > 0 ? splitArrayPool.Pop() : new List<string>();
             splitArray.Clear();
-            if(json.Length == 2)
+            if (json.Length == 2)
                 return splitArray;
             int parseDepth = 0;
             stringBuilder.Length = 0;
-            for (int i = 1; i<json.Length-1; i++)
+            for (int i = 1; i < json.Length - 1; i++)
             {
                 switch (json[i])
                 {
@@ -133,7 +133,7 @@ namespace SioForgeCAD.JSONParser
                 if (json.Length <= 2)
                     return string.Empty;
                 StringBuilder stringBuilder = new StringBuilder();
-                for (int i = 1; i<json.Length-1; ++i)
+                for (int i = 1; i < json.Length - 1; ++i)
                 {
                     if (json[i] == '\\' && i + 1 < json.Length - 1)
                     {
@@ -256,7 +256,7 @@ namespace SioForgeCAD.JSONParser
             if (type == typeof(object))
             {
                 return ParseAnonymousValue(json);
-            }    
+            }
             if (json[0] == '{' && json[json.Length - 1] == '}')
             {
                 return ParseObject(type, json);

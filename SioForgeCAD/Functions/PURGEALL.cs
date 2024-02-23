@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.EditorInput;
-using SioForgeCAD.Commun;
+﻿using SioForgeCAD.Commun;
 
 namespace SioForgeCAD.Functions
 {

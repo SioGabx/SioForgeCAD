@@ -2,13 +2,9 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
@@ -70,7 +66,7 @@ namespace SioForgeCAD.Commun
             }
         }
 
-   
+
 
 
 
@@ -83,11 +79,11 @@ namespace SioForgeCAD.Commun
             return new Autodesk.AutoCAD.Colors.Transparency(AlphaByte);
         }
 
-    
 
-     
 
-    
+
+
+
 
         public static Document GetDocument()
         {

@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -216,7 +215,7 @@ namespace SioForgeCAD
             Functions.MERGEHATCH.Merge();
         }
 
-        
+
 
         [CommandMethod("VPLOCK")]
         public static void VPLOCK()
@@ -229,7 +228,7 @@ namespace SioForgeCAD
         {
             Functions.VPLOCK.DoLockUnlock(false);
         }
-        
+
 
 
 
@@ -245,31 +244,7 @@ namespace SioForgeCAD
         [CommandMethod("TEST")]
         public static void TEST()
         {
-            Point3d pt = new Point3d(0, 0, 0); var offset = 20;
-            var scale = 1;
-
-            Point3dCollection points = new Point3dCollection();
-            points.Add(new Point3d(pt.X + ((offset + 00) * scale), pt.Y + ((offset + 00) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 00) * scale), pt.Y + ((offset + 10) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 10) * scale), pt.Y + ((offset + 10) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 10) * scale), pt.Y + ((offset + 30) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 00) * scale), pt.Y + ((offset + 30) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 00) * scale), pt.Y + ((offset + 40) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 30) * scale), pt.Y + ((offset + 40) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 30) * scale), pt.Y + ((offset + 30) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 20) * scale), pt.Y + ((offset + 30) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 20) * scale), pt.Y + ((offset + 10) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 30) * scale), pt.Y + ((offset + 10) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 30) * scale), pt.Y + ((offset + 00) * scale), 0));
-            points.Add(new Point3d(pt.X + ((offset + 00) * scale), pt.Y + ((offset + 00) * scale), 0));
-
-
-            Polyline poly = new Polyline();
-            foreach (Point3d item in points)
-            {
-                poly.AddVertex(item);
-            }
-            poly.AddToDrawing();
+           
         }
 
 

@@ -8,7 +8,6 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Windows;
 
 namespace SioForgeCAD.Functions
 {
@@ -34,7 +33,7 @@ namespace SioForgeCAD.Functions
                 if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                 {
                     Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult).Flatten();
-                    
+
                     getCutHatchLinePointTransient.Origin = Origin;
                     var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
                     DBPoint dBPoint = new DBPoint(OriginNearestPt);

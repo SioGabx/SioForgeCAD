@@ -123,7 +123,7 @@ namespace SioForgeCAD.Forms
                         if (j < maxColumnIndex)
                         {
                             // Add tab between cells except for the last cell
-                            sb.Append('\t'); 
+                            sb.Append('\t');
                         }
                     }
                 }
@@ -319,7 +319,7 @@ namespace SioForgeCAD.Forms
             return Rows;
         }
 
-        
+
 
 
     }

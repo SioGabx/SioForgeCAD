@@ -157,7 +157,7 @@ namespace SioForgeCAD.Commun
                 }
                 StaticDrawable?.Clear();
             }
-            
+
         }
 
         public void DisposeEntities()

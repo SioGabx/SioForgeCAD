@@ -12,8 +12,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Text;
-using System.Windows;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
 namespace SioForgeCAD.Functions

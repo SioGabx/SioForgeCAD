@@ -61,7 +61,7 @@ namespace SioForgeCAD.Commun.Extensions
                 yield return poly.GetPoint2dAt(i);
             }
         }
-       
+
 
         /// <summary>
         /// Determines if the polyline is self-intersecting.

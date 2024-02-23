@@ -39,7 +39,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-       
+
 
 
         /// <summary>

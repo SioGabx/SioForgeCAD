@@ -16,7 +16,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
-    
+
             if (blockRef.IsDynamicBlock)
             {
                 try

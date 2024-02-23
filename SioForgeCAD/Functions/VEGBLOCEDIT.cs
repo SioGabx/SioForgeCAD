@@ -165,7 +165,7 @@ namespace SioForgeCAD.Functions
                 {
                     //Not same layer, we should copy properties of the old one
                     Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
-                   //Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
+                    //Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
 
 
