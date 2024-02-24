@@ -19,10 +19,10 @@ namespace SioForgeCAD.Commun
             return IntersectionPointsFounds.Count > 0;
         }
 
-        private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Polyline CutLine, out DBObjectCollection InsideCutLines)
+        private static DBObjectCollection GetInsideCutLines(this Polyline polyline, Polyline CutLine)
         {
             DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline);
-            InsideCutLines = new DBObjectCollection();
+            DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)
             {
                 bool IsInside = true;
@@ -44,7 +44,7 @@ namespace SioForgeCAD.Commun
                     line.Dispose();
                 }
             }
-            return CutCurveByCurve(polyline, CutLine);
+            return InsideCutLines;
         }
 
         private static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
@@ -67,10 +67,17 @@ namespace SioForgeCAD.Commun
             return polyline.GetSplitCurves(DblCollection);
         }
 
+        public static List<Polyline> Cut2(this Polyline BasePolyline, Polyline CutLine)
+        {
+            return null;
+        }
+
+
 
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline CutLine)
         {
-            DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
+            DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, CutLine);
+            DBObjectCollection SplittedPolylines = CutCurveByCurve(BasePolyline, CutLine);
 
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
             foreach (Polyline polyline in SplittedPolylines)
@@ -91,7 +98,7 @@ namespace SioForgeCAD.Commun
 
 
 
-           
+
             int index = 0;
             while (NotClosedPolylines.Count > index)
             {
