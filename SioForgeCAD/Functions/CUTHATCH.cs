@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -15,27 +16,69 @@ namespace SioForgeCAD.Functions
     {
         public static void Cut()
         {
-            if (!GetHatch(out Hatch hachure, out Polyline polyline))
+            if (!GetHatch(out Hatch Hachure, out Polyline Boundary))
             {
                 return;
             }
-            if (hachure is null || polyline is null || Math.Floor(polyline.Area) != Math.Floor(hachure.Area))
+            if (Hachure is null || Boundary is null || Math.Floor(Boundary.Area) != Math.Floor(Hachure.Area))
             {
                 Generic.WriteMessage("Impossible de découpper cette hachure.");
                 return;
             }
             Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+
+            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Dessiner une ligne de coupe ou une ligne/polyligne existante ?");
+            const string NewKeyword = "Nouvelle";
+            const string ExistKeyword = "Existante";
+
+
+            promptKeywordOptions.Keywords.Add(NewKeyword);
+            promptKeywordOptions.Keywords.Default = NewKeyword;
+            promptKeywordOptions.Keywords.Add(ExistKeyword);
+            promptKeywordOptions.AppendKeywordsToMessage = true;
+            promptKeywordOptions.AllowArbitraryInput = false;
+            var SelectOption = ed.GetKeywords(promptKeywordOptions);
+
+            Polyline CutLine;
+            if (SelectOption.StringResult == NewKeyword)
+            {
+                CutLine = GetCutLine(Boundary);
+            }
+            else
+            {
+                CutLine = GetCutPolyline(Boundary);
+            }
+
+
+            if (CutLine != null)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    var Cuted = Boundary.Cut(CutLine);
+                    ApplyCutting(Boundary, Hachure, Cuted);
+                    Generic.WriteMessage($"La hachure à été divisée en {Cuted.Count}");
+                    tr.Commit();
+                }
+            }
+            CutLine?.Dispose();
+        }
+
+        public static Polyline GetCutLine(Polyline Boundary)
+        {
+            Database db = Generic.GetDatabase();
 
             using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
             {
-                getCutHatchLinePointTransient.Polyline = polyline;
+                getCutHatchLinePointTransient.Polyline = Boundary;
                 var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
                 if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                 {
                     Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult).Flatten();
 
                     getCutHatchLinePointTransient.Origin = Origin;
-                    var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
+                    var OriginNearestPt = FoundNearestPointOnPolyline(Boundary, Origin.SCG);
                     DBPoint dBPoint = new DBPoint(OriginNearestPt);
                     var dBPointObjectId = dBPoint.AddToDrawing();
                     (Points Point, PromptPointResult PromptPointResult) getCutHatchLinePointResultTwo;
@@ -49,18 +92,89 @@ namespace SioForgeCAD.Functions
                     }
                     if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
                     {
-                        using (Transaction tr = db.TransactionManager.StartTransaction())
-                        {
-                            Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult).Flatten();
-                            var Cuted = GetCutPolyline(polyline, Origin, EndPoint);
-                            ApplyCutting(polyline, hachure, Cuted);
-                            Generic.WriteMessage($"La hachure à été divisée en {Cuted.Length}");
-                            tr.Commit();
-                        }
+                        Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult).Flatten();
+                        return GetPolylineFromNearestPointOnBoundary(Boundary, Origin, EndPoint);
                     }
                 }
             }
+            return null;
         }
+
+        public static Polyline GetPolylineFromNearestPointOnBoundary(Polyline Boundary, Points Origin, Points EndPoint)
+        {
+            var OriginNearestPt = FoundNearestPointOnPolyline(Boundary, Origin.SCG);
+            var EndNearestPt = FoundNearestPointOnPolyline(Boundary, EndPoint.SCG);
+
+            Vector3d LineVector = OriginNearestPt - EndNearestPt;
+
+            using (Line line = new Line(OriginNearestPt.Displacement(LineVector, .1), EndNearestPt.Displacement(-LineVector, .1)))
+            {
+                return line.ToPolyline();
+            }
+        }
+
+
+        public static Polyline GetCutPolyline(Polyline Boundary)
+        {
+            Editor editor = Generic.GetEditor();
+            TypedValue[] filterList = new TypedValue[] {
+                new TypedValue((int)DxfCode.Operator, "<or"),
+                new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.Operator, "or>"),
+            };
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "Selectionnez un polyline qui coupe la hachure",
+                SingleOnly = true,
+                SinglePickInSpace = true,
+                RejectObjectsOnLockedLayers = true
+            };
+
+            while (true)
+            {
+                PromptSelectionResult promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+                if (promptResult.Status == PromptStatus.Cancel)
+                {
+                    return null;
+                }
+                else if (promptResult.Status == PromptStatus.OK)
+                {
+                    if (promptResult.Value.Count == 1)
+                    {
+                        ObjectId SelectedObjectId = promptResult.Value.GetObjectIds().First();
+                        DBObject Entity = SelectedObjectId.GetNoTransactionDBObject(OpenMode.ForRead);
+                        Polyline polyline;
+                        if (Entity is Polyline)
+                        {
+                            polyline = (Polyline)Entity;
+                        }
+                        else if (Entity is Line)
+                        {
+                            polyline = ((Line)Entity).ToPolyline();
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        if (IsValidCutLine(Boundary, polyline))
+                        {
+                            return polyline;
+                        }
+                        else
+                        {
+                            Generic.WriteMessage("La polyligne ne coupe pas la hachure");
+                            continue;
+                        }
+
+                    }
+                }
+            }
+
+        }
+
+
 
         public static bool AskSelectHatch(out ObjectId HatchObjectId)
         {
@@ -134,7 +248,7 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static void ApplyCutting(Polyline polyline, Hatch hachure, Polyline[] Cuts)
+        public static void ApplyCutting(Polyline polyline, Hatch hachure, List<Polyline> Cuts)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
@@ -178,17 +292,12 @@ namespace SioForgeCAD.Functions
             return polyline.GetClosestPointTo(point, false);
         }
 
-        public static Polyline[] GetCutPolyline(Polyline polyline, Points Origin, Points EndPoint)
+        public static bool IsValidCutLine(Polyline Boundary, Polyline CutLine)
         {
-            var OriginNearestPt = FoundNearestPointOnPolyline(polyline, Origin.SCG);
-            var NearestPt = FoundNearestPointOnPolyline(polyline, EndPoint.SCG);
-
-            Vector3d LineVector = OriginNearestPt - NearestPt;
-
-            using (Line line = new Line(OriginNearestPt.Displacement(LineVector, .1), NearestPt.Displacement(-LineVector, .1)))
-            {
-                return polyline.Cut(line).ToArray();
-            }
+            List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
+            int NumberOfPolyline = CuttedPolyline.Count;
+            CuttedPolyline.DeepDispose();
+            return NumberOfPolyline > 1;
         }
 
         public class GetCutHatchLinePointTransient : GetPointTransient
@@ -257,10 +366,11 @@ namespace SioForgeCAD.Functions
                     return base.IsValidPoint(pointResult);
                 }
                 var Pt = Points.GetFromPromptPointResult(pointResult);
-                Polyline[] CuttedPolyline = GetCutPolyline(Polyline, Origin, Pt);
-                int NumberOfPolyline = CuttedPolyline.Length;
-                CuttedPolyline.DeepDispose();
-                return NumberOfPolyline > 1;
+
+                Polyline CutLine = GetPolylineFromNearestPointOnBoundary(Polyline, Origin, Pt);
+                bool ValidPoint = IsValidCutLine(Polyline, CutLine);
+                CutLine.Dispose();
+                return ValidPoint;
             }
         }
     }

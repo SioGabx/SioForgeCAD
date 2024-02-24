@@ -11,54 +11,67 @@ namespace SioForgeCAD.Commun
 {
     public static class SlicePolygon
     {
-        private static bool IsSegmentIntersecting(this Polyline polyline, Line CutLine, out Point3dCollection IntersectionPointsFounds)
+        private static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds)
         {
             IntersectionPointsFounds = new Point3dCollection();
             polyline.IntersectWith(CutLine, Intersect.OnBothOperands, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
             return IntersectionPointsFounds.Count > 0;
         }
 
-        private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Line CutLine, out DBObjectCollection InsideCutLines)
+        private static DBObjectCollection GetSplittedPolyline(this Polyline polyline, Polyline CutLine, out DBObjectCollection InsideCutLines)
+        {
+            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline);
+            InsideCutLines = new DBObjectCollection();
+            foreach (Polyline line in CutLines)
+            {
+                bool IsInside = true;
+                for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < line.GetReelNumberOfVertices(); PolylineSegmentIndex++)
+                {
+                    var PolylineSegment = line.GetSegmentAt(PolylineSegmentIndex);
+                    if (IsInside)
+                    {
+                        Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
+                        IsInside = MiddlePoint.IsInsidePolyline(polyline);
+                    }
+                }
+                if (IsInside)
+                {
+                    InsideCutLines.Add(line);
+                }
+                else
+                {
+                    line.Dispose();
+                }
+            }
+
+            return CutCurveByCurve(polyline, CutLine);
+        }
+
+        private static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
             if (IntersectionPointsFounds.Count == 0)
             {
-                InsideCutLines = new DBObjectCollection();
                 return new DBObjectCollection();
             }
 
-
-            Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistance(CutLine.StartPoint);
+            Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistanceOnLine(polyline);
 
             DoubleCollection DblCollection = new DoubleCollection();
-            foreach (Point3d Point in IntersectionPointsFounds)
+            foreach (Point3d Point in OrderedIntersectionPointsFounds)
             {
                 var param = polyline.GetParamAtPointX(Point);
                 DblCollection.Add(param);
                 DblCollection.Add(param);
             }
-            DBObjectCollection SplittedPolylines = polyline.GetSplitCurves(DblCollection);
-
-            InsideCutLines = new DBObjectCollection();
-            for (var segIndex = 0; segIndex < OrderedIntersectionPointsFounds.Count; segIndex++)
-            {
-                Point3d StartPoint = OrderedIntersectionPointsFounds[segIndex];
-                Point3d EndPoint = OrderedIntersectionPointsFounds[segIndex + 1];
-                Point3d MiddlePoint = StartPoint.GetMiddlePoint(EndPoint);
-                if (MiddlePoint.IsInsidePolyline(polyline))
-                {
-                    Polyline PolySegment = new Polyline();
-                    PolySegment.AddVertex(StartPoint);
-                    PolySegment.AddVertex(EndPoint);
-                    InsideCutLines.Add(PolySegment);
-                }
-            }
-            return SplittedPolylines;
+            return polyline.GetSplitCurves(DblCollection);
         }
 
-        public static List<Polyline> Cut(this Polyline BasePolyline, Line CutLine)
+
+        public static List<Polyline> Cut(this Polyline BasePolyline, Polyline CutLine)
         {
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
+            
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
             //DBObjectCollection ClosedPolyline = new DBObjectCollection();
             foreach (Polyline polyline in SplittedPolylines)
@@ -67,8 +80,9 @@ namespace SioForgeCAD.Commun
                 {
                     if (polyline.IsLineCanCloseAPolyline(PolySegment))
                     {
+                        polyline.JoinEntity(PolySegment);
                         polyline.Closed = true;
-                        polyline.SetBulgeAt(polyline.NumberOfVertices - 1, 0);
+                        //polyline.SetBulgeAt(polyline.NumberOfVertices - 1, 0);
                     }
                 }
             }

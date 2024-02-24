@@ -107,30 +107,21 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Point3dCollection OrderByDistance(this Point3dCollection collection, Point3d Origin)
+        public static Point3dCollection OrderByDistanceOnLine(this Point3dCollection collection, Polyline poly)
         {
-            var newCollection = new Point3dCollection();
+            
+            List<(Point3d Point, double Distance)> List = new List<(Point3d, double)>();
             foreach (Point3d point in collection)
             {
-                double distance = point.DistanceTo(Origin);
-                bool inserted = false;
-                for (int i = 0; i < newCollection.Count; i++)
-                {
-                    if (newCollection[i].DistanceTo(Origin) > distance)
-                    {
-                        newCollection.Insert(i, point);
-                        inserted = true;
-                        break;
-                    }
-                }
-
-                if (!inserted)
-                {
-                    newCollection.Add(point);
-                }
-
+                double distance = poly.GetDistAtPoint(point);
+                List.Add((point, distance));
             }
-
+            var orderedList = List.OrderBy(item => item.Distance).ToList();
+            var newCollection = new Point3dCollection();
+            foreach (var item in orderedList)
+            {
+                newCollection.Add(item.Point);
+            }
             return newCollection;
         }
 

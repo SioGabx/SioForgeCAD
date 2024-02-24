@@ -1,21 +1,31 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Drawing
 {
     public static class Entities
     {
-        public static List<ObjectId> AddToDrawing(this IEnumerable<Entity> entities)
+        public static List<ObjectId> AddToDrawing(this IEnumerable<Entity> entities, int ColorIndex = 7, bool Clone = false)
         {
             List<ObjectId> objs = new List<ObjectId>();
             foreach (var entity in entities)
             {
-                entity.ColorIndex = 5;
-                objs.Add(entity.AddToDrawing());
+                Entity ent = entity;
+                if (Clone)
+                {
+                    ent = (Entity)ent.Clone();
+                }
+                ent.ColorIndex = ColorIndex;
+                objs.Add(ent.AddToDrawing());
             }
             return objs;
         }
 
+        public static List<ObjectId> AddToDrawing(this DBObjectCollection entities, int ColorIndex = 7, bool Clone = false)
+        {
+            return entities.Cast<Entity>().AddToDrawing(ColorIndex, Clone);
+        }
 
         public static ObjectId AddToDrawing(this Entity entity)
         {
