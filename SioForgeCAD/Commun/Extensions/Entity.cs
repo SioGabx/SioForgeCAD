@@ -1,4 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using System;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -50,7 +52,22 @@ namespace SioForgeCAD.Commun.Extensions
             Target.XData = Origin.XData;
         }
 
-
+        public static double TryGetArea(this Entity ent)
+        {
+            try
+            {
+                if (ent is Polyline) { return ((Polyline)ent).Area; }
+                if (ent is Hatch) { return ((Hatch)ent).Area; }
+                if (ent is Circle) { return ((Circle)ent).Area; }
+                if (ent is Ellipse) { return ((Ellipse)ent).Area; }
+                if (ent is Region) { return ((Region)ent).Area; }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+            return 0;
+        }
 
     }
 }

@@ -36,6 +36,11 @@ namespace SioForgeCAD.Functions
                     DBObject ent = selectedObjectId.GetDBObject();
                     if (ent is Polyline || ent is Circle)
                     {
+                        if (ent is Polyline poly && poly?.IsSelfIntersecting() == true)
+                        {
+                            Generic.WriteMessage("Impossible de combiner une hachure qui se coupe elle-même.");
+                            continue;
+                        }
                         Curve curv = ent.Clone() as Curve;
                         Curves.Add(curv);
                     }

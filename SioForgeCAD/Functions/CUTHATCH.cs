@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -20,9 +21,18 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            if (Hachure is null || Boundary is null || Math.Floor(Boundary.Area) != Math.Floor(Hachure.Area))
+         
+
+            if (Hachure is null || Boundary is null ||Math.Floor(Boundary.TryGetArea()) != Math.Floor(Hachure.TryGetArea()))
             {
-                Generic.WriteMessage("Impossible de découpper cette hachure.");
+                if (Boundary?.IsSelfIntersecting() == true)
+                {
+                    Generic.WriteMessage("Impossible de découpper une hachure qui se coupe elle-même.");
+                }
+                else
+                {
+                    Generic.WriteMessage("Impossible de découpper cette hachure.");
+                }
                 return;
             }
             Database db = Generic.GetDatabase();
