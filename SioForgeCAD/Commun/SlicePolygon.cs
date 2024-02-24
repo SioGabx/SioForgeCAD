@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,6 @@ namespace SioForgeCAD.Commun
                     line.Dispose();
                 }
             }
-
             return CutCurveByCurve(polyline, CutLine);
         }
 
@@ -73,7 +73,6 @@ namespace SioForgeCAD.Commun
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
 
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
-            //DBObjectCollection ClosedPolyline = new DBObjectCollection();
             foreach (Polyline polyline in SplittedPolylines)
             {
                 foreach (Polyline PolySegment in InsideCutLines)
@@ -82,15 +81,17 @@ namespace SioForgeCAD.Commun
                     {
                         polyline.JoinEntity(PolySegment);
                         polyline.Closed = true;
-                        //polyline.SetBulgeAt(polyline.NumberOfVertices - 1, 0);
                     }
                 }
             }
-
             List<DBObject> Polylines = SplittedPolylines.ToList();
+
             List<DBObject> ClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == true).ToList();
             List<DBObject> NotClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == false).ToList();
 
+
+
+           
             int index = 0;
             while (NotClosedPolylines.Count > index)
             {
@@ -101,47 +102,27 @@ namespace SioForgeCAD.Commun
 
                 var AvailableNotClosedEntities = NotClosedPolylines.ToList();
                 AvailableNotClosedEntities.AddRange(InsideCutLines.ToList());
-
                 foreach (Polyline PolyligneB in AvailableNotClosedEntities.Cast<Polyline>())
                 {
-                    if (PolyligneA == PolyligneB) { continue; }
-
-
-                    
-
-                    bool CanBeJoin;
-                    if (PolyligneA.IsLineCanCloseAPolyline(PolyligneB))
+                    if (!PolyligneA.CanBeJoin(PolyligneB))
                     {
-                        CanBeJoin = false;
-                    }
-                    else
-                    {
-                        //Check if the polyline is already joined
-                        IEnumerable<Point3d> PAPoint = PolyligneA.GetPoints();
-                        IEnumerable<Point3d> PBPoint = PolyligneB.GetPoints();
-                        CanBeJoin = PAPoint.ContainsAll(PBPoint);
+                        continue;
                     }
 
-                    if (!CanBeJoin)
+                    try
                     {
-                        try
-                        {
-                            if (PolyligneA.HasAtLeastOnPointInCommun(PolyligneB))
-                            {
-                                PolyligneA.JoinEntity(PolyligneB);
-                                NotClosedPolylines.Remove(PolyligneB);
-                                index--;
-                            }
-                        }
-                        catch (System.Exception ex)
-                        {
-                            Debug.WriteLine(ex);
-                        }
-
+                        PolyligneA.JoinEntity(PolyligneB);
+                        NotClosedPolylines.Remove(PolyligneB);
+                        index--;
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.WriteLine(ex);
                     }
                 }
 
-                PolyligneA.Cleanup();
+
+                //PolyligneA.Cleanup();
                 if (PolyligneA.Closed)
                 {
                     ClosedPolylines.Add(PolyligneA);
@@ -166,6 +147,5 @@ namespace SioForgeCAD.Commun
                 .DeepDispose();
             return CutedClosePolyligne;
         }
-
     }
 }

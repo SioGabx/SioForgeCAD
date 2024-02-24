@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -70,7 +71,27 @@ namespace SioForgeCAD.Commun.Extensions
             return false;
         }
 
+        public static bool CanBeJoin(this Polyline A, Polyline B)
+        {
+            if (A == B) { return false; }
+            if (!A.IsLineCanCloseAPolyline(B))
+            {
+                //Check if the polyline is already joined
+                IEnumerable<Point3d> PAPoint = A.GetPoints();
+                IEnumerable<Point3d> PBPoint = B.GetPoints();
 
+                if (PAPoint.ContainsAll(PBPoint))
+                {
+                    return false;
+                }
+            }
+
+            if (!A.HasAtLeastOnPointInCommun(B))
+            {
+                return false;
+            }
+            return true;
+        }
 
 
     }
