@@ -75,6 +75,16 @@ namespace SioForgeCAD.Commun.Extensions
             return false;
         }
 
+        public static bool ContainsAll(this IEnumerable<Point3d> pointsA, IEnumerable<Point3d> pointsB)
+        {
+            foreach (var item in pointsB)
+            {
+                if (pointsA.Contains(item) != true) { return false; }
+            }
+            return true;
+        }
+
+
         public static Point3d TranformToBlockReferenceTransformation(this Point3d OriginPoint, BlockReference blkRef)
         {
             Point3d selectedPointInBlockRefSpace = OriginPoint.TransformBy(blkRef.BlockTransform.Inverse());

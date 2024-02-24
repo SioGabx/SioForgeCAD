@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
+using SioForgeCAD.Commun.Extensions;
 using System;
 
 namespace SioForgeCAD.Functions
@@ -62,13 +63,8 @@ namespace SioForgeCAD.Functions
                             if (selObj.ObjectId.ObjectClass.DxfName == "CIRCLE")
                             {
                                 Circle circle = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Circle;
-                                using (Polyline pline = new Polyline())
+                                using (Polyline pline = circle.ToPolyline())
                                 {
-                                    double bulge = 1.0;
-                                    double halfWidth = 0.0;
-
-                                    pline.AddVertexAt(0, new Point2d(circle.Center.X - circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
-                                    pline.AddVertexAt(1, new Point2d(circle.Center.X + circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
                                     pline.Elevation = circle.Center.Z;
                                     pline.Closed = true;
                                     pline.Layer = circle.Layer;

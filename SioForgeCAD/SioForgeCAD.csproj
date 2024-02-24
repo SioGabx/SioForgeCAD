@@ -118,6 +118,7 @@
     <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\Arcs.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
+    <Compile Include="Commun\Extensions\Circles.cs" />
     <Compile Include="Commun\Extensions\CircularArc2d.cs" />
     <Compile Include="Commun\Extensions\Curves.cs" />
     <Compile Include="Commun\Extensions\Database.cs" />

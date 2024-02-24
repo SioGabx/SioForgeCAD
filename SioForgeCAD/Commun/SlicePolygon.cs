@@ -71,7 +71,7 @@ namespace SioForgeCAD.Commun
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline CutLine)
         {
             DBObjectCollection SplittedPolylines = GetSplittedPolyline(BasePolyline, CutLine, out DBObjectCollection InsideCutLines);
-            
+
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection().Join(InsideCutLines).Join(SplittedPolylines);
             //DBObjectCollection ClosedPolyline = new DBObjectCollection();
             foreach (Polyline polyline in SplittedPolylines)
@@ -105,14 +105,33 @@ namespace SioForgeCAD.Commun
                 foreach (Polyline PolyligneB in AvailableNotClosedEntities.Cast<Polyline>())
                 {
                     if (PolyligneA == PolyligneB) { continue; }
-                    if (PolyligneA.HasAtLeastOnPointInCommun(PolyligneB))
+
+
+                    
+
+                    bool CanBeJoin;
+                    if (PolyligneA.IsLineCanCloseAPolyline(PolyligneB))
+                    {
+                        CanBeJoin = false;
+                    }
+                    else
+                    {
+                        //Check if the polyline is already joined
+                        IEnumerable<Point3d> PAPoint = PolyligneA.GetPoints();
+                        IEnumerable<Point3d> PBPoint = PolyligneB.GetPoints();
+                        CanBeJoin = PAPoint.ContainsAll(PBPoint);
+                    }
+
+                    if (!CanBeJoin)
                     {
                         try
                         {
-                            PolyligneA.JoinEntity(PolyligneB);
-                            NotClosedPolylines.Remove(PolyligneB);
-                            index--;
-
+                            if (PolyligneA.HasAtLeastOnPointInCommun(PolyligneB))
+                            {
+                                PolyligneA.JoinEntity(PolyligneB);
+                                NotClosedPolylines.Remove(PolyligneB);
+                                index--;
+                            }
                         }
                         catch (System.Exception ex)
                         {

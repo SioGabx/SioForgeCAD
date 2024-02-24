@@ -58,7 +58,17 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static bool HasEndPointOrStartPointInCommun(this Polyline A, Polyline B)
+        {
+            if (A == null || B == null) return false;
 
+            if (A.EndPoint.IsEqualTo(B.EndPoint)) return true;
+            if (A.EndPoint.IsEqualTo(B.StartPoint)) return true;
+            if (A.StartPoint.IsEqualTo(B.EndPoint)) return true;
+            if (A.StartPoint.IsEqualTo(B.StartPoint)) return true;
+
+            return false;
+        }
 
 
 
