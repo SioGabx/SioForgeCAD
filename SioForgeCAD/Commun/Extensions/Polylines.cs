@@ -94,10 +94,18 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static DBObjectCollection BreakAt(this Polyline poly, params Point3d[] points)
+        {
+            DoubleCollection DblCollection = new DoubleCollection();
+            foreach (Point3d point in points)
+            {
+                var param = poly.GetParamAtPointX(point);
+                DblCollection.Add(param);
+                DblCollection.Add(param);
+            }
+            return poly.GetSplitCurves(DblCollection);
+        }
+
     }
-
-
-
-
 }
 

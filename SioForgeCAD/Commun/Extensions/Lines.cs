@@ -62,39 +62,62 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
+               
+        
         /// <summary>
         /// Determines if the polyline is self-intersecting.
         /// </summary>
         /// <param name="poly">The polyline.</param>
         /// <returns>The result.</returns>
-        public static bool IsSelfIntersecting(this Polyline poly)
+        public static bool IsSelfIntersecting(this Polyline poly, out Point3dCollection IntersectionFound)
         {
-            var points = poly.GetPolyPoints().ToList();
-            for (int i = 0; i < points.Count - 3; i++)
+            IntersectionFound = new Point3dCollection();
+            DBObjectCollection entities = new DBObjectCollection();
+            poly.Explode(entities);
+            for (int i = 0; i < entities.Count; ++i)
             {
-                var a1 = points[i];
-                var a2 = points[i + 1];
-                for (var j = i + 2; j < points.Count - 1; j++)
+                for (int j = i + 1; j < entities.Count; ++j)
                 {
-                    var b1 = points[j];
-                    var b2 = points[j + 1];
-                    if (IsLineSegIntersect(a1, a2, b1, b2))
+                    Curve curve1 = entities[i] as Curve;
+                    Curve curve2 = entities[j] as Curve;
+                    Point3dCollection points = new Point3dCollection();
+                    curve1.IntersectWith(curve2,Intersect.OnBothOperands,points,IntPtr.Zero,IntPtr.Zero);
+
+                    foreach (Point3d point in points)
                     {
-                        if (i == 0 && j == points.Count - 2)
+                        // Make a check to skip the start/end points
+                        // since they are connected vertices
+                        if (point == curve1.StartPoint || point == curve1.EndPoint)
                         {
-                            // NOTE: If they happen to be the first and the last, check if polyline is closed. A closed polyline is not considered self-intersecting.
-                            if (points.First().GetDistanceTo(points.Last()) > Tolerance.Global.EqualPoint)
+                            if (point == curve2.StartPoint || point == curve2.EndPoint)
                             {
-                                return true;
+                                continue;
                             }
+                        }
+
+                        // If two consecutive segments, then skip
+                        if (j == i + 1)
+                        {
                             continue;
                         }
-                        return true;
+                        IntersectionFound.Add(point);
                     }
+
                 }
+                // Need to be disposed explicitely
+                // since entities are not DB resident
+                entities[i].Dispose();
             }
-            return false;
+
+            if (IntersectionFound.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
         }
 
         /// <summary>

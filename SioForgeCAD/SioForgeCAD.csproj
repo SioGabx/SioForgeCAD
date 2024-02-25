@@ -135,6 +135,7 @@
     <Compile Include="Commun\Extensions\List.cs" />
     <Compile Include="Commun\Extensions\Math.cs" />
     <Compile Include="Commun\Extensions\Point3d.cs" />
+    <Compile Include="Commun\Extensions\Point3dCollection.cs" />
     <Compile Include="Commun\Extensions\Polylines.cs" />
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />

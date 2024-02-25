@@ -49,7 +49,7 @@ namespace SioForgeCAD.Commun.Extensions
                             Polyline = null;
                             foreach (ObjectId BoundaryElementObjectId in objectIdCollection)
                             {
-                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity() as Polyline;
+                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity(OpenMode.ForRead) as Polyline;
                                 if (Polyline == null)
                                 {
                                     Polyline = BoundaryElementEntity;

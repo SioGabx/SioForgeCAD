@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -15,6 +16,7 @@ namespace SioForgeCAD.Commun
       
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline BaseCutLine)
         {
+            BaseCutLine.Elevation = BasePolyline.Elevation;
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
             List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
             foreach (Polyline CutLine in InsideCutLines)
@@ -150,7 +152,7 @@ namespace SioForgeCAD.Commun
             return InsideCutLines;
         }
 
-        private static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
+        public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
             if (IntersectionPointsFounds.Count == 0)
@@ -169,8 +171,5 @@ namespace SioForgeCAD.Commun
             }
             return polyline.GetSplitCurves(DblCollection);
         }
-
-
-
     }
 }

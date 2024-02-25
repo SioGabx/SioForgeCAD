@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.Colors;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -21,11 +22,11 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-         
 
-            if (Hachure is null || Boundary is null ||Math.Floor(Boundary.TryGetArea()) != Math.Floor(Hachure.TryGetArea()))
+
+            if (Hachure is null || Boundary is null || Math.Floor(Boundary.TryGetArea()) != Math.Floor(Hachure.TryGetArea()))
             {
-                if (Boundary?.IsSelfIntersecting() == true)
+                if (Boundary?.IsSelfIntersecting(out _) == true)
                 {
                     Generic.WriteMessage("Impossible de découpper une hachure qui se coupe elle-même.");
                 }
@@ -52,15 +53,14 @@ namespace SioForgeCAD.Functions
             var SelectOption = ed.GetKeywords(promptKeywordOptions);
 
             Polyline CutLine;
-            if (SelectOption.StringResult == NewKeyword)
-            {
-                CutLine = GetCutLine(Boundary);
-            }
-            else
-            {
-                CutLine = GetCutPolyline(Boundary);
-            }
-
+                if (SelectOption.StringResult == NewKeyword)
+                {
+                    CutLine = GetCutLine(Boundary);
+                }
+                else
+                {
+                    CutLine = GetCutPolyline(Boundary);
+                }
 
             if (CutLine != null)
             {
@@ -103,7 +103,8 @@ namespace SioForgeCAD.Functions
                     if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
                     {
                         Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult).Flatten();
-                        return GetPolylineFromNearestPointOnBoundary(Boundary, Origin, EndPoint);
+                        Polyline CutLine = GetPolylineFromNearestPointOnBoundary(Boundary, Origin, EndPoint);
+                        return CutLine;
                     }
                 }
             }
@@ -157,7 +158,7 @@ namespace SioForgeCAD.Functions
                         Polyline polyline;
                         if (Entity is Polyline)
                         {
-                            polyline = (Polyline)Entity;
+                            polyline = (Polyline)Entity.Clone();
                         }
                         else if (Entity is Line)
                         {
@@ -167,7 +168,7 @@ namespace SioForgeCAD.Functions
                         {
                             continue;
                         }
-
+                        
                         if (IsValidCutLine(Boundary, polyline))
                         {
                             return polyline;
@@ -331,7 +332,8 @@ namespace SioForgeCAD.Functions
                 Editor ed = Generic.GetEditor();
 
                 var ObjectCollection = new DBObjectCollection();
-                var NearestPt = FoundNearestPointOnPolyline(Polyline, moveToPt);
+                Polyline boundaryClone = Polyline.Clone() as Polyline;
+                var NearestPt = FoundNearestPointOnPolyline(boundaryClone, moveToPt);
 
                 //Set the diameter to 1.5% of the current View height
                 double CircleRadius = ed.GetCurrentViewSize().Height * (1.5 / 100) / 2;
@@ -340,11 +342,11 @@ namespace SioForgeCAD.Functions
                 DBPoint Point = new DBPoint(NearestPt);
                 ObjectCollection.Add(Point);
                 ObjectCollection.Add(Circle);
-                ObjectCollection.Add(Polyline.Clone() as Polyline);
+                ObjectCollection.Add(boundaryClone);
 
                 if (!(Origin is Points.Null))
                 {
-                    var OriginNearestPt = FoundNearestPointOnPolyline(Polyline, Origin.SCG);
+                    var OriginNearestPt = FoundNearestPointOnPolyline(boundaryClone, Origin.SCG);
                     Line Line = new Line(OriginNearestPt, NearestPt);
                     Circle OriginCircle = new Circle(OriginNearestPt, Vector3d.ZAxis, CircleRadius);
                     DBPoint OriginPoint = new DBPoint(OriginNearestPt);
