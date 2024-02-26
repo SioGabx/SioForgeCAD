@@ -53,7 +53,6 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsEqualTo(this IEnumerable<Point3d> A, IEnumerable<Point3d> B)
         {
-
             if (A.Count() != B.Count()) { return false; }
             Point3d[] ArrayA = A.ToArray();
             Point3d[] ArrayB = B.ToArray();
@@ -84,14 +83,12 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-
         public static Point3d TranformToBlockReferenceTransformation(this Point3d OriginPoint, BlockReference blkRef)
         {
             Point3d selectedPointInBlockRefSpace = OriginPoint.TransformBy(blkRef.BlockTransform.Inverse());
             // Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
             return selectedPointInBlockRefSpace;//.TransformBy(rotationMatrix);
         }
-
 
         public static Point3d Displacement(this Point3d point, Vector3d Vector, double Distance)
         {
@@ -119,7 +116,6 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3dCollection OrderByDistanceOnLine(this Point3dCollection collection, Polyline poly)
         {
-            
             List<(Point3d Point, double Distance)> List = new List<(Point3d, double)>();
             foreach (Point3d point in collection)
             {
@@ -143,50 +139,35 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        public static bool IsPointOnPolyline(this Point3d pt,Polyline pl)
-
+        public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
-
             bool isOn = false;
 
             for (int i = 0; i < pl.NumberOfVertices; i++)
-
             {
-
                 Curve3d seg = null;
-
-
-
                 SegmentType segType = pl.GetSegmentType(i);
 
                 if (segType == SegmentType.Arc)
-
+                {
                     seg = pl.GetArcSegmentAt(i);
-
+                }
                 else if (segType == SegmentType.Line)
-
+                {
                     seg = pl.GetLineSegmentAt(i);
-
-
+                }
 
                 if (seg != null)
-
                 {
-
                     isOn = seg.IsOn(pt);
 
                     if (isOn)
-
+                    {
                         break;
-
+                    }
                 }
-
             }
-
             return isOn;
-
         }
-
-
     }
 }
