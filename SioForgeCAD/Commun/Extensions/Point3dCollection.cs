@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.Geometry;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,16 @@ namespace SioForgeCAD.Commun.Extensions
             collection.CopyTo(array, 0);
             return array;
         }
+
+        public static void AddToDrawing(this Point3dCollection collection)
+        {
+            foreach (Point3d item in collection)
+            {
+                DBPoint dBPoint = new DBPoint(item);
+                dBPoint.AddToDrawing();
+            }
+        }
+
 
     }
 }

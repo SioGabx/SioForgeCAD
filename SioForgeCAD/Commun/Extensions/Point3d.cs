@@ -143,5 +143,50 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static bool IsPointOnPolyline(this Point3d pt,Polyline pl)
+
+        {
+
+            bool isOn = false;
+
+            for (int i = 0; i < pl.NumberOfVertices; i++)
+
+            {
+
+                Curve3d seg = null;
+
+
+
+                SegmentType segType = pl.GetSegmentType(i);
+
+                if (segType == SegmentType.Arc)
+
+                    seg = pl.GetArcSegmentAt(i);
+
+                else if (segType == SegmentType.Line)
+
+                    seg = pl.GetLineSegmentAt(i);
+
+
+
+                if (seg != null)
+
+                {
+
+                    isOn = seg.IsOn(pt);
+
+                    if (isOn)
+
+                        break;
+
+                }
+
+            }
+
+            return isOn;
+
+        }
+
+
     }
 }

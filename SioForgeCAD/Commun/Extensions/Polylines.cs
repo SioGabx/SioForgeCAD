@@ -105,7 +105,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return poly.GetSplitCurves(DblCollection);
         }
-
     }
 }
 

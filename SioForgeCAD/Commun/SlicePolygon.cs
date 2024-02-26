@@ -13,11 +13,12 @@ namespace SioForgeCAD.Commun
 {
     public static class SlicePolygon
     {
-      
+
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline BaseCutLine)
         {
             BaseCutLine.Elevation = BasePolyline.Elevation;
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
+            //InsideCutLines.AddToDrawing(5, true);
             List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
             foreach (Polyline CutLine in InsideCutLines)
             {
@@ -28,6 +29,7 @@ namespace SioForgeCAD.Commun
                 foreach (Polyline Poly in Polygon.ToArray())
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine);
+                    //SplittedPolylines.AddToDrawing(4, true);
                     if (SplittedPolylines.Count > 1)
                     {
                         Polygon.Remove(Poly);
@@ -157,7 +159,7 @@ namespace SioForgeCAD.Commun
             }
             return InsideCutLines;
         }
-
+        static bool added = false;
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
@@ -168,13 +170,15 @@ namespace SioForgeCAD.Commun
             }
 
             Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistanceOnLine(polyline);
-
             DoubleCollection DblCollection = new DoubleCollection();
             foreach (Point3d Point in OrderedIntersectionPointsFounds)
             {
-                var param = polyline.GetParamAtPointX(Point);
-                DblCollection.Add(param);
-                DblCollection.Add(param);
+                if (Point.IsPointOnPolyline(polyline))
+                {
+                    var param = polyline.GetParamAtPointX(Point);
+                    DblCollection.Add(param);
+                    DblCollection.Add(param);
+                }
             }
             return polyline.GetSplitCurves(DblCollection);
         }
