@@ -123,7 +123,8 @@ namespace SioForgeCAD.Commun.Extensions
             List<(Point3d Point, double Distance)> List = new List<(Point3d, double)>();
             foreach (Point3d point in collection)
             {
-                double distance = poly.GetDistAtPoint(point);
+                double param = poly.GetParamAtPointX(point);
+                double distance = poly.GetDistanceAtParameter(param);
                 List.Add((point, distance));
             }
             var orderedList = List.OrderBy(item => item.Distance).ToList();

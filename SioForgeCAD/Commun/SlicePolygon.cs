@@ -36,7 +36,13 @@ namespace SioForgeCAD.Commun
                         {
                             Poly.Dispose();
                         }
-                        Polygon.AddRange(TempsResult);
+                        foreach (var TempPoly in TempsResult)
+                        {
+                            if (TempPoly.TryGetArea() > 0.01)
+                            {
+                                Polygon.Add(TempPoly);
+                            }
+                        }
                     }
                 }
             }
@@ -155,6 +161,7 @@ namespace SioForgeCAD.Commun
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
+
             if (IntersectionPointsFounds.Count == 0)
             {
                 return new DBObjectCollection();
