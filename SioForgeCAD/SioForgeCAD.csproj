@@ -194,7 +194,7 @@
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Functions\RP2.cs" />
     <Compile Include="Functions\RRR.cs" />
-    <Compile Include="Functions\SSCL.cs" />
+    <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />

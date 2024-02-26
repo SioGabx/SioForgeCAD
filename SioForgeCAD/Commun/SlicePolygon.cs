@@ -159,7 +159,7 @@ namespace SioForgeCAD.Commun
             }
             return InsideCutLines;
         }
-        static bool added = false;
+
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
@@ -173,7 +173,7 @@ namespace SioForgeCAD.Commun
             DoubleCollection DblCollection = new DoubleCollection();
             foreach (Point3d Point in OrderedIntersectionPointsFounds)
             {
-                if (Point.IsPointOnPolyline(polyline))
+                if (Point.IsOnPolyline(polyline))
                 {
                     var param = polyline.GetParamAtPointX(Point);
                     DblCollection.Add(param);

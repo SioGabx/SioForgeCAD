@@ -130,7 +130,19 @@ namespace SioForgeCAD
         [CommandMethod("SSCL", CommandFlags.Transparent)]
         public static void SSCL()
         {
-            Functions.SSCL.Select();
+            Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
+        }    
+        
+        [CommandMethod("SSO", CommandFlags.Transparent)]
+        public static void SSO()
+        {
+            Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
+        }
+
+           [CommandMethod("SSF", CommandFlags.Transparent)]
+        public static void SSF()
+        {
+            Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
         }
 
         [CommandMethod("RRR", CommandFlags.UsePickSet)]

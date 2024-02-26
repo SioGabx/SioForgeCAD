@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            Polyline TerrainBasePolyline = LinesExtentions.AskForSelection("Sélectionnez une polyligne comme base de terrain");
+            Polyline TerrainBasePolyline = ed.GetPolyline("Sélectionnez une polyligne comme base de terrain");
             if (TerrainBasePolyline == null)
             {
                 return;

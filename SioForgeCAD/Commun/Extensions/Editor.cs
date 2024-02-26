@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Windows;
@@ -33,6 +34,54 @@ namespace SioForgeCAD.Commun.Extensions
             Point2d screen = (Point2d)Application.GetSystemVariable("SCREENSIZE");
             double w = h * (screen.X / screen.Y);
             return new Size(w, h);
+        }
+
+
+        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
+        {
+            Database db = ed.Document.Database;
+            while (true)
+            {
+                PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
+                {
+                    MessageForAdding = Message,
+                    SingleOnly = true,
+                    SinglePickInSpace = true,
+                    RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers,
+                };
+                TypedValue[] filterList = new TypedValue[] {
+                    new TypedValue((int)DxfCode.Operator, "<or"),
+                    new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                    new TypedValue((int)DxfCode.Start, "LINE"),
+                    new TypedValue((int)DxfCode.Operator, "or>"),
+                };
+                PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
+                if (polyResult.Status == PromptStatus.Error)
+                {
+                    continue;
+                }
+                if (polyResult.Status != PromptStatus.OK)
+                {
+                    return null;
+                }
+                Entity SelectedEntity;
+
+                using (Transaction GlobalTrans = db.TransactionManager.StartTransaction())
+                {
+                    SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
+                }
+                if (SelectedEntity is Line ProjectionTargetLine)
+                {
+                    SelectedEntity = ProjectionTargetLine.ToPolyline();
+                }
+
+                if (!(SelectedEntity is Polyline ProjectionTarget))
+                {
+                    Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
+                    continue;
+                }
+                return ProjectionTarget;
+            }
         }
 
     }
