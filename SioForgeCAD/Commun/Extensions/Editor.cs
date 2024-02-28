@@ -64,12 +64,7 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     return null;
                 }
-                Entity SelectedEntity;
-
-                using (Transaction GlobalTrans = db.TransactionManager.StartTransaction())
-                {
-                    SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
-                }
+                Entity SelectedEntity = polyResult.Value[0].ObjectId.GetNoTransactionDBObject(OpenMode.ForRead) as Entity;
                 if (SelectedEntity is Line ProjectionTargetLine)
                 {
                     SelectedEntity = ProjectionTargetLine.ToPolyline();

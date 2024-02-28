@@ -131,16 +131,16 @@ namespace SioForgeCAD
         public static void SSCL()
         {
             Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
-        }    
-        
-        [CommandMethod("SSO", CommandFlags.Transparent)]
-        public static void SSO()
+        }
+
+        [CommandMethod("SSOC", CommandFlags.Transparent)]
+        public static void SSOC()
         {
             Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
         }
 
-           [CommandMethod("SSF", CommandFlags.Transparent)]
-        public static void SSF()
+        [CommandMethod("SSOF", CommandFlags.Transparent)]
+        public static void SSOF()
         {
             Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
         }
@@ -170,7 +170,7 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        [CommandMethod("TLEN")]
+        //[CommandMethod("TLEN")]
         public void TLEN()
         {
             throw new NotImplementedException();
@@ -256,7 +256,7 @@ namespace SioForgeCAD
         [CommandMethod("TEST")]
         public static void TEST()
         {
-           
+
         }
 
 
@@ -285,7 +285,19 @@ namespace SioForgeCAD
 
 
 
-
+        [CommandMethod("DEBUG", "POLYCLEAN", CommandFlags.UsePickSet)]
+        public void POLYCLEAN()
+        {
+            Editor ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var poly = ed.GetPolyline("Selectionnez une polyligne");
+                poly.UpgradeOpen();
+                poly.Cleanup();
+                tr.Commit();
+            }
+        }
 
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]

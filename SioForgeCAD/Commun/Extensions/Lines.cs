@@ -5,53 +5,84 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class LinesExtentions
     {
+
         public static void Cleanup(this Polyline polyline)
         {
-            if (polyline != null)
+            if (polyline == null) { return; }
+            int vertexCount = polyline.NumberOfVertices;
+            if (vertexCount <= 2) { return; }
+
+            bool HasAVertexRemoved = true;
+            while (HasAVertexRemoved)
             {
-                int vertexCount = polyline.NumberOfVertices;
+                HasAVertexRemoved = false;
 
-                if (vertexCount > 2)
+                Point3d lastPoint = polyline.StartPoint;
+                int index = 1;
+                while ((polyline.GetReelNumberOfVertices()) > index)
                 {
-                    Point2d lastPoint = polyline.GetPoint2dAt(0);
-                    int index = 1;
-                    while ((polyline.NumberOfVertices - 1) > index)
+                    Point3d currentPoint = polyline.GetPoint3dAt(index);
+                    Point3d nextPoint;
+                    if (polyline.GetReelNumberOfVertices() <= index + 1)
                     {
-                        Point2d currentPoint = polyline.GetPoint2dAt(index);
-                        Point2d nextPoint = polyline.GetPoint2dAt(index + 1);
-                        Vector2d vector1 = currentPoint.GetVectorTo(lastPoint);
-                        Vector2d vector2 = nextPoint.GetVectorTo(currentPoint);
+                        nextPoint = polyline.StartPoint;
+                    }
+                    else
+                    {
+                        nextPoint = polyline.GetPoint3dAt(index + 1);
+                    }
+                    
+                    Vector3d vector1 = currentPoint.GetVectorTo(lastPoint);
+                    Vector3d vector2 = nextPoint.GetVectorTo(currentPoint);
 
-                        // Calculer la normal du vecteur en utilisant le produit vectoriel
-                        double crossProduct = vector1.X * vector2.Y - vector1.Y * vector2.X;
+                    // Calculer la normal du vecteur en utilisant le produit vectoriel
+                    double crossProduct = vector1.X * vector2.Y - vector1.Y * vector2.X;
+                    if (Math.Abs(crossProduct) < Tolerance.Global.EqualPoint || currentPoint.IsEqualTo(nextPoint, Generic.Tolerance))
+                    {
+                        polyline.RemoveVertexAt(index);
+                        HasAVertexRemoved = true;
+                    }
+                    else
+                    {
+                        index++;
+                    }
+                    lastPoint = currentPoint;
+                }
 
-                        if (Math.Abs(crossProduct) < Tolerance.Global.EqualPoint || currentPoint == nextPoint)
-                        {
-                            polyline.RemoveVertexAt(index);
-                            // Décrémenter l'index pour réexaminer le point actuel lors de la prochaine itération
-                            index--;
-                        }
-                        lastPoint = currentPoint;
+
+                index = 0;
+                while (index < polyline.GetReelNumberOfVertices())
+                {
+                    if (ParseIndex(index))
+                    {
                         index++;
                     }
 
-
-                    if (polyline.Closed == false && polyline.GetPoint3dAt(0).IsEqualTo(polyline.GetPoint3dAt(polyline.NumberOfVertices - 1)))
-                    {
-                        polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
-                        polyline.Closed = true;
-                    }
-
                 }
-            }
-        }
 
+                bool ParseIndex(int startIndex)
+                {
+                    var seg = polyline.GetSegmentAt(startIndex);
+                    if (seg.StartPoint.IsEqualTo(seg.EndPoint, Generic.Tolerance))
+                    {
+                        polyline.RemoveVertexAt(startIndex);
+                        HasAVertexRemoved = true;
+                        return false;
+                    }
+                    return true;
+                }
+
+            }
+
+
+        }
 
 
         public static IEnumerable<Point2d> GetPolyPoints(this Polyline poly)
@@ -62,8 +93,8 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-               
-        
+
+
         /// <summary>
         /// Determines if the polyline is self-intersecting.
         /// </summary>
@@ -81,7 +112,7 @@ namespace SioForgeCAD.Commun.Extensions
                     Curve curve1 = entities[i] as Curve;
                     Curve curve2 = entities[j] as Curve;
                     Point3dCollection points = new Point3dCollection();
-                    curve1.IntersectWith(curve2,Intersect.OnBothOperands,points,IntPtr.Zero,IntPtr.Zero);
+                    curve1.IntersectWith(curve2, Intersect.OnBothOperands, points, IntPtr.Zero, IntPtr.Zero);
 
                     foreach (Point3d point in points)
                     {
@@ -225,9 +256,8 @@ namespace SioForgeCAD.Commun.Extensions
 
             Point3d StartPointB = PolyB.StartPoint.Flatten();
             Point3d EndPointB = PolyB.EndPoint.Flatten();
-
-            return (StartPointA.IsEqualTo(StartPointB) && EndPointA.IsEqualTo(EndPointB)) ||
-                 (StartPointA.IsEqualTo(EndPointB) && EndPointA.IsEqualTo(StartPointB))
+            return (StartPointA.IsEqualTo(StartPointB, Generic.Tolerance) && EndPointA.IsEqualTo(EndPointB, Generic.Tolerance)) ||
+                 (StartPointA.IsEqualTo(EndPointB, Generic.Tolerance) && EndPointA.IsEqualTo(StartPointB, Generic.Tolerance))
                 ;
         }
 

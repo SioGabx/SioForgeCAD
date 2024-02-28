@@ -29,6 +29,7 @@ namespace SioForgeCAD.Commun
                 foreach (Polyline Poly in Polygon.ToArray())
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine);
+
                     //SplittedPolylines.AddToDrawing(4, true);
                     if (SplittedPolylines.Count > 1)
                     {
@@ -42,6 +43,7 @@ namespace SioForgeCAD.Commun
                         {
                             if (TempPoly.TryGetArea() > 0.01)
                             {
+                                TempPoly.Cleanup();
                                 Polygon.Add(TempPoly);
                             }
                         }
@@ -176,11 +178,15 @@ namespace SioForgeCAD.Commun
                 if (Point.IsOnPolyline(polyline))
                 {
                     var param = polyline.GetParamAtPointX(Point);
-                    DblCollection.Add(param);
-                    DblCollection.Add(param);
+                    if (!DblCollection.Contains(param))
+                    {
+                        DblCollection.Add(param);
+                        DblCollection.Add(param);
+                    }
                 }
             }
-            return polyline.GetSplitCurves(DblCollection);
+            var SplittedCurves = polyline.GetSplitCurves(DblCollection);
+            return SplittedCurves;
         }
     }
 }

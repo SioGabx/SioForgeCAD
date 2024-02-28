@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace SioForgeCAD.Commun
 {
     public static class Generic
     {
+        public static Tolerance Tolerance = new Tolerance(1e-3, 1e-3);
         public static void ReadWriteToFileResource(string name, string ToFilePath)
         {
             // Determine path

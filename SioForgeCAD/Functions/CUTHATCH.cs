@@ -45,9 +45,9 @@ namespace SioForgeCAD.Functions
             const string ExistKeyword = "Existante";
 
 
-            promptKeywordOptions.Keywords.Add(NewKeyword);
-            promptKeywordOptions.Keywords.Default = NewKeyword;
             promptKeywordOptions.Keywords.Add(ExistKeyword);
+            promptKeywordOptions.Keywords.Add(NewKeyword);
+            promptKeywordOptions.Keywords.Default = ExistKeyword;
             promptKeywordOptions.AppendKeywordsToMessage = true;
             promptKeywordOptions.AllowArbitraryInput = false;
             var SelectOption = ed.GetKeywords(promptKeywordOptions);
