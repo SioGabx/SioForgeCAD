@@ -127,16 +127,20 @@ namespace SioForgeCAD.Commun
             return CutedClosePolyligne;
         }
 
-        private static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds)
+        private static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
         {
             IntersectionPointsFounds = new Point3dCollection();
-            polyline.IntersectWith(CutLine, Intersect.OnBothOperands, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
+            polyline.IntersectWith(CutLine, intersect, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
             return IntersectionPointsFounds.Count > 0;
         }
 
         private static DBObjectCollection GetInsideCutLines(this Polyline polyline, Polyline CutLine)
         {
             DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline);
+            if (CutLines.Count == 0)
+            {
+                CutLines.Add(CutLine.Clone() as Polyline);
+            }
             DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)
             {
@@ -152,6 +156,31 @@ namespace SioForgeCAD.Commun
                 }
                 if (IsInside)
                 {
+                    polyline.IsSegmentIntersecting(line, out Point3dCollection Intersection, Intersect.ExtendArgument);
+                    if (Intersection.Count > 0)
+                    {
+                        if (!Intersection.ContainsTolerance(line.StartPoint))
+                        {
+                            Point3dCollection OrderedIntersectionPointsFounds = Intersection.OrderByDistanceFromPoint(line.StartPoint);
+                            var NewStartPoint = OrderedIntersectionPointsFounds[0];
+                            if (NewStartPoint.DistanceTo(line.StartPoint) < CutLine.Length / 2)
+                            {
+                                line.SetPointAt(0, NewStartPoint.ToPoint2d());
+                            }
+                        }
+
+                        if (!Intersection.ContainsTolerance(line.EndPoint))
+                        {
+                            Point3dCollection OrderedIntersectionPointsFounds = Intersection.OrderByDistanceFromPoint(line.EndPoint);
+                            var NewEndPoint = OrderedIntersectionPointsFounds[0];
+                            if (NewEndPoint.DistanceTo(line.EndPoint) < CutLine.Length / 2)
+                            {
+                                line.SetPointAt(line.NumberOfVertices - 1, NewEndPoint.ToPoint2d());
+                            }
+                        }
+                    }
+
+
                     InsideCutLines.Add(line);
                 }
                 else

@@ -36,5 +36,24 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return point3dCollection;
         }
+
+        public static bool ContainsTolerance(this Point3dCollection collection, Point3d Point, Tolerance? CustomTolerance = null)
+        {
+            if (CustomTolerance is null)
+            {
+                CustomTolerance = Tolerance.Global;
+            }
+            foreach (Point3d CollectionPoint in collection)
+            {
+                if (CollectionPoint.IsEqualTo(Point, (Tolerance)CustomTolerance))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+
     }
 }

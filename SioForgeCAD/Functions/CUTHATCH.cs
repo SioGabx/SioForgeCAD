@@ -307,6 +307,7 @@ namespace SioForgeCAD.Functions
         {
             List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
             int NumberOfPolyline = CuttedPolyline.Count;
+            CuttedPolyline.Remove(Boundary);
             CuttedPolyline.DeepDispose();
             return NumberOfPolyline > 1;
         }
