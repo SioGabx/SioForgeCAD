@@ -106,8 +106,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
-    <Compile Include="Commun\Arythmetique.cs" />
-    <Compile Include="Commun\DelaunayTriangulate.cs" />
+    <Compile Include="Commun\Mist\Arythmetique.cs" />
+    <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
     <Compile Include="Commun\Drawing\Colors.cs" />
@@ -140,20 +140,20 @@
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
     <Compile Include="Commun\Mist\CsvReader.cs" />
-    <Compile Include="Commun\GetPointTransient.cs" />
-    <Compile Include="Commun\HightLighter.cs" />
+    <Compile Include="Commun\Mist\GetPointTransient.cs" />
+    <Compile Include="Commun\Mist\HightLighter.cs" />
     <Compile Include="Commun\Extensions\ObjectId.cs" />
     <Compile Include="Commun\Extensions\String.cs" />
-    <Compile Include="Commun\Generic.cs" />
-    <Compile Include="Commun\Layers.cs" />
+    <Compile Include="Commun\Mist\Generic.cs" />
+    <Compile Include="Commun\Mist\Layers.cs" />
     <Compile Include="Commun\Mist\JSONParser.cs" />
     <Compile Include="Commun\Mist\JSONWriter.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
-    <Compile Include="Commun\PerpendicularPoint.cs" />
-    <Compile Include="Commun\PluginRegister.cs" />
-    <Compile Include="Commun\SelectInXref.cs" />
-    <Compile Include="Commun\SlicePolygon.cs" />
+    <Compile Include="Commun\Mist\PerpendicularPoint.cs" />
+    <Compile Include="Commun\Mist\PluginRegister.cs" />
+    <Compile Include="Commun\Mist\SelectInXref.cs" />
+    <Compile Include="Commun\Mist\SlicePolygon.cs" />
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,8 +180,8 @@
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />
-    <Compile Include="Commun\CotePoints.cs" />
-    <Compile Include="Commun\Points.cs" />
+    <Compile Include="Commun\Mist\CotePoints.cs" />
+    <Compile Include="Commun\Mist\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CUTHATCH.cs" />
@@ -191,6 +191,7 @@
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\PURGEALL.cs" />
+    <Compile Include="Functions\RANDOMPAVEMENT.cs" />
     <Compile Include="Functions\RENBLK.cs" />
     <Compile Include="Functions\RP2.cs" />
     <Compile Include="Functions\RRR.cs" />

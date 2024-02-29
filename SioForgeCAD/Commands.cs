@@ -206,6 +206,12 @@ namespace SioForgeCAD
             Functions.BATTLEMENTS.Draw();
         }
 
+        [CommandMethod("RANDOMPAVEMENT")]
+        public static void RANDOMPAVEMENT()
+        {
+            Functions.RANDOMPAVEMENT.Draw();
+        }
+
         [CommandMethod("PURGEALL")]
         public static void PURGEALL()
         {
