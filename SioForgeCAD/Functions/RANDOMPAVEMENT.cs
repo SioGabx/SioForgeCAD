@@ -17,7 +17,7 @@ namespace SioForgeCAD.Functions
     public static class RANDOMPAVEMENT
     {
         public static double PavementFill = 75;
-        public static string BaseSettings = "20%{[0,0],[0,1],[1,1],[1,0]},20%{[0,0],[0,1]},80%{[0,0]}";
+        public static string BaseSettings = "20%[[0,0],[0,1],[1,1],[1,0]],20%[[0,0],[0,1]],80%[[0,0]]";
         public static double PavementColumnsWidth = 0.25;
         public static double PavementRowsWidth = 0.25;
         public class ProportionalRandomSelector<T>
@@ -137,12 +137,12 @@ namespace SioForgeCAD.Functions
 
         public static ProportionalRandomSelector<List<(int, int)>> ParseValues(string Values)
         {
-            //"20%{[0,0],[0,1],[1,1],[1,0]},20%{[0,0],[0,1]},80%{[0,0]}";
             var randomSelector = new ProportionalRandomSelector<List<(int, int)>>();
-            string pattern = @"(\d+)%\{(.*?)\}";
+           
+            Values = Values.Replace("[[", "{[");
+            Values = Values.Replace("]]", "]}");
 
-            Regex regex = new Regex(pattern);
-
+            Regex regex = new Regex(@"(\d+)%\{(.*?)\}");
             MatchCollection matches = regex.Matches(Values);
 
             foreach (Match match in matches)

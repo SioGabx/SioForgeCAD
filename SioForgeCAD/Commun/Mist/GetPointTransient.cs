@@ -235,7 +235,7 @@ namespace SioForgeCAD.Commun
             Entity drawableClone = EntityToMakeDrawable.Clone() as Entity;
             drawableClone.Color = GetTransGraphicsColor(drawableClone, IsStaticDrawable);
             drawableClone.Transparency = GetTransGraphicsTransparency(drawableClone, IsStaticDrawable);
-            TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128 - index, new IntegerCollection());
+            TransientManager.CurrentTransientManager.AddTransient(drawableClone, TransientDrawingMode.DirectShortTerm, 128 - index, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
             return drawableClone;
         }
 

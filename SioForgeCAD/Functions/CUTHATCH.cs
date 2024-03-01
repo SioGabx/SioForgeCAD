@@ -264,8 +264,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
             {
-                ObjectId ModelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(db);
-                BlockTableRecord btr = tr.GetObject(ModelSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr); ;
                 DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
                 ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
 
@@ -291,7 +290,12 @@ namespace SioForgeCAD.Functions
                     orderTable.MoveAbove(ObjIds, oHatchObjectId);
                 }
                 //Keep same draw order as old hatch
+                try { 
                 orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
+                }catch(Exception ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                }
 
                 polyline.ObjectId.EraseObject();
                 hachure.ObjectId.EraseObject();

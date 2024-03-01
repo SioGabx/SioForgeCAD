@@ -95,7 +95,7 @@ namespace SioForgeCAD.Commun
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRec = tr.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 acBlkTblRec.AppendEntity(PointDrawingEntity);
                 tr.AddNewlyCreatedDBObject(PointDrawingEntity, true);
                 PointDrawingEntityObjectId = PointDrawingEntity.ObjectId;

@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
+using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 
@@ -50,7 +51,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 using (btr)
                 {
                     PromptSelectionResult selResult = ed.GetSelection();

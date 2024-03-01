@@ -101,29 +101,29 @@ namespace SioForgeCAD.Commun.Extensions
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
 
-            using (Transaction transaction = db.TransactionManager.StartTransaction())
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable blockTable = transaction.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord modelSpace = transaction.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+               BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord modelSpace = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
                 foreach (ObjectId objId in modelSpace)
                 {
                     if (objId.ObjectClass.DxfName == "INSERT")
                     {
-                        BlockReference blockReference = transaction.GetObject(objId, OpenMode.ForRead) as BlockReference;
+                        BlockReference blockReference = tr.GetObject(objId, OpenMode.ForRead) as BlockReference;
 
                         if (blockReference != null && blockReference.Name == blockName && blockReference.Position.IsEqualTo(position, Tolerance.Global))
                         {
                             // Check attribute values
                             foreach (ObjectId attId in blockReference.AttributeCollection)
                             {
-                                DBObject obj = transaction.GetObject(attId, OpenMode.ForRead) as DBObject;
+                                DBObject obj = tr.GetObject(attId, OpenMode.ForRead) as DBObject;
                                 if (obj is AttributeReference attributeReference)
                                 {
                                     if (attributeReference.TextString == attributeValue)
                                     {
                                         // The block with the same position and attribute values exists
-                                        transaction.Commit();
+                                        tr.Commit();
                                         return true;
                                     }
                                 }
@@ -133,7 +133,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
 
                 // The block does not exist at the same position with the same attribute values
-                transaction.Commit();
+                tr.Commit();
                 return false;
             }
         }

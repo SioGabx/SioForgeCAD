@@ -32,8 +32,8 @@ namespace SioForgeCAD.Commun.Drawing
             var db = Generic.GetDatabase();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
-                BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                //BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
                 // Check if the entity is already in the database
                 if (entity.IsErased)
@@ -53,9 +53,7 @@ namespace SioForgeCAD.Commun.Drawing
         {
             var db = Generic.GetDatabase();
             Transaction acTrans = db.TransactionManager.TopTransaction;
-
-            BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-            BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+            BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
             var objid = acBlkTblRec.AppendEntity(entity);
             acTrans.AddNewlyCreatedDBObject(entity, true);

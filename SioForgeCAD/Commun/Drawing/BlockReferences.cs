@@ -83,7 +83,7 @@ namespace SioForgeCAD.Commun.Drawing
             using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord acBlkTblRecNewDoc2 = ActualTransaction.GetObject(acBlkTblNewDoc2[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                BlockTableRecord acBlkTblRecNewDoc2 = Generic.GetCurrentSpaceBlockTableRecord(ActualTransaction);
                 ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
                 ActualTransaction.Commit();
             }
@@ -169,7 +169,9 @@ namespace SioForgeCAD.Commun.Drawing
                 }
                 BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
                 //Also open modelspace - we'll be adding our BlockReference to it
-                BlockTableRecord ms = bt[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
+                //BlockTableRecord ms = bt[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
+
+                BlockTableRecord ms = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 //Create new BlockReference, and link it to our block definition
                 using (BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
                 {

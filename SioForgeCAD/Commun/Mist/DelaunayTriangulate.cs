@@ -255,12 +255,7 @@ namespace SioForgeCAD.Commun
                     OpenMode.ForRead,
                     false
                   );
-                BlockTableRecord btr =
-                  (BlockTableRecord)tr.GetObject(
-                    bt[BlockTableRecord.ModelSpace],
-                    OpenMode.ForWrite,
-                    false
-                  );
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 //PolyFaceMesh pfm = new PolyFaceMesh();
                 //btr.AppendEntity(pfm);
                 //tr.AddNewlyCreatedDBObject(pfm, true);

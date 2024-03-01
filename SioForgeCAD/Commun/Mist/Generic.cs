@@ -43,13 +43,13 @@ namespace SioForgeCAD.Commun
         public static ObjectId AddFontStyle(string font)
         {
             var doc = GetDocument();
+            var db = GetDatabase();
             using (Transaction newTransaction = doc.TransactionManager.StartTransaction())
             {
                 BlockTable newBlockTable;
                 newBlockTable = newTransaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord newBlockTableRecord;
-                newBlockTableRecord = (BlockTableRecord)newTransaction.GetObject(newBlockTable[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
-                TextStyleTable newTextStyleTable = newTransaction.GetObject(doc.Database.TextStyleTableId, OpenMode.ForRead) as TextStyleTable;
+                BlockTableRecord newBlockTableRecord = Generic.GetCurrentSpaceBlockTableRecord(newTransaction);
+                TextStyleTable newTextStyleTable = newTransaction.GetObject(db.TextStyleTableId, OpenMode.ForRead) as TextStyleTable;
 
                 if (!newTextStyleTable.Has(font.ToUpperInvariant()))  //The TextStyle is currently not in the database
                 {
@@ -93,8 +93,17 @@ namespace SioForgeCAD.Commun
         }
         public static Database GetDatabase()
         {
-            return GetDocument().Database;
+            return HostApplicationServices.WorkingDatabase;
         }
+
+        public static BlockTableRecord GetCurrentSpaceBlockTableRecord(Transaction acTrans)
+        {
+            //https://spiderinnet1.typepad.com/blog/2012/03/autocad-net-api-modelspacepaperspacecurrentspace-and-entity-creation.html
+            //Use db.CurrentSpaceId instead of bt[BlockTableRecord.ModelSpace
+            Database db = Generic.GetDatabase();
+            return acTrans.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+        }
+
         public static Editor GetEditor()
         {
             return GetDocument().Editor;
