@@ -17,6 +17,10 @@ namespace SioForgeCAD.Commun
 
         public static DBObject GetDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
         {
+            if (objectId.IsNull)
+            {
+                return null;
+            }
             var db = Generic.GetDatabase();
             return db.TransactionManager.GetObject(objectId, openMode, false, true);
         }

@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
             }
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-
+            ed.SetImpliedSelection(new ObjectId[0]);
 
             PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Dessiner une ligne de coupe ou une ligne/polyligne existante ?");
             const string NewKeyword = "Nouvelle";
@@ -53,14 +53,14 @@ namespace SioForgeCAD.Functions
             var SelectOption = ed.GetKeywords(promptKeywordOptions);
 
             Polyline CutLine;
-                if (SelectOption.StringResult == NewKeyword)
-                {
-                    CutLine = GetCutLine(Boundary);
-                }
-                else
-                {
-                    CutLine = GetCutPolyline(Boundary);
-                }
+            if (SelectOption.StringResult == NewKeyword)
+            {
+                CutLine = GetCutLine(Boundary);
+            }
+            else
+            {
+                CutLine = GetCutPolyline(Boundary);
+            }
 
             if (CutLine != null)
             {
@@ -168,7 +168,7 @@ namespace SioForgeCAD.Functions
                         {
                             continue;
                         }
-                        
+
                         if (IsValidCutLine(Boundary, polyline))
                         {
                             return polyline;
@@ -209,13 +209,16 @@ namespace SioForgeCAD.Functions
             {
                 var option = new PromptEntityOptions("\nSelectionnez une hachure")
                 {
-                    AllowNone = false,
+                    AllowNone = true,
                     AllowObjectOnLockedLayer = false,
                 };
                 option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
                 option.AddAllowedClass(typeof(Hatch), false);
                 var Result = ed.GetEntity(option);
-                if (Result.Status != PromptStatus.OK)
+                if(Result.Status == PromptStatus.None)
+                { 
+                    return true;
+                }else if (Result.Status != PromptStatus.OK)
                 {
                     return false;
                 }
@@ -233,19 +236,18 @@ namespace SioForgeCAD.Functions
             {
                 try
                 {
+                    while (true)
+                    {
+                        if (!AskSelectHatch(out ObjectId HatchObjectId))
+                        {
+                            return false;
+                        }
 
-                    if (!AskSelectHatch(out ObjectId HatchObjectId))
-                    {
-                        return true;
-                    }
-
-                    if (HatchObjectId.GetDBObject() is Hatch hatch)
-                    {
-                        Hachure = hatch;
-                    }
-                    else
-                    {
-                        return false;
+                        if (HatchObjectId.GetDBObject() is Hatch hatch)
+                        {
+                            Hachure = hatch;
+                            break;
+                        }
                     }
                 }
                 finally
@@ -254,8 +256,7 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            Hachure?.GetHatchPolyline(out Polyline);
-            return true;
+            return Hachure?.GetHatchPolyline(out Polyline) == true;
         }
 
 
@@ -290,9 +291,11 @@ namespace SioForgeCAD.Functions
                     orderTable.MoveAbove(ObjIds, oHatchObjectId);
                 }
                 //Keep same draw order as old hatch
-                try { 
-                orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
-                }catch(Exception ex)
+                try
+                {
+                    orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
+                }
+                catch (Exception ex)
                 {
                     Debug.WriteLine(ex.ToString());
                 }
