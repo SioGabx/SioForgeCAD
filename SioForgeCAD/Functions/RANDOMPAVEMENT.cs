@@ -55,7 +55,18 @@ namespace SioForgeCAD.Functions
             public Point3d TopRight;
             public Point3d BottomLeft;
             public Point3d BottomRight;
-            public bool IsSelected;
+            public bool IsSelected = false;
+
+            public Polyline GetPolyligne()
+            {
+                Polyline poly = new Polyline();
+                poly.AddVertex(TopLeft);
+                poly.AddVertex(TopRight);
+                poly.AddVertex(BottomRight);
+                poly.AddVertex(BottomLeft);
+                poly.Closed = true;
+                return poly;
+            }
         }
 
         public static void Draw()
@@ -75,32 +86,76 @@ namespace SioForgeCAD.Functions
                 Point3d Origin = ColumnsLine.StartPoint;
                 int NumberOfColumns = (int)Math.Ceiling(ColumnsLine.Length / PavementColumnsWidth) - 1;
                 int NumberOfRows = (int)Math.Ceiling(RowsLine.Length / PavementRowsWidth) - 1;
-
+                int NumberOfElement = NumberOfColumns * NumberOfRows;
                 Vector3d ColumnVector = ColumnsLine.GetVector3d();
                 Vector3d RowVector = RowsLine.GetVector3d(); 
 
-                List<List<Pavement>> Pavementlist = new List<List<Pavement>>();
+                List<List<Pavement>> PavementList = new List<List<Pavement>>();
 
                 for (int Column = 0; Column < NumberOfColumns; Column++)
                 {
                     var ColumnOrigin = Origin.Displacement(ColumnVector, PavementColumnsWidth * Column);
+                    List <Pavement>  PavementSubList = new List<Pavement>();
                     for (int Row = 0; Row < NumberOfRows; Row++)
                     {
                         Point3d BottomLeft = ColumnOrigin.Displacement(RowVector, PavementRowsWidth * Row);
                         Point3d BottomRight = BottomLeft.Displacement(ColumnVector, PavementColumnsWidth);
-
                         Point3d TopLeft = BottomLeft.Displacement(RowVector, PavementRowsWidth);
                         Point3d TopRight = BottomRight.Displacement(RowVector, PavementRowsWidth);
-                        Polyline poly = new Polyline();
-                        poly.AddVertex(TopLeft);
-                        poly.AddVertex(TopRight);
-                        poly.AddVertex(BottomRight);
-                        poly.AddVertex(BottomLeft);
-                        poly.Closed = true;
-                        poly.AddToDrawingCurrentTransaction();
+
+                        Pavement Pavement = new Pavement
+                        {
+                            BottomLeft = BottomLeft,
+                            BottomRight = BottomRight,
+                            TopLeft = TopLeft,
+                            TopRight = TopRight
+                        };
+
+                        PavementSubList.Add(Pavement);
+                    }
+                    PavementList.Add(PavementSubList);
+                }
+
+                Random Random = new Random();
+
+                int NumberSelected = 0;
+               
+                while ((((double)NumberSelected / NumberOfElement) * 100) < PavementFill)
+                {
+                    var SelectedPavement = randomSelector.SelectItem();
+
+                    int outerIndex = Random.Next(0, PavementList.Count);
+                    int innerIndex = Random.Next(0, PavementList[outerIndex].Count);
+
+                    foreach ((int, int) item in SelectedPavement.Value)
+                    {
+                        var SelectIndexX = outerIndex + item.Item1;
+                        var SelectIndexY = innerIndex + item.Item2;
+                        if (PavementList.Count > SelectIndexX && PavementList[SelectIndexX].Count > SelectIndexY)
+                        {
+                            Pavement pavement = PavementList[SelectIndexX][SelectIndexY];
+                            if (!pavement.IsSelected)
+                            {
+                                NumberSelected++;
+                                pavement.IsSelected = true;
+                            }
+                            
+                        }
                     }
                 }
 
+                foreach (List<Pavement> PavementSubList in PavementList)
+                {
+                    foreach (Pavement Pavement in PavementSubList)
+                    {
+                        Polyline poly = Pavement.GetPolyligne();
+                        if (Pavement.IsSelected)
+                        {
+                            poly.ColorIndex = 5;
+                        }
+                        poly.AddToDrawingCurrentTransaction();
+                    }
+                }
 
                 tr.Commit();
             }
