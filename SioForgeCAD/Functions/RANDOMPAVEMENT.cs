@@ -84,8 +84,8 @@ namespace SioForgeCAD.Functions
                 }
 
                 Point3d Origin = ColumnsLine.StartPoint;
-                int NumberOfColumns = (int)Math.Ceiling(ColumnsLine.Length / PavementColumnsWidth) - 1;
-                int NumberOfRows = (int)Math.Ceiling(RowsLine.Length / PavementRowsWidth) - 1;
+                int NumberOfColumns = (int)Math.Round(ColumnsLine.Length / PavementColumnsWidth);
+                int NumberOfRows = (int)Math.Round(RowsLine.Length / PavementRowsWidth);
                 int NumberOfElement = NumberOfColumns * NumberOfRows;
                 Vector3d ColumnVector = ColumnsLine.GetVector3d();
                 Vector3d RowVector = RowsLine.GetVector3d(); 
