@@ -12,6 +12,7 @@ using Autodesk.AutoCAD.Windows;
 using System.Windows;
 using System.Drawing;
 using System.Reflection;
+using System.Diagnostics;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -272,20 +273,21 @@ namespace SioForgeCAD
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
 
 
-            //TrayItem ti = new TrayItem();
-            //ti.ToolTipText = "My tray item tooltip";
-            //var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
-            //var iconHandle = bitmap.GetHicon();
-            //ti.Icon = System.Drawing.Icon.FromHandle(iconHandle); 
-            //Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
+            TrayItem ti = new TrayItem();
+            ti.ToolTipText = "My tray item tooltip";
+            var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
+            var iconHandle = bitmap.GetHicon();
+            ti.Icon = System.Drawing.Icon.FromHandle(iconHandle);
+            
+            Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
 
             Autodesk.AutoCAD.Windows.Pane pane = new Autodesk.AutoCAD.Windows.Pane();
            // pane.Icon = ti.Icon;
             pane.ToolTipText = "My Pane tooltip";
             pane.Style = Autodesk.AutoCAD.Windows.PaneStyles.Normal;
+            //pane.Ba
             pane.MouseDown += new Autodesk.AutoCAD.Windows.StatusBarMouseDownEventHandler(HelloWorld);
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.Panes.Add(pane);
-            //Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.
         }
 
         public static void HelloWorld(object sender, Autodesk.AutoCAD.Windows.StatusBarMouseDownEventArgs e)

@@ -53,6 +53,8 @@ namespace SioForgeCAD.Commun.Extensions
                     new TypedValue((int)DxfCode.Operator, "<or"),
                     new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
                     new TypedValue((int)DxfCode.Start, "LINE"),
+                    new TypedValue((int)DxfCode.Start, "ELLIPSE"),
+                    new TypedValue((int)DxfCode.Start, "SPLINE"),
                     new TypedValue((int)DxfCode.Operator, "or>"),
                 };
                 PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
@@ -68,6 +70,16 @@ namespace SioForgeCAD.Commun.Extensions
                 if (SelectedEntity is Line ProjectionTargetLine)
                 {
                     SelectedEntity = ProjectionTargetLine.ToPolyline();
+                }
+
+                if (SelectedEntity is Ellipse ProjectionTargetEllipse)
+                {
+                    SelectedEntity = ProjectionTargetEllipse.ToPolyline();
+                }
+
+                if (SelectedEntity is Spline ProjectionTargetSpline)
+                {
+                    SelectedEntity = ProjectionTargetSpline.ToPolyline();
                 }
 
                 if (!(SelectedEntity is Polyline ProjectionTarget))
