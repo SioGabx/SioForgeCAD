@@ -17,6 +17,7 @@ namespace SioForgeCAD.Commun
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline BaseCutLine)
         {
             BaseCutLine.Elevation = BasePolyline.Elevation;
+            BasePolyline.Cleanup();
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
             //InsideCutLines.AddToDrawing(5, true);
             List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
