@@ -136,7 +136,7 @@ namespace SioForgeCAD.Commun
 
         private static DBObjectCollection GetInsideCutLines(this Polyline polyline, Polyline CutLine)
         {
-            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline);
+            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline, Intersect.ExtendThis);
             if (CutLines.Count == 0)
             {
                 CutLines.Add(CutLine.Clone() as Polyline);
@@ -185,15 +185,16 @@ namespace SioForgeCAD.Commun
                 }
                 else
                 {
+                   // line.AddToDrawing();
                     line.Dispose();
                 }
             }
             return InsideCutLines;
         }
 
-        public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine)
+        public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
         {
-            polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds);
+            polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);
 
             if (IntersectionPointsFounds.Count == 0)
             {
@@ -214,8 +215,16 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-            var SplittedCurves = polyline.GetSplitCurves(DblCollection);
-            return SplittedCurves;
+            try
+            {
+                var SplittedCurves = polyline.GetSplitCurves(DblCollection);
+                return SplittedCurves;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
+            return new DBObjectCollection();
         }
     }
 }

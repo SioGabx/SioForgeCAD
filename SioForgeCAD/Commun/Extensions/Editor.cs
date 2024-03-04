@@ -74,7 +74,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                 if (SelectedEntity is Ellipse ProjectionTargetEllipse)
                 {
-                    SelectedEntity = ProjectionTargetEllipse.ToPolyline();
+                   // SelectedEntity = ProjectionTargetEllipse.ToPolyline();
                 }
 
                 if (SelectedEntity is Spline ProjectionTargetSpline)

@@ -106,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
+    <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
