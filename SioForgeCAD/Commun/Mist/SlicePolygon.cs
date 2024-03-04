@@ -214,8 +214,6 @@ namespace SioForgeCAD.Commun
 
             }
 
-
-
             return InsideCutLines;
         }
 
