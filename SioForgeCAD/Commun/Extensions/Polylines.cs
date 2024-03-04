@@ -60,19 +60,8 @@ namespace SioForgeCAD.Commun.Extensions
             return area;
         }
 
-        public static bool HasEndPointOrStartPointInCommun(this Polyline A, Polyline B)
-        {
-            if (A == null || B == null) return false;
-
-            if (A.EndPoint.IsEqualTo(B.EndPoint)) return true;
-            if (A.EndPoint.IsEqualTo(B.StartPoint)) return true;
-            if (A.StartPoint.IsEqualTo(B.EndPoint)) return true;
-            if (A.StartPoint.IsEqualTo(B.StartPoint)) return true;
-
-            return false;
-        }
-
-        public static bool CanBeJoin(this Polyline A, Polyline B)
+    
+        public static bool CanBeJoinWith(this Polyline A, Polyline B)
         {
             if (A == B) { return false; }
             if (!A.IsLineCanCloseAPolyline(B))
@@ -87,7 +76,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
 
-            if (!A.HasAtLeastOnPointInCommun(B))
+            if (!A.HasEndPointOrStartPointInCommun(B))
             {
                 return false;
             }
@@ -263,15 +252,19 @@ namespace SioForgeCAD.Commun.Extensions
             var Vertex = new PolylineVertex3d(point);
             Poly.AppendVertex(Vertex);
         }
-
-        public static bool HasAtLeastOnPointInCommun(this Polyline PolyA, Polyline PolyB)
+             
+        public static bool HasEndPointOrStartPointInCommun(this Polyline A, Polyline B)
         {
-            return (
-                PolyA.StartPoint.IsEqualTo(PolyB.StartPoint) ||
-                PolyA.StartPoint.IsEqualTo(PolyB.EndPoint) ||
-                PolyA.EndPoint.IsEqualTo(PolyB.StartPoint) ||
-                PolyA.EndPoint.IsEqualTo(PolyB.EndPoint));
+            if (A == null || B == null) return false;
+
+            if (A.EndPoint.IsEqualTo(B.EndPoint)) return true;
+            if (A.EndPoint.IsEqualTo(B.StartPoint)) return true;
+            if (A.StartPoint.IsEqualTo(B.EndPoint)) return true;
+            if (A.StartPoint.IsEqualTo(B.StartPoint)) return true;
+
+            return false;
         }
+
 
         public static bool IsLineCanCloseAPolyline(this Polyline PolyA, Polyline PolyB)
         {
