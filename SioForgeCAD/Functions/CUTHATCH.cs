@@ -111,6 +111,7 @@ namespace SioForgeCAD.Functions
 
         public static Polyline GetCutPolyline(Polyline Boundary, out PromptStatus promptStatus)
         {
+            //To do : allow multiple selection
             Editor editor = Generic.GetEditor();
             TypedValue[] filterList = new TypedValue[] {
                 new TypedValue((int)DxfCode.Operator, "<or"),
