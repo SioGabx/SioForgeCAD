@@ -49,7 +49,7 @@ namespace SioForgeCAD.Commun
 
             if (double.IsNaN(I_cote))
             {
-                I_cote = 0;
+                I_cote = First.Altitude;
             }
             if (double.IsNaN(pente))
             {

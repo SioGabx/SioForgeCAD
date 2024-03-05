@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using CadApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Overrules
 {
@@ -32,16 +31,7 @@ namespace SioForgeCAD.Commun.Overrules
             var y = GripPoint.Y;
             var offset = gripHeight / 2.0;
 
-            //var points = new Point3dCollection();
-            //points.Add(new Point3d(x - offset, y, 0.0));
-            //points.Add(new Point3d(x, y - offset, 0.0));
-            //points.Add(new Point3d(x + offset, y, 0.0));
-            //points.Add(new Point3d(x, y + offset, 0.0));
-
-            //Point3d center = new Point3d(x, y, 0.0);
-            //var radius = offset;
-
-            double WidthCross = ((gripHeight / 3) / 2) * 0.8;
+            double WidthCross = (gripHeight / 3 / 2) * 0.8;
 
             Point3d Origin = new Point3d(x, y, 0.0);
 
@@ -49,11 +39,6 @@ namespace SioForgeCAD.Commun.Overrules
             Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
             Vector3d XVector = ucs.CoordinateSystem3d.Xaxis;
-
-            //Point3d OriginTop = new Point3d(x, y + offset, 0.0);
-            //Point3d OriginBottom = new Point3d(x, y - offset, 0.0);
-            //Point3d OriginLeft = new Point3d(x - offset, y, 0.0);
-            //Point3d OriginRight = new Point3d(x + offset, y, 0.0);
 
             Point3d OriginTop = Origin.Displacement(YVector, offset);
             Point3d OriginBottom = Origin.Displacement(-YVector, offset);
@@ -91,14 +76,17 @@ namespace SioForgeCAD.Commun.Overrules
             worldDraw.SubEntityTraits.FillType = FillType.FillAlways;
             if (type == DrawType.HoverGrip)
             {
+                //GRIPHOVER (System Variable) -> Obsolete
                 worldDraw.SubEntityTraits.Color = 11;
             }
             else if (type == DrawType.HotGrip)
             {
+                //GRIPHOT (System Variable)
                 worldDraw.SubEntityTraits.Color = 12;
             }
             else
             {
+                //GRIPCONTOUR
                 worldDraw.SubEntityTraits.Color = 150;
             }
             worldDraw.Geometry.Polygon(points);
@@ -115,8 +103,8 @@ namespace SioForgeCAD.Commun.Overrules
 
         public override ReturnValue OnHotGrip(ObjectId entityId, Context contextFlags)
         {
-            var dwg = CadApp.DocumentManager.MdiActiveDocument;
-            using (dwg.LockDocument())
+            var doc = Generic.GetDocument();
+            using (doc.LockDocument())
             {
                 OnHotGripAction(entityId);
             }
