@@ -34,6 +34,11 @@ namespace SioForgeCAD.Commun.Extensions
             return vector3D.MultiplyBy(-1);
         }
 
+        public static Vector2d Inverse(this Vector2d vector2D)
+        {
+            return vector2D.MultiplyBy(-1);
+        }
+
         public static double GetRotationRelativeToSCG(this Vector3d vector)
         {
             Vector2d xAxisWCS = new Vector2d(0, 1);
@@ -71,6 +76,16 @@ namespace SioForgeCAD.Commun.Extensions
         public static double CrossProduct(this Vector2d v1, Vector2d v2)
         {
             return v1.X * v2.Y - v1.Y * v2.X;
+        }
+
+        public static bool IsColinear(this Vector3d v1, Vector3d v2, Tolerance tol)
+        {
+            return IsColinear(ToVector2d(v1), ToVector2d(v2), tol);
+        }
+
+        public static bool IsColinear(this Vector2d v1, Vector2d v2, Tolerance tol)
+        {
+            return Math.Abs(v1.CrossProduct(v2)) < tol.EqualPoint;
         }
 
         public static Point3d FindProjectedIntersection(this Vector3d FirstVector, Point3d FirstVectorBasePoint, Vector3d SecondVector, Point3d SecondVectorBasePoint)

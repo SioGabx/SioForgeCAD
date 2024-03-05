@@ -1,7 +1,9 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -60,7 +62,7 @@ namespace SioForgeCAD.Commun.Extensions
             return area;
         }
 
-    
+
         public static bool CanBeJoinWith(this Polyline A, Polyline B)
         {
             if (A == B) { return false; }
@@ -97,6 +99,13 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void Cleanup(this Polyline polyline)
         {
+            int InverseCount = 0;
+            void InversePoly()
+            {
+                InverseCount++;
+                polyline.Inverse();
+            }
+
             if (polyline == null) { return; }
             int vertexCount = polyline.NumberOfVertices;
             if (vertexCount <= 2) { return; }
@@ -104,6 +113,7 @@ namespace SioForgeCAD.Commun.Extensions
             bool HasAVertexRemoved = true;
             while (HasAVertexRemoved)
             {
+                InversePoly();
                 HasAVertexRemoved = false;
                 int index = 1;
                 while ((polyline.GetReelNumberOfVertices()) > index)
@@ -120,12 +130,12 @@ namespace SioForgeCAD.Commun.Extensions
                         nextPoint = polyline.GetPoint3dAt(index + 1);
                     }
 
-                    Vector3d vector1 = currentPoint.GetVectorTo(lastPoint);
-                    Vector3d vector2 = nextPoint.GetVectorTo(currentPoint);
+                    Vector2d vector1 = currentPoint.GetVectorTo(lastPoint).ToVector2d();
+                    Vector2d vector2 = nextPoint.GetVectorTo(currentPoint).ToVector2d();
 
-                    // Calculer la normal du vecteur en utilisant le produit vectoriel
-                    double crossProduct = vector1.X * vector2.Y - vector1.Y * vector2.X;
-                    if (Math.Abs(crossProduct) < Tolerance.Global.EqualPoint || currentPoint.IsEqualTo(nextPoint, Generic.Tolerance))
+                    bool IsColinear = vector1.IsColinear(vector2, Generic.Tolerance);
+
+                    if (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.Tolerance))
                     {
                         polyline.RemoveVertexAt(index);
                         HasAVertexRemoved = true;
@@ -140,28 +150,45 @@ namespace SioForgeCAD.Commun.Extensions
                 index = 0;
                 while (index < polyline.GetReelNumberOfVertices())
                 {
-                    if (ParseIndex(index))
+                    try
+                    {
+                        var seg = polyline.GetSegmentAt(index);
+                        if (seg.StartPoint.IsEqualTo(seg.EndPoint, Generic.Tolerance))
+                        {
+                            polyline.RemoveVertexAt(index);
+                            HasAVertexRemoved = true;
+                        }
+                        else
+                        {
+                            index++;
+                        }
+                    }
+                    catch (Exception)
                     {
                         index++;
                     }
 
                 }
 
-                bool ParseIndex(int startIndex)
-                {
-                    var seg = polyline.GetSegmentAt(startIndex);
-                    if (seg.StartPoint.IsEqualTo(seg.EndPoint, Generic.Tolerance))
-                    {
-                        polyline.RemoveVertexAt(startIndex);
-                        HasAVertexRemoved = true;
-                        return false;
-                    }
-                    return true;
-                }
-
+            }
+            if (InverseCount % 2 != 0)
+            {
+                InversePoly();
             }
 
+        }
 
+        public static void Inverse(this Polyline poly)
+        {
+            //https://www.keanw.com/2012/09/reversing-the-direction-of-an-autocad-polyline-using-net.html
+            try
+            {
+                poly.ReverseCurve();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
         }
 
         public static IEnumerable<Point2d> GetPolyPoints(this Polyline poly)
@@ -252,7 +279,7 @@ namespace SioForgeCAD.Commun.Extensions
             var Vertex = new PolylineVertex3d(point);
             Poly.AppendVertex(Vertex);
         }
-             
+
         public static bool HasEndPointOrStartPointInCommun(this Polyline A, Polyline B)
         {
             if (A == null || B == null) return false;

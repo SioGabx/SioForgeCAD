@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
 {
     public static class CUTHATCH
     {
-        public static void Cut()
+        public static void CutHatch()
         {
             if (!GetHatch(out Hatch Hachure, out Polyline Boundary))
             {
@@ -54,9 +54,11 @@ namespace SioForgeCAD.Functions
                     ApplyCutting(Boundary, Hachure, Cuted);
                     Generic.WriteMessage($"La hachure à été divisée en {Cuted.Count}");
                     tr.Commit();
+                    
                 }
+                CutLine.Dispose();
             }
-            CutLine?.Dispose();
+
         }
 
         public static Polyline GetCutLine(Polyline Boundary)
@@ -120,6 +122,7 @@ namespace SioForgeCAD.Functions
                 new TypedValue((int)DxfCode.Start, "SPLINE"),
                 new TypedValue((int)DxfCode.Operator, "or>"),
             };
+
             const string NewLineKeyWord = "Nouvelle";
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions()
             {
@@ -181,7 +184,7 @@ namespace SioForgeCAD.Functions
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 promptStatus = PromptStatus.Keyword;
                 return null;

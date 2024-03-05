@@ -228,7 +228,7 @@ namespace SioForgeCAD
         [CommandMethod("CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH()
         {
-            Functions.CUTHATCH.Cut();
+            Functions.CUTHATCH.CutHatch();
         }
 
 
@@ -327,8 +327,11 @@ namespace SioForgeCAD
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var poly = ed.GetPolyline("Selectionnez une polyligne");
+                int NumberOfVerticesBefore = poly.NumberOfVertices;
                 poly.UpgradeOpen();
                 poly.Cleanup();
+                int NumberOfVerticesAfter = poly.NumberOfVertices;
+                Generic.WriteMessage("La polyline à été simplifiée en supprimant " + (NumberOfVerticesBefore - NumberOfVerticesAfter));
                 tr.Commit();
             }
         }
