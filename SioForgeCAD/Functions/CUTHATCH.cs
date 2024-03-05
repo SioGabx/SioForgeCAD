@@ -40,26 +40,10 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             ed.SetImpliedSelection(new ObjectId[0]);
 
-            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Dessiner une ligne de coupe ou une ligne/polyligne existante ?");
-            const string NewKeyword = "Nouvelle";
-            const string ExistKeyword = "Existante";
-
-
-            promptKeywordOptions.Keywords.Add(ExistKeyword);
-            promptKeywordOptions.Keywords.Add(NewKeyword);
-            promptKeywordOptions.Keywords.Default = ExistKeyword;
-            promptKeywordOptions.AppendKeywordsToMessage = true;
-            promptKeywordOptions.AllowArbitraryInput = false;
-            var SelectOption = ed.GetKeywords(promptKeywordOptions);
-
-            Polyline CutLine;
-            if (SelectOption.StringResult == NewKeyword)
+            Polyline CutLine = GetCutPolyline(Boundary, out PromptStatus promptResult);
+            if (promptResult == PromptStatus.Keyword)
             {
                 CutLine = GetCutLine(Boundary);
-            }
-            else
-            {
-                CutLine = GetCutPolyline(Boundary);
             }
 
             if (CutLine != null)
@@ -125,62 +109,81 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static Polyline GetCutPolyline(Polyline Boundary)
+        public static Polyline GetCutPolyline(Polyline Boundary, out PromptStatus promptStatus)
         {
             Editor editor = Generic.GetEditor();
             TypedValue[] filterList = new TypedValue[] {
                 new TypedValue((int)DxfCode.Operator, "<or"),
                 new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
                 new TypedValue((int)DxfCode.Start, "LINE"),
+                new TypedValue((int)DxfCode.Start, "SPLINE"),
                 new TypedValue((int)DxfCode.Operator, "or>"),
             };
-            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            const string NewLineKeyWord = "Nouvelle";
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions()
             {
-                MessageForAdding = "Selectionnez un polyline qui coupe la hachure",
                 SingleOnly = true,
                 SinglePickInSpace = true,
-                RejectObjectsOnLockedLayers = true
+                RejectObjectsOnLockedLayers = true,
             };
+            selectionOptions.Keywords.Add(NewLineKeyWord);
+            string kws = selectionOptions.Keywords.GetDisplayString(true);
+            selectionOptions.MessageForAdding = "Selectionnez un polyline qui coupe la hachure ou " + kws;
+            selectionOptions.KeywordInput += delegate (object sender, SelectionTextInputEventArgs e) { throw new Exception("Keyword") { }; };
 
-            while (true)
+
+            try
             {
-                PromptSelectionResult promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
-                if (promptResult.Status == PromptStatus.Cancel)
+                while (true)
                 {
-                    return null;
-                }
-                else if (promptResult.Status == PromptStatus.OK)
-                {
-                    if (promptResult.Value.Count == 1)
+                    PromptSelectionResult promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+                    promptStatus = promptResult.Status;
+                    if (promptResult.Status == PromptStatus.Cancel || promptResult.Status == PromptStatus.Keyword)
                     {
-                        ObjectId SelectedObjectId = promptResult.Value.GetObjectIds().First();
-                        DBObject Entity = SelectedObjectId.GetNoTransactionDBObject(OpenMode.ForRead);
-                        Polyline polyline;
-                        if (Entity is Polyline)
+                        return null;
+                    }
+                    else if (promptResult.Status == PromptStatus.OK)
+                    {
+                        if (promptResult.Value.Count == 1)
                         {
-                            polyline = (Polyline)Entity.Clone();
-                        }
-                        else if (Entity is Line)
-                        {
-                            polyline = ((Line)Entity).ToPolyline();
-                        }
-                        else
-                        {
-                            continue;
-                        }
+                            ObjectId SelectedObjectId = promptResult.Value.GetObjectIds().First();
+                            DBObject Entity = SelectedObjectId.GetNoTransactionDBObject(OpenMode.ForRead);
+                            Polyline polyline;
+                            if (Entity is Polyline)
+                            {
+                                polyline = (Polyline)Entity.Clone();
+                            }
+                            else if (Entity is Line)
+                            {
+                                polyline = ((Line)Entity).ToPolyline();
+                            }
+                            else if (Entity is Spline)
+                            {
+                                polyline = (Polyline)((Spline)Entity).ToPolyline();
+                            }
+                            else
+                            {
+                                continue;
+                            }
 
-                        if (IsValidCutLine(Boundary, polyline))
-                        {
-                            return polyline;
-                        }
-                        else
-                        {
-                            Generic.WriteMessage("La polyligne ne coupe pas la hachure");
-                            continue;
-                        }
+                            if (IsValidCutLine(Boundary, polyline))
+                            {
+                                return polyline;
+                            }
+                            else
+                            {
+                                Generic.WriteMessage("La polyligne ne coupe pas la hachure");
+                                continue;
+                            }
 
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                promptStatus = PromptStatus.Keyword;
+                return null;
             }
 
         }
@@ -215,10 +218,11 @@ namespace SioForgeCAD.Functions
                 option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
                 option.AddAllowedClass(typeof(Hatch), false);
                 var Result = ed.GetEntity(option);
-                if(Result.Status == PromptStatus.None)
-                { 
+                if (Result.Status == PromptStatus.None)
+                {
                     return true;
-                }else if (Result.Status != PromptStatus.OK)
+                }
+                else if (Result.Status != PromptStatus.OK)
                 {
                     return false;
                 }
