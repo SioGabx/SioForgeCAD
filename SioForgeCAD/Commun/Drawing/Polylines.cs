@@ -14,6 +14,7 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 polyline.AddVertexAt(polyline.NumberOfVertices, point.SCG.ToPoint2d(), 0, 0, 0);
             }
+            polyline.Cleanup();
             return polyline;
         }
         public static Polyline GetPolylineFromPoints(params Points[] listOfPoints)
