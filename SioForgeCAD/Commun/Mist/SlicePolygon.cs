@@ -231,15 +231,15 @@ namespace SioForgeCAD.Commun
             DoubleCollection DblCollection = new DoubleCollection();
             foreach (Point3d Point in OrderedIntersectionPointsFounds)
             {
-                //if (Point.IsOnPolyline(polyline))
-                //{
+                if (Point.IsOnPolyline(polyline))
+                {
                     var param = polyline.GetParamAtPointX(Point);
                     if (!DblCollection.Contains(param))
                     {
                         DblCollection.Add(param);
                         DblCollection.Add(param);
                     }
-                //}
+                }
             }
             try
             {

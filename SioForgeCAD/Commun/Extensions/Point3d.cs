@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.BoundaryRepresentation;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -25,6 +26,12 @@ namespace SioForgeCAD.Commun.Extensions
         public static Points ToPoints(this Point3d p)
         {
             return Points.From3DPoint(p);
+        }
+
+        public static void AddToDrawing(this Point3d pnt)
+        {
+            DBPoint dBPoint = new DBPoint(pnt);
+            dBPoint.AddToDrawing();
         }
 
         public static Point3d GetMiddlePoint(this Point3d A, Point3d B)
@@ -159,6 +166,16 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
+            //var NearestPointOnPolyline = pl.GetClosestPointTo(pt,false);
+            //if (NearestPointOnPolyline.IsEqualTo(pt, new Tolerance(1e-5, 1e-5)))
+            //{
+            //    return true;
+            //}
+            //else
+            //{
+            //    return false;
+            //}
+
             bool isOn = false;
 
             for (int i = 0; i < pl.NumberOfVertices; i++)
