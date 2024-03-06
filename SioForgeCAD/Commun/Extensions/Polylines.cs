@@ -133,9 +133,9 @@ namespace SioForgeCAD.Commun.Extensions
                     Vector2d vector1 = currentPoint.GetVectorTo(lastPoint).ToVector2d();
                     Vector2d vector2 = nextPoint.GetVectorTo(currentPoint).ToVector2d();
 
-                    bool IsColinear = vector1.IsColinear(vector2, Generic.Tolerance);
+                    bool IsColinear = vector1.IsColinear(vector2, Generic.LowTolerance);
 
-                    if (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.Tolerance))
+                    if (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance))
                     {
                         polyline.RemoveVertexAt(index);
                         HasAVertexRemoved = true;
@@ -153,7 +153,7 @@ namespace SioForgeCAD.Commun.Extensions
                     try
                     {
                         var seg = polyline.GetSegmentAt(index);
-                        if (seg.StartPoint.IsEqualTo(seg.EndPoint, Generic.Tolerance))
+                        if (seg.StartPoint.IsEqualTo(seg.EndPoint, Generic.LowTolerance))
                         {
                             polyline.RemoveVertexAt(index);
                             HasAVertexRemoved = true;
@@ -300,8 +300,8 @@ namespace SioForgeCAD.Commun.Extensions
 
             Point3d StartPointB = PolyB.StartPoint.Flatten();
             Point3d EndPointB = PolyB.EndPoint.Flatten();
-            return (StartPointA.IsEqualTo(StartPointB, Generic.Tolerance) && EndPointA.IsEqualTo(EndPointB, Generic.Tolerance)) ||
-                 (StartPointA.IsEqualTo(EndPointB, Generic.Tolerance) && EndPointA.IsEqualTo(StartPointB, Generic.Tolerance));
+            return (StartPointA.IsEqualTo(StartPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(EndPointB, Generic.LowTolerance)) ||
+                 (StartPointA.IsEqualTo(EndPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(StartPointB, Generic.LowTolerance));
         }
 
         public static void AddVertexIfNotExist(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)

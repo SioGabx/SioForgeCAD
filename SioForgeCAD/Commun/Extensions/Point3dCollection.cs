@@ -33,7 +33,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (CustomTolerance is null)
             {
-                CustomTolerance = Tolerance.Global;
+                CustomTolerance = Generic.MediumTolerance;
             }
             foreach (Point3d CollectionPoint in collection)
             {

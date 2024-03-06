@@ -194,7 +194,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                 if (seg != null)
                 {
-                    isOn = seg.IsOn(pt);
+                    isOn = seg.IsOn(pt, Generic.MediumTolerance);
 
                     if (isOn)
                     {

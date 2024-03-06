@@ -17,11 +17,11 @@ namespace SioForgeCAD.Commun.Extensions
         /// <returns>The parameter.</returns>
         public static double GetParamAtPointX(this Curve cv, Point3d point)
         {
-            if (point.DistanceTo(cv.StartPoint) < Tolerance.Global.EqualPoint)
+            if (point.DistanceTo(cv.StartPoint) < Generic.MediumTolerance.EqualPoint)
             {
                 return 0.0;
             }
-            else if (point.DistanceTo(cv.EndPoint) < Tolerance.Global.EqualPoint)
+            else if (point.DistanceTo(cv.EndPoint) < Generic.MediumTolerance.EqualPoint)
             {
                 return cv.GetParameterAtPoint(cv.EndPoint);
             }
