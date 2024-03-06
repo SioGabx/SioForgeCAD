@@ -1,8 +1,4 @@
-﻿using System;
-using System.Windows.Media;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Geometry;
-/*
+﻿/*
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class EllipsesExtensions

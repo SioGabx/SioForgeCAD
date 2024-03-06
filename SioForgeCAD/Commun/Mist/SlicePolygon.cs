@@ -1,8 +1,6 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -29,7 +27,7 @@ namespace SioForgeCAD.Commun
                 }
                 foreach (Polyline Poly in Polygon.ToArray())
                 {
-                    DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine,Intersect.OnBothOperands);
+                    DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine, Intersect.OnBothOperands);
 
                     //SplittedPolylines.AddToDrawing(4, true);
                     if (SplittedPolylines.Count > 1)
@@ -188,14 +186,14 @@ namespace SioForgeCAD.Commun
                                 InsideCutLine_A.JoinEntity(InsideCutLine_B);
                                 InsideCutLines.Remove(InsideCutLine_B);
                                 InsideCutLine_B.Dispose();
-                                
+
                             }
                         }
                     }
                 }
             }
 
-           //InsideCutLines.AddToDrawing(2, true);
+            //InsideCutLines.AddToDrawing(2, true);
 
             //Extend line to boundary intersection
             foreach (Autodesk.AutoCAD.DatabaseServices.Polyline InsideCutLine in InsideCutLines.ToList())
@@ -241,12 +239,12 @@ namespace SioForgeCAD.Commun
             {
                 if (Point.IsOnPolyline(polyline))
                 {
-                var param = polyline.GetParamAtPointX(Point);
-                if (!DblCollection.Contains(param))
-                {
-                    DblCollection.Add(param);
-                    DblCollection.Add(param);
-                }
+                    var param = polyline.GetParamAtPointX(Point);
+                    if (!DblCollection.Contains(param))
+                    {
+                        DblCollection.Add(param);
+                        DblCollection.Add(param);
+                    }
                 }
             }
             try

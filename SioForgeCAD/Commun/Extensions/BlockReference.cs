@@ -103,7 +103,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-               BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord modelSpace = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
                 foreach (ObjectId objId in modelSpace)

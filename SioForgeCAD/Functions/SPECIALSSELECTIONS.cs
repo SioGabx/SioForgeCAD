@@ -3,8 +3,6 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {

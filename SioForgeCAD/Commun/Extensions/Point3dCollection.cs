@@ -24,7 +24,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Point3dCollection ToPoint3dCollection (this IEnumerable<Point3d> IEnumCollection)
+        public static Point3dCollection ToPoint3dCollection(this IEnumerable<Point3d> IEnumCollection)
         {
             return new Point3dCollection(IEnumCollection.ToArray());
         }

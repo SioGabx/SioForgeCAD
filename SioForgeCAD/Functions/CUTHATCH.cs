@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Colors;
+﻿using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -54,7 +53,7 @@ namespace SioForgeCAD.Functions
                     ApplyCutting(Boundary, Hachure, Cuted);
                     Generic.WriteMessage($"La hachure à été divisée en {Cuted.Count}");
                     tr.Commit();
-                    
+
                 }
                 CutLine.Dispose();
             }

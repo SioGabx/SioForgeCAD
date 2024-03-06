@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun.Drawing
             var db = doc.Database;
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
-                BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans); 
+                BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
                 if (ColorIndex != null)
                 {

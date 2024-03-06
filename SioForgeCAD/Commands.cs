@@ -2,17 +2,13 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Windows.Controls;
-using Autodesk.AutoCAD.Windows;
-using System.Windows;
 using System.Drawing;
-using System.Reflection;
-using System.Diagnostics;
+using System.Windows;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -278,11 +274,11 @@ namespace SioForgeCAD
             var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
             var iconHandle = bitmap.GetHicon();
             ti.Icon = System.Drawing.Icon.FromHandle(iconHandle);
-            
+
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
 
             Autodesk.AutoCAD.Windows.Pane pane = new Autodesk.AutoCAD.Windows.Pane();
-           // pane.Icon = ti.Icon;
+            // pane.Icon = ti.Icon;
             pane.ToolTipText = "My Pane tooltip";
             pane.Style = Autodesk.AutoCAD.Windows.PaneStyles.Normal;
             //pane.Ba

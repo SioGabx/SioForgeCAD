@@ -6,11 +6,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -88,14 +84,14 @@ namespace SioForgeCAD.Functions
                 int NumberOfRows = (int)Math.Round(RowsLine.Length / PavementRowsWidth);
                 int NumberOfElement = NumberOfColumns * NumberOfRows;
                 Vector3d ColumnVector = ColumnsLine.GetVector3d();
-                Vector3d RowVector = RowsLine.GetVector3d(); 
+                Vector3d RowVector = RowsLine.GetVector3d();
 
                 List<List<Pavement>> PavementList = new List<List<Pavement>>();
 
                 for (int Column = 0; Column < NumberOfColumns; Column++)
                 {
                     var ColumnOrigin = Origin.Displacement(ColumnVector, PavementColumnsWidth * Column);
-                    List <Pavement>  PavementSubList = new List<Pavement>();
+                    List<Pavement> PavementSubList = new List<Pavement>();
                     for (int Row = 0; Row < NumberOfRows; Row++)
                     {
                         Point3d BottomLeft = ColumnOrigin.Displacement(RowVector, PavementRowsWidth * Row);
@@ -119,7 +115,7 @@ namespace SioForgeCAD.Functions
                 Random Random = new Random();
 
                 int NumberSelected = 0;
-               
+
                 while ((((double)NumberSelected / NumberOfElement) * 100) < PavementFill)
                 {
                     var SelectedPavement = randomSelector.SelectItem();
@@ -139,7 +135,7 @@ namespace SioForgeCAD.Functions
                                 NumberSelected++;
                                 pavement.IsSelected = true;
                             }
-                            
+
                         }
                     }
                 }
@@ -193,7 +189,7 @@ namespace SioForgeCAD.Functions
         public static ProportionalRandomSelector<List<(int, int)>> ParseValues(string Values)
         {
             var randomSelector = new ProportionalRandomSelector<List<(int, int)>>();
-           
+
             Values = Values.Replace("[[", "{[");
             Values = Values.Replace("]]", "]}");
 

@@ -1,11 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 
 namespace SioForgeCAD.Commun.Extensions
@@ -97,6 +91,6 @@ namespace SioForgeCAD.Commun.Extensions
             return poly;
         }
 
-       
+
     }
 }
