@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -139,6 +140,7 @@ namespace SioForgeCAD.Commun
             {
                 CutLines.Add(CutLine.Clone() as Polyline);
             }
+            //CutLines.AddToDrawing(3, true);
             DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)
             {
@@ -151,10 +153,23 @@ namespace SioForgeCAD.Commun
                     if (IsInside)
                     {
                         IsInside = MiddlePoint.IsInsidePolyline(polyline);
+                        //if (!IsInside)
+                        //{
+                        //    Circles.Draw(MiddlePoint, 1, 5);
+                        //}
+
                     }
                     if (!IsOverlaping)
                     {
-                        IsOverlaping = MiddlePoint.IsOnPolyline(polyline);
+                        if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
+                        {
+                            IsOverlaping = MiddlePoint.IsOnPolyline(polyline);
+                            //if (IsOverlaping)
+                            //{
+                            //    Circles.Draw(MiddlePoint, 1, 4);
+                            //}
+                        }
+
                     }
                 }
                 if (IsInside && !IsOverlaping)

@@ -8,15 +8,16 @@ namespace SioForgeCAD.Commun.Drawing
     {
         public static ObjectId Draw(Point3d center, double radius, int ColorIndex = 256)
         {
-            return Draw(center, radius, ColorIndex);
+            using (Circle acLine = new Circle(center, Vector3d.ZAxis, radius))
+            {
+                return Draw(acLine, ColorIndex);
+            }
+            
         }
 
         public static ObjectId Draw(Points center, double radius, int ColorIndex = 256)
         {
-            using (Circle acLine = new Circle(center.SCG, Vector3d.ZAxis, radius))
-            {
-                return Draw(acLine, ColorIndex);
-            }
+            return Draw(center.SCG, radius, ColorIndex);
         }
 
         public static ObjectId Draw(Circle acLine, int? ColorIndex = 256)
