@@ -19,11 +19,15 @@ namespace SioForgeCAD
         public void Initialize()
         {
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
+            Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
+            Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
         }
 
         public void Terminate()
         {
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Detach();
+            Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Detach();
+            Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Detach();
         }
 
         [CommandMethod("SIOFORGECAD")]
@@ -109,6 +113,18 @@ namespace SioForgeCAD
         public static void CIRCLETOPOLYLIGNE()
         {
             Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
+        }
+
+        [CommandMethod("POLYLINE3DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        public static void POLYLINE3DTOPOLYLIGNE()
+        {
+            Functions.POLYLINE3DTOPOLYLIGNE.ConvertPolyline3dToPolylines();
+        }
+
+        [CommandMethod("POLYLINE2DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        public static void POLYLINE2DTOPOLYLIGNE()
+        {
+            Functions.POLYLINE2DTOPOLYLIGNE.ConvertPolyline2dToPolylines();
         }
 
         [CommandMethod("DRAWCPTERRAIN", CommandFlags.UsePickSet | CommandFlags.Redraw)]

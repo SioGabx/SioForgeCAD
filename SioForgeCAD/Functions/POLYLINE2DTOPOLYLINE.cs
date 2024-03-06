@@ -6,10 +6,14 @@ using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
-    public static class CIRCLETOPOLYLIGNE
+    public static class POLYLINE2DTOPOLYLIGNE
     {
         public class ContextMenu
         {
@@ -21,31 +25,27 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en polyligne");
                 mi.Click += new EventHandler(OnConvert);
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Circle));
+                RXClass rxc = Entity.GetClass(typeof(Polyline2d));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Circle));
+                RXClass rxc = Entity.GetClass(typeof(Polyline2d));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
             private static void OnConvert(object o, EventArgs e)
             {
                 Document doc = Generic.GetDocument();
-                doc.SendStringToExecute("_.CIRCLETOPOLYLIGNE ", true, false, false);
+                doc.SendStringToExecute("_.POLYLINE2DTOPOLYLIGNE ", true, false, false);
             }
         }
 
-
-
-
-        public static void ConvertCirclesToPolylines()
+        public static void ConvertPolyline2dToPolylines()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Database db = Generic.GetDatabase(); 
+            Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -60,17 +60,16 @@ namespace SioForgeCAD.Functions
 
                         foreach (SelectedObject selObj in selSet)
                         {
-                            if (selObj.ObjectId.ObjectClass.DxfName == "CIRCLE")
+                            if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
                             {
-                                Circle circle = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Circle;
-                                using (Polyline pline = circle.ToPolyline())
+                                Polyline2d poly2d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline2d;
+                                using (Polyline pline = poly2d.ToPolyline())
                                 {
-                                    pline.Elevation = circle.Center.Z;
-                                    pline.Closed = true;
-                                    pline.Layer = circle.Layer;
+                                    pline.Elevation = poly2d.Elevation;
+                                    pline.Layer = poly2d.Layer;
                                     btr.AppendEntity(pline);
                                     tr.AddNewlyCreatedDBObject(pline, true);
-                                    circle.Erase();
+                                    poly2d.Erase();
                                 }
                             }
                         }

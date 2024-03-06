@@ -348,6 +348,41 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+
+        public static Polyline ToPolyline(this Polyline3d poly3d)
+        {
+            if (poly3d.PolyType == Poly3dType.SimplePoly) { 
+            Polyline poly2d = new Polyline();
+            foreach (ObjectId vertexId in poly3d)
+            {
+                PolylineVertex3d vertex = vertexId.GetDBObject() as PolylineVertex3d;
+                if (vertex != null)
+                {
+                    Point2d point = new Point2d(vertex.Position.X, vertex.Position.Y);
+                    poly2d.AddVertexAt(poly2d.NumberOfVertices, point, 0, 0, 0);
+                }
+            }
+            return poly2d;
+            }
+            else
+            {
+                return poly3d.Spline.ToPolyline() as Polyline;
+            }
+        }
+
+        public static Polyline ToPolyline(this Polyline2d poly2d)
+        {
+            if (poly2d.PolyType == Poly2dType.QuadSplinePoly || poly2d.PolyType == Poly2dType.CubicSplinePoly)
+            {
+                return poly2d.Spline.ToPolyline() as Polyline;
+            }
+            Polyline poly = new Polyline();
+            poly.ConvertFrom(poly2d, false);
+            return poly;
+        }
+
+
     }
 }
 

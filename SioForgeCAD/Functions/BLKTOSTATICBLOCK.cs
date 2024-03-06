@@ -50,6 +50,18 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                     blockRef.ConvertToStaticBlock(BlockReferences.GetUniqueBlockName(blockRef.GetBlockReferenceName() + "_static"));
+                    /*
+                      Entity ent = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
+                    if (ent != null && ent.Visible == false)
+                    {
+                        ent.Erase();
+                        count++;
+                    } 
+                      
+                     
+                    (defun C:PurgeHiddenEntities ( / selset n count entnme entdat bit60) (if (setq selset (ssget "X")) (progn (setq n 0 count 0) (repeat (sslength selset) (setq entdat (entget (setq entnme (ssname selset n)))) (if (and (setq bit60 (assoc 60 entdat))(= 1 (cdr bit60))) (progn (entdel entnme) (setq count (1+ count)) ) ) (setq n (1+ n)) ) (princ (strcat "\n " (itoa count) " hidden entities deleted.")) ) ) (princ) )
+
+                    */
                 }
                 tr.Commit();
             }

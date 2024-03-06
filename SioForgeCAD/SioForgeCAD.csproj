@@ -193,6 +193,8 @@
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
+    <Compile Include="Functions\POLYLINE2DTOPOLYLINE.cs" />
+    <Compile Include="Functions\POLYLINE3DTOPOLYLINE.cs" />
     <Compile Include="Functions\PURGEALL.cs" />
     <Compile Include="Functions\RANDOMPAVEMENT.cs" />
     <Compile Include="Functions\RENBLK.cs" />
@@ -243,11 +245,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Ressources\SioForgeCAD_testfile.dwg" />
     <None Include="start.scr">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Ressources\checked.png" />
     <Content Include="Ressources\RainBowRamp.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
