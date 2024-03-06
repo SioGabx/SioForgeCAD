@@ -29,7 +29,7 @@ namespace SioForgeCAD.Commun
                 }
                 foreach (Polyline Poly in Polygon.ToArray())
                 {
-                    DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine);
+                    DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine,Intersect.OnBothOperands);
 
                     //SplittedPolylines.AddToDrawing(4, true);
                     if (SplittedPolylines.Count > 1)
@@ -51,6 +51,7 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
+            //Polygon.AddToDrawing(5, true);
             InsideCutLines.DeepDispose();
             return Polygon;
         }
@@ -101,8 +102,6 @@ namespace SioForgeCAD.Commun
                     }
                 }
 
-
-                //PolyligneA.Cleanup();
                 if (PolyligneA.Closed)
                 {
                     ClosedPolylines.Add(PolyligneA);
@@ -137,7 +136,7 @@ namespace SioForgeCAD.Commun
 
         private static DBObjectCollection GetInsideCutLines(this Polyline polyline, Polyline CutLine)
         {
-            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline, Intersect.ExtendThis);
+            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline, Intersect.ExtendBoth);
             if (CutLines.Count == 0)
             {
                 CutLines.Add(CutLine.Clone() as Polyline);
@@ -146,17 +145,21 @@ namespace SioForgeCAD.Commun
             foreach (Polyline line in CutLines)
             {
                 bool IsInside = true;
+                bool IsOverlaping = false;
                 for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < line.GetReelNumberOfVertices(); PolylineSegmentIndex++)
                 {
-
                     var PolylineSegment = line.GetSegmentAt(PolylineSegmentIndex);
+                    Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
                     if (IsInside)
                     {
-                        Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
                         IsInside = MiddlePoint.IsInsidePolyline(polyline);
                     }
+                    if (!IsOverlaping)
+                    {
+                        IsOverlaping = MiddlePoint.IsOnPolyline(polyline);
+                    }
                 }
-                if (IsInside)
+                if (IsInside && !IsOverlaping)
                 {
                     InsideCutLines.Add(line);
                 }
@@ -166,25 +169,33 @@ namespace SioForgeCAD.Commun
                     line.Dispose();
                 }
             }
-
+            //InsideCutLines.AddToDrawing(3, true);
             //Fix splitted lines
-            foreach (Polyline InsideCutLine_A in InsideCutLines.ToList())
+
+            bool SuccessfulllyJoinACutLine = true;
+            while (SuccessfulllyJoinACutLine)
             {
-                foreach (Polyline InsideCutLine_B in InsideCutLines.ToList())
+                SuccessfulllyJoinACutLine = false;
+                foreach (Polyline InsideCutLine_A in InsideCutLines.ToList())
                 {
-                    if (InsideCutLines.Contains(InsideCutLine_A) && InsideCutLines.Contains(InsideCutLine_B))
+                    foreach (Polyline InsideCutLine_B in InsideCutLines.ToList())
                     {
-                        if (InsideCutLine_A.CanBeJoinWith(InsideCutLine_B))
+                        if (InsideCutLines.Contains(InsideCutLine_A) && InsideCutLines.Contains(InsideCutLine_B))
                         {
-                            InsideCutLines.Remove(InsideCutLine_B);
-                            InsideCutLine_A.JoinEntity(InsideCutLine_B);
-                            InsideCutLine_B.Dispose();
+                            if (InsideCutLine_A.CanBeJoinWith(InsideCutLine_B))
+                            {
+                                SuccessfulllyJoinACutLine = true;
+                                InsideCutLine_A.JoinEntity(InsideCutLine_B);
+                                InsideCutLines.Remove(InsideCutLine_B);
+                                InsideCutLine_B.Dispose();
+                                
+                            }
                         }
                     }
                 }
             }
 
-            //InsideCutLines.AddToDrawing(2, true);
+           //InsideCutLines.AddToDrawing(2, true);
 
             //Extend line to boundary intersection
             foreach (Autodesk.AutoCAD.DatabaseServices.Polyline InsideCutLine in InsideCutLines.ToList())
@@ -212,7 +223,6 @@ namespace SioForgeCAD.Commun
                         }
                     }
                 }
-
             }
 
             return InsideCutLines;
@@ -222,10 +232,8 @@ namespace SioForgeCAD.Commun
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);
 
-            if (IntersectionPointsFounds.Count == 0)
-            {
-                return new DBObjectCollection();
-            }
+            IntersectionPointsFounds.Add(CutLine.StartPoint);
+            IntersectionPointsFounds.Add(CutLine.EndPoint);
 
             Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistanceOnLine(polyline);
             DoubleCollection DblCollection = new DoubleCollection();
@@ -233,12 +241,12 @@ namespace SioForgeCAD.Commun
             {
                 if (Point.IsOnPolyline(polyline))
                 {
-                    var param = polyline.GetParamAtPointX(Point);
-                    if (!DblCollection.Contains(param))
-                    {
-                        DblCollection.Add(param);
-                        DblCollection.Add(param);
-                    }
+                var param = polyline.GetParamAtPointX(Point);
+                if (!DblCollection.Contains(param))
+                {
+                    DblCollection.Add(param);
+                    DblCollection.Add(param);
+                }
                 }
             }
             try
