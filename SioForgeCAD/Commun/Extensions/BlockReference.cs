@@ -47,27 +47,29 @@ namespace SioForgeCAD.Commun.Extensions
             return blockDef.Comments?.ToString();
         }
 
-        public static DynamicBlockReferencePropertyCollection GetDynamicProperties(this BlockReference blockReference)
+        public static List<DynamicBlockReferenceProperty> GetDynamicProperties(this BlockReference blockReference)
         {
-            return blockReference.DynamicBlockReferencePropertyCollection;
-        }
-
-        public static void SetDynamicBlockReferenceProperty(this BlockReference blockReference, string propertyName, object value)
-        {
-            DynamicBlockReferencePropertyCollection propertyCollection = GetDynamicProperties(blockReference);
+            List<DynamicBlockReferenceProperty> Values = new List<DynamicBlockReferenceProperty>();
+            DynamicBlockReferencePropertyCollection propertyCollection = blockReference.DynamicBlockReferencePropertyCollection;
 
             if (propertyCollection != null)
             {
                 foreach (DynamicBlockReferenceProperty prop in propertyCollection)
                 {
-                    if (prop.PropertyName.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!prop.ReadOnly)
-                        {
-                            prop.Value = value;
-                            return;
-                        }
-                    }
+                    Values.Add(prop);
+                }
+            }
+            return Values;
+        }
+
+        public static void SetDynamicBlockReferenceProperty(this BlockReference blockReference, string propertyName, object value)
+        {
+            foreach (DynamicBlockReferenceProperty prop in GetDynamicProperties(blockReference))
+            {
+                if (!prop.ReadOnly && prop.PropertyName.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    prop.Value = value;
+                    return;
                 }
             }
         }
@@ -118,9 +120,7 @@ namespace SioForgeCAD.Commun.Extensions
         /// </summary>
         /// <param name="target">Instance to which the method applies.</param>
         /// <param name="attribs">Collection of pairs Tag/Value.</param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name ="target"/> is null.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name ="attribs"/> is null.</exception>
-        public static void SetAttributeValues(this BlockReference target,Dictionary<string, string> attribs)
+        public static void SetAttributeValues(this BlockReference target, Dictionary<string, string> attribs)
         {
             Transaction tr = Generic.GetDatabase().TransactionManager.TopTransaction;
             foreach (AttributeReference attRef in target.AttributeCollection.GetObjects())
@@ -133,7 +133,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Point3d ProjectPointToCurrentSpace(ObjectId xrefId, Point3d pointInXref)
+        public static Point3d ProjectXrefPointToCurrentSpace(ObjectId xrefId, Point3d pointInXref)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;

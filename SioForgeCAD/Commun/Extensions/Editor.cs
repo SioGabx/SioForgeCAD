@@ -37,6 +37,40 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
+        {
+            objectId = new ObjectId[0];
+            Editor editor = Generic.GetEditor();
+            TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "Selectionnez un bloc",
+                SingleOnly = SingleOnly,
+                SinglePickInSpace = true,
+                RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers
+            };
+
+            PromptSelectionResult promptResult;
+
+            while (true)
+            {
+                promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+
+                if (promptResult.Status == PromptStatus.Cancel)
+                {
+                    return false;
+                }
+                else if (promptResult.Status == PromptStatus.OK)
+                {
+                    if (promptResult.Value.Count > 0)
+                    {
+                        objectId = promptResult.Value.GetObjectIds();
+                        return true;
+                    }
+                }
+            }
+        }
+
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
         {
             Database db = ed.Document.Database;

@@ -92,7 +92,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("BLKMAKEUNIQUE", CommandFlags.Redraw)]
-        public void MAKEUNIQUBLK()
+        public void BLKMAKEUNIQUE()
         {
             new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
         }
@@ -101,6 +101,12 @@ namespace SioForgeCAD
         public void BLKMAKEUNIQUEEACH()
         {
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
+        }
+
+        [CommandMethod("BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
+        public void BLKSETTOBYBBLOCK()
+        {
+            Functions.BLKSETTOBYBBLOCK.ByBlock();
         }
 
         [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
@@ -133,7 +139,7 @@ namespace SioForgeCAD
             new Functions.DRAWCPTERRAIN().DrawTerrainFromSelectedPoints();
         }
 
-        [CommandMethod("DROPCPOBJECTTOTERRAIN")]
+        [CommandMethod("DROPCPOBJECTTOTERRAIN", CommandFlags.UsePickSet)]
         public static void DROPCPOBJECTTOTERRAIN()
         {
             Functions.DROPCPOBJECTTOTERRAIN.Project();
@@ -374,7 +380,7 @@ namespace SioForgeCAD
                     {
                         Generic.WriteMessage(item.ToString());
                     }
-                    
+
                 }
             }
         }

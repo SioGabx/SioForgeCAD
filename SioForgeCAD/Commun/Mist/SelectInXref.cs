@@ -59,7 +59,7 @@ namespace SioForgeCAD.Commun
             Point3d BlkPosition = XrefPosition;
             foreach (ObjectId objectId in NestedXrefsContainer)
             {
-                BlkPosition = Points.From3DPoint(BlockReferenceExtensions.ProjectPointToCurrentSpace(objectId, BlkPosition)).SCG;
+                BlkPosition = Points.From3DPoint(BlockReferenceExtensions.ProjectXrefPointToCurrentSpace(objectId, BlkPosition)).SCG;
             }
             return BlkPosition.ToPoints();
         }

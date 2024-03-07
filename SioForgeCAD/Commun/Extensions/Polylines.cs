@@ -352,18 +352,19 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Polyline ToPolyline(this Polyline3d poly3d)
         {
-            if (poly3d.PolyType == Poly3dType.SimplePoly) { 
-            Polyline poly2d = new Polyline();
-            foreach (ObjectId vertexId in poly3d)
+            if (poly3d.PolyType == Poly3dType.SimplePoly)
             {
-                PolylineVertex3d vertex = vertexId.GetDBObject() as PolylineVertex3d;
-                if (vertex != null)
+                Polyline poly2d = new Polyline();
+                foreach (ObjectId vertexId in poly3d)
                 {
-                    Point2d point = new Point2d(vertex.Position.X, vertex.Position.Y);
-                    poly2d.AddVertexAt(poly2d.NumberOfVertices, point, 0, 0, 0);
+                    PolylineVertex3d vertex = vertexId.GetDBObject() as PolylineVertex3d;
+                    if (vertex != null)
+                    {
+                        Point2d point = new Point2d(vertex.Position.X, vertex.Position.Y);
+                        poly2d.AddVertexAt(poly2d.NumberOfVertices, point, 0, 0, 0);
+                    }
                 }
-            }
-            return poly2d;
+                return poly2d;
             }
             else
             {

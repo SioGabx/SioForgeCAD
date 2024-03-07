@@ -6,10 +6,6 @@ using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -44,7 +40,7 @@ namespace SioForgeCAD.Functions
 
         public static void ConvertPolyline2dToPolylines()
         {
-            Database db = Generic.GetDatabase(); 
+            Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())

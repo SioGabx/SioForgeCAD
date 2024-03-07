@@ -1,14 +1,13 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
-    public static class BLKTOSTATICBLOCK
+    public static class BLKSETTOBYBBLOCK
     {
-        public static void Convert()
+        public static void ByBlock()
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -26,31 +25,16 @@ namespace SioForgeCAD.Functions
                         return;
                     }
 
-                    string UniqueName;
-                    if (blockRef.IsDynamicBlock || (blockRef.BlockTableRecord.GetDBObject() as BlockTableRecord).IsDynamicBlock)
-                    {
-                        UniqueName = BlockReferences.GetUniqueBlockName(blockRef.GetBlockReferenceName() + "_static");
-                        blockRef.ConvertToStaticBlock(UniqueName);
-                    }
-                    else
-                    {
-                        UniqueName = blockRef.GetBlockReferenceName();
-                    }
-
-                    BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
-                    if (!bt.Has(UniqueName))
-                    {
-                        return;
-                    }
-                    BlockTableRecord blockDef = bt[UniqueName].GetObject(OpenMode.ForWrite) as BlockTableRecord;
+                    BlockTableRecord blockDef = blockRef.BlockTableRecord.GetObject(OpenMode.ForWrite) as BlockTableRecord;
                     foreach (ObjectId EntityInBlockDef in blockDef)
                     {
-                        if (EntityInBlockDef.GetDBObject() is Entity ent)
+                        if (EntityInBlockDef.GetDBObject(OpenMode.ForWrite) is Entity ent)
                         {
-                            if (!ent.Visible)
-                            {
-                                ent.EraseObject();
-                            }
+                            ent.ColorIndex = 0; //ByBlock 
+                            ent.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByBlock);
+                            ent.Linetype = "BYBLOCK";
+                            ent.LineWeight = LineWeight.ByBlock;
+                            ent.Layer = "0";
                         }
                     }
                     foreach (ObjectId BlkRefInDrawing in blockDef.GetBlockReferenceIds(true, false))
@@ -60,7 +44,11 @@ namespace SioForgeCAD.Functions
                 }
                 tr.Commit();
             }
+
+
         }
+
+
 
     }
 }
