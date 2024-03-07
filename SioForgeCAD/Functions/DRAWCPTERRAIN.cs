@@ -204,7 +204,9 @@ namespace SioForgeCAD.Functions
                 TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
                 CotationBlockRefObjectId.EraseObject();
             }
-            TerrainEntity.Add(Polylines.GetPolylineFromPoints(TerrainPointsToConnect));
+            Polyline MainTerrainPolyline = Polylines.GetPolylineFromPoints(TerrainPointsToConnect);
+            MainTerrainPolyline.Cleanup();
+            TerrainEntity.Add(MainTerrainPolyline);
             return TerrainEntity;
         }
 

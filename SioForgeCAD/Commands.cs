@@ -355,6 +355,30 @@ namespace SioForgeCAD
             Commun.Triangulate.TriangulateCommand();
         }
 
+        [CommandMethod("DEBUG", "READXDATA", CommandFlags.UsePickSet)]
+        public void READXDATA()
+        {
+
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            var result = ed.GetEntity("Selectionnez un object");
+            if (result.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (result.ObjectId.GetDBObject() is Entity ent)
+                {
+                    foreach (var item in ent.ReadXData())
+                    {
+                        Generic.WriteMessage(item.ToString());
+                    }
+                    
+                }
+            }
+        }
+
         [CommandMethod("DEBUG", "ISCLOCKWISE", CommandFlags.UsePickSet)]
         public void ISCLOCKWISE()
         {

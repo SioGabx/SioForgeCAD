@@ -2,7 +2,9 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -66,6 +68,67 @@ namespace SioForgeCAD.Commun.Extensions
                             return;
                         }
                     }
+                }
+            }
+        }
+
+
+        public static IEnumerable<KeyValuePair<string, AttributeReference>> GetAttributesByTag(this BlockReference source)
+        {
+            foreach (var att in source.AttributeCollection.GetObjects())
+            {
+                yield return new KeyValuePair<string, AttributeReference>(att.Tag, att);
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all the attribute values by tag.
+        /// </summary>
+        /// <param name="source">Instance to which the method applies.</param>
+        /// <returns>Collection of pairs Tag/Value.</returns>
+        public static Dictionary<string, string> GetAttributesValues(this BlockReference source)
+        {
+            return source.GetAttributesByTag().ToDictionary(p => p.Key, p => p.Value.TextString);
+        }
+
+
+        /// <summary>
+        /// Sets the value to the attribute.
+        /// </summary>
+        /// <param name="target">Instance to which the method applies.</param>
+        /// <param name="tag">Attribute tag.</param>
+        /// <param name="value">New value.</param>
+        /// <returns>The value if attribute was found, null otherwise.</returns>
+        public static string SetAttributeValue(this BlockReference target, string tag, string value)
+        {
+            foreach (AttributeReference attRef in target.AttributeCollection.GetObjects())
+            {
+                if (attRef.Tag == tag)
+                {
+                    attRef.TextString = value;
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the values to the attributes.
+        /// </summary>
+        /// <param name="target">Instance to which the method applies.</param>
+        /// <param name="attribs">Collection of pairs Tag/Value.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name ="target"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name ="attribs"/> is null.</exception>
+        public static void SetAttributeValues(this BlockReference target,Dictionary<string, string> attribs)
+        {
+            Transaction tr = Generic.GetDatabase().TransactionManager.TopTransaction;
+            foreach (AttributeReference attRef in target.AttributeCollection.GetObjects())
+            {
+                if (attribs.ContainsKey(attRef.Tag))
+                {
+                    tr.GetObject(attRef.ObjectId, OpenMode.ForWrite);
+                    attRef.TextString = attribs[attRef.Tag];
                 }
             }
         }

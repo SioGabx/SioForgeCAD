@@ -25,6 +25,17 @@ namespace SioForgeCAD.Commun
             return db.TransactionManager.GetObject(objectId, openMode, false, true);
         }
 
+        public static List<ObjectId> GetObjectIds(this IEnumerable<DBObject> dBObjects)
+        {
+            List<ObjectId> ObjectIds = new List<ObjectId>();
+            foreach (DBObject obj in dBObjects)
+            {
+                ObjectIds.Add(obj.ObjectId);
+            }
+            return ObjectIds;
+        }
+
+
         public static DBObject GetNoTransactionDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
         {
             var db = Generic.GetDatabase();
@@ -43,17 +54,12 @@ namespace SioForgeCAD.Commun
 
         public static DBObjectCollection Explode(this IEnumerable<ObjectId> ObjectsToExplode, bool EraseOriginal = true)
         {
-            Database db = Generic.GetDatabase();
-            Autodesk.AutoCAD.DatabaseServices.TransactionManager tr = db.TransactionManager;
-
-            // Collect our exploded objects in a single collection
-
             DBObjectCollection objs = new DBObjectCollection();
 
             // Loop through the selected objects
             foreach (ObjectId ObjectToExplode in ObjectsToExplode)
             {
-                Entity ent = (Entity)tr.GetObject(ObjectToExplode, OpenMode.ForRead);
+                Entity ent = ObjectToExplode.GetEntity();
                 // Explode the object into our collection
                 ent.Explode(objs);
                 if (EraseOriginal)
@@ -79,6 +85,16 @@ namespace SioForgeCAD.Commun
                 NewDBObjectCollection.Add(ObjectId.GetDBObject());
             }
             return NewDBObjectCollection;
+        }
+
+        public static ObjectIdCollection ToObjectIdCollection(this IEnumerable<ObjectId> objectId)
+        {
+            var NewObjectIdCollection = new ObjectIdCollection();
+            foreach (ObjectId ObjectId in NewObjectIdCollection)
+            {
+                NewObjectIdCollection.Add(ObjectId);
+            }
+            return NewObjectIdCollection;
         }
 
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<DBObject> entities)

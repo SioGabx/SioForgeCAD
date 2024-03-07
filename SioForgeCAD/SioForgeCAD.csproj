@@ -106,8 +106,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
+    <Compile Include="Commun\Extensions\AttributeCollection.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
+    <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
     <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
