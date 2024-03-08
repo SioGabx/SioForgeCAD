@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -221,7 +222,10 @@ namespace SioForgeCAD.Commun
                         var NewStartPoint = OrderedIntersectionPointsFounds[0];
                         if (NewStartPoint.DistanceTo(InsideCutLine.StartPoint) < CutLine.Length / 2)
                         {
-                            InsideCutLine.SetPointAt(0, NewStartPoint.ToPoint2d());
+                            if (InsideCutLine.EndPoint.DistanceTo(NewStartPoint) >= InsideCutLine.EndPoint.DistanceTo(InsideCutLine.StartPoint))
+                            {
+                                InsideCutLine.SetPointAt(0, NewStartPoint.ToPoint2d());
+                            }
                         }
                     }
 
@@ -231,7 +235,11 @@ namespace SioForgeCAD.Commun
                         var NewEndPoint = OrderedIntersectionPointsFounds[0];
                         if (NewEndPoint.DistanceTo(InsideCutLine.EndPoint) < CutLine.Length / 2)
                         {
-                            InsideCutLine.SetPointAt(InsideCutLine.NumberOfVertices - 1, NewEndPoint.ToPoint2d());
+                            if (InsideCutLine.StartPoint.DistanceTo(NewEndPoint) >= InsideCutLine.StartPoint.DistanceTo(InsideCutLine.EndPoint))
+                            {
+                                InsideCutLine.SetPointAt(InsideCutLine.NumberOfVertices - 1, NewEndPoint.ToPoint2d());
+                            }
+                            
                         }
                     }
                 }
