@@ -364,3 +364,4 @@ FodyWeavers.xsd
 *.bak
 *.dwl
 *.dwl2
+/SioForgeCAD/Ressources/acad.err
