@@ -1,7 +1,10 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.BoundaryRepresentation;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
+using SioForgeCAD.Commun.Extensions;
 using System.Linq;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -41,9 +44,21 @@ namespace SioForgeCAD.Commun.Extensions
                     var NumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline BaseBoundary);
                     if (NumberOfBoundary > 1)
                     {
+                        if (BaseBoundary.Closed)
+                        {
+                            tr.Commit();
+                            if (Hachure.HatchStyle != HatchStyle.Ignore)
+                            {
+                                Generic.WriteMessage("\nImpossible de découper une hachure qui contient des trous");
+                                return false;
+                            }
+                            Generic.WriteMessage("\nAvertissement : La polyligne contient des trous mais ceux ci seront ignorés");
+                            Polyline = BaseBoundary;
+                            return true;
+                        }
                         Hachure.ReGenerateBoundaryCommand();
                         double NewNumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline);
-                        if (NewNumberOfBoundary > 1)
+                        if (NewNumberOfBoundary > 1 && !Polyline.Closed)
                         {
                             var objectIdCollection = Hachure.GetAssociatedObjectIds();
                             Polyline = null;
@@ -56,7 +71,14 @@ namespace SioForgeCAD.Commun.Extensions
                                 }
                                 else
                                 {
-                                    Polyline.JoinPolyline(BoundaryElementEntity);
+                                    try
+                                    {
+                                        Polyline.JoinPolyline(BoundaryElementEntity);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug.WriteLine(ex);
+                                    }
                                 }
                             }
                             Polyline.Cleanup();
@@ -128,5 +150,58 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return plines;
         }
+
+
+
+        public static Hatch HatchRegion(this Region region, Transaction tr, bool Associative = true)
+        {
+            // Create a hatch and set its properties
+            Hatch hatch = new Hatch();
+            //hatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+            //hatch.ColorIndex = 1;  // Set your desired color index
+            //hatch.Transparency = new Transparency(127);
+
+            // Add the hatch to the modelspace & transaction
+            Generic.GetCurrentSpaceBlockTableRecord(tr).AppendEntity(hatch);
+            tr.AddNewlyCreatedDBObject(hatch, true);
+
+            hatch.Associative = Associative;
+
+            // Add the hatch loops and complete the hatch
+            foreach ((HatchLoopTypes loopType, Curve2dCollection edgePtrs, IntegerCollection edgeTypes) item in region.GetLoops())
+            {
+                hatch.AppendLoop(item.loopType, item.edgePtrs, item.edgeTypes);
+            }
+
+            hatch.EvaluateHatch(true);
+            return hatch;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

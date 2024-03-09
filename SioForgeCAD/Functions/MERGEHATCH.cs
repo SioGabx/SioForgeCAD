@@ -57,9 +57,6 @@ namespace SioForgeCAD.Functions
                     MergedCurves = UndoOffsetCurves;
                 }
 
-
-
-
                 MergedCurves.AddToDrawing();
                 MergePolylinePoints(MergedCurves);
                 foreach (Curve curve in MergedCurves)
@@ -74,12 +71,6 @@ namespace SioForgeCAD.Functions
                 return;
             }
         }
-
-
-
-
-
-
 
 
         private static void MergePolylinePoints(List<Curve> curves)

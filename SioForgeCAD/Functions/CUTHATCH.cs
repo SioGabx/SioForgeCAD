@@ -47,11 +47,29 @@ namespace SioForgeCAD.Functions
 
             if (CutLine != null)
             {
+
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    var Cuted = Boundary.Cut(CutLine);
-                    ApplyCutting(Boundary, Hachure, Cuted);
-                    Generic.WriteMessage($"La hachure à été divisée en {Cuted.Count}");
+                    //HoleInHatch(Boundary, CutLine, Hachure);
+                    //tr.Commit();
+                    //return;
+
+
+
+                    List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
+                    int NumberOfPolyline = CuttedPolyline.Count;
+                    if (NumberOfPolyline > 1)
+                    {
+                        ApplyCutting(Boundary, Hachure, CuttedPolyline);
+                        Boundary.ObjectId.EraseObject();
+                        Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}");
+                    }
+                    else if (CheckIfHole(Boundary, CutLine))
+                    {
+                        HoleInHatch(Boundary, CutLine, Hachure);
+                        Generic.WriteMessage($"Un trou à été découpé dans la hachure");
+                    }
+
                     tr.Commit();
 
                 }
@@ -307,10 +325,82 @@ namespace SioForgeCAD.Functions
                     Debug.WriteLine(ex.ToString());
                 }
 
-                polyline.ObjectId.EraseObject();
                 hachure.ObjectId.EraseObject();
             }
         }
+
+        public static void HoleInHatch(Polyline OutsidePolyline, Polyline InsidePolyline, Hatch hachure)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.TopTransaction)
+            {
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr); ;
+                DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
+                ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
+
+                OutsidePolyline.CopyPropertiesTo(InsidePolyline);
+                var polylineObjectId = btr.AppendEntity(InsidePolyline);
+                DrawOrderCollection.Add(polylineObjectId);
+                tr.AddNewlyCreatedDBObject(InsidePolyline, true);
+
+                ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
+                ObjectIdCollection InsideObjId = new ObjectIdCollection  { polylineObjectId };
+
+                Hatch oHatch = new Hatch();
+                var oHatchObjectId = btr.AppendEntity(oHatch);
+                tr.AddNewlyCreatedDBObject(oHatch, true);
+                oHatch.Associative = true;
+                oHatch.AppendLoop(HatchLoopTypes.Default, OutsideObjId);
+                oHatch.AppendLoop(HatchLoopTypes.External, InsideObjId);
+                oHatch.EvaluateHatch(true);
+                hachure.CopyPropertiesTo(oHatch);
+                oHatch.HatchStyle = HatchStyle.Normal;
+                DrawOrderCollection.Add(oHatchObjectId);
+                orderTable.MoveAbove(OutsideObjId, oHatchObjectId);
+                orderTable.MoveAbove(InsideObjId, oHatchObjectId);
+
+                //Keep same draw order as old hatch
+                try
+                {
+                    orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                }
+
+                ApplyCutting(OutsidePolyline, hachure, new List<Polyline> { InsidePolyline.Clone() as Polyline });
+            }
+        }
+
+
+        static bool CheckIfHole(Polyline Boundary, Polyline CutLine)
+        {
+            if (!CutLine.Closed)
+            {
+                return false;
+            }
+
+            foreach (var Point in CutLine.GetPoints())
+            {
+                if (!Point.IsInsidePolyline(Boundary))
+                {
+                    return false;
+                }
+            }
+
+            var IntersectionFound = new Point3dCollection();
+            CutLine.IntersectWith(Boundary, Intersect.OnBothOperands, IntersectionFound, IntPtr.Zero, IntPtr.Zero);
+            if (IntersectionFound.Count > 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+
+
 
         public static Point3d FoundNearestPointOnPolyline(Polyline polyline, Point3d point)
         {
@@ -323,7 +413,7 @@ namespace SioForgeCAD.Functions
             int NumberOfPolyline = CuttedPolyline.Count;
             CuttedPolyline.Remove(Boundary);
             CuttedPolyline.DeepDispose();
-            return NumberOfPolyline > 1;
+            return (NumberOfPolyline > 1) || CheckIfHole(Boundary, CutLine);
         }
 
         public class GetCutHatchLinePointTransient : GetPointTransient
