@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun
 {
     public static class SlicePolygon
     {
-
+        public static List<Polyline> LastSliceResult = null;
         public static List<Polyline> Cut(this Polyline BasePolyline, Polyline BaseCutLine)
         {
             BaseCutLine.Elevation = BasePolyline.Elevation;
@@ -52,7 +52,30 @@ namespace SioForgeCAD.Commun
             }
             //Polygon.AddToDrawing(5, true);
             InsideCutLines.DeepDispose();
+            SetCache(Polygon, BasePolyline);
             return Polygon;
+        }
+
+
+        public static void SetCache(List<Polyline> CachePolygon, Polyline BasePolyline)
+        {
+            if (CachePolygon != null && CachePolygon != null)
+            {
+                foreach (var item in CachePolygon)
+                {
+                    if (item != null)
+                    {
+                        LastSliceResult?.Remove(item);
+                    }
+                }
+
+            }
+            if (BasePolyline != null)
+            {
+                LastSliceResult?.Remove(BasePolyline);
+            }
+            LastSliceResult?.DeepDispose();
+            LastSliceResult = CachePolygon;
         }
 
 
@@ -239,7 +262,7 @@ namespace SioForgeCAD.Commun
                             {
                                 InsideCutLine.SetPointAt(InsideCutLine.NumberOfVertices - 1, NewEndPoint.ToPoint2d());
                             }
-                            
+
                         }
                     }
                 }

@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
                                 using (Polyline pline = poly2d.ToPolyline())
                                 {
                                     pline.Elevation = poly2d.Elevation;
-                                    pline.Layer = poly2d.Layer;
+                                    poly2d.CopyPropertiesTo(pline);
                                     btr.AppendEntity(pline);
                                     tr.AddNewlyCreatedDBObject(pline, true);
                                     poly2d.Erase();

@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                                 {
                                     pline.Elevation = circle.Center.Z;
                                     pline.Closed = true;
-                                    pline.Layer = circle.Layer;
+                                    circle.CopyPropertiesTo(pline);
                                     btr.AppendEntity(pline);
                                     tr.AddNewlyCreatedDBObject(pline, true);
                                     circle.Erase();

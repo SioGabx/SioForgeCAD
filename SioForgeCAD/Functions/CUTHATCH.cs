@@ -50,19 +50,15 @@ namespace SioForgeCAD.Functions
 
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    //HoleInHatch(Boundary, CutLine, Hachure);
-                    //tr.Commit();
-                    //return;
-
-
-
-                    List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
+                    List<Polyline> CuttedPolyline = SlicePolygon.LastSliceResult is null ? Boundary.Cut(CutLine) : SlicePolygon.LastSliceResult;
                     int NumberOfPolyline = CuttedPolyline.Count;
                     if (NumberOfPolyline > 1)
                     {
                         ApplyCutting(Boundary, Hachure, CuttedPolyline);
+                       
                         Boundary.ObjectId.EraseObject();
-                        Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}");
+                        Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}"); 
+                       
                     }
                     else if (CheckIfHole(Boundary, CutLine))
                     {
@@ -73,7 +69,8 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
 
                 }
-                CutLine.Dispose();
+                CutLine.Dispose(); 
+                SlicePolygon.SetCache(null, null);
             }
 
         }
@@ -411,8 +408,8 @@ namespace SioForgeCAD.Functions
         {
             List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
             int NumberOfPolyline = CuttedPolyline.Count;
-            CuttedPolyline.Remove(Boundary);
-            CuttedPolyline.DeepDispose();
+            //CuttedPolyline.Remove(Boundary);
+            //CuttedPolyline.DeepDispose();
             return (NumberOfPolyline > 1) || CheckIfHole(Boundary, CutLine);
         }
 
