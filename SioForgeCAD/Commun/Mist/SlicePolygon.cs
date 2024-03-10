@@ -85,7 +85,7 @@ namespace SioForgeCAD.Commun
 
             foreach (Polyline polyline in SplittedPolylines)
             {
-                if (polyline.IsLineCanCloseAPolyline(CutLine))
+                if (polyline.IsCurveCanClose(CutLine))
                 {
                     polyline.JoinEntity(CutLine);
                     polyline.Closed = true;

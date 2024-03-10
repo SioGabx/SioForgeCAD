@@ -88,6 +88,7 @@ namespace SioForgeCAD.Commun.Extensions
                     new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
                     new TypedValue((int)DxfCode.Start, "LINE"),
                     new TypedValue((int)DxfCode.Start, "ELLIPSE"),
+                    new TypedValue((int)DxfCode.Start, "CIRCLE"),
                     new TypedValue((int)DxfCode.Start, "SPLINE"),
                     new TypedValue((int)DxfCode.Operator, "or>"),
                 };
@@ -108,7 +109,12 @@ namespace SioForgeCAD.Commun.Extensions
 
                 if (SelectedEntity is Ellipse ProjectionTargetEllipse)
                 {
-                    // SelectedEntity = ProjectionTargetEllipse.ToPolyline();
+                    SelectedEntity = ProjectionTargetEllipse.ToPolyline();
+                }
+
+                if (SelectedEntity is Circle ProjectionTargetCircle)
+                {
+                    SelectedEntity = ProjectionTargetCircle.ToPolyline();
                 }
 
                 if (SelectedEntity is Spline ProjectionTargetSpline)
@@ -123,6 +129,46 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 return ProjectionTarget;
             }
+        }
+
+        public static bool GetHatch(this Editor ed, out ObjectId HatchObjectId)
+        {
+            HatchObjectId = ObjectId.Null;
+            SelectionSet BaseSelection = ed.SelectImplied()?.Value;
+            if (BaseSelection != null && BaseSelection.Count > 0)
+            {
+                foreach (ObjectId item in BaseSelection.GetObjectIds())
+                {
+                    DBObject Obj = item.GetDBObject();
+                    if (Obj is Hatch)
+                    {
+                        HatchObjectId = item;
+                        break;
+                    }
+                }
+            }
+
+            if (HatchObjectId == ObjectId.Null)
+            {
+                var option = new PromptEntityOptions("\nSelectionnez une hachure")
+                {
+                    AllowNone = true,
+                    AllowObjectOnLockedLayer = false,
+                };
+                option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
+                option.AddAllowedClass(typeof(Hatch), false);
+                var Result = ed.GetEntity(option);
+                if (Result.Status == PromptStatus.None)
+                {
+                    return true;
+                }
+                else if (Result.Status != PromptStatus.OK)
+                {
+                    return false;
+                }
+                HatchObjectId = Result.ObjectId;
+            }
+            return true;
         }
 
     }

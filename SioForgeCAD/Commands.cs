@@ -1,13 +1,16 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using System.Windows;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -19,6 +22,7 @@ namespace SioForgeCAD
         public void Initialize()
         {
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
+            Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
         }
@@ -26,6 +30,7 @@ namespace SioForgeCAD
         public void Terminate()
         {
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Detach();
+            Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Detach();
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Detach();
             Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Detach();
         }
@@ -119,6 +124,11 @@ namespace SioForgeCAD
         public static void CIRCLETOPOLYLIGNE()
         {
             Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
+        }
+        [CommandMethod("ELLIPSETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        public static void ELLIPSETOPOLYLIGNE()
+        {
+            Functions.ELLIPSETOPOLYLIGNE.ConvertEllipseToPolylines();
         }
 
         [CommandMethod("POLYLINE3DTOPOLYLIGNE", CommandFlags.UsePickSet)]
@@ -248,6 +258,43 @@ namespace SioForgeCAD
         {
             Functions.CUTHATCH.CutHatch();
         }
+        
+        [CommandMethod("TESTCUTHATCH", CommandFlags.UsePickSet)]
+        public static void TESTCUTHATCH()
+        {
+            Functions.CUTHATCH.CutHoleHatch();
+        }
+        [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
+        public static void TESTMERGE()
+        {
+            Editor ed = Generic.GetEditor();
+
+            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
+            PromptSelectionResult selRes = ed.GetSelection();
+            if (selRes.Status != PromptStatus.OK)
+                return;
+
+            SelectionSet sel = selRes.Value;
+            List<Curve> Curves = new List<Curve>();
+
+            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId selectedObjectId in sel.GetObjectIds())
+                {
+                    DBObject ent = selectedObjectId.GetDBObject();
+                    if (ent is Curve)
+                    {
+                        Curve curv = ent.Clone() as Curve;
+                        Curves.Add(curv);
+                    }
+                }
+                Curves.Join().AddToDrawing(2);
+                tr.Commit();
+            }
+            
+        }
+
+
 
 
 
@@ -283,8 +330,64 @@ namespace SioForgeCAD
 
 
 
-        [CommandMethod("TEST")]
-        public static void TEST()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        [CommandMethod("TESTtraytooltip")]
+        public static void TESTtraytooltip()
         {
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2

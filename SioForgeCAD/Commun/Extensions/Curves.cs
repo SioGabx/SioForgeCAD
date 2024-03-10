@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -141,7 +142,191 @@ namespace SioForgeCAD.Commun.Extensions
             return OffsetCurves;
         }
 
-        public static List<Curve> Merge(this IEnumerable<Curve> Curves)
+
+        public static bool IsSelfIntersecting(this Curve poly, out Point3dCollection IntersectionFound)
+        {
+            IntersectionFound = new Point3dCollection();
+            DBObjectCollection entities = new DBObjectCollection();
+            poly.Explode(entities);
+            for (int i = 0; i < entities.Count; ++i)
+            {
+                for (int j = i + 1; j < entities.Count; ++j)
+                {
+                    Curve curve1 = entities[i] as Curve;
+                    Curve curve2 = entities[j] as Curve;
+                    Point3dCollection points = new Point3dCollection();
+                    curve1.IntersectWith(curve2, Intersect.OnBothOperands, points, IntPtr.Zero, IntPtr.Zero);
+
+                    foreach (Point3d point in points)
+                    {
+                        // Make a check to skip the start/end points
+                        // since they are connected vertices
+                        if (point == curve1.StartPoint || point == curve1.EndPoint)
+                        {
+                            if (point == curve2.StartPoint || point == curve2.EndPoint)
+                            {
+                                continue;
+                            }
+                        }
+
+                        // If two consecutive segments, then skip
+                        if (j == i + 1)
+                        {
+                            continue;
+                        }
+                        IntersectionFound.Add(point);
+                    }
+
+                }
+                // Need to be disposed explicitely
+                // since entities are not DB resident
+                entities[i].Dispose();
+            }
+
+            if (IntersectionFound.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
+        }
+
+        public static bool CanBeJoinWith(this Curve A, Curve B)
+        {
+            if (A == B) { return false; }
+            if (A.Closed || B.Closed)
+            {
+                return false;
+            }
+
+            if (A.IsCurveCanClose(B))
+            {
+                //Check if the polyline is already joined
+                IEnumerable<Point3d> PAPoint = A.GetPoints();
+                var PAPointList = PAPoint.ToList();
+                if (A.StartPoint.DistanceTo(A.EndPoint) > Generic.MediumTolerance.EqualPoint)
+                {
+                    PAPointList.Remove(A.StartPoint);
+                    PAPointList.Remove(A.EndPoint);
+                }
+
+                IEnumerable<Point3d> PBPoint = B.GetPoints();
+
+                if (PAPointList.ContainsAll(PBPoint))
+                {
+                    return false;
+                }
+            }
+
+            if (!A.HasEndPointOrStartPointInCommun(B))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static bool IsCurveCanClose(this Curve PolyA, Curve PolyB)
+        {
+            Point3d StartPointA = PolyA.StartPoint.Flatten();
+            Point3d EndPointA = PolyA.EndPoint.Flatten();
+
+            Point3d StartPointB = PolyB.StartPoint.Flatten();
+            Point3d EndPointB = PolyB.EndPoint.Flatten();
+            return (StartPointA.IsEqualTo(StartPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(EndPointB, Generic.LowTolerance)) ||
+                 (StartPointA.IsEqualTo(EndPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(StartPointB, Generic.LowTolerance));
+        }
+
+        public static bool HasEndPointOrStartPointInCommun(this Curve A, Curve B)
+        {
+            if (A == null || B == null) return false;
+
+            if (A.EndPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
+            if (A.EndPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
+            if (A.StartPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
+            if (A.StartPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
+
+            return false;
+        }
+
+
+
+        public static List<Curve> Join(this IEnumerable<Curve> Curves)
+        {
+            List<Curve> entities = Curves.ToList();
+            for (int i = 0; i < entities.Count; i++)
+            {
+                var JoignableEnt = entities[i].GetJoinableCurve();
+                entities[i] = JoignableEnt;
+            }
+
+
+            for (int i = entities.Count - 1; i >= 0; i--)
+            {
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    try
+                    {
+                        // check if start/endpoints are the same
+                        // if they are join them and reset the loops and start again
+                        Curve srcCurve = entities[i];
+                        Curve addCurve = entities[j];
+
+                        if (srcCurve.CanBeJoinWith(addCurve))
+                        {
+                            if (addCurve is Spline && !(srcCurve is Spline))
+                            {
+                                addCurve.JoinEntity(srcCurve);
+                                entities.RemoveAt(i);
+                                srcCurve.Dispose();
+                            }
+                            else
+                            {
+                                srcCurve.JoinEntity(addCurve);
+                                entities.RemoveAt(j);
+                                addCurve.Dispose();
+                            }
+
+
+                            // reset i to the start (as it has changed)
+                            i = entities.Count;
+                            j = 0;
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.WriteLine("\nError: n{0}", ex.Message);
+                    }
+                }
+            }
+
+            return entities;
+        }
+
+
+        private static Curve GetJoinableCurve(this Curve srcCurve)
+        {
+            if (srcCurve is Line srcPolylineType)
+            {
+                return srcPolylineType.ToPolyline();
+            }
+            if (srcCurve is Arc srcPArcType)
+            {
+                return srcPArcType.ToPolyline();
+            }
+
+            if (srcCurve is Ellipse srcPEllipseType)
+            {
+                return srcPEllipseType.Spline;
+            }
+            return srcCurve;
+        }
+
+
+
+        public static List<Curve> RegionMerge(this IEnumerable<Curve> Curves)
         {
             DBObjectCollection reg = new DBObjectCollection();
             try

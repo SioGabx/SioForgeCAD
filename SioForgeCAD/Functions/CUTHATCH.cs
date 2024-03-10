@@ -15,9 +15,25 @@ namespace SioForgeCAD.Functions
 {
     public static class CUTHATCH
     {
+        public static void CutHoleHatch()
+        {
+            if (!GetHatch(out Hatch Hachure))
+            {
+                return;
+            }
+            if (!Hachure.GetHatchPolylineV2(out Polyline Boundary))
+            {
+                return;
+            }
+        }
+
         public static void CutHatch()
         {
-            if (!GetHatch(out Hatch Hachure, out Polyline Boundary))
+            if (!GetHatch(out Hatch Hachure) || Hachure is null)
+            {
+                return;
+            }
+            if (!Hachure.GetHatchPolyline(out Polyline Boundary) )
             {
                 return;
             }
@@ -208,59 +224,20 @@ namespace SioForgeCAD.Functions
 
 
 
-        public static bool AskSelectHatch(out ObjectId HatchObjectId)
-        {
-            Editor ed = Generic.GetEditor();
-            HatchObjectId = ObjectId.Null;
-            SelectionSet BaseSelection = ed.SelectImplied()?.Value;
-            if (BaseSelection != null && BaseSelection.Count > 0)
-            {
-                foreach (ObjectId item in BaseSelection.GetObjectIds())
-                {
-                    DBObject Obj = item.GetDBObject();
-                    if (Obj is Hatch)
-                    {
-                        HatchObjectId = item;
-                        break;
-                    }
-                }
-            }
+       
 
-            if (HatchObjectId == ObjectId.Null)
-            {
-                var option = new PromptEntityOptions("\nSelectionnez une hachure")
-                {
-                    AllowNone = true,
-                    AllowObjectOnLockedLayer = false,
-                };
-                option.SetRejectMessage("\nVeuillez selectionner seulement des hachures");
-                option.AddAllowedClass(typeof(Hatch), false);
-                var Result = ed.GetEntity(option);
-                if (Result.Status == PromptStatus.None)
-                {
-                    return true;
-                }
-                else if (Result.Status != PromptStatus.OK)
-                {
-                    return false;
-                }
-                HatchObjectId = Result.ObjectId;
-            }
-            return true;
-        }
-
-        public static bool GetHatch(out Hatch Hachure, out Polyline Polyline)
+        public static bool GetHatch(out Hatch Hachure)
         {
             Hachure = null;
-            Polyline = null;
             var db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 try
                 {
                     while (true)
                     {
-                        if (!AskSelectHatch(out ObjectId HatchObjectId))
+                        if (!ed.GetHatch(out ObjectId HatchObjectId))
                         {
                             return false;
                         }
@@ -278,7 +255,7 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            return Hachure?.GetHatchPolyline(out Polyline) == true;
+            return true;
         }
 
 

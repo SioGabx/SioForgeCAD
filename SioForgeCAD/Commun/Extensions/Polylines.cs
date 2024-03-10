@@ -62,27 +62,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        public static bool CanBeJoinWith(this Polyline A, Polyline B)
-        {
-            if (A == B) { return false; }
-            if (!A.IsLineCanCloseAPolyline(B))
-            {
-                //Check if the polyline is already joined
-                IEnumerable<Point3d> PAPoint = A.GetPoints();
-                IEnumerable<Point3d> PBPoint = B.GetPoints();
-
-                if (PAPoint.ContainsAll(PBPoint))
-                {
-                    return false;
-                }
-            }
-
-            if (!A.HasEndPointOrStartPointInCommun(B))
-            {
-                return false;
-            }
-            return true;
-        }
+       
 
         public static DBObjectCollection BreakAt(this Polyline poly, params Point3d[] points)
         {
@@ -133,8 +113,8 @@ namespace SioForgeCAD.Commun.Extensions
                     Vector2d vector2 = nextPoint.GetVectorTo(currentPoint).ToVector2d();
 
                     bool IsColinear = vector1.IsColinear(vector2, Generic.LowTolerance);
-
-                    if (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance))
+                    var HasBulge = polyline.GetSegmentType(index) == SegmentType.Arc;
+                    if (!HasBulge && (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance)))
                     {
                         polyline.RemoveVertexAt(index);
                         HasAVertexRemoved = true;
@@ -198,61 +178,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        /// <summary>
-        /// Determines if the polyline is self-intersecting.
-        /// </summary>
-        /// <param name="poly">The polyline.</param>
-        /// <returns>The result.</returns>
-        public static bool IsSelfIntersecting(this Polyline poly, out Point3dCollection IntersectionFound)
-        {
-            IntersectionFound = new Point3dCollection();
-            DBObjectCollection entities = new DBObjectCollection();
-            poly.Explode(entities);
-            for (int i = 0; i < entities.Count; ++i)
-            {
-                for (int j = i + 1; j < entities.Count; ++j)
-                {
-                    Curve curve1 = entities[i] as Curve;
-                    Curve curve2 = entities[j] as Curve;
-                    Point3dCollection points = new Point3dCollection();
-                    curve1.IntersectWith(curve2, Intersect.OnBothOperands, points, IntPtr.Zero, IntPtr.Zero);
-
-                    foreach (Point3d point in points)
-                    {
-                        // Make a check to skip the start/end points
-                        // since they are connected vertices
-                        if (point == curve1.StartPoint || point == curve1.EndPoint)
-                        {
-                            if (point == curve2.StartPoint || point == curve2.EndPoint)
-                            {
-                                continue;
-                            }
-                        }
-
-                        // If two consecutive segments, then skip
-                        if (j == i + 1)
-                        {
-                            continue;
-                        }
-                        IntersectionFound.Add(point);
-                    }
-
-                }
-                // Need to be disposed explicitely
-                // since entities are not DB resident
-                entities[i].Dispose();
-            }
-
-            if (IntersectionFound.Count == 0)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-
-        }
 
 
         /// <summary>
@@ -279,29 +204,7 @@ namespace SioForgeCAD.Commun.Extensions
             Poly.AppendVertex(Vertex);
         }
 
-        public static bool HasEndPointOrStartPointInCommun(this Polyline A, Polyline B)
-        {
-            if (A == null || B == null) return false;
 
-            if (A.EndPoint.IsEqualTo(B.EndPoint)) return true;
-            if (A.EndPoint.IsEqualTo(B.StartPoint)) return true;
-            if (A.StartPoint.IsEqualTo(B.EndPoint)) return true;
-            if (A.StartPoint.IsEqualTo(B.StartPoint)) return true;
-
-            return false;
-        }
-
-
-        public static bool IsLineCanCloseAPolyline(this Polyline PolyA, Polyline PolyB)
-        {
-            Point3d StartPointA = PolyA.StartPoint.Flatten();
-            Point3d EndPointA = PolyA.EndPoint.Flatten();
-
-            Point3d StartPointB = PolyB.StartPoint.Flatten();
-            Point3d EndPointB = PolyB.EndPoint.Flatten();
-            return (StartPointA.IsEqualTo(StartPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(EndPointB, Generic.LowTolerance)) ||
-                 (StartPointA.IsEqualTo(EndPointB, Generic.LowTolerance) && EndPointA.IsEqualTo(StartPointB, Generic.LowTolerance));
-        }
 
         public static void AddVertexIfNotExist(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
         {

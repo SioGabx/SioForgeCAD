@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -20,5 +21,20 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
+
+        public static List<T> RemoveCommun<T>(this IEnumerable<T> list, IEnumerable<T> ItemsToRemove)
+        {
+            List < T > NewList = list.ToList();
+            foreach (var item in list)
+            {
+                if (ItemsToRemove.Contains(item))
+                {
+                    NewList.Remove(item);
+                }
+            }
+            return NewList;
+        }
+
     }
 }

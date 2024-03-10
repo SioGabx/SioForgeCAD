@@ -1,8 +1,10 @@
-﻿/*
+﻿
+using Autodesk.AutoCAD.DatabaseServices;
+
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class EllipsesExtensions
-    {
+    {/*
         public PolylineSegmentCollection(Ellipse ellipse)
         {
             Assert.IsNotNull(ellipse, nameof(ellipse));
@@ -124,7 +126,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-        public static Polyline ToPolyline(this Ellipse ellipse)
+         public static Polyline ToPolyline(this Ellipse ellipse)
         {
             if (ellipse == null)
             {
@@ -136,6 +138,11 @@ namespace SioForgeCAD.Commun.Extensions
             pline.Elevation = ellipse.Center.TransformBy(Matrix3d.WorldToPlane(new Plane(Point3d.Origin, ellipse.Normal))).Z;
             return pline;
         }
+        */
+
+        public static Polyline ToPolyline(this Ellipse ellipse)
+        {
+            return ellipse.Spline.ToPolyline(10, true, true) as Polyline;
+        }
     }
 }
-*/

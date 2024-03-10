@@ -193,6 +193,7 @@
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
+    <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\POLYLINE2DTOPOLYLINE.cs" />

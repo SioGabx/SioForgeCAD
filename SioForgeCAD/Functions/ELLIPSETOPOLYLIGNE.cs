@@ -9,7 +9,7 @@ using System;
 
 namespace SioForgeCAD.Functions
 {
-    public static class POLYLINE2DTOPOLYLIGNE
+    public static class ELLIPSETOPOLYLIGNE
     {
         public class ContextMenu
         {
@@ -21,27 +21,31 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en polyligne");
                 mi.Click += new EventHandler(OnConvert);
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Polyline2d));
+                RXClass rxc = Entity.GetClass(typeof(Ellipse));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Polyline2d));
+                RXClass rxc = Entity.GetClass(typeof(Ellipse));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
             private static void OnConvert(object o, EventArgs e)
             {
                 Document doc = Generic.GetDocument();
-                doc.SendStringToExecute("_.POLYLINE2DTOPOLYLIGNE ", true, false, false);
+                doc.SendStringToExecute("_.ELLIPSETOPOLYLIGNE ", true, false, false);
             }
         }
 
-        public static void ConvertPolyline2dToPolylines()
+
+
+
+        public static void ConvertEllipseToPolylines()
         {
-            Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -56,15 +60,17 @@ namespace SioForgeCAD.Functions
 
                         foreach (SelectedObject selObj in selSet)
                         {
-                            if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
+                            if (selObj.ObjectId.ObjectClass.DxfName == "ELLIPSE")
                             {
-                                Polyline2d poly2d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline2d;
-                                using (Polyline pline = poly2d.ToPolyline())
+                                Ellipse ellipse = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Ellipse;
+                                using (Polyline pline = ellipse.ToPolyline())
                                 {
-                                    poly2d.CopyPropertiesTo(pline);
+                                    pline.Elevation = ellipse.Center.Z;
+                                    ellipse.CopyPropertiesTo(pline);
+                                    pline.Cleanup();
                                     btr.AppendEntity(pline);
                                     tr.AddNewlyCreatedDBObject(pline, true);
-                                    poly2d.Erase();
+                                    ellipse.Erase();
                                 }
                             }
                         }

@@ -46,12 +46,12 @@ namespace SioForgeCAD.Functions
                 }
 
                 MergePolylinePoints(Curves);
-                List<Curve> MergedCurves = Curves.Merge();
+                List<Curve> MergedCurves = Curves.RegionMerge();
 
                 if (MergedCurves.Count > 1)
                 {
                     List<Curve> OffsetCurves = Curves.OffsetPolyline(Margin, false);
-                    List<Curve> OffsetCurvesWithIntersections = OffsetCurves.Merge();
+                    List<Curve> OffsetCurvesWithIntersections = OffsetCurves.RegionMerge();
                     List<Curve> UndoOffsetCurves = OffsetCurvesWithIntersections.OffsetPolyline(Margin, true);
 
                     MergedCurves = UndoOffsetCurves;

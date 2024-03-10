@@ -62,6 +62,17 @@ namespace SioForgeCAD.Commun.Extensions
                     TargetBlockReference.Rotation = OriginBlkRef.Rotation;
                     TargetBlockReference.ScaleFactors = OriginBlkRef.ScaleFactors;
                 }
+
+                if (Origin is Polyline OriginPolyline)
+                {
+                    Polyline TargetPolyline = Target as Polyline;
+                    TargetPolyline.Elevation = OriginPolyline.Elevation;
+                }
+                if (Origin is Polyline2d OriginPolyline2d)
+                {
+                    Polyline TargetPolyline = Target as Polyline;
+                    TargetPolyline.Elevation = OriginPolyline2d.Elevation;
+                }
             }
 
             //Default for each Entities
