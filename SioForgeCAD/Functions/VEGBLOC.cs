@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
                 string Height = Rows["HEIGHT"] ?? "0";
                 string Width = Rows["WIDTH"] ?? "1";
                 string Type = Rows["TYPE"] ?? "ARBRES";
-                string BlocName = CreateBlockFromData(Name, Height, Width, Type);
+                string BlocName = CreateBlockFromData(Name, Height, Width, Type, out _, out _);
                 if (string.IsNullOrEmpty(BlocName))
                 {
                     continue;
@@ -55,8 +55,10 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type)
+        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type, out string BlockData, out bool WasSuccessfullyCreated)
         {
+            WasSuccessfullyCreated = false;
+            BlockData = string.Empty;
             if (string.IsNullOrWhiteSpace(Name))
             {
                 return string.Empty;
@@ -99,10 +101,12 @@ namespace SioForgeCAD.Functions
             //If the layer arealdy exist; we need to get the real color
             BlocColor = Layers.GetLayerColor(BlocName);
             var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+            string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
+                BlockData = Description;
             if (!BlockReferences.IsBlockExist(BlocName))
             {
-                string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
                 BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
+                WasSuccessfullyCreated = true;
             }
             return BlocName;
         }
@@ -349,6 +353,12 @@ namespace SioForgeCAD.Functions
                 if (ShortName.Contains("\'"))
                 {
                     ShortName += "'";
+                }
+            }
+            if (!CompleteName.EndsWith("'"))
+            {
+                if (CompleteName.Contains("\'"))
+                {
                     CompleteName += "'";
                 }
             }

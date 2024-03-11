@@ -15,6 +15,17 @@ namespace SioForgeCAD.Commun.Extensions
             return (blockRef?.BlockTableRecord.GetDBObject() as BlockTableRecord)?.IsFromExternalReference ?? false;
         }
 
+        public static BlockTableRecord GetBlocDefinition(this Database db, string BlocName)
+        {
+            BlockTable bt = db.BlockTableId.GetDBObject() as BlockTable;
+            if (!bt.Has(BlocName))
+            {
+                throw new System.Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
+            }
+            BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
+            return blockDef;
+        }
+
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
