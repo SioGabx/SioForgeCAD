@@ -33,22 +33,15 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            if (!Hachure.GetHatchPolyline(out Polyline Boundary) )
+            if (!Hachure.GetHatchPolyline(out Polyline Boundary))
             {
                 return;
             }
 
 
-            if (Hachure is null || Boundary is null || Math.Floor(Boundary.TryGetArea()) != Math.Floor(Hachure.TryGetArea()))
+            if (Hachure is null || Boundary is null)
             {
-                if (Boundary?.IsSelfIntersecting(out _) == true)
-                {
-                    Generic.WriteMessage("Impossible de découpper une hachure qui se coupe elle-même.");
-                }
-                else
-                {
-                    Generic.WriteMessage("Impossible de découpper cette hachure.");
-                }
+                Generic.WriteMessage("Impossible de découpper cette hachure.");
                 return;
             }
             Database db = Generic.GetDatabase();
@@ -71,10 +64,10 @@ namespace SioForgeCAD.Functions
                     if (NumberOfPolyline > 1)
                     {
                         ApplyCutting(Boundary, Hachure, CuttedPolyline);
-                       
+
                         Boundary.ObjectId.EraseObject();
-                        Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}"); 
-                       
+                        Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}");
+
                     }
                     else if (CheckIfHole(Boundary, CutLine))
                     {
@@ -85,7 +78,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
 
                 }
-                CutLine.Dispose(); 
+                CutLine.Dispose();
                 SlicePolygon.SetCache(null, null);
             }
 
@@ -224,7 +217,7 @@ namespace SioForgeCAD.Functions
 
 
 
-       
+
 
         public static bool GetHatch(out Hatch Hachure)
         {
@@ -318,7 +311,7 @@ namespace SioForgeCAD.Functions
                 tr.AddNewlyCreatedDBObject(InsidePolyline, true);
 
                 ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
-                ObjectIdCollection InsideObjId = new ObjectIdCollection  { polylineObjectId };
+                ObjectIdCollection InsideObjId = new ObjectIdCollection { polylineObjectId };
 
                 Hatch oHatch = new Hatch();
                 var oHatchObjectId = btr.AppendEntity(oHatch);

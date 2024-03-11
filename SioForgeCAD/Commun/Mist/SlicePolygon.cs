@@ -234,7 +234,7 @@ namespace SioForgeCAD.Commun
             //InsideCutLines.AddToDrawing(2, true);
 
             //Extend line to boundary intersection
-            foreach (Autodesk.AutoCAD.DatabaseServices.Polyline InsideCutLine in InsideCutLines.ToList())
+            foreach (Polyline InsideCutLine in InsideCutLines.ToList())
             {
                 polyline.IsSegmentIntersecting(InsideCutLine, out Point3dCollection Intersection, Intersect.ExtendArgument);
                 if (Intersection.Count > 0)

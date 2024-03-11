@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -178,7 +179,72 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Spline GetSpline(this Polyline pline)
+        {
+            Spline spline = null;
+            void CreateSpline(NurbCurve3d nurb)
+            {
+                if (spline is null)
+                    spline = (Spline)Curve.CreateFromGeCurve(nurb);
+                else
+                    using (var spl = (Spline)Curve.CreateFromGeCurve(nurb))
+                        spline.JoinEntity(spl);
+            }
+            for (int i = 0; i < pline.NumberOfVertices; i++)
+            {
+                switch (pline.GetSegmentType(i))
+                {
+                    case SegmentType.Line:
+                        CreateSpline(new NurbCurve3d(pline.GetLineSegmentAt(i)));
+                        break;
+                    case SegmentType.Arc:
+                        CreateSpline(new NurbCurve3d(pline.GetArcSegmentAt(i).GetEllipticalArc()));
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return spline;
+        }
 
+        public static Polyline ToPolygon(this Polyline poly)
+        {
+            //Polyline newPolyline = new Polyline();
+            //// Parcourir les sommets de la polyligne d'origine
+            //for (int i = 0; i < poly.GetReelNumberOfVertices() -1; i++)
+            //{
+            //    // Obtenir le sommet actuel et le suivant
+            //    var seg = poly.GetSegmentAt(i);
+            //    Point3d currentVertex = seg.StartPoint;
+            //    Point3d nextVertex = seg.EndPoint;
+
+            //    // Si le sommet actuel est un arc
+            //    if (poly.GetSegmentType(i) == SegmentType.Arc)
+            //    {
+            //        // Déterminer le nombre de segments nécessaires pour approximer l'arc
+            //        double startParam = poly.GetParamAtPointX(currentVertex);
+            //        double endParam = poly.GetParamAtPointX(nextVertex);
+
+            //        double paramIncrement = (endParam - startParam) / 10;
+            //        // Ajouter des segments droits à la nouvelle polyligne
+            //        for (int j = 1; j <= 10; j++)
+            //        {
+            //            var pointStartParam = startParam + (paramIncrement * (j));
+            //            //var pointEndParam = startParam + paramIncrement * j;
+            //            var point = poly.GetPointAtParam(pointStartParam);
+            //            //var pointBulge = poly.GetBulgeBetween(pointStartParam, pointEndParam);
+            //            newPolyline.AddVertex(point, 0,0,0);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        // Le sommet actuel est un point droit
+            //        newPolyline.AddVertex(currentVertex, 0, 0, 0);
+            //    }
+            //}
+            //return newPolyline;
+            return poly.GetSpline().ToPolyline() as Polyline;
+        }
 
         /// <summary>
         /// Gets the bulge between two parameters within the same arc segment of a polyline.

@@ -2,9 +2,11 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -106,12 +108,22 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                using (DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline }))
-                using (Brep brepEnt = new Brep(Reg[0] as Region))
+                if (polyline?.IsSelfIntersecting(out _) != true)
                 {
-                    brepEnt.GetPointContainment(point, out PointContainment pointCont);
-                    Reg[0].Dispose();
-                    return pointCont != PointContainment.Outside;
+                    using (DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline }))
+                    using (Brep brepEnt = new Brep(Reg[0] as Region))
+                    {
+                        brepEnt.GetPointContainment(point, out PointContainment pointCont);
+                        Reg[0].Dispose();
+                        return pointCont != PointContainment.Outside;
+                    }
+                }
+                else
+                {
+                    var NoArcPoly = polyline.ToPolygon();
+                    //NoArcPoly.AddToDrawing();
+                    var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
+                    return point.ToPoint2d().IsPointInsidePolygon(Pnts);
                 }
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
@@ -204,5 +216,64 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return isOn;
         }
+
+
+        /// <summary>
+        /// Determines whether a point is inside a polyline
+        /// </summary>
+        /// <param name="p">The point to check</param>
+        /// <param name="verts">The vertices of the polyline</param>
+        /// <returns>True if the point is within the polyline, otherwise false</returns>
+        public static bool IsPointInsidePolygon(this Point2d p, Point3dCollection verts)
+        {
+            int counter = 0;
+            int n = verts.Count;
+            Point2d p1 = verts[0].ToPoint2d();
+            int i = 1;
+            while ((i <= n))
+            {
+                Point2d p2 = verts[(i % n)].ToPoint2d();
+                if (p.Y > Math.Min(p1.Y, p2.Y))
+                {
+                    if (p.Y <= Math.Max(p1.Y, p2.Y))
+                    {
+                        if (p.X <= Math.Max(p1.X, p2.X))
+                        {
+                            if (p1.Y != p2.Y)
+                            {
+                                double xinters = (((p.Y - p1.Y) * ((p2.X - p1.X) / (p2.Y - p1.Y))) + p1.X);
+                                if ((p1.X == p2.X) || (p.X <= xinters))
+                                {
+                                    counter++;
+                                }
+                            }
+                        }
+                    }
+                }
+                p1 = p2;
+                i++;
+            }
+            if ((counter % 2) == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
