@@ -85,7 +85,6 @@ namespace SioForgeCAD.Functions
 
         public static void Edit()
         {
-            Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
             if (!SelectBloc(out PromptSelectionResult promptResult))
@@ -142,9 +141,7 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                string BlockData = string.Empty;
-                bool WasCreated = false;
-                string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out BlockData, out WasCreated);
+                string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out string BlockData, out bool WasCreated);
                 if (string.IsNullOrWhiteSpace(NewBlockName))
                 {
                     return;
@@ -174,7 +171,7 @@ namespace SioForgeCAD.Functions
                 {
                     //Not same layer, we should copy properties of the old one
                     Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
-                    //Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
+                    Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
                     var BlkDef = db.GetBlocDefinition(NewBlockName);
                     BlkDef.UpgradeOpen();

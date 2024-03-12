@@ -180,13 +180,13 @@ namespace SioForgeCAD.Functions
                             {
                                 polyline = (Polyline)Entity.Clone();
                             }
-                            else if (Entity is Line)
+                            else if (Entity is Line line)
                             {
-                                polyline = ((Line)Entity).ToPolyline();
+                                polyline = line.ToPolyline();
                             }
-                            else if (Entity is Spline)
+                            else if (Entity is Spline spline)
                             {
-                                polyline = (Polyline)((Spline)Entity).ToPolyline();
+                                polyline = (Polyline)spline.ToPolyline();
                             }
                             else
                             {

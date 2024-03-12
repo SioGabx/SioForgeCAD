@@ -4,7 +4,7 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class DBObjectCollectionExtensions
     {
-        public static DBObjectCollection Join(this DBObjectCollection A, DBObjectCollection B)
+        public static DBObjectCollection AddRange(this DBObjectCollection A, DBObjectCollection B)
         {
             foreach (DBObject ent in B)
             {

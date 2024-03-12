@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.MacroRecorder;
 using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
@@ -63,7 +64,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-       
+
 
         public static DBObjectCollection BreakAt(this Polyline poly, params Point3d[] points)
         {
@@ -350,6 +351,81 @@ namespace SioForgeCAD.Commun.Extensions
             Polyline poly = new Polyline();
             poly.ConvertFrom(poly2d, false);
             return poly;
+        }
+
+
+        public static void IsInsideOrOverlaping(this Polyline checkedLine, Polyline Boundary, out bool IsInside, out bool IsOverlaping)
+        {
+            IsInside = true;
+            IsOverlaping = false;
+
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < checkedLine.GetReelNumberOfVertices(); PolylineSegmentIndex++)
+            {
+                var PolylineSegment = checkedLine.GetSegmentAt(PolylineSegmentIndex);
+                Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
+                if (IsInside)
+                {
+                    IsInside = MiddlePoint.IsInsidePolyline(Boundary);
+                    //if (!IsInside)
+                    //{
+                    //    Circles.Draw(MiddlePoint, 1, 5);
+                    //}
+
+                }
+                if (!IsOverlaping)
+                {
+                    if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
+                    {
+                        IsOverlaping = MiddlePoint.IsOnPolyline(Boundary);
+                        //if (IsOverlaping)
+                        //{
+                        //    Circles.Draw(MiddlePoint, 1, 4);
+                        //}
+                    }
+
+                }
+            }
+
+
+
+        }
+
+
+        public static bool Union(this Polyline PolyBase, Polyline PolyUnion, out Polyline UnionResult)
+        {
+
+            DBObjectCollection PolyBaseCurves = SlicePolygon.CutCurveByCurve(PolyBase, PolyUnion, Intersect.ExtendBoth);
+            DBObjectCollection PolyUnionCurves = SlicePolygon.CutCurveByCurve(PolyUnion, PolyBase, Intersect.ExtendBoth);
+
+            if (PolyBaseCurves.Count > 1 && PolyUnionCurves.Count > 1)
+            {
+                foreach (Polyline PolyBaseSubCurves in PolyBaseCurves.ToList().Cast<Polyline>())
+                {
+                    PolyBaseSubCurves.IsInsideOrOverlaping(PolyUnion, out bool IsInside, out bool IsOverlaping);
+                    if (IsInside || IsOverlaping)
+                    {
+                        PolyBaseCurves.Remove(PolyBaseSubCurves);
+                        PolyBaseSubCurves.Dispose();
+                    }
+                }
+                foreach (Polyline PolyUnionSubCurves in PolyUnionCurves.ToList().Cast<Polyline>())
+                {
+                    PolyUnionSubCurves.IsInsideOrOverlaping(PolyBase, out bool IsInside, out bool IsOverlaping);
+                    if (IsInside || IsOverlaping)
+                    {
+                        PolyUnionCurves.Remove(PolyUnionSubCurves);
+                        PolyUnionSubCurves.Dispose();
+                    }
+                }
+
+
+                List<Curve> AllCurves = PolyBaseCurves.AddRange(PolyUnionCurves).Cast<Curve>().ToList();
+                List<Curve> CombinedCurves = AllCurves.Join();
+                UnionResult = CombinedCurves[0] as Polyline;
+                return true;
+            }
+            UnionResult = PolyBase;
+            return false;
         }
 
 

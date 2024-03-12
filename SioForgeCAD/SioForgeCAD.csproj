@@ -196,6 +196,7 @@
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
+    <Compile Include="Functions\FORCEPOINTTOBEONSCREENBOUNDS.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\POLYLINE2DTOPOLYLINE.cs" />
     <Compile Include="Functions\POLYLINE3DTOPOLYLINE.cs" />

@@ -36,11 +36,30 @@ namespace SioForgeCAD.Commun.Extensions
             return new Size(w, h);
         }
 
+        public static Extents3d GetCurrentViewBound(this Editor ed, double shrinkScale = 1.0)
+        {
+
+            //Get current view size
+            Size vSize = GetCurrentViewSize(ed);
+
+            double w = vSize.Width * shrinkScale;
+            double h = vSize.Height * shrinkScale;
+
+            //Get current view's centre.
+            //Note, the centre point from VIEWCTR is in UCS and
+            //need to be transformed back to World CS
+            Point3d cent = ((Point3d)Application.GetSystemVariable("VIEWCTR")).TransformBy(ed.CurrentUserCoordinateSystem);
+
+            Point3d minPoint = new Point3d(cent.X - w / 2.0, cent.Y - h / 2.0, 0);
+            Point3d maxPoint = new Point3d(cent.X + w / 2.0, cent.Y + h / 2.0, 0);
+
+            return new Extents3d(minPoint, maxPoint);
+        }
+
 
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             objectId = new ObjectId[0];
-            Editor editor = Generic.GetEditor();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
@@ -54,7 +73,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             while (true)
             {
-                promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+                promptResult = ed.GetSelection(selectionOptions, new SelectionFilter(filterList));
 
                 if (promptResult.Status == PromptStatus.Cancel)
                 {
@@ -73,7 +92,6 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
         {
-            Database db = ed.Document.Database;
             while (true)
             {
                 PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()

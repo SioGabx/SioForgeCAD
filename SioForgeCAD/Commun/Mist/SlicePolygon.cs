@@ -81,7 +81,7 @@ namespace SioForgeCAD.Commun
 
         public static List<Polyline> RecreateClosedPolyline(DBObjectCollection SplittedPolylines, Polyline CutLine)
         {
-            DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection() { CutLine }.Join(SplittedPolylines);
+            DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection() { CutLine }.AddRange(SplittedPolylines);
 
             foreach (Polyline polyline in SplittedPolylines)
             {
@@ -141,7 +141,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            SplittedPolylines.ToList()
+            SplittedPolylines.ToList().Cast<Polyline>()
                 .Where(polyligne => !(CutedClosePolyligne
                 .Contains(polyligne)))
                 .ToList()
@@ -156,9 +156,9 @@ namespace SioForgeCAD.Commun
             return IntersectionPointsFounds.Count > 0;
         }
 
-        private static DBObjectCollection GetInsideCutLines(this Polyline polyline, Polyline CutLine)
+        private static DBObjectCollection GetInsideCutLines(this Polyline BoundaryPolyline, Polyline CutLine)
         {
-            DBObjectCollection CutLines = CutCurveByCurve(CutLine, polyline, Intersect.ExtendBoth);
+            DBObjectCollection CutLines = CutCurveByCurve(CutLine, BoundaryPolyline, Intersect.ExtendBoth);
             if (CutLines.Count == 0)
             {
                 CutLines.Add(CutLine.Clone() as Polyline);
@@ -167,34 +167,7 @@ namespace SioForgeCAD.Commun
             DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)
             {
-                bool IsInside = true;
-                bool IsOverlaping = false;
-                for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < line.GetReelNumberOfVertices(); PolylineSegmentIndex++)
-                {
-                    var PolylineSegment = line.GetSegmentAt(PolylineSegmentIndex);
-                    Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
-                    if (IsInside)
-                    {
-                        IsInside = MiddlePoint.IsInsidePolyline(polyline);
-                        //if (!IsInside)
-                        //{
-                        //    Circles.Draw(MiddlePoint, 1, 5);
-                        //}
-
-                    }
-                    if (!IsOverlaping)
-                    {
-                        if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
-                        {
-                            IsOverlaping = MiddlePoint.IsOnPolyline(polyline);
-                            //if (IsOverlaping)
-                            //{
-                            //    Circles.Draw(MiddlePoint, 1, 4);
-                            //}
-                        }
-
-                    }
-                }
+                line.IsInsideOrOverlaping(BoundaryPolyline, out bool IsInside, out bool IsOverlaping);
                 if (IsInside && !IsOverlaping)
                 {
                     InsideCutLines.Add(line);
@@ -212,9 +185,9 @@ namespace SioForgeCAD.Commun
             while (SuccessfulllyJoinACutLine)
             {
                 SuccessfulllyJoinACutLine = false;
-                foreach (Polyline InsideCutLine_A in InsideCutLines.ToList())
+                foreach (Polyline InsideCutLine_A in InsideCutLines.ToList().Cast<Polyline>())
                 {
-                    foreach (Polyline InsideCutLine_B in InsideCutLines.ToList())
+                    foreach (Polyline InsideCutLine_B in InsideCutLines.ToList().Cast<Polyline>())
                     {
                         if (InsideCutLines.Contains(InsideCutLine_A) && InsideCutLines.Contains(InsideCutLine_B))
                         {
@@ -234,9 +207,9 @@ namespace SioForgeCAD.Commun
             //InsideCutLines.AddToDrawing(2, true);
 
             //Extend line to boundary intersection
-            foreach (Polyline InsideCutLine in InsideCutLines.ToList())
+            foreach (Polyline InsideCutLine in InsideCutLines.ToList().Cast<Polyline>())
             {
-                polyline.IsSegmentIntersecting(InsideCutLine, out Point3dCollection Intersection, Intersect.ExtendArgument);
+                BoundaryPolyline.IsSegmentIntersecting(InsideCutLine, out Point3dCollection Intersection, Intersect.ExtendArgument);
                 if (Intersection.Count > 0)
                 {
                     if (!Intersection.ContainsTolerance(InsideCutLine.StartPoint))
