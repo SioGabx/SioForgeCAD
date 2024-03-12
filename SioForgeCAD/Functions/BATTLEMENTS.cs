@@ -239,6 +239,7 @@ namespace SioForgeCAD.Functions
                 return false;
             }
             Largeur = GetLargeurValue.Value;
+            BattlementWidth = Largeur;
             return true;
         }
 

@@ -114,7 +114,7 @@ namespace SioForgeCAD.Commun.Extensions
                     Vector2d vector1 = currentPoint.GetVectorTo(lastPoint).ToVector2d();
                     Vector2d vector2 = nextPoint.GetVectorTo(currentPoint).ToVector2d();
 
-                    bool IsColinear = vector1.IsColinear(vector2, Generic.LowTolerance);
+                    bool IsColinear = vector1.IsColinear(vector2, Generic.MediumTolerance);
                     var HasBulge = polyline.GetSegmentType(index) == SegmentType.Arc;
                     if (!HasBulge && (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance)))
                     {

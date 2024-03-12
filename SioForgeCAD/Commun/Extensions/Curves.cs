@@ -328,7 +328,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static List<Curve> RegionMerge(this IEnumerable<Curve> Curves)
         {
-            DBObjectCollection reg = new DBObjectCollection();
+            DBObjectCollection reg;
             try
             {
                 var CurvesCollection = Curves.ToDBObjectCollection();
@@ -337,7 +337,6 @@ namespace SioForgeCAD.Commun.Extensions
                     if (ent is Polyline polyline && polyline.IsSelfIntersecting(out Point3dCollection IntersectionFound))
                     {
                         Generic.WriteMessage("Jeux de selection incorrect : une ou plusieurs polylignes se coupent elles-même");
-                        return new List<Curve>();
                     }
                 }
                 reg = Region.CreateFromCurves(CurvesCollection);
@@ -346,6 +345,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 Generic.WriteMessage("Impossible de combiner les hachures");
                 Debug.WriteLine(e);
+                return new List<Curve>();
             }
             if (reg.Count > 0)
             {

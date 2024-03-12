@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
         }
 
         public static void InsideStrictPolyline()
-        {
+        {//https://forums.autodesk.com/t5/net/cannot-get-the-entities-using-selectcrossingpolygon-and/td-p/6384137
             Editor ed = Generic.GetEditor();
             Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne qui delimite les objects à selectionner", false);
             if (TerrainBasePolyline is null)
