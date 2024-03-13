@@ -24,6 +24,19 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Point3dCollection AddRange(this Point3dCollection A, Point3dCollection B)
+        {
+            foreach (Point3d pt in B)
+            {
+                if (!A.Contains(pt))
+                {
+                    A.Add(pt);
+                }
+            }
+            return A;
+        }
+
+
         public static Point3dCollection ToPoint3dCollection(this IEnumerable<Point3d> IEnumCollection)
         {
             return new Point3dCollection(IEnumCollection.ToArray());

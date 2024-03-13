@@ -304,6 +304,12 @@ namespace SioForgeCAD
             Functions.MERGEHATCH.Merge();
         }
 
+        [CommandMethod("MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
+        public static void MERGEPOLYLIGNES()
+        {
+            Functions.MERGEPOLYLIGNES.Merge();
+        }
+
 
 
         [CommandMethod("VPLOCK")]

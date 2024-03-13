@@ -149,7 +149,7 @@ namespace SioForgeCAD.Commun
             return CutedClosePolyligne;
         }
 
-        private static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
+        public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
         {
             IntersectionPointsFounds = new Point3dCollection();
             polyline.IntersectWith(CutLine, intersect, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
@@ -167,7 +167,8 @@ namespace SioForgeCAD.Commun
             DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)
             {
-                line.IsInsideOrOverlaping(BoundaryPolyline, out bool IsInside, out bool IsOverlaping);
+                bool IsInside = line.IsInside(BoundaryPolyline);
+                bool IsOverlaping = line.IsOverlaping(BoundaryPolyline);
                 if (IsInside && !IsOverlaping)
                 {
                     InsideCutLines.Add(line);
@@ -244,13 +245,9 @@ namespace SioForgeCAD.Commun
             return InsideCutLines;
         }
 
-        public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
+
+        public static DoubleCollection GetSplitPoints(this Polyline polyline, Point3dCollection IntersectionPointsFounds)
         {
-            polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);
-
-            IntersectionPointsFounds.Add(CutLine.StartPoint);
-            IntersectionPointsFounds.Add(CutLine.EndPoint);
-
             Point3dCollection OrderedIntersectionPointsFounds = IntersectionPointsFounds.OrderByDistanceOnLine(polyline);
             DoubleCollection DblCollection = new DoubleCollection();
             foreach (Point3d Point in OrderedIntersectionPointsFounds)
@@ -265,6 +262,11 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
+            return DblCollection;
+        }
+
+        public static DBObjectCollection TryGetSplitCurves(this Polyline polyline, DoubleCollection DblCollection)
+        {
             try
             {
                 var SplittedCurves = polyline.GetSplitCurves(DblCollection);
@@ -275,6 +277,17 @@ namespace SioForgeCAD.Commun
                 Debug.WriteLine(ex.ToString());
             }
             return new DBObjectCollection();
+        }
+
+
+        public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
+        {
+            polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);
+
+            IntersectionPointsFounds.Add(CutLine.StartPoint);
+            IntersectionPointsFounds.Add(CutLine.EndPoint);
+            DoubleCollection DblCollection = GetSplitPoints(polyline, IntersectionPointsFounds);
+            return TryGetSplitCurves(polyline, DblCollection);
         }
     }
 }

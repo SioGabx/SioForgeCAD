@@ -8,33 +8,59 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class Extends3dExtensions
     {
+        public static double Left(this Extents3d extends)
+        {
+            return extends.MinPoint.X;
+        }
+        public static double Right(this Extents3d extends)
+        {
+            return extends.MaxPoint.X;
+        }
+        public static double Top(this Extents3d extends)
+        {
+            return extends.MaxPoint.Y;
+        }
+        public static double Bottom(this Extents3d extends)
+        {
+            return extends.MinPoint.Y;
+        }
         public static Point3d TopLeft(this Extents3d extends)
         {
-            return new Point3d(extends.MaxPoint.X, extends.MaxPoint.Y, 0);
+            return new Point3d(extends.Left(), extends.Top(), 0);
         }
         public static Point3d TopRight(this Extents3d extends)
         {
-            return new Point3d(extends.MinPoint.X, extends.MaxPoint.Y, 0);
+            return new Point3d(extends.MaxPoint.X, extends.Top(), 0);
         }
         public static Point3d BottomLeft(this Extents3d extends)
         {
-            return new Point3d(extends.MaxPoint.X, extends.MinPoint.Y, 0);
+            return new Point3d(extends.Left(), extends.Bottom(), 0);
         }
         public static Point3d BottomRight(this Extents3d extends)
         {
-            return new Point3d(extends.MinPoint.X, extends.MinPoint.Y, 0);
+            return new Point3d(extends.Right(), extends.Bottom(), 0);
         }
 
         public static Size Size(this Extents3d extends)
         {
             var Dim = new Size
             {
-                Width = extends.TopLeft().DistanceTo(extends.TopLeft()),
+                Width = extends.TopLeft().DistanceTo(extends.TopRight()),
                 Height = extends.BottomLeft().DistanceTo(extends.BottomRight())
             };
             return Dim;
         }
 
+
+        public static bool CollideWith(this Extents3d a, Extents3d b)
+        {
+            return !(b.Left() > a.Right() || b.Right() < a.Left() || b.Top() < a.Bottom() || b.Bottom() > a.Top());
+        }
+        public static bool CollideWithOrConnected(this Extents3d a, Extents3d b)
+        {
+            return true;
+            return !(b.Left() >= a.Right() || b.Right() <= a.Left() || b.Top() <= a.Bottom() || b.Bottom() >= a.Top());
+        }
 
         public static Extents3d GetExtents(this Entity entity)
         {
