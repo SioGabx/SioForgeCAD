@@ -398,44 +398,33 @@ namespace SioForgeCAD.Commun.Extensions
             foreach (var PolyBase in Polylines)
             {
                 Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
-                var PolyBaseExtend = PolyBase.GetExtents();
                 foreach (var PolyCut in Polylines)
                 {
-                    if (PolyCut.GetExtents().CollideWithOrConnected(PolyBaseExtend))
-                    {
-                        PolyBase.IsSegmentIntersecting(PolyCut, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands);
-                        GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
-                    }
+                    PolyBase.IsSegmentIntersecting(PolyCut, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands);
+                    GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
                 }
-                //if (GlobalIntersectionPointsFounds.Count > 0)
-                //{
-                    var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
-                    SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToList(), PolyBase));
-                //}
-                //else
-                //{
-                //    SplittedCurvesOrigin.Add((new List<Polyline>() { PolyBase }, PolyBase));
-                //}
+                if (GlobalIntersectionPointsFounds.Count > 0) {
+                var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
+                SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToList(), PolyBase));
+                }
+                else
+                {
+                    SplittedCurvesOrigin.Add((new List<Polyline>() { PolyBase }, PolyBase));
+                }
             }
 
             List<Polyline> GlobalSplittedCurves = new List<Polyline>();
             foreach (var SplittedCurveOrigin in SplittedCurvesOrigin.ToList())
             {
                 List<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
-                var SplittedGeometryOriginExtend = SplittedCurveOrigin.GeometryOrigin.GetExtents();
-                foreach (var PolyBase in Polylines)
+                foreach (var SplittedCurve in SplittedCurves.ToList())
                 {
-                    if (PolyBase == SplittedCurveOrigin.GeometryOrigin)
+                    foreach (var PolyBase in Polylines)
                     {
-                        continue;
-                    }
-                    if (!SplittedGeometryOriginExtend.CollideWithOrConnected(PolyBase.GetExtents()))
-                    {
-                        continue;
-                    }
-
-                    foreach (var SplittedCurve in SplittedCurves.ToList())
-                    {
+                        if (PolyBase == SplittedCurveOrigin.GeometryOrigin)
+                        {
+                            continue;
+                        }
                         if (SplittedCurve.IsInside(PolyBase))
                         {
                             SplittedCurves.Remove(SplittedCurve);
