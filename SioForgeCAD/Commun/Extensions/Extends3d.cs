@@ -58,7 +58,6 @@ namespace SioForgeCAD.Commun.Extensions
         }
         public static bool CollideWithOrConnected(this Extents3d a, Extents3d b)
         {
-            return true;
             return !(b.Left() >= a.Right() || b.Right() <= a.Left() || b.Top() <= a.Bottom() || b.Bottom() >= a.Top());
         }
 

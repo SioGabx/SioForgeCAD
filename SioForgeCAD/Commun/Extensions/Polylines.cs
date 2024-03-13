@@ -393,98 +393,116 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool Union(this List<Polyline> Polylines, out List<Polyline> UnionResult)
         {
-            List<(List<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = new List<(List<Polyline>, Polyline)>();
+            Stopwatch sw = new Stopwatch();
 
-            foreach (var PolyBase in Polylines)
+            sw.Start();
             {
-                Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
-                foreach (var PolyCut in Polylines)
-                {
-                    PolyBase.IsSegmentIntersecting(PolyCut, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands);
-                    GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
-                }
-                if (GlobalIntersectionPointsFounds.Count > 0) {
-                var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
-                SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToList(), PolyBase));
-                }
-                else
-                {
-                    SplittedCurvesOrigin.Add((new List<Polyline>() { PolyBase }, PolyBase));
-                }
-            }
+                List<(List<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = new List<(List<Polyline>, Polyline)>();
 
-            List<Polyline> GlobalSplittedCurves = new List<Polyline>();
-            foreach (var SplittedCurveOrigin in SplittedCurvesOrigin.ToList())
-            {
-                List<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
-                foreach (var SplittedCurve in SplittedCurves.ToList())
+                foreach (var PolyBase in Polylines)
                 {
-                    foreach (var PolyBase in Polylines)
+                    Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
+                    var PolyBaseExtend = PolyBase.GetExtents();
+                    foreach (var PolyCut in Polylines)
                     {
-                        if (PolyBase == SplittedCurveOrigin.GeometryOrigin)
+                        if (PolyCut.GetExtents().CollideWithOrConnected(PolyBaseExtend))
                         {
-                            continue;
+                            PolyBase.IsSegmentIntersecting(PolyCut, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands);
+                            GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
                         }
-                        if (SplittedCurve.IsInside(PolyBase))
+                    }
+                    if (GlobalIntersectionPointsFounds.Count > 0)
+                    {
+                        var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
+                        SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToList(), PolyBase));
+                    }
+                    else
+                    {
+                        SplittedCurvesOrigin.Add((new List<Polyline>() { PolyBase }, PolyBase));
+                    }
+                }
+
+                List<Polyline> GlobalSplittedCurves = new List<Polyline>();
+                foreach (var SplittedCurveOrigin in SplittedCurvesOrigin.ToList())
+                {
+                    List<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
+                    var SplittedGeometryOriginExtend = SplittedCurveOrigin.GeometryOrigin.GetExtents();
+                    foreach (var SplittedCurve in SplittedCurves.ToList())
+                    {
+                        foreach (var PolyBase in Polylines)
                         {
-                            SplittedCurves.Remove(SplittedCurve);
-                            break;
+                            if (!SplittedGeometryOriginExtend.CollideWithOrConnected(PolyBase.GetExtents()))
+                            {
+                                continue;
+                            }
+                            if (PolyBase == SplittedCurveOrigin.GeometryOrigin)
+                            {
+                                continue;
+                            }
+                            if (SplittedCurve.IsInside(PolyBase))
+                            {
+                                SplittedCurves.Remove(SplittedCurve);
+                                break;
+                            }
+                        }
+                    }
+                    GlobalSplittedCurves.AddRange(SplittedCurves);
+                }
+
+
+                foreach (var SplittedCurveA in GlobalSplittedCurves.ToList())
+                {
+                    foreach (var SplittedCurveB in GlobalSplittedCurves.ToList())
+                    {
+                        if (SplittedCurveA != SplittedCurveB)
+                        {
+                            if (SplittedCurveA.IsOverlaping(SplittedCurveB))
+                            {
+                                GlobalSplittedCurves.Remove(SplittedCurveA);
+                                break;
+                            }
                         }
                     }
                 }
-                GlobalSplittedCurves.AddRange(SplittedCurves);
+
+
+                //SplittedCurves.AddToDrawing();
+
+                //DBObjectCollection PolyBaseCurves = SlicePolygon.CutCurveByCurve(PolyBase, PolyUnion, Intersect.ExtendBoth);
+                //DBObjectCollection PolyUnionCurves = SlicePolygon.CutCurveByCurve(PolyUnion, PolyBase, Intersect.ExtendBoth);
+
+                //if (PolyBaseCurves.Count > 1 && PolyUnionCurves.Count > 1)
+                //{
+                //    foreach (Polyline PolyBaseSubCurves in PolyBaseCurves.ToList().Cast<Polyline>())
+                //    {
+                //        PolyBaseSubCurves.IsInsideOrOverlaping(PolyUnion, out bool IsInside, out bool IsOverlaping);
+                //        if (IsInside || IsOverlaping)
+                //        {
+                //            PolyBaseCurves.Remove(PolyBaseSubCurves);
+                //            PolyBaseSubCurves.Dispose();
+                //        }
+                //    }
+                //    foreach (Polyline PolyUnionSubCurves in PolyUnionCurves.ToList().Cast<Polyline>())
+                //    {
+                //        PolyUnionSubCurves.IsInsideOrOverlaping(PolyBase, out bool IsInside, out bool IsOverlaping);
+                //        if (IsInside || IsOverlaping)
+                //        {
+                //            PolyUnionCurves.Remove(PolyUnionSubCurves);
+                //            PolyUnionSubCurves.Dispose();
+                //        }
+                //    }
+
+
+                //    List<Curve> AllCurves = PolyBaseCurves.AddRange(PolyUnionCurves).Cast<Curve>().ToList();
+                //    List<Curve> CombinedCurves = AllCurves.Join();
+                //    UnionResult = CombinedCurves[0] as Polyline;
+                //    return true;
+                //}
+                //UnionResult = PolyBase;
+                UnionResult = GlobalSplittedCurves;
             }
-
-
-            foreach (var SplittedCurveA in GlobalSplittedCurves.ToList())
-            {
-                foreach (var SplittedCurveB in GlobalSplittedCurves.ToList())
-                {
-                    if (SplittedCurveA != SplittedCurveB)
-                    {
-                        if (SplittedCurveA.IsOverlaping(SplittedCurveB))
-                        {
-                            GlobalSplittedCurves.Remove(SplittedCurveA);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            //SplittedCurves.AddToDrawing();
-
-            //DBObjectCollection PolyBaseCurves = SlicePolygon.CutCurveByCurve(PolyBase, PolyUnion, Intersect.ExtendBoth);
-            //DBObjectCollection PolyUnionCurves = SlicePolygon.CutCurveByCurve(PolyUnion, PolyBase, Intersect.ExtendBoth);
-
-            //if (PolyBaseCurves.Count > 1 && PolyUnionCurves.Count > 1)
-            //{
-            //    foreach (Polyline PolyBaseSubCurves in PolyBaseCurves.ToList().Cast<Polyline>())
-            //    {
-            //        PolyBaseSubCurves.IsInsideOrOverlaping(PolyUnion, out bool IsInside, out bool IsOverlaping);
-            //        if (IsInside || IsOverlaping)
-            //        {
-            //            PolyBaseCurves.Remove(PolyBaseSubCurves);
-            //            PolyBaseSubCurves.Dispose();
-            //        }
-            //    }
-            //    foreach (Polyline PolyUnionSubCurves in PolyUnionCurves.ToList().Cast<Polyline>())
-            //    {
-            //        PolyUnionSubCurves.IsInsideOrOverlaping(PolyBase, out bool IsInside, out bool IsOverlaping);
-            //        if (IsInside || IsOverlaping)
-            //        {
-            //            PolyUnionCurves.Remove(PolyUnionSubCurves);
-            //            PolyUnionSubCurves.Dispose();
-            //        }
-            //    }
-
-
-            //    List<Curve> AllCurves = PolyBaseCurves.AddRange(PolyUnionCurves).Cast<Curve>().ToList();
-            //    List<Curve> CombinedCurves = AllCurves.Join();
-            //    UnionResult = CombinedCurves[0] as Polyline;
-            //    return true;
-            //}
-            //UnionResult = PolyBase;
-            UnionResult = GlobalSplittedCurves;
+            sw.Stop();
+            Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);
             return true;
         }
 
