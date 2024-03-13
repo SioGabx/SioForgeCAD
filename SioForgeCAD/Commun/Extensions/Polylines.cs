@@ -429,6 +429,7 @@ namespace SioForgeCAD.Commun.Extensions
                     var SplittedGeometryOriginExtend = SplittedCurveOrigin.GeometryOrigin.GetExtents();
                     foreach (var SplittedCurve in SplittedCurves.ToList())
                     {
+                        
                         foreach (var PolyBase in Polylines)
                         {
                             if (!SplittedGeometryOriginExtend.CollideWithOrConnected(PolyBase.GetExtents()))
@@ -464,43 +465,97 @@ namespace SioForgeCAD.Commun.Extensions
                         }
                     }
                 }
-
-
-                //SplittedCurves.AddToDrawing();
-
-                //DBObjectCollection PolyBaseCurves = SlicePolygon.CutCurveByCurve(PolyBase, PolyUnion, Intersect.ExtendBoth);
-                //DBObjectCollection PolyUnionCurves = SlicePolygon.CutCurveByCurve(PolyUnion, PolyBase, Intersect.ExtendBoth);
-
-                //if (PolyBaseCurves.Count > 1 && PolyUnionCurves.Count > 1)
-                //{
-                //    foreach (Polyline PolyBaseSubCurves in PolyBaseCurves.ToList().Cast<Polyline>())
-                //    {
-                //        PolyBaseSubCurves.IsInsideOrOverlaping(PolyUnion, out bool IsInside, out bool IsOverlaping);
-                //        if (IsInside || IsOverlaping)
-                //        {
-                //            PolyBaseCurves.Remove(PolyBaseSubCurves);
-                //            PolyBaseSubCurves.Dispose();
-                //        }
-                //    }
-                //    foreach (Polyline PolyUnionSubCurves in PolyUnionCurves.ToList().Cast<Polyline>())
-                //    {
-                //        PolyUnionSubCurves.IsInsideOrOverlaping(PolyBase, out bool IsInside, out bool IsOverlaping);
-                //        if (IsInside || IsOverlaping)
-                //        {
-                //            PolyUnionCurves.Remove(PolyUnionSubCurves);
-                //            PolyUnionSubCurves.Dispose();
-                //        }
-                //    }
-
-
-                //    List<Curve> AllCurves = PolyBaseCurves.AddRange(PolyUnionCurves).Cast<Curve>().ToList();
-                //    List<Curve> CombinedCurves = AllCurves.Join();
-                //    UnionResult = CombinedCurves[0] as Polyline;
-                //    return true;
-                //}
-                //UnionResult = PolyBase;
                 UnionResult = GlobalSplittedCurves;
             }
+            sw.Stop();
+            Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);
+            return true;
+        }
+
+        public static bool Union2(this List<Polyline> Polylines, out List<Polyline> UnionResult)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            // Cache extents of polylines
+            Dictionary<Polyline, Extents3d> polylineExtents = new Dictionary<Polyline, Extents3d>();
+            foreach (var polyline in Polylines)
+            {
+                polylineExtents[polyline] = polyline.GetExtents();
+            }
+
+            // Calculate intersection points
+            Dictionary<Polyline, Point3dCollection> intersectionPoints = new Dictionary<Polyline, Point3dCollection>();
+            foreach (var polyline in Polylines)
+            {
+                Point3dCollection globalIntersectionPointsFounds = new Point3dCollection();
+                var polylineExt = polylineExtents[polyline];
+                foreach (var otherPolyline in Polylines)
+                {
+                    if (polylineExt.CollideWithOrConnected(polylineExtents[otherPolyline]))
+                    {
+                        if (polyline.IsSegmentIntersecting(otherPolyline, out Point3dCollection points, Intersect.OnBothOperands))
+                        {
+                            globalIntersectionPointsFounds.AddRange(points);
+                        }
+                    }
+                }
+                intersectionPoints[polyline] = globalIntersectionPointsFounds;
+            }
+
+            // Split polylines based on intersection points
+            Dictionary<Polyline, List<Polyline>> splitPolylines = new Dictionary<Polyline, List<Polyline>>();
+            foreach (var polyline in Polylines)
+            {
+                var splitPoints = intersectionPoints[polyline];
+                if (splitPoints.Count > 0)
+                {
+                    var splitDouble = polyline.GetSplitPoints(splitPoints);
+                    splitPolylines[polyline] = polyline.TryGetSplitCurves(splitDouble).Cast<Polyline>().ToList();
+                }
+                else
+                {
+                    splitPolylines[polyline] = new List<Polyline>() { polyline };
+                }
+            }
+
+            // Combine and filter polylines
+            HashSet<Polyline> combinedPolylines = new HashSet<Polyline>();
+            foreach (var splitCurveOrigin in splitPolylines)
+            {
+                var geometryOrigin = splitCurveOrigin.Key;
+                var splitCurves = splitCurveOrigin.Value;
+                var geometryOriginExtent = polylineExtents[geometryOrigin];
+                foreach (var splitCurve in splitCurves)
+                {
+                    if (!polylineExtents.ContainsKey(splitCurve) || !geometryOriginExtent.CollideWithOrConnected(polylineExtents[splitCurve]))
+                    {
+                        continue;
+                    }
+                    if (geometryOrigin == splitCurve || splitCurve.IsInside(geometryOrigin))
+                    {
+                        continue;
+                    }
+                    combinedPolylines.Add(splitCurve);
+                }
+            }
+
+            // Remove overlapping polylines
+            HashSet<Polyline> finalPolylines = new HashSet<Polyline>(combinedPolylines);
+            foreach (var polylineA in combinedPolylines)
+            {
+                foreach (var polylineB in combinedPolylines)
+                {
+                    if (polylineA != polylineB && polylineA.IsOverlaping(polylineB))
+                    {
+                        finalPolylines.Remove(polylineA);
+                        break;
+                    }
+                }
+            }
+
+            UnionResult = finalPolylines.ToList();
+
             sw.Stop();
             Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);
             return true;

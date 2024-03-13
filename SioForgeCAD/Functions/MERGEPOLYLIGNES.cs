@@ -15,7 +15,7 @@ namespace SioForgeCAD.Functions
 {
     static public class MERGEPOLYLIGNES
     {
-        public static void Merge()
+        public static void Merge(bool Union2 = false)
         {
             Editor ed = Generic.GetEditor();
 
@@ -46,7 +46,16 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                Curves.Union(out List<Polyline> UnionResult);
+                List<Polyline> UnionResult = null;
+                if (Union2)
+                {
+                    Curves.Union2(out UnionResult);
+                }
+                else
+                {
+                    Curves.Union(out UnionResult);
+                }
+
                 UnionResult.AddToDrawing();
 
                 tr.Commit();

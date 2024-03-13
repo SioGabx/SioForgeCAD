@@ -121,7 +121,7 @@ namespace SioForgeCAD.Commun.Extensions
                 else
                 {
                     var NoArcPoly = polyline.ToPolygon();
-                    //NoArcPoly.AddToDrawing();
+                    NoArcPoly.AddToDrawing();
                     var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
                     return point.ToPoint2d().IsPointInsidePolygon(Pnts);
                 }
