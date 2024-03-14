@@ -307,12 +307,7 @@ namespace SioForgeCAD
         [CommandMethod("MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void MERGEPOLYLIGNES()
         {
-            Functions.MERGEPOLYLIGNES.Merge(false);
-        }
-        [CommandMethod("MERGEPOLYLIGNES2", CommandFlags.UsePickSet)]
-        public static void MERGEPOLYLIGNES2()
-        {
-            Functions.MERGEPOLYLIGNES.Merge(true);
+            Functions.MERGEPOLYLIGNES.Merge();
         }
 
 

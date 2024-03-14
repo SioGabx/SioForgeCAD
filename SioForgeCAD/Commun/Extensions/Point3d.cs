@@ -114,15 +114,15 @@ namespace SioForgeCAD.Commun.Extensions
                     using (Brep brepEnt = new Brep(Reg[0] as Region))
                     {
                         brepEnt.GetPointContainment(point, out PointContainment pointCont);
-                        Reg[0].Dispose();
+                        Reg.DeepDispose();
                         return pointCont != PointContainment.Outside;
                     }
                 }
                 else
                 {
                     var NoArcPoly = polyline.ToPolygon();
-                    NoArcPoly.AddToDrawing();
                     var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
+                    if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
                     return point.ToPoint2d().IsPointInsidePolygon(Pnts);
                 }
             }
@@ -227,31 +227,26 @@ namespace SioForgeCAD.Commun.Extensions
         public static bool IsPointInsidePolygon(this Point2d p, Point3dCollection verts)
         {
             int counter = 0;
-            int n = verts.Count;
+            int VertexCount = verts.Count;
             Point2d p1 = verts[0].ToPoint2d();
-            int i = 1;
-            while ((i <= n))
+            int index = 1;
+            while ((index <= VertexCount))
             {
-                Point2d p2 = verts[(i % n)].ToPoint2d();
-                if (p.Y > Math.Min(p1.Y, p2.Y))
+                Point2d p2 = verts[index % VertexCount].ToPoint2d();
+                if (p.Y > Math.Min(p1.Y, p2.Y) && p.Y <= Math.Max(p1.Y, p2.Y) && p.X <= Math.Max(p1.X, p2.X))
                 {
-                    if (p.Y <= Math.Max(p1.Y, p2.Y))
+                    if (p1.Y != p2.Y)
                     {
-                        if (p.X <= Math.Max(p1.X, p2.X))
+                        double xinters = (((p.Y - p1.Y) * ((p2.X - p1.X) / (p2.Y - p1.Y))) + p1.X);
+                        if ((p1.X == p2.X) || (p.X <= xinters))
                         {
-                            if (p1.Y != p2.Y)
-                            {
-                                double xinters = (((p.Y - p1.Y) * ((p2.X - p1.X) / (p2.Y - p1.Y))) + p1.X);
-                                if ((p1.X == p2.X) || (p.X <= xinters))
-                                {
-                                    counter++;
-                                }
-                            }
+                            counter++;
                         }
                     }
+
                 }
                 p1 = p2;
-                i++;
+                index++;
             }
             if ((counter % 2) == 0)
             {
