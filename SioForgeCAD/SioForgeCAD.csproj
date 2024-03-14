@@ -207,10 +207,12 @@
     <Compile Include="Functions\RP2.cs" />
     <Compile Include="Functions\RRR.cs" />
     <Compile Include="Functions\BLKSETTOBYBBLOCK.cs" />
+    <Compile Include="Functions\SCALEBY.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />
+    <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VPLOCK.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

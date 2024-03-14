@@ -228,6 +228,12 @@ namespace SioForgeCAD
             Functions.VEGBLOCCOPYGRIP.AddGrip();
         }
 
+        [CommandMethod("VEGBLOCLEGEND", CommandFlags.UsePickSet)]
+        public void VEGBLOCLEGEND()
+        {
+            Functions.VEGBLOCLEGEND.Add();
+        }
+
         [CommandMethod("BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK()
         {
@@ -264,6 +270,24 @@ namespace SioForgeCAD
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
+
+
+        [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
+        public void SCALEBY()
+        {
+            Functions.SCALEBY.ScaleBy();
+        }
+
+
+
+
+
+
+
+
+
+
+
         [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {

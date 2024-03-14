@@ -129,12 +129,12 @@ namespace SioForgeCAD.Functions
 
 
 
-        public static bool AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
+        public static ObjectId AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, Layer ?? BlocName);
-
+            ObjectId BlkObjectId = ObjectId.Null;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
@@ -145,12 +145,12 @@ namespace SioForgeCAD.Functions
                 if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
                 {
                     tr.Commit();
-                    return false;
+                    return BlkObjectId;
                 }
-                BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
+                BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
                 tr.Commit();
             }
-            return true;
+            return BlkObjectId;
         }
 
 

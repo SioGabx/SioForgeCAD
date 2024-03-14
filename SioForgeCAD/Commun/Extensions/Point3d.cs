@@ -123,7 +123,7 @@ namespace SioForgeCAD.Commun.Extensions
                     var NoArcPoly = polyline.ToPolygon();
                     var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
                     if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
-                    return point.ToPoint2d().IsPointInsidePolygon(Pnts);
+                    return point.ToPoint2d().IsPointInsidePolygonMcMartin(Pnts);
                 }
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
@@ -226,7 +226,6 @@ namespace SioForgeCAD.Commun.Extensions
         /// <returns>True if the point is within the polyline, otherwise false</returns>
         public static bool IsPointInsidePolygon(this Point2d p, Point3dCollection verts)
         {
-            return IsPointInsidePolygonMcMartin(p, verts);
             int counter = 0;
             int VertexCount = verts.Count;
             Point2d p1 = verts[0].ToPoint2d();
@@ -257,12 +256,10 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        
-
         public static bool IsPointInsidePolygonMcMartin(this Point2d p, Point3dCollection verts)
         {
-            //https://github.com/GeospatialPython/pyshp/blob/6f945596d8998a5ea381d80a3001658b7646e604/shapefile.py#L243C1-L244C3
-            
+            //https://erich.realtimerendering.com/ptinpoly/
+            //https://www.realtimerendering.com/resources/RTNews/html//rtnv5n3.html#art3
             double tx = p.X;
             double ty = p.Y;
 

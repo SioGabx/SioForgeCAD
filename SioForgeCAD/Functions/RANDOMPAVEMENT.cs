@@ -139,7 +139,7 @@ namespace SioForgeCAD.Functions
                         }
                     }
                 }
-
+                ObjectIdCollection EntitiesObjectIdCollection = new ObjectIdCollection();
                 foreach (List<Pavement> PavementSubList in PavementList)
                 {
                     foreach (Pavement Pavement in PavementSubList)
@@ -148,11 +148,16 @@ namespace SioForgeCAD.Functions
                         if (Pavement.IsSelected)
                         {
                             poly.ColorIndex = 5;
+                            poly.ConstantWidth = .01;
                         }
-                        poly.AddToDrawingCurrentTransaction();
+                        else
+                        {
+                            poly.ColorIndex = 255;
+                        }
+                        EntitiesObjectIdCollection.Add(poly.AddToDrawingCurrentTransaction());
                     }
                 }
-
+                Commun.Drawing.Groups.Create("RANDOMPAVEMENTS", $"PavementRowsWidth : {PavementRowsWidth}\nPavementColumnsWidth : {PavementColumnsWidth}\nPavementFill : {PavementFill}\nBaseSettings : {BaseSettings}" , EntitiesObjectIdCollection);
                 tr.Commit();
             }
         }
