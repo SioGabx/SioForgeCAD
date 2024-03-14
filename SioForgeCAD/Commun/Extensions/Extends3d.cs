@@ -115,6 +115,42 @@ namespace SioForgeCAD.Commun.Extensions
                 && point.Z >= extents.MinPoint.Z && point.Z <= extents.MaxPoint.Z;
         }
 
+
+        public static bool IsInside(this Polyline LineB, Extents3d extents, bool CheckEach = true)
+        {
+            int NumberOfVertices = 1;
+            if (CheckEach)
+            {
+                NumberOfVertices = LineB.GetReelNumberOfVertices();
+            }
+
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
+            {
+                var PolylineSegment = LineB.GetSegmentAt(PolylineSegmentIndex);
+                Point3d MiddlePoint;
+                if (LineB.GetSegmentType(PolylineSegmentIndex) == SegmentType.Arc)
+                {
+                    var Startparam = LineB.GetParameterAtPoint(PolylineSegment.StartPoint);
+                    var Endparam = LineB.GetParameterAtPoint(PolylineSegment.EndPoint);
+                    MiddlePoint = LineB.GetPointAtParam(Startparam + ((Endparam - Startparam) / 2));
+                }
+                else
+                {
+                    MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
+                }
+
+                if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
+                {
+                    if (!extents.IsPointIn(MiddlePoint))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+
         public static Point3d GetCenter(this IEnumerable<ObjectId> entIds)
         {
             return entIds.GetExtents().GetCenter();

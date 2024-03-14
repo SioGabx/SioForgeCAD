@@ -421,7 +421,7 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         foreach (var PolyBase in Polylines)
                         {
-                            if (!SplittedGeometryOriginExtend.CollideWithOrConnected(PolyBase.GetExtents()))
+                            if (!SplittedCurve.IsInside(PolyBase.GetExtents(), false))
                             {
                                 continue;
                             }
@@ -432,8 +432,6 @@ namespace SioForgeCAD.Commun.Extensions
                             if (SplittedCurve.IsInside(PolyBase, false))
                             {
                                 SplittedCurves.Remove(SplittedCurve);
-                                SplittedCurve.ColorIndex = 5;
-                                SplittedCurve.AddToDrawing();
                                 SplittedCurve.Dispose();
                                 break;
                             }
@@ -445,6 +443,9 @@ namespace SioForgeCAD.Commun.Extensions
 
                 foreach (var SplittedCurveA in GlobalSplittedCurves.ToArray())
                 {
+                    if (!GlobalSplittedCurves.Contains(SplittedCurveA)){
+                        continue;
+                    }
                     foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                     {
                         if (SplittedCurveA != SplittedCurveB)
@@ -452,6 +453,7 @@ namespace SioForgeCAD.Commun.Extensions
                             if (SplittedCurveA.IsOverlaping(SplittedCurveB))
                             {
                                 GlobalSplittedCurves.Remove(SplittedCurveA);
+                                SplittedCurveA.Dispose();
                                 break;
                             }
                         }

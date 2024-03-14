@@ -108,7 +108,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                if (polyline?.IsSelfIntersecting(out _) != true)
+                if (false && polyline?.IsSelfIntersecting(out _) != true)
                 {
                     using (DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline }))
                     using (Brep brepEnt = new Brep(Reg[0] as Region))
@@ -226,6 +226,7 @@ namespace SioForgeCAD.Commun.Extensions
         /// <returns>True if the point is within the polyline, otherwise false</returns>
         public static bool IsPointInsidePolygon(this Point2d p, Point3dCollection verts)
         {
+            return IsPointInsidePolygonMcMartin(p, verts);
             int counter = 0;
             int VertexCount = verts.Count;
             Point2d p1 = verts[0].ToPoint2d();
@@ -256,7 +257,56 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        
 
+        public static bool IsPointInsidePolygonMcMartin(this Point2d p, Point3dCollection verts)
+        {
+            //https://github.com/GeospatialPython/pyshp/blob/6f945596d8998a5ea381d80a3001658b7646e604/shapefile.py#L243C1-L244C3
+            
+            double tx = p.X;
+            double ty = p.Y;
+
+            //get initial test bit for above/below X axis
+            var vtx0 = verts[0];
+            var yflag0 = (vtx0[1] >= ty);
+
+            bool inside_flag = false;
+            for (int i = 1; i < verts.Count; i++)
+            {
+                var vtx1 = verts[i];
+
+                var yflag1 = (vtx1[1] >= ty);
+                // check if endpoints straddle (are on opposite sides) of X axis
+                // (i.e. the Y's differ); if so, +X ray could intersect this edge.
+                if (yflag0 != yflag1)
+                {
+                    var xflag0 = (vtx0[0] >= tx);
+                    // check if endpoints are on same side of the Y axis (i.e. X's
+                    // are the same); if so, it's easy to test if edge hits or misses.
+                    if (xflag0 == (vtx1[0] >= tx))
+                    {
+                        //if edge's X values both right of the point, must hit
+                        if (xflag0)
+                        {
+                            inside_flag = !inside_flag;
+                        }
+                    }
+                    else
+                    {
+                        // compute intersection of pgon segment with +X ray, note
+                        //if >= point's X; if so, the ray hits it.
+                        if ((vtx1[0] - (vtx1[1] - ty) * (vtx0[0] - vtx1[0]) / (vtx0[1] - vtx1[1])) >= tx)
+                        {
+                            inside_flag = !inside_flag;
+                        }
+                    }
+                }
+                // move to next pair of vertices, retaining info as possible
+                yflag0 = yflag1;
+                vtx0 = vtx1;
+            }
+            return inside_flag;
+        }
 
 
 
