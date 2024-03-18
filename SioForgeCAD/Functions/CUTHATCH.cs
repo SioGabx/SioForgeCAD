@@ -27,6 +27,9 @@ namespace SioForgeCAD.Functions
             }
             List<Curve> ExternalMergedCurves = ExternalCurves.Join();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
+            List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
+            List<Curve> InnerMergedCurves = InnerCurves.Join();
+            InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
 
             if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)
             {
@@ -60,18 +63,51 @@ namespace SioForgeCAD.Functions
                 int NumberOfPolyline = CuttedPolyline.Count;
                 if (NumberOfPolyline > 1)
                 {
-                    foreach (var item in CuttedPolyline)
+                    int NumberOfSlice = 0;
+                    while (CuttedPolyline.Count > 0)
                     {
-                        ApplyHatchV2(item, OtherCurves, Hachure);
+                        Polyline NewBoundary = CuttedPolyline.FirstOrDefault();
+                        List<Curve> NewBoundaryHoles = new List<Curve>();
+                        foreach (Curve Holes in InnerMergedCurves)
+                        {
+                            var HolePoly = Holes.ToPolyline();
+                            if (HolePoly != null)
+                            {
+                                //HolePoly.Cleanup();
+                                if (NewBoundary.IsSegmentIntersecting(HolePoly, out var dCollection, Intersect.OnBothOperands))
+                                {
+                                    dCollection.OrderByDistanceOnLine(HolePoly);
+                                    var Cuts = (NewBoundary.Clone() as Polyline).Cut((HolePoly.Clone() as Polyline));
+                                    foreach (var CuttedNewBoundary in Cuts)
+                                    {
+                                        if (CuttedNewBoundary.ContainsSegment(dCollection[0], dCollection[1])) { continue; }
+                                        CuttedPolyline.Remove(NewBoundary);
+                                        CuttedPolyline.Add(CuttedNewBoundary);
+                                        NewBoundary = CuttedNewBoundary;
+                                    }
+                                    
+                                }
+                                else
+                                {
+                                    if (HolePoly.IsInside(NewBoundary))
+                                    {
+                                        NewBoundaryHoles.Add(Holes);
+                                    }
+                                }
+                            }
+                        }
+                        NumberOfSlice++;
+                        ApplyHatchV2(NewBoundary, NewBoundaryHoles, Hachure);
+                        CuttedPolyline.Remove(NewBoundary);
                     }
-                    Generic.WriteMessage($"La hachure à été divisée en {CuttedPolyline.Count}");
+                    Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
 
                 }
                 else if (CheckIfHole(Boundary, CutLine))
                 {
-                    ApplyHatchV2(CutLine, OtherCurves, Hachure);
-                    OtherCurves.Add((CutLine, HatchLoopTypes.External));
-                    ApplyHatchV2(Boundary, OtherCurves, Hachure);
+                    ApplyHatchV2(CutLine, ExternalMergedCurves, Hachure);
+                    ExternalMergedCurves.Add(CutLine);
+                    ApplyHatchV2(Boundary, ExternalMergedCurves, Hachure);
                     Boundary.CopyPropertiesTo(CutLine);
 
                     Generic.WriteMessage($"Un trou à été découpé dans la hachure");
@@ -90,7 +126,7 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static void ApplyHatchV2(Polyline OutsidePolyline, List<(Curve curve, HatchLoopTypes looptype)> OtherCurves, Hatch hachure)
+        public static void ApplyHatchV2(Polyline OutsidePolyline, List<Curve> OuterMostCurves, Hatch hachure)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
@@ -103,20 +139,20 @@ namespace SioForgeCAD.Functions
                     OutsidePolyline.AddToDrawingCurrentTransaction();
                 }
 
-                List<(ObjectId ObjId, HatchLoopTypes looptype)> Inside = new List<(ObjectId ObjId, HatchLoopTypes looptype)>();
-                foreach (var InsidePolyline in OtherCurves)
+                List<ObjectId> Inside = new List<ObjectId>();
+                foreach (var InsidePolyline in OuterMostCurves)
                 {
-                    OutsidePolyline.CopyPropertiesTo(InsidePolyline.curve);
-                    ObjectId polylineObjectId = InsidePolyline.curve.ObjectId;
-                    if (InsidePolyline.curve.IsNewObject)
+                    OutsidePolyline.CopyPropertiesTo(InsidePolyline);
+                    ObjectId polylineObjectId = InsidePolyline.ObjectId;
+                    if (InsidePolyline.IsNewObject)
                     {
-                        polylineObjectId = btr.AppendEntity(InsidePolyline.curve);
-                        tr.AddNewlyCreatedDBObject(InsidePolyline.curve, true);
+                        polylineObjectId = btr.AppendEntity(InsidePolyline);
+                        tr.AddNewlyCreatedDBObject(InsidePolyline, true);
                     }
                     DrawOrderCollection.Add(polylineObjectId);
-                    Inside.Add((polylineObjectId, InsidePolyline.looptype));
+                    Inside.Add(polylineObjectId);
                 }
-
+                DrawOrderCollection.Add(OutsidePolyline.ObjectId);
                 ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
 
 
@@ -128,7 +164,7 @@ namespace SioForgeCAD.Functions
                 ObjectIdCollection InsideObjId = new ObjectIdCollection();
                 foreach (var item in Inside)
                 {
-                    InsideObjId.Add(item.ObjId);
+                    InsideObjId.Add(item);
                 }
                 if (Inside.Count > 0)
                 {
@@ -137,12 +173,11 @@ namespace SioForgeCAD.Functions
 
                 oHatch.EvaluateHatch(true);
                 hachure.CopyPropertiesTo(oHatch);
-                oHatch.HatchStyle = HatchStyle.Normal;
-                DrawOrderCollection.Add(oHatchObjectId);
-
+                oHatch.HatchStyle = hachure.HatchStyle;
 
                 //Keep same draw order as old hatch
                 orderTable.MoveAbove(DrawOrderCollection, oHatchObjectId);
+                DrawOrderCollection.Insert(0, oHatchObjectId);
                 try
                 {
                     orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);

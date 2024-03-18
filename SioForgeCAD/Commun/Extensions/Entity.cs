@@ -102,16 +102,17 @@ namespace SioForgeCAD.Commun.Extensions
             Target.Transparency = Origin.Transparency;
             Target.Visible = Origin.Visible;
             Target.XData = Origin.XData;
-            Target.PlotStyleName = Origin.PlotStyleName;
-            Target.VisualStyleId = Origin.VisualStyleId;
-            Target.MergeStyle = Origin.MergeStyle;
-            Target.MaterialMapper = Origin.MaterialMapper;
-            Target.ForceAnnoAllVisible = Origin.ForceAnnoAllVisible;
-            Target.FaceStyleId = Origin.FaceStyleId;
-            Target.EdgeStyleId = Origin.EdgeStyleId;
-            Target.DrawStream = Origin.DrawStream;
+            //Target.PlotStyleName = Origin.PlotStyleName;
+            //Target.VisualStyleId = Origin.VisualStyleId;  
             Target.CastShadows = Origin.CastShadows;
             Target.Annotative = Origin.Annotative;
+            //Target.MergeStyle = Origin.MergeStyle;
+            //Target.MaterialMapper = Origin.MaterialMapper;
+            //Target.ForceAnnoAllVisible = Origin.ForceAnnoAllVisible;
+            //Target.FaceStyleId = Origin.FaceStyleId;
+            //Target.EdgeStyleId = Origin.EdgeStyleId;
+            //Target.DrawStream = Origin.DrawStream;
+          
         }
 
         public static double TryGetArea(this Entity ent)

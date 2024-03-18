@@ -251,7 +251,34 @@ namespace SioForgeCAD.Commun.Extensions
             return false;
         }
 
+        public static Polyline ToPolyline(this Curve curve)
+        {
+            if (curve is Polyline ProjectionTargetPolyLine)
+            {
+                return ProjectionTargetPolyLine.Clone() as Polyline;
+            }   
+            
+            if (curve is Line ProjectionTargetLine)
+            {
+                return ProjectionTargetLine.ToPolyline();
+            }
 
+            if (curve is Ellipse ProjectionTargetEllipse)
+            {
+                return ProjectionTargetEllipse.ToPolyline();
+            }
+
+            if (curve is Circle ProjectionTargetCircle)
+            {
+                return ProjectionTargetCircle.ToPolyline();
+            }
+
+            if (curve is Spline ProjectionTargetSpline)
+            {
+                return ProjectionTargetSpline.ToPolyline() as Polyline;
+            }
+            return null;
+        }
 
         public static List<Curve> Join(this IEnumerable<Curve> Curves)
         {

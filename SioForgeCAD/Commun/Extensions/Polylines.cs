@@ -399,6 +399,25 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return true;
         }
+        public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
+        {
+            IntersectionPointsFounds = new Point3dCollection();
+            polyline.IntersectWith(CutLine, intersect, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
+            return IntersectionPointsFounds.Count > 0;
+        }
+
+        public static bool ContainsSegment(this Polyline poly, Point3d Start, Point3d End)
+        {
+            Tolerance tol = Generic.MediumTolerance;
+            for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
+            {
+                var Seg = poly.GetSegmentAt(i);
+                if (Seg.StartPoint.IsEqualTo(Start, tol) && Seg.EndPoint.IsEqualTo(End, tol)) { return true; }
+                if (Seg.StartPoint.IsEqualTo(End, tol) && Seg.EndPoint.IsEqualTo(Start, tol)) { return true; }
+            }
+            return false;
+        }
+
 
         private static HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> GetSplittedCurves(List<PolyHole> Polylines)
         {
@@ -433,6 +452,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return SplittedCurvesOrigin;
         }
+
 
         public static bool Union(this List<PolyHole> Polylines, out List<PolyHole> UnionResult)
         {

@@ -74,7 +74,6 @@ namespace SioForgeCAD.Commun
             {
                 LastSliceResult?.Remove(BasePolyline);
             }
-            LastSliceResult?.DeepDispose();
             LastSliceResult = CachePolygon;
         }
 
@@ -149,12 +148,7 @@ namespace SioForgeCAD.Commun
             return CutedClosePolyligne;
         }
 
-        public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
-        {
-            IntersectionPointsFounds = new Point3dCollection();
-            polyline.IntersectWith(CutLine, intersect, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
-            return IntersectionPointsFounds.Count > 0;
-        }
+   
 
         private static DBObjectCollection GetInsideCutLines(this Polyline BoundaryPolyline, Polyline CutLine)
         {
