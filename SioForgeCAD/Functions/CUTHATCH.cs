@@ -28,6 +28,10 @@ namespace SioForgeCAD.Functions
             List<Curve> ExternalMergedCurves = ExternalCurves.Join();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
             List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
+            if (Hachure.HatchStyle == HatchStyle.Ignore)
+            {
+                InnerCurves.Clear();
+            }
             List<Curve> InnerMergedCurves = InnerCurves.Join();
             InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
 
@@ -68,7 +72,7 @@ namespace SioForgeCAD.Functions
                     {
                         Polyline NewBoundary = CuttedPolyline.FirstOrDefault();
                         List<Curve> NewBoundaryHoles = new List<Curve>();
-                        foreach (Curve Holes in InnerMergedCurves)
+                        foreach (Curve Holes in InnerMergedCurves.ToArray())
                         {
                             var HolePoly = Holes.ToPolyline();
                             if (HolePoly != null)
@@ -76,16 +80,24 @@ namespace SioForgeCAD.Functions
                                 //HolePoly.Cleanup();
                                 if (NewBoundary.IsSegmentIntersecting(HolePoly, out var dCollection, Intersect.OnBothOperands))
                                 {
-                                    dCollection.OrderByDistanceOnLine(HolePoly);
+                                    var OrdereddCollection = dCollection.OrderByDistanceOnLine(HolePoly);
                                     var Cuts = (NewBoundary.Clone() as Polyline).Cut((HolePoly.Clone() as Polyline));
+                                    if (Cuts.Count > 0)
+                                    {
+                                        CuttedPolyline.Remove(NewBoundary);
+                                    }
                                     foreach (var CuttedNewBoundary in Cuts)
                                     {
-                                        if (CuttedNewBoundary.ContainsSegment(dCollection[0], dCollection[1])) { continue; }
-                                        CuttedPolyline.Remove(NewBoundary);
+                                        if (CuttedNewBoundary.ContainsSegment(OrdereddCollection[0], OrdereddCollection[1]))
+                                        {
+                                            continue;
+                                        }
+                                        
+                                        NewBoundary.ColorIndex = 5;
+                                        NewBoundary.AddToDrawing();
                                         CuttedPolyline.Add(CuttedNewBoundary);
                                         NewBoundary = CuttedNewBoundary;
                                     }
-                                    
                                 }
                                 else
                                 {
@@ -105,9 +117,9 @@ namespace SioForgeCAD.Functions
                 }
                 else if (CheckIfHole(Boundary, CutLine))
                 {
-                    ApplyHatchV2(CutLine, ExternalMergedCurves, Hachure);
-                    ExternalMergedCurves.Add(CutLine);
-                    ApplyHatchV2(Boundary, ExternalMergedCurves, Hachure);
+                    ApplyHatchV2(CutLine, InnerMergedCurves, Hachure);
+                    InnerMergedCurves.Add(CutLine);
+                    ApplyHatchV2(Boundary, InnerMergedCurves, Hachure);
                     Boundary.CopyPropertiesTo(CutLine);
 
                     Generic.WriteMessage($"Un trou à été découpé dans la hachure");
@@ -142,6 +154,7 @@ namespace SioForgeCAD.Functions
                 List<ObjectId> Inside = new List<ObjectId>();
                 foreach (var InsidePolyline in OuterMostCurves)
                 {
+                    if (InsidePolyline == OutsidePolyline) { continue; }
                     OutsidePolyline.CopyPropertiesTo(InsidePolyline);
                     ObjectId polylineObjectId = InsidePolyline.ObjectId;
                     if (InsidePolyline.IsNewObject)
@@ -149,10 +162,16 @@ namespace SioForgeCAD.Functions
                         polylineObjectId = btr.AppendEntity(InsidePolyline);
                         tr.AddNewlyCreatedDBObject(InsidePolyline, true);
                     }
-                    DrawOrderCollection.Add(polylineObjectId);
+                    if (!DrawOrderCollection.Contains(polylineObjectId))
+                    {
+                        DrawOrderCollection.Add(polylineObjectId);
+                    }
                     Inside.Add(polylineObjectId);
                 }
-                DrawOrderCollection.Add(OutsidePolyline.ObjectId);
+                if (!DrawOrderCollection.Contains(OutsidePolyline.ObjectId))
+                {
+                    DrawOrderCollection.Add(OutsidePolyline.ObjectId);
+                }
                 ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
 
 
@@ -161,19 +180,34 @@ namespace SioForgeCAD.Functions
                 tr.AddNewlyCreatedDBObject(oHatch, true);
                 oHatch.Associative = true;
                 oHatch.AppendLoop(HatchLoopTypes.External, OutsideObjId);
-                ObjectIdCollection InsideObjId = new ObjectIdCollection();
+
                 foreach (var item in Inside)
                 {
-                    InsideObjId.Add(item);
+                    ObjectIdCollection InsideObjId = new ObjectIdCollection() { item };
+                    bool TryAppendLoop(HatchLoopTypes hatchLoopTypes)
+                    {
+                        try
+                        {
+                            oHatch.AppendLoop(hatchLoopTypes, InsideObjId);
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex + " hatchLoopTypes : " + hatchLoopTypes.ToString());
+
+                        }
+                        return false;
+                    }
+
+                    _ = (TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) | TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
+                        TryAppendLoop(HatchLoopTypes.Default));
                 }
-                if (Inside.Count > 0)
-                {
-                    oHatch.AppendLoop(HatchLoopTypes.Outermost, InsideObjId);
-                }
+
 
                 oHatch.EvaluateHatch(true);
                 hachure.CopyPropertiesTo(oHatch);
-                oHatch.HatchStyle = hachure.HatchStyle;
+                //oHatch.HatchStyle = hachure.HatchStyle;
+                oHatch.HatchStyle = HatchStyle.Normal;
 
                 //Keep same draw order as old hatch
                 orderTable.MoveAbove(DrawOrderCollection, oHatchObjectId);
