@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using System;
 using System.Collections.Generic;
@@ -67,6 +68,8 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     Polyline TargetPolyline = Target as Polyline;
                     TargetPolyline.Elevation = OriginPolyline.Elevation;
+                    TargetPolyline.ConstantWidth = OriginPolyline.ConstantWidth;
+                    TargetPolyline.Thickness = OriginPolyline.Thickness;
                 }
                 if (Origin is Polyline2d OriginPolyline2d)
                 {
@@ -76,8 +79,20 @@ namespace SioForgeCAD.Commun.Extensions
             }
 
             //Default for each Entities
-            Target.Color = Origin.Color;
-            Target.Layer = Origin.Layer;
+            if (Origin.EntityColor.IsNone)
+            {
+                Target.Color = Color.FromColorIndex(ColorMethod.ByLayer, 0);
+            }
+            else if (Origin.EntityColor.IsByColor)
+            {
+                Target.Color = Origin.Color;
+            }
+            else
+            {
+                Target.ColorIndex = Origin.ColorIndex;
+            }
+            
+            Target.LayerId = Origin.LayerId;
             Target.Linetype = Origin.Linetype;
             Target.LinetypeScale = Origin.LinetypeScale;
             Target.LineWeight = Origin.LineWeight;
@@ -87,6 +102,16 @@ namespace SioForgeCAD.Commun.Extensions
             Target.Transparency = Origin.Transparency;
             Target.Visible = Origin.Visible;
             Target.XData = Origin.XData;
+            Target.PlotStyleName = Origin.PlotStyleName;
+            Target.VisualStyleId = Origin.VisualStyleId;
+            Target.MergeStyle = Origin.MergeStyle;
+            Target.MaterialMapper = Origin.MaterialMapper;
+            Target.ForceAnnoAllVisible = Origin.ForceAnnoAllVisible;
+            Target.FaceStyleId = Origin.FaceStyleId;
+            Target.EdgeStyleId = Origin.EdgeStyleId;
+            Target.DrawStream = Origin.DrawStream;
+            Target.CastShadows = Origin.CastShadows;
+            Target.Annotative = Origin.Annotative;
         }
 
         public static double TryGetArea(this Entity ent)

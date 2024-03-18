@@ -9,6 +9,28 @@ using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
+    public class PolyHole
+    {
+        public Polyline Boundary;
+        public List<Polyline> Holes;
+
+        public PolyHole(Polyline boundary, List<Polyline> holes)
+        {
+            Boundary = boundary;
+            Holes = holes;
+        }
+
+        public static List<PolyHole> CreateFromList(IEnumerable<Polyline> polylines)
+        {
+            List<PolyHole> polyholes = new List<PolyHole>();
+            foreach (var poly in polylines)
+            {
+                polyholes.Add(new PolyHole(poly, new List<Polyline>()));
+            }
+            return polyholes;
+        }
+    }
+
     public static class PolylinesExtensions
     {
         public static int GetReelNumberOfVertices(this Polyline TargetPolyline)
@@ -378,37 +400,48 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
+        private static HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> GetSplittedCurves(List<PolyHole> Polylines)
+        {
+            HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = new HashSet<(HashSet<Polyline>, Polyline, List<PolyHole>)>();
 
-        public static bool Union(this List<Polyline> Polylines, out List<Polyline> UnionResult)
+            foreach (var PolyBase in Polylines)
+            {
+                Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
+                List<PolyHole> CuttedBy = new List<PolyHole>();
+                var PolyBaseExtend = PolyBase.Boundary.GetExtents();
+                foreach (var PolyCut in Polylines)
+                {
+                    if (PolyCut.Boundary.GetExtents().CollideWithOrConnected(PolyBaseExtend))
+                    {
+                        if (PolyBase.Boundary.IsSegmentIntersecting(PolyCut.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))
+                        {
+                            CuttedBy.Add(PolyCut);
+                        }
+                        GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
+                    }
+                }
+
+                if (GlobalIntersectionPointsFounds.Count > 0)
+                {
+                    var SplitDouble = PolyBase.Boundary.GetSplitPoints(GlobalIntersectionPointsFounds);
+                    SplittedCurvesOrigin.Add((PolyBase.Boundary.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet(), PolyBase.Boundary, CuttedBy));
+                }
+                else
+                {
+                    SplittedCurvesOrigin.Add((new HashSet<Polyline>() { PolyBase.Boundary }, PolyBase.Boundary, CuttedBy));
+                }
+            }
+            return SplittedCurvesOrigin;
+        }
+
+        public static bool Union(this List<PolyHole> Polylines, out List<PolyHole> UnionResult)
         {
             Stopwatch sw = new Stopwatch();
 
             sw.Start();
             {
-                HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = new HashSet<(HashSet<Polyline>, Polyline)>();
+                HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = GetSplittedCurves(Polylines);
 
-                foreach (var PolyBase in Polylines)
-                {
-                    Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
-                    var PolyBaseExtend = PolyBase.GetExtents();
-                    foreach (var PolyCut in Polylines)
-                    {
-                        if (PolyCut.GetExtents().CollideWithOrConnected(PolyBaseExtend))
-                        {
-                            PolyBase.IsSegmentIntersecting(PolyCut, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands);
-                            GlobalIntersectionPointsFounds.AddRange(IntersectionPointsFounds);
-                        }
-                    }
-                    if (GlobalIntersectionPointsFounds.Count > 0)
-                    {
-                        var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
-                        SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet(), PolyBase));
-                    }
-                    else
-                    {
-                        SplittedCurvesOrigin.Add((new HashSet<Polyline>() { PolyBase }, PolyBase));
-                    }
-                }
 
                 Generic.WriteMessage("IsSegmentIntersecting + Split en " + sw.ElapsedMilliseconds);
 
@@ -417,19 +450,24 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
                     var SplittedGeometryOriginExtend = SplittedCurveOrigin.GeometryOrigin.GetExtents();
+
+                    var PolyBaseCollection = SplittedCurveOrigin.CuttedBy;
+                    PolyBaseCollection.AddRange(Polylines.RemoveCommun(SplittedCurveOrigin.CuttedBy));
+
+
                     foreach (var SplittedCurve in SplittedCurves.ToArray())
                     {
-                        foreach (var PolyBase in Polylines)
+                        foreach (var PolyBase in PolyBaseCollection)
                         {
-                            if (!SplittedCurve.IsInside(PolyBase.GetExtents(), false))
+                            if (!SplittedCurve.IsInside(PolyBase.Boundary.GetExtents(), false))
                             {
                                 continue;
                             }
-                            if (PolyBase == SplittedCurveOrigin.GeometryOrigin)
+                            if (PolyBase.Boundary == SplittedCurveOrigin.GeometryOrigin)
                             {
                                 continue;
                             }
-                            if (SplittedCurve.IsInside(PolyBase, false))
+                            if (SplittedCurve.IsInside(PolyBase.Boundary, false))
                             {
                                 SplittedCurves.Remove(SplittedCurve);
                                 SplittedCurve.Dispose();
@@ -460,7 +498,7 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
                 Generic.WriteMessage("IsOverlaping en " + sw.ElapsedMilliseconds);
-                UnionResult = GlobalSplittedCurves.ToList();
+                UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves);
             }
             sw.Stop();
             Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);

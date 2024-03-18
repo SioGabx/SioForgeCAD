@@ -262,15 +262,9 @@ namespace SioForgeCAD
         [CommandMethod("CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH()
         {
-            Functions.CUTHATCH.CutHatch();
-        }
-        
-        [CommandMethod("TESTCUTHATCH", CommandFlags.UsePickSet)]
-        public static void TESTCUTHATCH()
-        {
             Functions.CUTHATCH.CutHoleHatch();
         }
-
+        
 
         [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
         public void SCALEBY()

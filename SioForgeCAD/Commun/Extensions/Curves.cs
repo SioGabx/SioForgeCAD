@@ -259,6 +259,7 @@ namespace SioForgeCAD.Commun.Extensions
             for (int i = 0; i < entities.Count; i++)
             {
                 var JoignableEnt = entities[i].GetJoinableCurve();
+                entities[i].CopyPropertiesTo(JoignableEnt);
                 entities[i] = JoignableEnt;
             }
 

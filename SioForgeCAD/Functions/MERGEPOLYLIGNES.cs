@@ -46,11 +46,14 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                Curves.Union(out List<Polyline> UnionResult);
+                PolyHole.CreateFromList(Curves).Union(out List<PolyHole> UnionResult);
 
-
-                UnionResult.AddToDrawing();
-
+                foreach (var polyh in UnionResult)
+                {
+                    polyh.Boundary.ColorIndex = 3;
+                    polyh.Boundary.AddToDrawing();
+                    polyh.Holes.AddToDrawing(2);
+                }
                 tr.Commit();
                 return;
             }
