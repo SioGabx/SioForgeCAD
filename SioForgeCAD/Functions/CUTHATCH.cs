@@ -117,6 +117,7 @@ namespace SioForgeCAD.Functions
                 }
                 else if (CheckIfHole(Boundary, CutLine))
                 {
+                    //TODO : Check if InnerMergedCurves is inside CutLine
                     ApplyHatchV2(CutLine, InnerMergedCurves, Hachure);
                     InnerMergedCurves.Add(CutLine);
                     ApplyHatchV2(Boundary, InnerMergedCurves, Hachure);
