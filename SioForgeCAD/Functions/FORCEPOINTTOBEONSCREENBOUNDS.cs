@@ -33,7 +33,9 @@ namespace SioForgeCAD.Functions
            
             if (e.Context.PointComputed && cmdActive)
             {
-                if (!ed.GetCurrentViewBound().IsPointIn(e.Context.ComputedPoint))
+                var ViewBox = ed.GetCurrentViewBound();
+                ViewBox.Expand(0.9);
+                if (!ViewBox.IsPointIn(e.Context.ComputedPoint))
                 {
                     e.Result.Retry = true;
                 }

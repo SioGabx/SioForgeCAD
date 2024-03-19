@@ -16,6 +16,17 @@ namespace SioForgeCAD.Commun.Drawing
             }
             return polyline;
         }
+
+        public static Polyline GetPolylineFromPoints(Point3dCollection listOfPoints)
+        {
+            Polyline polyline = new Polyline();
+            foreach (Point3d point in listOfPoints)
+            {
+                polyline.AddVertexAt(polyline.NumberOfVertices, point.ToPoint2d(), 0, 0, 0);
+            }
+            return polyline;
+        }
+
         public static Polyline GetPolylineFromPoints(params Points[] listOfPoints)
         {
             return GetPolylineFromPoints(listOfPoints as IEnumerable<Points>);

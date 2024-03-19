@@ -272,6 +272,17 @@ namespace SioForgeCAD
             Functions.SCALEBY.ScaleBy();
         }
 
+        [CommandMethod("FORCEPOINTTOBEONSCREENBOUNDS_ON", CommandFlags.Transparent)]
+        public void FORCEPOINTTOBEONSCREENBOUNDS_ON()
+        {
+            Functions.FORCEPOINTTOBEONSCREENBOUNDS.Enable();
+        }
+        [CommandMethod("FORCEPOINTTOBEONSCREENBOUNDS_OFF", CommandFlags.Transparent)]
+        public void FORCEPOINTTOBEONSCREENBOUNDS_OFF()
+        {
+            Functions.FORCEPOINTTOBEONSCREENBOUNDS.Disable();
+        }
+
 
 
 
@@ -283,7 +294,7 @@ namespace SioForgeCAD
             var polygon = poly.ToPolygon(10);
             var PtnsCollection = polygon.GetPoints().ToPoint3dCollection();
             PtnsCollection.Add(PtnsCollection[0]);
-            var pnts = PolygonInnerCentroid.GetInnerCentroid(PtnsCollection, 0.2);
+            var pnts = PolygonInnerCentroid.GetInnerCentroid(polygon, 5);
             pnts.AddToDrawing();
         }
 
