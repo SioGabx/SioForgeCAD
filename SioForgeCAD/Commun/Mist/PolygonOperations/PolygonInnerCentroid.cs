@@ -177,15 +177,51 @@ namespace SioForgeCAD.Commun
                         Point3d a = ring[i];
                         Point3d b = ring[j];
 
-                        using (Line ln = new Line(a, b))
-                        {
-                            var ClosestPt = ln.GetClosestPointTo(Point, false);
-                            minDistSq = Math.Min(minDistSq, ClosestPt.DistanceTo(Point));
-                        }
+                        //using (Line ln = new Line(a, b))
+                        //{
+                        //    var ClosestPt = ln.GetClosestPointTo(Point, false);
+                        //    minDistSq = Math.Min(minDistSq, ClosestPt.DistanceTo(Point));
+                        //}
+
+                        minDistSq = Math.Min(minDistSq, GetSegDistSq(Point.X, Point.Y, a, b));
                     }
                 }
 
                 return (inside ? 1 : -1) * Math.Sqrt(minDistSq);
+            }
+
+
+
+
+
+
+            private double GetSegDistSq(double px, double py, Point3d a, Point3d b)
+            {
+                var x = a.X;
+                var y = a.Y;
+                var dx = b.X - x;
+                var dy = b.Y - y;
+
+                if (dx != 0 || dy != 0)
+                {
+                    var t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
+
+                    if (t > 1)
+                    {
+                        x = b.X;
+                        y = b.Y;
+                    }
+                    else if (t > 0)
+                    {
+                        x += dx * t;
+                        y += dy * t;
+                    }
+                }
+
+                dx = px - x;
+                dy = py - y;
+
+                return dx * dx + dy * dy;
             }
         }
     }

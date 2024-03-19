@@ -230,13 +230,33 @@ namespace SioForgeCAD.Commun.Extensions
             return spline;
         }
 
-        public static Polyline ToPolygon(this Polyline poly)
+        public static Polyline ToPolygon(this Polyline poly, uint NumberOfVertexPerArc = 0)
         {
             if (poly.HasBulges)
             {
+                uint NumberOfVertex = (uint)poly.GetReelNumberOfVertices();
+                for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
+                {
+                    if (poly.GetSegmentType(i) == SegmentType.Arc)
+                    {
+                        NumberOfVertex += NumberOfVertexPerArc;
+                    }
+                }
+
                 using (var Spline = poly.GetSpline())
                 {
-                    return Spline.ToPolyline() as Polyline;
+                    Polyline Resultpoly;
+                    if (NumberOfVertexPerArc > 0)
+                    {
+                        Resultpoly = Spline.ToPolyline(NumberOfVertex, false, true) as Polyline;
+                    }
+                    else
+                    {
+                        Resultpoly = Spline.ToPolyline() as Polyline;
+                    }
+                    Resultpoly.Cleanup();
+
+                    return Resultpoly;
                 }
             }
             return poly;
@@ -385,7 +405,8 @@ namespace SioForgeCAD.Commun.Extensions
                     var Endparam = LineA.GetParameterAtPoint(PolylineSegment.EndPoint);
                     MiddlePoint = LineA.GetPointAtParam(Startparam + ((Endparam - Startparam) / 2));
                 }
-                else {
+                else
+                {
                     MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
                 }
 
@@ -501,7 +522,8 @@ namespace SioForgeCAD.Commun.Extensions
 
                 foreach (var SplittedCurveA in GlobalSplittedCurves.ToArray())
                 {
-                    if (!GlobalSplittedCurves.Contains(SplittedCurveA)){
+                    if (!GlobalSplittedCurves.Contains(SplittedCurveA))
+                    {
                         continue;
                     }
                     foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())

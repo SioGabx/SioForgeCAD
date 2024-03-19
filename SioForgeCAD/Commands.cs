@@ -280,9 +280,10 @@ namespace SioForgeCAD
         {
             Editor ed = Generic.GetEditor();
             var poly = ed.GetPolyline("Select poly", false);
-            var PtnsCollection = poly.ToPolygon().GetPoints().ToPoint3dCollection();
+            var polygon = poly.ToPolygon(10);
+            var PtnsCollection = polygon.GetPoints().ToPoint3dCollection();
             PtnsCollection.Add(PtnsCollection[0]);
-            var pnts = PolygonInnerCentroid.GetInnerCentroid(PtnsCollection, 1);
+            var pnts = PolygonInnerCentroid.GetInnerCentroid(PtnsCollection, 0.2);
             pnts.AddToDrawing();
         }
 
