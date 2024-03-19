@@ -80,7 +80,7 @@ namespace SioForgeCAD.Functions
                                 //HolePoly.Cleanup();
                                 if (NewBoundary.IsSegmentIntersecting(HolePoly, out var dCollection, Intersect.OnBothOperands))
                                 {
-                                    var OrdereddCollection = dCollection.OrderByDistanceOnLine(HolePoly);
+                                    var OrdereddCollection = dCollection.OrderByDistanceOnLine(CutLine);
                                     var Cuts = (NewBoundary.Clone() as Polyline).Cut((HolePoly.Clone() as Polyline));
                                     if (Cuts.Count > 0)
                                     {
@@ -92,9 +92,11 @@ namespace SioForgeCAD.Functions
                                         {
                                             continue;
                                         }
-                                        
-                                        NewBoundary.ColorIndex = 5;
-                                        NewBoundary.AddToDrawing();
+                                        var objid = Lines.Draw(OrdereddCollection[0], OrdereddCollection[1], 3);
+                                        CuttedNewBoundary.ColorIndex = 5;
+                                        var objid2 = CuttedNewBoundary.AddToDrawing();
+
+                                        Groups.Create("fdfd", "", new ObjectIdCollection() { objid, objid2 });
                                         CuttedPolyline.Add(CuttedNewBoundary);
                                         NewBoundary = CuttedNewBoundary;
                                     }

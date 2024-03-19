@@ -275,14 +275,23 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("INNERCENTROID", CommandFlags.UsePickSet)]
+        public static void INNERCENTROID()
+        {
+            Editor ed = Generic.GetEditor();
+            var poly = ed.GetPolyline("Select poly", false);
+            var PtnsCollection = poly.ToPolygon().GetPoints().ToPoint3dCollection();
+            PtnsCollection.Add(PtnsCollection[0]);
+            var pnts = PolygonInnerCentroid.GetInnerCentroid(PtnsCollection, 1);
+            pnts.AddToDrawing();
+        }
 
 
 
 
 
 
-
-        [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
+            [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {
             Editor ed = Generic.GetEditor();
