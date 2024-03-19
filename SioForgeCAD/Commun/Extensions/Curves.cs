@@ -256,26 +256,26 @@ namespace SioForgeCAD.Commun.Extensions
             if (curve is Polyline ProjectionTargetPolyLine)
             {
                 return ProjectionTargetPolyLine.Clone() as Polyline;
-            }   
-            
-            if (curve is Line ProjectionTargetLine)
-            {
-                return ProjectionTargetLine.ToPolyline();
             }
-
             if (curve is Ellipse ProjectionTargetEllipse)
             {
                 return ProjectionTargetEllipse.ToPolyline();
             }
-
+            if (curve is Spline ProjectionTargetSpline)
+            {
+                return ProjectionTargetSpline.ToPolyline(true, false) as Polyline;
+            }
+            if (curve is Line ProjectionTargetLine)
+            {
+                return ProjectionTargetLine.ToPolyline();
+            }
             if (curve is Circle ProjectionTargetCircle)
             {
                 return ProjectionTargetCircle.ToPolyline();
             }
-
-            if (curve is Spline ProjectionTargetSpline)
+            if (curve is Arc ProjectionTargetArc)
             {
-                return ProjectionTargetSpline.ToPolyline() as Polyline;
+                return ProjectionTargetArc.ToPolyline();
             }
             return null;
         }
@@ -286,7 +286,7 @@ namespace SioForgeCAD.Commun.Extensions
             for (int i = 0; i < entities.Count; i++)
             {
                 var JoignableEnt = entities[i].GetJoinableCurve();
-                entities[i].CopyPropertiesTo(JoignableEnt);
+                //entities[i].CopyPropertiesTo(JoignableEnt);
                 entities[i] = JoignableEnt;
             }
 

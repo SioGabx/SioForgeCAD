@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage("Impossible de découpper une hachure combinée.");
                 return;
             }
-            var Boundary = ExternalMergedCurves[0] as Polyline;
+            var Boundary = ExternalMergedCurves[0].ToPolyline();
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
             ed.SetImpliedSelection(new ObjectId[0]);
@@ -334,29 +334,9 @@ namespace SioForgeCAD.Functions
                             ObjectId SelectedObjectId = promptResult.Value.GetObjectIds().First();
                             DBObject Entity = SelectedObjectId.GetNoTransactionDBObject(OpenMode.ForRead);
                             Polyline polyline;
-                            if (Entity is Polyline)
+                            if (Entity is Curve curve)
                             {
-                                polyline = (Polyline)Entity.Clone();
-                            }
-                            else if (Entity is Line line)
-                            {
-                                polyline = line.ToPolyline();
-                            }
-                            else if (Entity is Spline spline)
-                            {
-                                polyline = (Polyline)spline.ToPolyline();
-                            }
-                            else if (Entity is Circle circle)
-                            {
-                                polyline = circle.ToPolyline();
-                            }
-                            else if (Entity is Ellipse ellipse)
-                            {
-                                polyline = ellipse.ToPolyline();
-                            }
-                            else if (Entity is Arc arc)
-                            {
-                                polyline = arc.ToPolyline();
+                                polyline = curve.ToPolyline();
                             }
                             else
                             {

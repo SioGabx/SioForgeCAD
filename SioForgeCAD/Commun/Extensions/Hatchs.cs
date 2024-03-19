@@ -12,13 +12,14 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class HatchsExtensions
     {
-        public static double GetAssociatedBoundary(this Hatch Hachure, out Polyline Boundary)
+        public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary)
         {
             var objectIdCollection = Hachure.GetAssociatedObjectIds();
             Boundary = null;
             if (objectIdCollection.Count >= 1)
             {
-                Boundary = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Polyline;
+                Curve Curve = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Curve;
+                Boundary = Curve;
             }
             return objectIdCollection.Count;
         }
@@ -28,88 +29,10 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        public static bool GetHatchPolyline(this Hatch Hachure, out Polyline Polyline)
-        {
-            Polyline = null;
-
-            Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                if (!Hachure.Associative)
-                {
-                    Hachure.ReGenerateBoundaryCommand();
-                    Hachure.GetAssociatedBoundary(out Polyline);
-                    Hachure.CopyPropertiesTo(Polyline);
-                }
-                else
-                {
-
-                    var NumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline BaseBoundary);
-                    if (NumberOfBoundary > 1)
-                    {
-                        if (BaseBoundary.Closed)
-                        {
-                            tr.Commit();
-                            if (Hachure.HatchStyle != HatchStyle.Ignore)
-                            {
-                                Generic.WriteMessage("\nImpossible de découper une hachure qui contient des trous");
-                                return false;
-                            }
-                            Generic.WriteMessage("\nAvertissement : La polyligne contient des trous mais ceux ci seront ignorés");
-                            Polyline = BaseBoundary;
-                            return true;
-                        }
-                        Hachure.ReGenerateBoundaryCommand();
-                        double NewNumberOfBoundary = Hachure.GetAssociatedBoundary(out Polyline);
-                        if (NewNumberOfBoundary > 1 && !Polyline.Closed)
-                        {
-                            var objectIdCollection = Hachure.GetAssociatedObjectIds();
-                            Polyline = null;
-                            foreach (ObjectId BoundaryElementObjectId in objectIdCollection)
-                            {
-                                var BoundaryElementEntity = BoundaryElementObjectId.GetEntity(OpenMode.ForRead) as Polyline;
-                                if (Polyline == null)
-                                {
-                                    Polyline = BoundaryElementEntity;
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        Polyline.JoinPolyline(BoundaryElementEntity);
-                                    }
-                                    catch (System.Exception ex)
-                                    {
-                                        Debug.WriteLine(ex);
-                                    }
-                                }
-                            }
-                            Polyline.Cleanup();
-                        }
-
-                        BaseBoundary.CopyPropertiesTo(Polyline);
-                    }
-                    else
-                    {
-                        Polyline = BaseBoundary;
-                    }
-                }
-                tr.Commit();
-
-                if (Polyline is null)
-                {
-                    return false;
-                }
-
-            }
-            return true;
-        }
-
-
         public static bool GetHatchPolylineV2(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
         {
             Hatch HatchClone = Hachure.Clone() as Hatch;
-            Polyline BaseBoundary;
+            Curve BaseBoundary;
             if (!Hachure.Associative)
             {
                 BaseBoundary = new Polyline();

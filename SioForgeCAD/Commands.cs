@@ -264,7 +264,7 @@ namespace SioForgeCAD
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
-        
+
 
         [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
         public void SCALEBY()
@@ -303,7 +303,7 @@ namespace SioForgeCAD
 
 
 
-            [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
+        [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {
             Editor ed = Generic.GetEditor();
@@ -330,7 +330,7 @@ namespace SioForgeCAD
                 Curves.Join().AddToDrawing(2);
                 tr.Commit();
             }
-            
+
         }
 
 
@@ -406,7 +406,7 @@ namespace SioForgeCAD
 
 
 
-   
+
 
 
 
