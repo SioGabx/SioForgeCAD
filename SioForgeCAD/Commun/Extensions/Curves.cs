@@ -263,7 +263,8 @@ namespace SioForgeCAD.Commun.Extensions
             }
             if (curve is Spline ProjectionTargetSpline)
             {
-                return ProjectionTargetSpline.ToPolyline(true, false) as Polyline;
+                Curve Converted = ProjectionTargetSpline.ToPolyline(true, true);
+                return Converted as Polyline;
             }
             if (curve is Line ProjectionTargetLine)
             {
@@ -276,6 +277,14 @@ namespace SioForgeCAD.Commun.Extensions
             if (curve is Arc ProjectionTargetArc)
             {
                 return ProjectionTargetArc.ToPolyline();
+            }
+            if (curve is Polyline2d ProjectionTargetPolyline2d)
+            {
+                return ProjectionTargetPolyline2d.ToPolyline();
+            }
+            if (curve is Polyline3d ProjectionTargetPolyline3d)
+            {
+                return ProjectionTargetPolyline3d.ToPolyline();
             }
             return null;
         }
