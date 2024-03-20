@@ -23,6 +23,7 @@ namespace SioForgeCAD.Commun
                 var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                 foreach (var PolyCut in Polylines)
                 {
+                    if (PolyCut == PolyBase) { continue; }
                     if (PolyCut.Boundary.GetExtents().CollideWithOrConnected(PolyBaseExtend))
                     {
                         if (PolyBase.Boundary.IsSegmentIntersecting(PolyCut.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))
