@@ -349,6 +349,12 @@ namespace SioForgeCAD
             Functions.MERGEPOLYLIGNES.Merge();
         }
 
+        [CommandMethod("MERGEPOLYLIGNESAU", CommandFlags.UsePickSet)]
+        public static void MERGEPOLYLIGNESAU()
+        {
+            Functions.MERGEPOLYLIGNES.MergeUsingRegion();
+        }
+
 
 
         [CommandMethod("VPLOCK")]

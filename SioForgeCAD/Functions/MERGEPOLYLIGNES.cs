@@ -6,6 +6,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Linq;
 using System.Text;
@@ -54,6 +55,58 @@ namespace SioForgeCAD.Functions
                     polyh.Boundary.AddToDrawing();
                     polyh.Holes.AddToDrawing(2);
                 }
+                Curves.DeepDispose();
+                tr.Commit();
+                return;
+            }
+        }
+
+        public static void MergeUsingRegion()
+        {
+            Editor ed = Generic.GetEditor();
+
+            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
+            PromptSelectionResult selRes = ed.GetSelection();
+            if (selRes.Status != PromptStatus.OK)
+                return;
+
+            SelectionSet sel = selRes.Value;
+            List<Polyline> Curves = new List<Polyline>();
+
+            //ed.GetPoint("Indiquez un point");
+            //var CurrentViewSave = ed.GetCurrentView();
+
+            Document doc = Generic.GetDocument();
+            using (Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId selectedObjectId in sel.GetObjectIds())
+                {
+                    DBObject ent = selectedObjectId.GetDBObject();
+                    if (ent is Polyline)
+                    {
+                        Polyline curv = ent.Clone() as Polyline;
+                        Curves.Add(curv);
+                    }
+                }
+                if (Curves.Count <= 0)
+                {
+                    return;
+                }
+                Stopwatch sw = new Stopwatch();
+
+                sw.Start();
+                {
+                    var UnionResult = Curves.RegionMerge(); ;
+
+                foreach (var polyh in UnionResult)
+                {
+                    polyh.ColorIndex = 3;
+                    polyh.AddToDrawing();
+                }
+                }
+                sw.Stop();
+                Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);
+                Curves.DeepDispose();
                 tr.Commit();
                 return;
             }

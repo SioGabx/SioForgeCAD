@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.Windows;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -60,17 +61,15 @@ namespace SioForgeCAD.Commun
                 Generic.WriteMessage("IsSegmentIntersecting + Split en " + sw.ElapsedMilliseconds);
 
                 HashSet<Polyline> GlobalSplittedCurves = new HashSet<Polyline>();
+                Dictionary<Polyline, Polyline> NoArcPolygonCache = new Dictionary<Polyline, Polyline>();
                 foreach (var SplittedCurveOrigin in SplittedCurvesOrigin.ToArray())
                 {
                     HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
-                    var SplittedGeometryOriginExtend = SplittedCurveOrigin.GeometryOrigin.GetExtents();
 
-                    var PolyBaseCollection = SplittedCurveOrigin.CuttedBy;
-                    PolyBaseCollection.AddRange(Polylines.RemoveCommun(SplittedCurveOrigin.CuttedBy));
-
-                    foreach (var PolyBase in PolyBaseCollection)
+                    foreach (var PolyBase in Polylines)
                     {
-                        Polyline NoArcPolyBase = null;
+                         NoArcPolygonCache.TryGetValue(PolyBase.Boundary, out Polyline NoArcPolyBase);
+                         
                         var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                         foreach (var SplittedCurve in SplittedCurves.ToArray())
                         {
@@ -85,7 +84,7 @@ namespace SioForgeCAD.Commun
                             if (NoArcPolyBase == null)
                             {
                                 NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
-                                //NoArcPolyBase.Cleanup();
+                                NoArcPolygonCache.Add(PolyBase.Boundary, NoArcPolyBase);
                             }
                             if (SplittedCurve.IsInside(NoArcPolyBase, false))
                             {
@@ -93,14 +92,19 @@ namespace SioForgeCAD.Commun
                                 SplittedCurve.Dispose();
                             }
                         }
-                        if (NoArcPolyBase != PolyBase.Boundary)
-                        {
-                            NoArcPolyBase?.Dispose();
-                        }
 
                     }
                     GlobalSplittedCurves.UnionWith(SplittedCurves.ToHashSet());
                 }
+
+                foreach (var item in NoArcPolygonCache)
+                {
+                    if (item.Key != item.Value)
+                    {
+                        item.Value?.Dispose();
+                    }
+                }
+
                 Generic.WriteMessage("IsInside en " + sw.ElapsedMilliseconds);
 
                 foreach (var SplittedCurveA in GlobalSplittedCurves.ToArray())

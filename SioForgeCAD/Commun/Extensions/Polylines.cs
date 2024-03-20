@@ -254,8 +254,9 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         Resultpoly = Spline.ToPolyline() as Polyline;
                     }
-                    if (Cleanup) { 
-                    Resultpoly.Cleanup();
+                    if (Cleanup)
+                    {
+                        Resultpoly.Cleanup();
                     }
                     return Resultpoly;
                 }
@@ -372,12 +373,22 @@ namespace SioForgeCAD.Commun.Extensions
         public static Point3d GetInnerCentroid(this Polyline poly)
         {
             var polygon = poly.ToPolygon(10, false);
-            return PolygonOperation.GetInnerCentroid(polygon, 5);
+            var pt = PolygonOperation.GetInnerCentroid(polygon, 5);
+            if (polygon != poly) { polygon?.Dispose(); }
+            return pt;
         }
 
         public static bool IsOverlaping(this Polyline LineA, Polyline LineB)
         {
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < LineA.GetReelNumberOfVertices(); PolylineSegmentIndex++)
+            var NumberOfVertices = LineA.GetReelNumberOfVertices();
+            if (NumberOfVertices > 200)//200 is a magic number
+            {
+                if (!LineA.GetExtents().CollideWithOrConnected(LineB.GetExtents()))
+                {
+                    return false;
+                }
+            }
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
             {
                 var PolylineSegment = LineA.GetSegmentAt(PolylineSegmentIndex);
                 Point3d MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
@@ -448,7 +459,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-      
+
 
 
 
