@@ -154,13 +154,14 @@
     <Compile Include="Commun\Mist\Layers.cs" />
     <Compile Include="Commun\Mist\Json\JSONParser.cs" />
     <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\PolygonInnerCentroid.cs" />
+    <Compile Include="Commun\Mist\PolygonOperations\InnerCentroid.cs" />
+    <Compile Include="Commun\Mist\PolygonOperations\Union.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
     <Compile Include="Commun\Mist\PerpendicularPoint.cs" />
     <Compile Include="Commun\Mist\PluginRegister.cs" />
     <Compile Include="Commun\Mist\SelectInXref.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\SlicePolygon.cs" />
+    <Compile Include="Commun\Mist\PolygonOperations\Slice.cs" />
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun
 {
-    public static class PolygonInnerCentroid
+    public static partial class PolygonOperation
     {
         /// <summary>
         /// A fast algorithm for finding polygon pole of inaccessibility, the most distant
@@ -102,7 +102,7 @@ namespace SioForgeCAD.Commun
         }
 
 
-        public class Cell
+        private class Cell
         {
             public Cell(Point3d pt, double h, Polyline polygon, Point3dCollection PtnsCollection, bool? FullyInside)
             {

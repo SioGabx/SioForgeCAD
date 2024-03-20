@@ -61,6 +61,14 @@ namespace SioForgeCAD.Commun.Extensions
             return !(b.Left() >= a.Right() || b.Right() <= a.Left() || b.Top() <= a.Bottom() || b.Bottom() >= a.Top());
         }
 
+        public static bool IsFullyInside(this Extents3d a, Extents3d b)
+        {
+            return a.MinPoint.X >= b.MinPoint.X &&
+                   a.MaxPoint.X <= b.MaxPoint.X &&
+                   a.MinPoint.Y >= b.MinPoint.Y &&
+                   a.MaxPoint.Y <= b.MaxPoint.Y;
+        }
+
         public static Extents3d GetExtents(this Entity entity)
         {
             if (entity != null && entity.Bounds.HasValue)

@@ -63,7 +63,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<Polyline> CuttedPolyline = SlicePolygon.LastSliceResult is null ? Boundary.Cut(CutLine) : SlicePolygon.LastSliceResult;
+                List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
                 int NumberOfPolyline = CuttedPolyline.Count;
                 if (NumberOfPolyline > 1)
                 {
@@ -78,25 +78,20 @@ namespace SioForgeCAD.Functions
                             if (HolePoly != null)
                             {
                                 //HolePoly.Cleanup();
-                                if (NewBoundary.IsSegmentIntersecting(HolePoly, out var dCollection, Intersect.OnBothOperands))
+                                if (NewBoundary.IsSegmentIntersecting(HolePoly, out _, Intersect.OnBothOperands))
                                 {
-                                    var OrdereddCollection = dCollection.OrderByDistanceOnLine(CutLine);
-                                    var Cuts = (NewBoundary.Clone() as Polyline).Cut((HolePoly.Clone() as Polyline));
+                                    var Cuts = (NewBoundary.Clone() as Polyline).Slice(HolePoly.Clone() as Polyline);
                                     if (Cuts.Count > 0)
                                     {
                                         CuttedPolyline.Remove(NewBoundary);
                                     }
                                     foreach (var CuttedNewBoundary in Cuts)
                                     {
-                                        if (CuttedNewBoundary.ContainsSegment(OrdereddCollection[0], OrdereddCollection[1]))
+                                       if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(HolePoly))
                                         {
                                             continue;
                                         }
-                                        var objid = Lines.Draw(OrdereddCollection[0], OrdereddCollection[1], 3);
-                                        CuttedNewBoundary.ColorIndex = 5;
-                                        var objid2 = CuttedNewBoundary.AddToDrawing();
 
-                                        Groups.Create("fdfd", "", new ObjectIdCollection() { objid, objid2 });
                                         CuttedPolyline.Add(CuttedNewBoundary);
                                         NewBoundary = CuttedNewBoundary;
                                     }
@@ -137,7 +132,7 @@ namespace SioForgeCAD.Functions
 
             }
             CutLine.Dispose();
-            SlicePolygon.SetCache(null, null);
+            PolygonOperation.SetSliceCache(null, null);
         }
 
 
@@ -418,7 +413,7 @@ namespace SioForgeCAD.Functions
 
         public static bool IsValidCutLine(Polyline Boundary, Polyline CutLine)
         {
-            List<Polyline> CuttedPolyline = Boundary.Cut(CutLine);
+            List<Polyline> CuttedPolyline = Boundary.Slice(CutLine);
             int NumberOfPolyline = CuttedPolyline.Count;
             //CuttedPolyline.Remove(Boundary);
             //CuttedPolyline.DeepDispose();

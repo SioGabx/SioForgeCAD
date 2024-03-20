@@ -10,10 +10,10 @@ using System.Linq;
 
 namespace SioForgeCAD.Commun
 {
-    public static class SlicePolygon
+    public static partial class PolygonOperation
     {
         public static List<Polyline> LastSliceResult = null;
-        public static List<Polyline> Cut(this Polyline BasePolyline, Polyline BaseCutLine)
+        public static List<Polyline> Slice(this Polyline BasePolyline, Polyline BaseCutLine)
         {
             BaseCutLine.Elevation = BasePolyline.Elevation;
             //BasePolyline.Cleanup();
@@ -52,12 +52,12 @@ namespace SioForgeCAD.Commun
             }
             //Polygon.AddToDrawing(5, true);
             InsideCutLines.DeepDispose();
-            SetCache(Polygon, BasePolyline);
+            SetSliceCache(Polygon, BasePolyline);
             return Polygon;
         }
 
 
-        public static void SetCache(List<Polyline> CachePolygon, Polyline BasePolyline)
+        public static void SetSliceCache(List<Polyline> CachePolygon, Polyline BasePolyline)
         {
             if (CachePolygon != null && CachePolygon != null)
             {
