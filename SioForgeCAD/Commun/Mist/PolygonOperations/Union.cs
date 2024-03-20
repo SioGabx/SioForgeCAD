@@ -67,25 +67,29 @@ namespace SioForgeCAD.Commun
                     var PolyBaseCollection = SplittedCurveOrigin.CuttedBy;
                     PolyBaseCollection.AddRange(Polylines.RemoveCommun(SplittedCurveOrigin.CuttedBy));
 
-
-                    foreach (var SplittedCurve in SplittedCurves.ToArray())
+                    foreach (var PolyBase in PolyBaseCollection)
                     {
-                        foreach (var PolyBase in PolyBaseCollection)
+                        Polyline NoArcPolyBase = null; 
+                        var PolyBaseExtend = PolyBase.Boundary.GetExtents();
+                        foreach (var SplittedCurve in SplittedCurves.ToArray())
                         {
                             if (PolyBase.Boundary == SplittedCurveOrigin.GeometryOrigin)
                             {
                                 continue;
                             }
-                            if (!SplittedCurve.IsInside(PolyBase.Boundary.GetExtents(), false))
+                            if (!SplittedCurve.IsInside(PolyBaseExtend, false))
                             {
                                 continue;
                             }
-
-                            if (SplittedCurve.IsInside(PolyBase.Boundary, false))
+                            if (NoArcPolyBase == null)
+                            {
+                                NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup:false);
+                                //NoArcPolyBase.Cleanup();
+                            }
+                            if (SplittedCurve.IsInside(NoArcPolyBase, false))
                             {
                                 SplittedCurves.Remove(SplittedCurve);
                                 SplittedCurve.Dispose();
-                                break;
                             }
                         }
                     }

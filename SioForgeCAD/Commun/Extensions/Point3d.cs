@@ -108,23 +108,11 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                if (false && polyline?.IsSelfIntersecting(out _) != true)
-                {
-                    using (DBObjectCollection Reg = Region.CreateFromCurves(new DBObjectCollection() { polyline }))
-                    using (Brep brepEnt = new Brep(Reg[0] as Region))
-                    {
-                        brepEnt.GetPointContainment(point, out PointContainment pointCont);
-                        Reg.DeepDispose();
-                        return pointCont != PointContainment.Outside;
-                    }
-                }
-                else
-                {
-                    var NoArcPoly = polyline.ToPolygon();
-                    var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
-                    if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
-                    return point.ToPoint2d().IsPointInsidePolygonMcMartin(Pnts);
-                }
+                Polyline NoArcPoly = polyline.ToPolygon();
+                var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
+                if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
+                return point.ToPoint2d().IsPointInsidePolygonMcMartin(Pnts);
+
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
             {

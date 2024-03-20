@@ -230,7 +230,7 @@ namespace SioForgeCAD.Commun.Extensions
             return spline;
         }
 
-        public static Polyline ToPolygon(this Polyline poly, uint NumberOfVertexPerArc = 0)
+        public static Polyline ToPolygon(this Polyline poly, uint NumberOfVertexPerArc = 0, bool Cleanup = true)
         {
             if (poly.HasBulges)
             {
@@ -254,8 +254,9 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         Resultpoly = Spline.ToPolyline() as Polyline;
                     }
+                    if (Cleanup) { 
                     Resultpoly.Cleanup();
-
+                    }
                     return Resultpoly;
                 }
             }
@@ -370,7 +371,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3d GetInnerCentroid(this Polyline poly)
         {
-            var polygon = poly.ToPolygon(10);
+            var polygon = poly.ToPolygon(10, false);
             return PolygonOperation.GetInnerCentroid(polygon, 5);
         }
 
@@ -403,20 +404,20 @@ namespace SioForgeCAD.Commun.Extensions
             for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
             {
                 var PolylineSegment = LineA.GetSegmentAt(PolylineSegmentIndex);
-                Point3d MiddlePoint;
-                if (LineA.GetSegmentType(PolylineSegmentIndex) == SegmentType.Arc)
-                {
-                    var Startparam = LineA.GetParameterAtPoint(PolylineSegment.StartPoint);
-                    var Endparam = LineA.GetParameterAtPoint(PolylineSegment.EndPoint);
-                    MiddlePoint = LineA.GetPointAtParam(Startparam + ((Endparam - Startparam) / 2));
-                }
-                else
-                {
-                    MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
-                }
-
                 if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
                 {
+                    Point3d MiddlePoint;
+                    if (LineA.GetSegmentType(PolylineSegmentIndex) == SegmentType.Arc)
+                    {
+                        var Startparam = LineA.GetParameterAtPoint(PolylineSegment.StartPoint);
+                        var Endparam = LineA.GetParameterAtPoint(PolylineSegment.EndPoint);
+                        MiddlePoint = LineA.GetPointAtParam(Startparam + ((Endparam - Startparam) / 2));
+                    }
+                    else
+                    {
+                        MiddlePoint = PolylineSegment.StartPoint.GetMiddlePoint(PolylineSegment.EndPoint);
+                    }
+
                     if (!MiddlePoint.IsInsidePolyline(LineB))
                     {
                         return false;
@@ -425,6 +426,8 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return true;
         }
+
+
         public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)
         {
             IntersectionPointsFounds = new Point3dCollection();
