@@ -69,7 +69,7 @@ namespace SioForgeCAD.Commun
 
                     foreach (var PolyBase in PolyBaseCollection)
                     {
-                        Polyline NoArcPolyBase = null; 
+                        Polyline NoArcPolyBase = null;
                         var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                         foreach (var SplittedCurve in SplittedCurves.ToArray())
                         {
@@ -83,7 +83,7 @@ namespace SioForgeCAD.Commun
                             }
                             if (NoArcPolyBase == null)
                             {
-                                NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup:false);
+                                NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
                                 //NoArcPolyBase.Cleanup();
                             }
                             if (SplittedCurve.IsInside(NoArcPolyBase, false))
@@ -92,6 +92,11 @@ namespace SioForgeCAD.Commun
                                 SplittedCurve.Dispose();
                             }
                         }
+                        if (NoArcPolyBase != PolyBase.Boundary)
+                        {
+                            NoArcPolyBase?.Dispose();
+                        }
+
                     }
                     GlobalSplittedCurves.UnionWith(SplittedCurves.ToHashSet());
                 }
