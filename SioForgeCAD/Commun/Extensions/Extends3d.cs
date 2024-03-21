@@ -69,13 +69,18 @@ namespace SioForgeCAD.Commun.Extensions
                    a.MaxPoint.Y <= b.MaxPoint.Y;
         }
 
+        readonly static object _GetExtentsLock = new object();
         public static Extents3d GetExtents(this Entity entity)
         {
-            if (entity != null && entity.Bounds.HasValue)
+            //GetExtents is not thread safe
+            lock (_GetExtentsLock)
             {
-                return entity.GeometricExtents;
+                if (entity != null && entity.Bounds.HasValue)
+                {
+                    return entity.GeometricExtents;
+                }
+                return new Extents3d();
             }
-            return new Extents3d();
         }
 
         public static Extents3d GetExtents(this IEnumerable<Entity> entities)

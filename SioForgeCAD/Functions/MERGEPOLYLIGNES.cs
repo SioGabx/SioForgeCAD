@@ -19,19 +19,14 @@ namespace SioForgeCAD.Functions
         public static void Merge()
         {
             Editor ed = Generic.GetEditor();
+            Document doc = Generic.GetDocument();
 
-            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
                 return;
 
             SelectionSet sel = selRes.Value;
             List<Polyline> Curves = new List<Polyline>();
-
-            //ed.GetPoint("Indiquez un point");
-            //var CurrentViewSave = ed.GetCurrentView();
-
-            Document doc = Generic.GetDocument();
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
                 foreach (ObjectId selectedObjectId in sel.GetObjectIds())

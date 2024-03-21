@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.Windows;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,10 +14,9 @@ namespace SioForgeCAD.Commun
 {
     public static partial class PolygonOperation
     {
-        private static HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> GetSplittedCurves(List<PolyHole> Polylines)
+        private static ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> GetSplittedCurves(List<PolyHole> Polylines)
         {
-            HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = new HashSet<(HashSet<Polyline>, Polyline, List<PolyHole>)>();
-
+            ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = new ConcurrentBag<(HashSet<Polyline>, Polyline, List<PolyHole>)>();
             foreach (var PolyBase in Polylines)
             {
                 Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
@@ -55,21 +55,19 @@ namespace SioForgeCAD.Commun
 
             sw.Start();
             {
-                HashSet<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = GetSplittedCurves(Polylines);
-
-
+                ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = GetSplittedCurves(Polylines);
                 Generic.WriteMessage("IsSegmentIntersecting + Split en " + sw.ElapsedMilliseconds);
 
-                HashSet<Polyline> GlobalSplittedCurves = new HashSet<Polyline>();
-                Dictionary<Polyline, Polyline> NoArcPolygonCache = new Dictionary<Polyline, Polyline>();
-                foreach (var SplittedCurveOrigin in SplittedCurvesOrigin.ToArray())
+                ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
+                ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
+                Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveOrigin =>
                 {
                     HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
 
                     foreach (var PolyBase in Polylines)
                     {
-                         NoArcPolygonCache.TryGetValue(PolyBase.Boundary, out Polyline NoArcPolyBase);
-                         
+                        NoArcPolygonCache.TryGetValue(PolyBase.Boundary, out Polyline NoArcPolyBase);
+
                         var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                         foreach (var SplittedCurve in SplittedCurves.ToArray())
                         {
@@ -84,7 +82,7 @@ namespace SioForgeCAD.Commun
                             if (NoArcPolyBase == null)
                             {
                                 NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
-                                NoArcPolygonCache.Add(PolyBase.Boundary, NoArcPolyBase);
+                                NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                             }
                             if (SplittedCurve.IsInside(NoArcPolyBase, false))
                             {
@@ -94,8 +92,10 @@ namespace SioForgeCAD.Commun
                         }
 
                     }
-                    GlobalSplittedCurves.UnionWith(SplittedCurves.ToHashSet());
-                }
+                    ConcurrentBagGlobalSplittedCurves.AddRange(SplittedCurves);
+                });
+
+                var GlobalSplittedCurves = ConcurrentBagGlobalSplittedCurves.ToList();
 
                 foreach (var item in NoArcPolygonCache)
                 {
@@ -106,25 +106,32 @@ namespace SioForgeCAD.Commun
                 }
 
                 Generic.WriteMessage("IsInside en " + sw.ElapsedMilliseconds);
-
-                foreach (var SplittedCurveA in GlobalSplittedCurves.ToArray())
+                object _lock = new object();
+                Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveA =>
                 {
-                    if (!GlobalSplittedCurves.Contains(SplittedCurveA))
+                    if (SplittedCurveA is null || !GlobalSplittedCurves.Contains(SplittedCurveA) || SplittedCurveA.IsDisposed)
                     {
-                        continue;
+                        return;
                     }
                     foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                     {
-                        if (SplittedCurveA != SplittedCurveB)
+                        if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
                         {
                             if (SplittedCurveA.IsOverlaping(SplittedCurveB))
                             {
-                                GlobalSplittedCurves.Remove(SplittedCurveA);
-                                SplittedCurveA.Dispose();
+                                lock (_lock)
+                                {
+                                    GlobalSplittedCurves.Remove(SplittedCurveA);
+                                }
                                 break;
                             }
                         }
                     }
+                });
+
+                foreach (var item in ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves))
+                {
+                    item.Dispose();
                 }
                 Generic.WriteMessage("IsOverlaping en " + sw.ElapsedMilliseconds);
                 UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves);

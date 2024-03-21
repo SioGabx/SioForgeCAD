@@ -166,16 +166,6 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
-            //var NearestPointOnPolyline = pl.GetClosestPointTo(pt,false);
-            //if (NearestPointOnPolyline.IsEqualTo(pt, new Tolerance(1e-5, 1e-5)))
-            //{
-            //    return true;
-            //}
-            //else
-            //{
-            //    return false;
-            //}
-
             bool isOn = false;
 
             for (int i = 0; i < pl.NumberOfVertices; i++)
