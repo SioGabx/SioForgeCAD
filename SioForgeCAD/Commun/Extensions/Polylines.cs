@@ -381,13 +381,6 @@ namespace SioForgeCAD.Commun.Extensions
         public static bool IsOverlaping(this Polyline LineA, Polyline LineB)
         {
             var NumberOfVertices = LineA.GetReelNumberOfVertices();
-            if (NumberOfVertices > 200)//200 is a magic number
-            {
-                if (!LineA.GetExtents().CollideWithOrConnected(LineB.GetExtents()))
-                {
-                    return false;
-                }
-            }
             for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
             {
                 var PolylineSegment = LineA.GetSegmentAt(PolylineSegmentIndex);

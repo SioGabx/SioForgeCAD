@@ -113,17 +113,23 @@ namespace SioForgeCAD.Commun
                     {
                         return;
                     }
+                    var SplittedCurveAExtend = SplittedCurveA.GetExtents();
+
                     foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                     {
                         if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
                         {
-                            if (SplittedCurveA.IsOverlaping(SplittedCurveB))
+                            var SplittedCurveBExtend = SplittedCurveB.GetExtents();
+                            if (SplittedCurveAExtend.CollideWithOrConnected(SplittedCurveBExtend))
                             {
-                                lock (_lock)
+                                if (SplittedCurveA.IsOverlaping(SplittedCurveB))
                                 {
-                                    GlobalSplittedCurves.Remove(SplittedCurveA);
+                                    lock (_lock)
+                                    {
+                                        GlobalSplittedCurves.Remove(SplittedCurveA);
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
