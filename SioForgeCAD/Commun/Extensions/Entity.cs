@@ -102,10 +102,10 @@ namespace SioForgeCAD.Commun.Extensions
             Target.Transparency = Origin.Transparency;
             Target.Visible = Origin.Visible;
             Target.XData = Origin.XData;
+            Target.CastShadows = Origin.CastShadows;
             //Target.PlotStyleName = Origin.PlotStyleName;
             //Target.VisualStyleId = Origin.VisualStyleId;  
-            Target.CastShadows = Origin.CastShadows;
-            Target.Annotative = Origin.Annotative;
+            //Target.Annotative = Origin.Annotative;
             //Target.MergeStyle = Origin.MergeStyle;
             //Target.MaterialMapper = Origin.MaterialMapper;
             //Target.ForceAnnoAllVisible = Origin.ForceAnnoAllVisible;

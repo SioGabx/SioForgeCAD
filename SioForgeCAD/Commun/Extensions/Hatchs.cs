@@ -23,34 +23,21 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return objectIdCollection.Count;
         }
-        public static void ReGenerateBoundaryCommand(this Hatch Hachure)
-        {
-            Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
-        }
+        //public static void ReGenerateBoundaryCommand(this Hatch Hachure)
+        //{
+        //    Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
+        //}
 
 
         public static bool GetHatchPolylineV2(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
         {
             Hatch HatchClone = Hachure.Clone() as Hatch;
-            Curve BaseBoundary;
-            if (!Hachure.Associative)
-            {
-                BaseBoundary = new Polyline();
-                Hachure.CopyPropertiesTo(BaseBoundary);
-            }
-            else
-            {
-                
-                Hachure.GetAssociatedBoundary(out BaseBoundary);
-            }
-
-
-                ExternalCurves = new List<Curve>();
+            ExternalCurves = new List<Curve>();
             OtherCurves = new List<(Curve curve, HatchLoopTypes looptype)>();
 
             foreach ((Curve curve, HatchLoopTypes looptype) in GetHatchBoundary(HatchClone))
             {
-                BaseBoundary.CopyPropertiesTo(curve);
+                Hachure.CopyPropertiesTo(curve);
                 if (looptype.HasFlag(HatchLoopTypes.External))
                 {
                     ExternalCurves.Add(curve);
@@ -59,9 +46,7 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     OtherCurves.Add((curve, looptype));
                 }
-
             }
-
             return true;
         }
 
@@ -164,69 +149,10 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-
-
-
-
-
-
-
-        ///// <summary>
-        ///// Converts hatch to polyline.
-        ///// </summary>
-        ///// <param name="hatch">The hatch.</param>
-        ///// <returns>The result polylines.</returns>
-        //public static List<Polyline> HatchToPline(Hatch hatch)
-        //{
-        //    var plines = new List<Polyline>();
-        //    int loopCount = hatch.NumberOfLoops;
-        //    for (int index = 0; index < loopCount;)
-        //    {
-        //        if (hatch.GetLoopAt(index).IsPolyline)
-        //        {
-        //            var loop = hatch.GetLoopAt(index).Polyline;
-        //            var p = new Polyline();
-        //            int i = 0;
-        //            loop.Cast<BulgeVertex>().ForEach(y =>
-        //            {
-        //                p.AddVertexAt(i, y.Vertex, y.Bulge, 0, 0);
-        //                i++;
-        //            });
-        //            plines.Add(p);
-        //            break;
-        //        }
-        //        else
-        //        {
-        //            var loop = hatch.GetLoopAt(index).Curves;
-        //            var p = new Polyline();
-        //            int i = 0;
-        //            loop.Cast<Curve2d>().ForEach(y =>
-        //            {
-        //                p.AddVertexAt(i, y.StartPoint, 0, 0, 0);
-        //                i++;
-        //                if (y == loop.Cast<Curve2d>().Last())
-        //                {
-        //                    p.AddVertexAt(i, y.EndPoint, 0, 0, 0);
-        //                }
-        //            });
-        //            plines.Add(p);
-        //            break;
-        //        }
-        //    }
-        //    return plines;
-        //}
-
-
-
         public static Hatch HatchRegion(this Region region, Transaction tr, bool Associative = true)
         {
             // Create a hatch and set its properties
             Hatch hatch = new Hatch();
-            //hatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
-            //hatch.ColorIndex = 1;  // Set your desired color index
-            //hatch.Transparency = new Transparency(127);
-
-            // Add the hatch to the modelspace & transaction
             Generic.GetCurrentSpaceBlockTableRecord(tr).AppendEntity(hatch);
             tr.AddNewlyCreatedDBObject(hatch, true);
 
@@ -241,32 +167,5 @@ namespace SioForgeCAD.Commun.Extensions
             hatch.EvaluateHatch(true);
             return hatch;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

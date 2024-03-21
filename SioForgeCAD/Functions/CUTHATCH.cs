@@ -25,6 +25,15 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
+
+            //Get the existing boundary style (if is Associative we get the curve, if not, we copy the hatch style)
+            Entity ExistingBoundaryStyle = Hachure;
+            if (Hachure.Associative)
+            {
+                Hachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
+                ExistingBoundaryStyle = AssociatedBoundary;
+            }
+
             List<Curve> ExternalMergedCurves = ExternalCurves.Join();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
             List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
@@ -77,7 +86,6 @@ namespace SioForgeCAD.Functions
                             var HolePoly = Holes.ToPolyline();
                             if (HolePoly != null)
                             {
-                                //HolePoly.Cleanup();
                                 if (NewBoundary.IsSegmentIntersecting(HolePoly, out _, Intersect.OnBothOperands))
                                 {
                                     var Cuts = (NewBoundary.Clone() as Polyline).Slice(HolePoly.Clone() as Polyline);
@@ -106,6 +114,7 @@ namespace SioForgeCAD.Functions
                             }
                         }
                         NumberOfSlice++;
+                        ExistingBoundaryStyle.CopyPropertiesTo(NewBoundary);
                         ApplyHatchV2(NewBoundary, NewBoundaryHoles, Hachure);
                         CuttedPolyline.Remove(NewBoundary);
                     }
@@ -115,11 +124,12 @@ namespace SioForgeCAD.Functions
                 else if (CheckIfHole(Boundary, CutLine))
                 {
                     //TODO : Check if InnerMergedCurves is inside CutLine
-                    ApplyHatchV2(CutLine, InnerMergedCurves, Hachure);
+                    ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
+                    ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
+                    ApplyHatchV2(CutLine, new List<Curve>(), Hachure);
                     InnerMergedCurves.Add(CutLine);
                     ApplyHatchV2(Boundary, InnerMergedCurves, Hachure);
-                    Boundary.CopyPropertiesTo(CutLine);
-
+                   
                     Generic.WriteMessage($"Un trou à été découpé dans la hachure");
                 }
 
