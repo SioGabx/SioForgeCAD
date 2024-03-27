@@ -192,7 +192,7 @@ namespace SioForgeCAD
             Functions.BLKINSEDIT.MoveBasePoint();
         }
 
-        [CommandMethod("RP2")]
+        [CommandMethod("RP2", CommandFlags.Transparent)]
         public void RP2()
         {
             Functions.RP2.RotateUCS();
