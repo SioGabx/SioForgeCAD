@@ -140,7 +140,7 @@ namespace SioForgeCAD.Commun
                     item.Dispose();
                 }
                 Generic.WriteMessage("IsOverlaping en " + sw.ElapsedMilliseconds);
-                UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves);
+                UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves.Join().Cast<Polyline>());
             }
             sw.Stop();
             Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);

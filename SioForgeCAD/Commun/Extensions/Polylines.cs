@@ -17,15 +17,32 @@ namespace SioForgeCAD.Commun.Extensions
         public PolyHole(Polyline boundary, List<Polyline> holes)
         {
             Boundary = boundary;
+            if (holes != null) { 
             Holes = holes;
+            }
+            else
+            {
+                Holes = new List<Polyline>();
+            }
         }
 
-        public static List<PolyHole> CreateFromList(IEnumerable<Polyline> polylines)
+        public static List<PolyHole> CreateFromList(IEnumerable<Polyline> polylines, IEnumerable<Polyline> PossibleHole = null)
         {
             List<PolyHole> polyholes = new List<PolyHole>();
             foreach (var poly in polylines)
             {
-                polyholes.Add(new PolyHole(poly, new List<Polyline>()));
+                List<Polyline> holes = new List<Polyline>();
+                if (PossibleHole != null)
+                {
+                    foreach (Polyline Hole in PossibleHole)
+                    {
+                        if (Hole.IsInside(poly, false))
+                        {
+                            holes.Add(Hole);
+                        }
+                    }
+                }
+                polyholes.Add(new PolyHole(poly, holes));
             }
             return polyholes;
         }
