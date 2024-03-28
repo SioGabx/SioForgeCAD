@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.Windows;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
@@ -60,6 +61,8 @@ namespace SioForgeCAD.Commun
 
                 ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
                 ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
+
+
                 Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveOrigin =>
                 {
                     HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
@@ -84,7 +87,7 @@ namespace SioForgeCAD.Commun
                                 NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
                                 NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                             }
-                            if (SplittedCurve.IsInside(NoArcPolyBase, false))
+                            if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
                             {
                                 SplittedCurves.Remove(SplittedCurve);
                                 SplittedCurve.Dispose();
@@ -109,27 +112,18 @@ namespace SioForgeCAD.Commun
                 object _lock = new object();
                 Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveA =>
                 {
-                    if (SplittedCurveA is null || !GlobalSplittedCurves.Contains(SplittedCurveA) || SplittedCurveA.IsDisposed)
-                    {
-                        return;
-                    }
-                    var SplittedCurveAExtend = SplittedCurveA.GetExtents();
-
+                  
                     foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                     {
                         if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
                         {
-                            var SplittedCurveBExtend = SplittedCurveB.GetExtents();
-                            if (SplittedCurveAExtend.CollideWithOrConnected(SplittedCurveBExtend))
+                            if (SplittedCurveA.IsSameAs(SplittedCurveB))
                             {
-                                if (SplittedCurveA.IsOverlaping(SplittedCurveB))
+                                lock (_lock)
                                 {
-                                    lock (_lock)
-                                    {
-                                        GlobalSplittedCurves.Remove(SplittedCurveA);
-                                    }
-                                    break;
+                                    GlobalSplittedCurves.Remove(SplittedCurveA);
                                 }
+                                break;
                             }
                         }
                     }

@@ -17,8 +17,9 @@ namespace SioForgeCAD.Commun.Extensions
         public PolyHole(Polyline boundary, List<Polyline> holes)
         {
             Boundary = boundary;
-            if (holes != null) { 
-            Holes = holes;
+            if (holes != null)
+            {
+                Holes = holes;
             }
             else
             {
@@ -60,9 +61,10 @@ namespace SioForgeCAD.Commun.Extensions
             return NumberOfVertices;
         }
 
-        public static (Point3d StartPoint, Point3d EndPoint) GetSegmentAt(this Polyline TargetPolyline, int Index)
+        public static (Point3d StartPoint, Point3d EndPoint, double Bulge) GetSegmentAt(this Polyline TargetPolyline, int Index)
         {
             int NumberOfVertices = TargetPolyline.NumberOfVertices;
+            double Bulge = TargetPolyline.GetBulgeAt(Index);
             var PolylineSegmentStart = TargetPolyline.GetPoint3dAt(Index);
             Index += 1;
             if (Index >= NumberOfVertices)
@@ -70,7 +72,7 @@ namespace SioForgeCAD.Commun.Extensions
                 Index = 0;
             }
             var PolylineSegmentEnd = TargetPolyline.GetPoint3dAt(Index);
-            return (PolylineSegmentStart, PolylineSegmentEnd);
+            return (PolylineSegmentStart, PolylineSegmentEnd, Bulge);
         }
 
         public static double GetArea(this Polyline pline)
@@ -447,6 +449,29 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return true;
         }
+
+
+        public static bool IsSameAs(this Polyline polylineA, Polyline polylineB)
+        {
+            if (polylineA.IsDisposed || polylineB.IsDisposed) { return false; }
+            if (polylineA.NumberOfVertices != polylineB.NumberOfVertices)
+            {
+                return false;
+            }
+            Tolerance tol = Generic.MediumTolerance;
+            
+            for (int i = 0; i < polylineA.GetReelNumberOfVertices(); i++)
+            {
+                var SegA = polylineA.GetSegmentAt(i);
+                var SegB = polylineB.GetSegmentAt(i);
+                if (!SegA.StartPoint.IsEqualTo(SegB.StartPoint, tol)) return false;
+                if (!SegA.EndPoint.IsEqualTo(SegB.EndPoint, tol)) return false;
+                if (SegA.Bulge != SegB.Bulge) return false;
+            }
+
+            return true;
+        }
+
 
 
         public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect = Intersect.OnBothOperands)

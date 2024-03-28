@@ -27,7 +27,7 @@ namespace SioForgeCAD.Commun.Drawing
             return entities.Cast<Entity>().AddToDrawing(ColorIndex, Clone);
         }
 
-        public static ObjectId AddToDrawing(this Entity entity)
+        public static ObjectId AddToDrawing(this Entity entity, int? ColorIndex = null)
         {
             var db = Generic.GetDatabase();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
@@ -41,6 +41,12 @@ namespace SioForgeCAD.Commun.Drawing
                     acTrans.Abort();
                     return ObjectId.Null;
                 }
+
+                if (ColorIndex != null)
+                {
+                    entity.ColorIndex = (int)ColorIndex;
+                }
+
                 acBlkTblRec.AppendEntity(entity);
                 acTrans.AddNewlyCreatedDBObject(entity, true);
                 acTrans.Commit();
