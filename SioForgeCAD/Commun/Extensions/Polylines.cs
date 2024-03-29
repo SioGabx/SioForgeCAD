@@ -370,6 +370,7 @@ namespace SioForgeCAD.Commun.Extensions
                         poly2d.AddVertexAt(poly2d.NumberOfVertices, point, 0, 0, 0);
                     }
                 }
+                poly2d.Closed = poly3d.Closed;
                 return poly2d;
             }
             else
