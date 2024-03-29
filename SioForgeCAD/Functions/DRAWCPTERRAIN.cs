@@ -154,7 +154,7 @@ namespace SioForgeCAD.Functions
             double CoteMinimal = double.MaxValue;
             foreach (TerrainPoint terrainPoint in TerrainPoints)
             {
-                CoteMinimal = Math.Min(CoteMinimal, terrainPoint.Altitude - 1);
+                CoteMinimal = Math.Min(CoteMinimal, terrainPoint.Altitude);
             }
             double CoteMinimalMaximumMultipleOfFive = CoteMinimal.RoundToNearestMultiple(5);
 
