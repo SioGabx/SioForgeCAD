@@ -9,46 +9,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
-    public class PolyHole
-    {
-        public Polyline Boundary;
-        public List<Polyline> Holes;
-
-        public PolyHole(Polyline boundary, List<Polyline> holes)
-        {
-            Boundary = boundary;
-            if (holes != null)
-            {
-                Holes = holes;
-            }
-            else
-            {
-                Holes = new List<Polyline>();
-            }
-        }
-
-        public static List<PolyHole> CreateFromList(IEnumerable<Polyline> polylines, IEnumerable<Polyline> PossibleHole = null)
-        {
-            List<PolyHole> polyholes = new List<PolyHole>();
-            foreach (var poly in polylines)
-            {
-                List<Polyline> holes = new List<Polyline>();
-                if (PossibleHole != null)
-                {
-                    foreach (Polyline Hole in PossibleHole)
-                    {
-                        if (Hole.IsInside(poly, false))
-                        {
-                            holes.Add(Hole);
-                        }
-                    }
-                }
-                polyholes.Add(new PolyHole(poly, holes));
-            }
-            return polyholes;
-        }
-    }
-
+   
     public static class PolylinesExtensions
     {
         public static int GetReelNumberOfVertices(this Polyline TargetPolyline)

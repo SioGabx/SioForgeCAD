@@ -58,13 +58,7 @@ namespace SioForgeCAD.Commun
             //Merge overlaping hole polyline
             Union(PolyHole.CreateFromList(NewBoundaryHoles.Cast<Polyline>()), out var HoleUnionResult);
 
-            List<Polyline> holes = new List<Polyline>();
-            foreach (var item in HoleUnionResult)
-            {
-                holes.Add(item.Boundary);
-            }
-
-            UnionResult = PolyHole.CreateFromList(CuttedPolyline, holes);
+            UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }
 

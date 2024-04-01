@@ -9,6 +9,17 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class EntityExtensions
     {
+
+        public static List<T> Clone<T>(this IEnumerable<T> list)
+        {
+            List<T> NewList = new List<T>();
+            foreach (var item in list)
+            {
+                NewList.Add((T)(item as Entity).Clone());
+            }
+            return NewList;
+        }
+
         public static void EraseObject(this Entity ObjectToErase)
         {
             Document doc = Generic.GetDocument();

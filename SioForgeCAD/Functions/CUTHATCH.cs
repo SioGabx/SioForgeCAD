@@ -81,38 +81,6 @@ namespace SioForgeCAD.Functions
                     {
                         Polyline NewBoundary = CuttedPolyline.FirstOrDefault();
                         List<Curve> NewBoundaryHoles = new List<Curve>();
-                        //foreach (Curve Holes in InnerMergedCurves.ToArray())
-                        //{
-                        //    var HolePoly = Holes.ToPolyline();
-                        //    if (HolePoly != null)
-                        //    {
-                        //        if (NewBoundary.IsSegmentIntersecting(HolePoly, out _, Intersect.OnBothOperands))
-                        //        {
-                        //            var Cuts = (NewBoundary.Clone() as Polyline).Slice(HolePoly.Clone() as Polyline);
-                        //            if (Cuts.Count > 0)
-                        //            {
-                        //                CuttedPolyline.Remove(NewBoundary);
-                        //            }
-                        //            foreach (var CuttedNewBoundary in Cuts)
-                        //            {
-                        //                if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(HolePoly))
-                        //                {
-                        //                    continue;
-                        //                }
-
-                        //                CuttedPolyline.Add(CuttedNewBoundary);
-                        //                NewBoundary = CuttedNewBoundary;
-                        //            }
-                        //        }
-                        //        else
-                        //        {
-                        //            if (HolePoly.IsInside(NewBoundary))
-                        //            {
-                        //                NewBoundaryHoles.Add(Holes);
-                        //            }
-                        //        }
-                        //    }
-                        //}
 
                         //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
                         CuttedPolyline.Remove(NewBoundary);
@@ -139,15 +107,20 @@ namespace SioForgeCAD.Functions
                     //TODO : Check if InnerMergedCurves is inside CutLine
                     ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
                     ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
-                    ApplyHatchV2(CutLine, new List<Curve>(), Hachure);
 
+                    PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Clone().Cast<Polyline>(), out var CutLineSubResult);
+                    foreach (var item in CutLineSubResult)
+                    {
+                        ApplyHatchV2(item.Boundary, item.Holes.Cast<Curve>().ToList(), Hachure);
+                    }
 
-
-
+                    
                     InnerMergedCurves.Add(CutLine);
-                    ApplyHatchV2(Boundary, InnerMergedCurves, Hachure);
-                   
+
+                    PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Clone().Cast<Polyline>()), out var MergedHoles);
+                    ApplyHatchV2(Boundary, MergedHoles.GetBoundaries().Cast<Curve>().ToList(), Hachure);
                     Generic.WriteMessage($"Un trou à été découpé dans la hachure");
+                    InnerMergedCurves.DeepDispose();
                 }
 
                 foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
