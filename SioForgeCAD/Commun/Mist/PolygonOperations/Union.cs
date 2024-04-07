@@ -21,12 +21,14 @@ namespace SioForgeCAD.Commun
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin, List<PolyHole> CuttedBy)> SplittedCurvesOrigin = new ConcurrentBag<(HashSet<Polyline>, Polyline, List<PolyHole>)>();
             foreach (var PolyBase in Polylines)
             {
+                if (PolyBase.Boundary.IsDisposed) { continue; }
                 Point3dCollection GlobalIntersectionPointsFounds = new Point3dCollection();
                 List<PolyHole> CuttedBy = new List<PolyHole>();
                 var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                 foreach (var PolyCut in Polylines)
                 {
                     if (PolyCut == PolyBase) { continue; }
+                    if (PolyCut.Boundary.IsDisposed) { continue; }
                     if (PolyCut.Boundary.GetExtents().CollideWithOrConnected(PolyBaseExtend))
                     {
                         if (PolyBase.Boundary.IsSegmentIntersecting(PolyCut.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))

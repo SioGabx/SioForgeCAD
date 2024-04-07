@@ -87,14 +87,19 @@ namespace SioForgeCAD.Functions
                         {
                             CuttedPolyline.Add(SubResult[i].Boundary);
                         }
-                        NewBoundary = SubResult[0].Boundary;
+                        
+                        Polyline SubstractedNewBoundary = SubResult[0].Boundary;
+                        if (NewBoundary != SubstractedNewBoundary)
+                        {
+                            NewBoundary.Dispose();
+                        }
                         NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
 
                         NumberOfSlice++;
-                        ExistingBoundaryStyle.CopyPropertiesTo(NewBoundary);
-                        ApplyHatchV2(NewBoundary, NewBoundaryHoles, Hachure);
-                        CuttedPolyline.Remove(NewBoundary);
-                        NewBoundary.Dispose();
+                        ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
+                        ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
+                        CuttedPolyline.Remove(SubstractedNewBoundary);
+                        SubstractedNewBoundary.Dispose();
                     }
                     Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
 
@@ -153,10 +158,10 @@ namespace SioForgeCAD.Functions
             }
 
             InnerMergedCurves.DeepDispose();
+            ExternalMergedCurves.DeepDispose();
+            ExistingBoundaryStyle.Dispose();
             CutLine.Dispose();
             Boundary.Dispose();
-            ExistingBoundaryStyle.Dispose();
-            ExternalMergedCurves.DeepDispose();
             PolygonOperation.SetSliceCache(null, null);
         }
 
