@@ -102,7 +102,7 @@ namespace SioForgeCAD.Functions
             BlocColor = Layers.GetLayerColor(BlocName);
             var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
             string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
-                BlockData = Description;
+            BlockData = Description;
             if (!BlockReferences.IsBlockExist(BlocName))
             {
                 BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);

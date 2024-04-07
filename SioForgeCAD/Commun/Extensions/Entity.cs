@@ -102,7 +102,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 Target.ColorIndex = Origin.ColorIndex;
             }
-            
+
             Target.LayerId = Origin.LayerId;
             Target.Linetype = Origin.Linetype;
             Target.LinetypeScale = Origin.LinetypeScale;
@@ -123,7 +123,7 @@ namespace SioForgeCAD.Commun.Extensions
             //Target.FaceStyleId = Origin.FaceStyleId;
             //Target.EdgeStyleId = Origin.EdgeStyleId;
             //Target.DrawStream = Origin.DrawStream;
-          
+
         }
 
         public static double TryGetArea(this Entity ent)

@@ -1,7 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.MacroRecorder;
-using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +7,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
-   
+
     public static class PolylinesExtensions
     {
         public static int GetReelNumberOfVertices(this Polyline TargetPolyline)
@@ -421,7 +419,7 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
             Tolerance tol = Generic.MediumTolerance;
-            
+
             for (int i = 0; i < polylineA.GetReelNumberOfVertices(); i++)
             {
                 var SegA = polylineA.GetSegmentAt(i);

@@ -6,7 +6,7 @@ using Autodesk.AutoCAD.Geometry;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application; 
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {

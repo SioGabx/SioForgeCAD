@@ -157,7 +157,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 string OldBlockNewRenameName = OldBlockName;
-               
+
                 //If user is only changing size, -> the name dont change but we need to replace old references
                 if (OldBlockName == NewBlockName)
                 {
@@ -173,9 +173,9 @@ namespace SioForgeCAD.Functions
                     Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
                     Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
-                    var BlkDef = db.GetBlocDefinition(NewBlockName);
-                    BlkDef.UpgradeOpen();
-                    BlkDef.Comments = BlockData;
+                var BlkDef = db.GetBlocDefinition(NewBlockName);
+                BlkDef.UpgradeOpen();
+                BlkDef.Comments = BlockData;
 
                 ReplaceAllBlockReference(tr, OldBlockNewRenameName, NewBlockName);
                 Layers.Merge(OldBlockName, NewBlockName);

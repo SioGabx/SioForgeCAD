@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static List<T> RemoveCommun<T>(this IEnumerable<T> list, IEnumerable<T> ItemsToRemove)
         {
-            List < T > NewList = list.ToList();
+            List<T> NewList = list.ToList();
             foreach (var item in list)
             {
                 if (ItemsToRemove.Contains(item))

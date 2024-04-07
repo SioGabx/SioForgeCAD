@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -148,7 +147,7 @@ namespace SioForgeCAD.Commun
             return CutedClosePolyligne;
         }
 
-   
+
 
         private static DBObjectCollection GetInsideCutLines(this Polyline BoundaryPolyline, Polyline CutLine)
         {

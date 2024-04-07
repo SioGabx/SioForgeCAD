@@ -1,12 +1,11 @@
-﻿using Autodesk.AutoCAD.BoundaryRepresentation;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Commun.Extensions
 {

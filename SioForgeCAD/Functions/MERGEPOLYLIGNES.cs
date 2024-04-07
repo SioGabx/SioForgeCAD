@@ -4,13 +4,9 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing.Printing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -93,11 +89,11 @@ namespace SioForgeCAD.Functions
                 {
                     var UnionResult = Curves.RegionMerge(); ;
 
-                foreach (var polyh in UnionResult)
-                {
-                    polyh.ColorIndex = 3;
-                    polyh.AddToDrawing();
-                }
+                    foreach (var polyh in UnionResult)
+                    {
+                        polyh.ColorIndex = 3;
+                        polyh.AddToDrawing();
+                    }
                 }
                 sw.Stop();
                 Generic.WriteMessage("Union en " + sw.ElapsedMilliseconds);

@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
@@ -85,21 +84,22 @@ namespace SioForgeCAD.Functions
                         PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
                         for (int i = 1; i < SubResult.Count; i++)
                         {
+                            //Add back each cut
                             CuttedPolyline.Add(SubResult[i].Boundary);
                         }
-                        
-                        Polyline SubstractedNewBoundary = SubResult[0].Boundary;
-                        if (NewBoundary != SubstractedNewBoundary)
-                        {
-                            NewBoundary.Dispose();
-                        }
-                        NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
 
-                        NumberOfSlice++;
+                        //Parse the first in list, if there is no new cut, this is the same as NewBoundary
+                        Polyline SubstractedNewBoundary = SubResult[0].Boundary;
+                        NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
+                        if (NewBoundary != SubstractedNewBoundary) { NewBoundary.Dispose(); }
+
                         ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
                         ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
+
                         CuttedPolyline.Remove(SubstractedNewBoundary);
                         SubstractedNewBoundary.Dispose();
+
+                        NumberOfSlice++;
                     }
                     Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
 
@@ -110,13 +110,13 @@ namespace SioForgeCAD.Functions
                     ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
 
                     //Hatch cutline -> remove the content if the cutline is cutting a hole
-                    
+
                     PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
                     foreach (var item in CutLineSubResult)
                     {
                         ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
                     }
-                   
+
 
                     //Generate a union of existing hole + new one
                     InnerMergedCurves.Add(CutLine);
@@ -131,7 +131,8 @@ namespace SioForgeCAD.Functions
                         {
                             if (CurveA != CurveB)
                             {
-                                if ((CurveA as Polyline).IsInside(CurveB as Polyline, true)){
+                                if ((CurveA as Polyline).IsInside(CurveB as Polyline, true))
+                                {
                                     ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
                                     Holes.Remove(CurveA);
                                     CurveA.Dispose();
@@ -157,6 +158,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
+            //Cleanup
             InnerMergedCurves.DeepDispose();
             ExternalMergedCurves.DeepDispose();
             ExistingBoundaryStyle.Dispose();
