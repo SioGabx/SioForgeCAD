@@ -92,35 +92,55 @@ namespace SioForgeCAD.Functions
                         NewBoundary = SubResult[0].Boundary;
                         NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
 
-
-
                         NumberOfSlice++;
                         ExistingBoundaryStyle.CopyPropertiesTo(NewBoundary);
                         ApplyHatchV2(NewBoundary, NewBoundaryHoles, Hachure);
                         CuttedPolyline.Remove(NewBoundary);
+                        NewBoundary.Dispose();
                     }
                     Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
 
                 }
                 else if (CheckIfHole(Boundary, CutLine))
                 {
-                    //TODO : Check if InnerMergedCurves is inside CutLine
                     ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
                     ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
 
-                    PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Clone().Cast<Polyline>(), out var CutLineSubResult);
+                    //Hatch cutline -> remove the content if the cutline is cutting a hole
+                    PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
                     foreach (var item in CutLineSubResult)
                     {
-                        ApplyHatchV2(item.Boundary, item.Holes.Cast<Curve>().ToList(), Hachure);
+                        ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
+                    }
+                    
+                    //Generate a union of existing hole + new one
+                    InnerMergedCurves.Add(CutLine);
+                    PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Cast<Polyline>()), out var MergedHoles);
+                    var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
+
+                    //If hole is inside an hole, we add a new Hatch inside
+                    foreach (var CurveA in Holes.ToArray())
+                    {
+                        var CurveAPoly = CurveA as Polyline;
+
+                        foreach (var CurveB in Holes.ToArray())
+                        {
+                            if (CurveA != CurveB)
+                            {
+                                if ((CurveA as Polyline).IsInside(CurveB as Polyline, true)){
+                                    ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
+                                    Holes.Remove(CurveA);
+                                    CurveA.Dispose();
+                                    break;
+                                }
+                            }
+                        }
                     }
 
-                    
-                    InnerMergedCurves.Add(CutLine);
-
-                    PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Clone().Cast<Polyline>()), out var MergedHoles);
-                    ApplyHatchV2(Boundary, MergedHoles.GetBoundaries().Cast<Curve>().ToList(), Hachure);
+                    //Apply hatch to the boundary with the union holes
+                    ApplyHatchV2(Boundary, Holes, Hachure);
                     Generic.WriteMessage($"Un trou à été découpé dans la hachure");
-                    InnerMergedCurves.DeepDispose();
+                    MergedHoles.GetBoundaries().DeepDispose();
                 }
 
                 foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
@@ -131,7 +151,12 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
 
             }
+
+            InnerMergedCurves.DeepDispose();
             CutLine.Dispose();
+            Boundary.Dispose();
+            Hachure.Dispose();
+            ExistingBoundaryStyle.Dispose();
             PolygonOperation.SetSliceCache(null, null);
         }
 

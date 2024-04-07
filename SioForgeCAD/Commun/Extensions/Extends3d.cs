@@ -75,7 +75,7 @@ namespace SioForgeCAD.Commun.Extensions
             //GetExtents is not thread safe
             lock (_GetExtentsLock)
             {
-                if (entity != null && entity.Bounds.HasValue)
+                if (entity != null && entity?.Bounds.HasValue == true)
                 {
                     return entity.GeometricExtents;
                 }

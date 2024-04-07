@@ -399,9 +399,5 @@ namespace SioForgeCAD.Commun.Extensions
                 return Curves.ToList();
             }
         }
-
-
-
-
     }
 }

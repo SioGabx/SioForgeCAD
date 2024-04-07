@@ -30,7 +30,7 @@ namespace SioForgeCAD.Commun
                     {
                         if (NewBoundary.IsSegmentIntersecting(SubsPoly, out _, Intersect.OnBothOperands))
                         {
-                            var Cuts = (NewBoundary.Clone() as Polyline).Slice(SubsPoly.Clone() as Polyline);
+                            var Cuts = NewBoundary.Slice(SubsPoly);
                             if (Cuts.Count > 0)
                             {
                                 CuttedPolyline.Remove(NewBoundary);

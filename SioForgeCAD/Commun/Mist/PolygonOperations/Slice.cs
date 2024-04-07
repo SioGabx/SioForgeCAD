@@ -119,7 +119,7 @@ namespace SioForgeCAD.Commun
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.WriteLine(ex);
+                        Debug.WriteLine("RecreateClosedPolyline :" + ex);
                     }
                 }
 
@@ -261,6 +261,10 @@ namespace SioForgeCAD.Commun
 
         public static DBObjectCollection TryGetSplitCurves(this Polyline polyline, DoubleCollection DblCollection)
         {
+            if (DblCollection.Count == 0)
+            {
+                return new DBObjectCollection();
+            }
             try
             {
                 var SplittedCurves = polyline.GetSplitCurves(DblCollection);
@@ -268,7 +272,7 @@ namespace SioForgeCAD.Commun
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                Debug.WriteLine("TryGetSplitCurves" + ex.ToString());
             }
             return new DBObjectCollection();
         }

@@ -69,8 +69,11 @@ namespace SioForgeCAD.Commun
 
                     foreach (var PolyBase in Polylines)
                     {
+                        if (PolyBase.Boundary.IsDisposed)
+                        {
+                            continue;
+                        }
                         NoArcPolygonCache.TryGetValue(PolyBase.Boundary, out Polyline NoArcPolyBase);
-
                         var PolyBaseExtend = PolyBase.Boundary.GetExtents();
                         foreach (var SplittedCurve in SplittedCurves.ToArray())
                         {
