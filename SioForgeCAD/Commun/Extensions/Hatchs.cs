@@ -31,11 +31,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool GetHatchPolylineV2(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
         {
-            Hatch HatchClone = Hachure.Clone() as Hatch;
             ExternalCurves = new List<Curve>();
             OtherCurves = new List<(Curve curve, HatchLoopTypes looptype)>();
 
-            foreach ((Curve curve, HatchLoopTypes looptype) in GetHatchBoundary(HatchClone))
+            foreach ((Curve curve, HatchLoopTypes looptype) in GetHatchBoundary(Hachure))
             {
                 Hachure.CopyPropertiesTo(curve);
                 if (looptype.HasFlag(HatchLoopTypes.External))

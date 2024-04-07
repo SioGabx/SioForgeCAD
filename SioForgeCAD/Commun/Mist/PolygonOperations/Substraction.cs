@@ -23,32 +23,35 @@ namespace SioForgeCAD.Commun
             SubstractionPolygons.AddRange(BasePolygon.Holes);
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
-                var SubsPoly = SubstractionPolygonCurve.ToPolyline();
-                if (SubsPoly != null)
+                using (var SubsPoly = SubstractionPolygonCurve.ToPolyline())
                 {
-                    foreach (Polyline NewBoundary in CuttedPolyline.ToArray())
+                    if (SubsPoly != null)
                     {
-                        if (NewBoundary.IsSegmentIntersecting(SubsPoly, out _, Intersect.OnBothOperands))
+                        foreach (Polyline NewBoundary in CuttedPolyline.ToArray())
                         {
-                            var Cuts = NewBoundary.Slice(SubsPoly);
-                            if (Cuts.Count > 0)
+                            if (NewBoundary.IsSegmentIntersecting(SubsPoly, out _, Intersect.OnBothOperands))
                             {
-                                CuttedPolyline.Remove(NewBoundary);
-                            }
-                            foreach (var CuttedNewBoundary in Cuts)
-                            {
-                                if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SubsPoly))
+                                var Cuts = NewBoundary.Slice(SubsPoly);
+                                if (Cuts.Count > 0)
                                 {
-                                    continue;
+                                    CuttedPolyline.Remove(NewBoundary);
                                 }
-                                CuttedPolyline.Add(CuttedNewBoundary);
+                                foreach (var CuttedNewBoundary in Cuts)
+                                {
+                                    if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SubsPoly))
+                                    {
+                                        continue;
+                                    }
+                                    CuttedPolyline.Add(CuttedNewBoundary);
+                                }
+                                Cuts.RemoveCommun(CuttedPolyline).DeepDispose();
                             }
-                        }
-                        else
-                        {
-                            if (SubsPoly.IsInside(NewBoundary, false))
+                            else
                             {
-                                NewBoundaryHoles.Add(SubstractionPolygonCurve);
+                                if (SubsPoly.IsInside(NewBoundary, false))
+                                {
+                                    NewBoundaryHoles.Add(SubstractionPolygonCurve);
+                                }
                             }
                         }
                     }
@@ -57,7 +60,6 @@ namespace SioForgeCAD.Commun
 
             //Merge overlaping hole polyline
             Union(PolyHole.CreateFromList(NewBoundaryHoles.Cast<Polyline>()), out var HoleUnionResult);
-
             UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }

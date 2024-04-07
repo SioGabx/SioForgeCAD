@@ -63,7 +63,24 @@ namespace SioForgeCAD.Commun
             }
             return holes;
         }
+        public static List<Polyline> GetAllHoles(this IEnumerable<PolyHole> polyHolesList)
+        {
+            List<Polyline> holes = new List<Polyline>();
+            foreach (var item in polyHolesList)
+            {
+                holes.AddRange(item.Holes);
+            }
+            return holes;
+        }
 
+        public static void Dispose(this IEnumerable<PolyHole> polyHolesList)
+        {
+            foreach (var item in polyHolesList)
+            {
+                item.Boundary.Dispose();
+                item.Holes.DeepDispose();
+            }
+        }
 
 
     }

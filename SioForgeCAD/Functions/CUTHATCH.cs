@@ -25,7 +25,6 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-
             //Get the existing boundary style (if is Associative we get the curve, if not, we copy the hatch style)
             Entity ExistingBoundaryStyle = Hachure;
             if (Hachure.Associative)
@@ -33,12 +32,12 @@ namespace SioForgeCAD.Functions
                 Hachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
                 ExistingBoundaryStyle = AssociatedBoundary;
             }
-
             List<Curve> ExternalMergedCurves = ExternalCurves.Join();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
             List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
             if (Hachure.HatchStyle == HatchStyle.Ignore)
             {
+                InnerCurves.DeepDispose();
                 InnerCurves.Clear();
             }
             List<Curve> InnerMergedCurves = InnerCurves.Join();
@@ -69,7 +68,6 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
@@ -107,17 +105,18 @@ namespace SioForgeCAD.Functions
                     ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
 
                     //Hatch cutline -> remove the content if the cutline is cutting a hole
+                    
                     PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
                     foreach (var item in CutLineSubResult)
                     {
                         ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
                     }
-                    
+                   
+
                     //Generate a union of existing hole + new one
                     InnerMergedCurves.Add(CutLine);
                     PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Cast<Polyline>()), out var MergedHoles);
                     var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
-
                     //If hole is inside an hole, we add a new Hatch inside
                     foreach (var CurveA in Holes.ToArray())
                     {
@@ -139,8 +138,9 @@ namespace SioForgeCAD.Functions
 
                     //Apply hatch to the boundary with the union holes
                     ApplyHatchV2(Boundary, Holes, Hachure);
-                    Generic.WriteMessage($"Un trou à été découpé dans la hachure");
-                    MergedHoles.GetBoundaries().DeepDispose();
+                    Generic.WriteMessage($"Un trou a été créé dans la hachure");
+                    MergedHoles.DeepDispose();
+                    CutLineSubResult.Dispose();
                 }
 
                 foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
@@ -148,15 +148,15 @@ namespace SioForgeCAD.Functions
                     item.EraseObject();
                 }
                 Hachure.ObjectId.EraseObject();
+                Hachure.Dispose();
                 tr.Commit();
-
             }
 
             InnerMergedCurves.DeepDispose();
             CutLine.Dispose();
             Boundary.Dispose();
-            Hachure.Dispose();
             ExistingBoundaryStyle.Dispose();
+            ExternalMergedCurves.DeepDispose();
             PolygonOperation.SetSliceCache(null, null);
         }
 
