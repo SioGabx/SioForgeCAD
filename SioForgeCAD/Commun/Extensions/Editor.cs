@@ -57,6 +57,10 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+       
+
+
+
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             objectId = new ObjectId[0];

@@ -9,6 +9,7 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -165,17 +166,47 @@ namespace SioForgeCAD
             Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
         }
 
-        [CommandMethod("SSOC", CommandFlags.Transparent)]
+        [CommandMethod("SSOC", CommandFlags.Redraw)]
         public static void SSOC()
         {
             Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
         }
 
-        [CommandMethod("SSOF", CommandFlags.Transparent)]
+        [CommandMethod("SSOF", CommandFlags.Redraw)]
         public static void SSOF()
         {
             Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
         }
+
+
+        [CommandMethod("SelectInPolyline")]
+        public void SelectInPolylineCmd()
+        {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+            PromptEntityOptions peo = new PromptEntityOptions("\nSelect a polyline: ");
+            peo.SetRejectMessage("Only polylines accepted");
+            peo.AddAllowedClass(typeof(Polyline), false);
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return;
+            ObjectId plId = per.ObjectId;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            using (Point3dCollection vtcs = new Point3dCollection())
+            {
+                Polyline pl = (Polyline)tr.GetObject(plId, OpenMode.ForRead);
+                (pl.GeometricExtents).ZoomExtents();
+                for (int i = 0; i < pl.NumberOfVertices; i++)
+                    vtcs.Add(pl.GetPoint3dAt(i));
+                tr.Commit();
+                PromptSelectionResult psr = ed.SelectCrossingPolygon(vtcs);
+                if (psr.Status != PromptStatus.OK) return;
+                ObjectId[] ids = psr.Value.GetObjectIds();
+                ed.SetImpliedSelection(ids.Where(id => id != plId).ToArray());
+            }
+        }
+
+
 
         [CommandMethod("RRR", CommandFlags.UsePickSet)]
         public static void RRR()

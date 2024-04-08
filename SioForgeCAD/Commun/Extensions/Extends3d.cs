@@ -180,5 +180,51 @@ namespace SioForgeCAD.Commun.Extensions
             return outline;
         }
 
+
+
+        // Lifted from
+        // http://docs.autodesk.com/ACD/2010/ENU/AutoCAD%20.NET%20Developer%27s%20Guide/files/WS1a9193826455f5ff2566ffd511ff6f8c7ca-4363.htm
+        public static void ZoomExtents(this Extents3d extents)
+        {
+            var ed = Generic.GetEditor();
+            // Get the current view
+            using (ViewTableRecord acView = ed.GetCurrentView())
+            {
+                // Translate WCS coordinates to DCS
+                Matrix3d matWCS2DCS = Matrix3d.Rotation(-acView.ViewTwist, acView.ViewDirection, acView.Target) * Matrix3d.Displacement(acView.Target - Point3d.Origin) * Matrix3d.PlaneToWorld(acView.ViewDirection);
+
+                // Calculate the ratio between the width and height of the current view
+                double dViewRatio = (acView.Width / acView.Height);
+
+                // Tranform the extents of the view
+                extents.TransformBy(matWCS2DCS.Inverse());
+
+                // Calculate the new width and height of the current view
+                double dWidth = extents.MaxPoint.X - extents.MinPoint.X;
+                double dHeight = extents.MaxPoint.Y - extents.MinPoint.Y;
+
+                // Check to see if the new width fits in current window
+                if (dWidth > dHeight * dViewRatio) { 
+                    dHeight = dWidth / dViewRatio;
+                }
+
+                // Get the center of the view
+                Point2d pNewCentPt = new Point2d((extents.MaxPoint.X + extents.MinPoint.X) * 0.5, (extents.MaxPoint.Y + extents.MinPoint.Y) * 0.5);
+
+                // Resize the view
+                acView.Height = dHeight;
+                acView.Width = dWidth;
+
+                // Set the center of the view
+                acView.CenterPoint = pNewCentPt;
+
+                // Set the current view
+                ed.SetCurrentView(acView);
+            }
+        }
+
+
+
+
     }
 }

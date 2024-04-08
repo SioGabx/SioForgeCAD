@@ -97,6 +97,7 @@ namespace SioForgeCAD.Commun
             return NewObjectIdCollection;
         }
 
+
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<DBObject> entities)
         {
             var NewDBObjectCollection = new DBObjectCollection();

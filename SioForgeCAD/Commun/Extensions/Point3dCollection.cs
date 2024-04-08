@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System.Collections.Generic;
@@ -36,6 +37,18 @@ namespace SioForgeCAD.Commun.Extensions
             return A;
         }
 
+        public static Point3dCollection ConvertToUCS(this Point3dCollection SCGPoint3DCollection)
+        {
+            Editor ed = Generic.GetEditor();
+            Matrix3d SCGToUCS = ed.CurrentUserCoordinateSystem.Inverse();
+
+            Point3dCollection UCSPoint3dCollection = new Point3dCollection();
+            foreach (Point3d point in SCGPoint3DCollection)
+            {
+                UCSPoint3dCollection.Add(point.TransformBy(SCGToUCS));
+            }
+            return UCSPoint3dCollection;
+        }
 
         public static Point3dCollection ToPoint3dCollection(this IEnumerable<Point3d> IEnumCollection)
         {
