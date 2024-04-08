@@ -229,8 +229,8 @@ namespace SioForgeCAD.Functions
                         return false;
                     }
 
-                    _ = (TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) | TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
-                        TryAppendLoop(HatchLoopTypes.Default));
+                    _ = TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) | TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
+                        TryAppendLoop(HatchLoopTypes.Default);
                 }
 
 

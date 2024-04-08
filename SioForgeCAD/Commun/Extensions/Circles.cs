@@ -13,6 +13,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             pline.AddVertexAt(0, new Point2d(circle.Center.X - circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
             pline.AddVertexAt(1, new Point2d(circle.Center.X + circle.Radius, circle.Center.Y), bulge, halfWidth, halfWidth);
+            pline.Closed = true;
             return pline;
         }
 
