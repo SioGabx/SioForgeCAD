@@ -331,41 +331,6 @@ namespace SioForgeCAD
 
 
 
-
-        [CommandMethod("TESTMERGE", CommandFlags.UsePickSet)]
-        public static void TESTMERGE()
-        {
-            Editor ed = Generic.GetEditor();
-
-            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
-            PromptSelectionResult selRes = ed.GetSelection();
-            if (selRes.Status != PromptStatus.OK)
-                return;
-
-            SelectionSet sel = selRes.Value;
-            List<Curve> Curves = new List<Curve>();
-
-            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId selectedObjectId in sel.GetObjectIds())
-                {
-                    DBObject ent = selectedObjectId.GetDBObject();
-                    if (ent is Curve)
-                    {
-                        Curve curv = ent.Clone() as Curve;
-                        Curves.Add(curv);
-                    }
-                }
-                Curves.Join().AddToDrawing(2);
-                tr.Commit();
-            }
-
-        }
-
-
-
-
-
         [CommandMethod("MERGEHATCH", CommandFlags.UsePickSet)]
         public static void MERGEHATCH()
         {
@@ -474,18 +439,22 @@ namespace SioForgeCAD
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
 
 
-            TrayItem ti = new TrayItem();
-            ti.ToolTipText = "My tray item tooltip";
+            TrayItem ti = new TrayItem
+            {
+                ToolTipText = "My tray item tooltip"
+            };
             var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
             var iconHandle = bitmap.GetHicon();
             ti.Icon = System.Drawing.Icon.FromHandle(iconHandle);
 
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
 
-            Autodesk.AutoCAD.Windows.Pane pane = new Autodesk.AutoCAD.Windows.Pane();
-            // pane.Icon = ti.Icon;
-            pane.ToolTipText = "My Pane tooltip";
-            pane.Style = Autodesk.AutoCAD.Windows.PaneStyles.Normal;
+            Autodesk.AutoCAD.Windows.Pane pane = new Autodesk.AutoCAD.Windows.Pane
+            {
+                // pane.Icon = ti.Icon;
+                ToolTipText = "My Pane tooltip",
+                Style = Autodesk.AutoCAD.Windows.PaneStyles.Normal
+            };
             //pane.Ba
             pane.MouseDown += new Autodesk.AutoCAD.Windows.StatusBarMouseDownEventHandler(HelloWorld);
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.Panes.Add(pane);

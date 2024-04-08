@@ -69,7 +69,7 @@ namespace SioForgeCAD.Commun.Extensions
                    a.MaxPoint.Y <= b.MaxPoint.Y;
         }
 
-        readonly static object _GetExtentsLock = new object();
+        static readonly object _GetExtentsLock = new object();
         public static Extents3d GetExtents(this Entity entity)
         {
             //GetExtents is not thread safe
@@ -204,7 +204,8 @@ namespace SioForgeCAD.Commun.Extensions
                 double dHeight = extents.MaxPoint.Y - extents.MinPoint.Y;
 
                 // Check to see if the new width fits in current window
-                if (dWidth > dHeight * dViewRatio) { 
+                if (dWidth > dHeight * dViewRatio)
+                {
                     dHeight = dWidth / dViewRatio;
                 }
 

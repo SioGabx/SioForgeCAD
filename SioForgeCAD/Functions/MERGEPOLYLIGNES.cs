@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
-    static public class MERGEPOLYLIGNES
+    public static class MERGEPOLYLIGNES
     {
         public static void Merge()
         {
