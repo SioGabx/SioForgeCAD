@@ -33,15 +33,17 @@ namespace SioForgeCAD.Functions
             }
             Point3dCollection collection = TerrainBasePolyline.GetPoints().Distinct().ToPoint3dCollection().ConvertToUCS();
             var SavedView = ed.GetCurrentView();
+            TerrainBasePolyline?.GetExtents().ZoomExtents();
+            var Objects = ed.SelectCrossingPolygon(collection).Value.GetObjectIds().ToList();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                TerrainBasePolyline?.GetExtents().ZoomExtents();
-                var Objects = ed.SelectCrossingPolygon(collection).Value.GetObjectIds().ToList();
+
                 Objects.Remove(TerrainBasePolyline.ObjectId);
                 ed.SetImpliedSelection(Objects.ToArray());
                 ed.SetCurrentView(SavedView);
                 tr.Commit();
             }
+            ed.Regen();
         }
 
         public static void InsideStrictPolyline()
@@ -56,14 +58,15 @@ namespace SioForgeCAD.Functions
             }
             Point3dCollection collection = TerrainBasePolyline.GetPoints().Distinct().ToPoint3dCollection().ConvertToUCS();
             var SavedView = ed.GetCurrentView();
+            TerrainBasePolyline?.GetExtents().ZoomExtents();
+            var Objects = ed.SelectWindowPolygon(collection).Value;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                TerrainBasePolyline?.GetExtents().ZoomExtents();
-                var Objects = ed.SelectWindowPolygon(collection).Value;
                 ed.SetImpliedSelection(Objects);
                 ed.SetCurrentView(SavedView);
                 tr.Commit();
             }
+            ed.Regen();
         }
     }
 }
