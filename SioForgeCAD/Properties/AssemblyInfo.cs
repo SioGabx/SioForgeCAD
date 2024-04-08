@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("HOFFMANN François")]
 [assembly: AssemblyProduct("SioForgeCAD")]
-[assembly: AssemblyCopyright("Copyright © HOFFMANN François - 2021")]
+[assembly: AssemblyCopyright("Copyright © HOFFMANN François - 2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
