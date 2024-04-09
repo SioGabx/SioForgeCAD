@@ -69,102 +69,115 @@ namespace SioForgeCAD.Functions
             }
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
-                int NumberOfPolyline = CuttedPolyline.Count;
-                if (NumberOfPolyline > 1)
+                try
                 {
-                    int NumberOfSlice = 0;
-                    while (CuttedPolyline.Count > 0)
+                    List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
+                    int NumberOfPolyline = CuttedPolyline.Count;
+                    if (NumberOfPolyline > 1)
                     {
-                        Polyline NewBoundary = CuttedPolyline.FirstOrDefault();
-                        List<Curve> NewBoundaryHoles = new List<Curve>();
-
-                        //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
-                        CuttedPolyline.Remove(NewBoundary);
-                        PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
-                        for (int i = 1; i < SubResult.Count; i++)
+                        int NumberOfSlice = 0;
+                        while (CuttedPolyline.Count > 0)
                         {
-                            //Add back each cut
-                            CuttedPolyline.Add(SubResult[i].Boundary);
+                            Polyline NewBoundary = CuttedPolyline.FirstOrDefault();
+                            List<Curve> NewBoundaryHoles = new List<Curve>();
+
+                            //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
+                            CuttedPolyline.Remove(NewBoundary);
+                            PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
+                            //Weird case where Substraction return 0 
+                            if (SubResult.Count == 0)
+                            {
+                                Generic.WriteMessage("Une erreur c'est produite : impossible de découpper cette hachure. L'opération a été annulée");
+                                NewBoundary.Dispose();
+                                tr.Commit();
+                                return;
+                            }
+                            for (int i = 1; i < SubResult.Count; i++)
+                            {
+                                //Add back each cut
+                                CuttedPolyline.Add(SubResult[i].Boundary);
+                            }
+
+                            //Parse the first in list, if there is no new cut, this is the same as NewBoundary
+                            Polyline SubstractedNewBoundary = SubResult[0].Boundary;
+                            NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
+                            if (NewBoundary != SubstractedNewBoundary) { NewBoundary.Dispose(); }
+
+                            ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
+                            ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
+
+                            CuttedPolyline.Remove(SubstractedNewBoundary);
+                            SubstractedNewBoundary.Dispose();
+
+                            NumberOfSlice++;
+                        }
+                        Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
+
+                    }
+                    else if (CheckIfHole(Boundary, CutLine))
+                    {
+                        ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
+                        ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
+
+                        //Hatch cutline -> remove the content if the cutline is cutting a hole
+
+                        PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
+                        foreach (var item in CutLineSubResult)
+                        {
+                            ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
                         }
 
-                        //Parse the first in list, if there is no new cut, this is the same as NewBoundary
-                        Polyline SubstractedNewBoundary = SubResult[0].Boundary;
-                        NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
-                        if (NewBoundary != SubstractedNewBoundary) { NewBoundary.Dispose(); }
 
-                        ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
-                        ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
-
-                        CuttedPolyline.Remove(SubstractedNewBoundary);
-                        SubstractedNewBoundary.Dispose();
-
-                        NumberOfSlice++;
-                    }
-                    Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
-
-                }
-                else if (CheckIfHole(Boundary, CutLine))
-                {
-                    ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
-                    ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
-
-                    //Hatch cutline -> remove the content if the cutline is cutting a hole
-
-                    PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
-                    foreach (var item in CutLineSubResult)
-                    {
-                        ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
-                    }
-
-
-                    //Generate a union of existing hole + new one
-                    InnerMergedCurves.Add(CutLine);
-                    PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Cast<Polyline>()), out var MergedHoles);
-                    var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
-                    //If hole is inside an hole, we add a new Hatch inside
-                    foreach (var CurveA in Holes.ToArray())
-                    {
-                        var CurveAPoly = CurveA as Polyline;
-
-                        foreach (var CurveB in Holes.ToArray())
+                        //Generate a union of existing hole + new one
+                        InnerMergedCurves.Add(CutLine);
+                        PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Cast<Polyline>()), out var MergedHoles);
+                        var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
+                        //If hole is inside an hole, we add a new Hatch inside
+                        foreach (var CurveA in Holes.ToArray())
                         {
-                            if (CurveA != CurveB)
+                            var CurveAPoly = CurveA as Polyline;
+
+                            foreach (var CurveB in Holes.ToArray())
                             {
-                                if ((CurveA as Polyline).IsInside(CurveB as Polyline, true))
+                                if (CurveA != CurveB)
                                 {
-                                    ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
-                                    Holes.Remove(CurveA);
-                                    CurveA.Dispose();
-                                    break;
+                                    if ((CurveA as Polyline).IsInside(CurveB as Polyline, true))
+                                    {
+                                        ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
+                                        Holes.Remove(CurveA);
+                                        CurveA.Dispose();
+                                        break;
+                                    }
                                 }
                             }
                         }
+
+                        //Apply hatch to the boundary with the union holes
+                        ApplyHatchV2(Boundary, Holes, Hachure);
+                        Generic.WriteMessage($"Un trou a été créé dans la hachure");
+                        MergedHoles.DeepDispose();
+                        CutLineSubResult.Dispose();
                     }
 
-                    //Apply hatch to the boundary with the union holes
-                    ApplyHatchV2(Boundary, Holes, Hachure);
-                    Generic.WriteMessage($"Un trou a été créé dans la hachure");
-                    MergedHoles.DeepDispose();
-                    CutLineSubResult.Dispose();
+                    foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
+                    {
+                        item.EraseObject();
+                    }
+                    Hachure.ObjectId.EraseObject();
+                    tr.Commit();
                 }
-
-                foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
+                finally
                 {
-                    item.EraseObject();
+                    //Cleanup
+                    Hachure.Dispose();
+                    InnerMergedCurves.DeepDispose();
+                    ExternalMergedCurves.DeepDispose();
+                    ExistingBoundaryStyle.Dispose();
+                    CutLine.Dispose();
+                    Boundary.Dispose();
+                    PolygonOperation.SetSliceCache(null, null);
                 }
-                Hachure.ObjectId.EraseObject();
-                Hachure.Dispose();
-                tr.Commit();
             }
-
-            //Cleanup
-            InnerMergedCurves.DeepDispose();
-            ExternalMergedCurves.DeepDispose();
-            ExistingBoundaryStyle.Dispose();
-            CutLine.Dispose();
-            Boundary.Dispose();
-            PolygonOperation.SetSliceCache(null, null);
         }
 
 
