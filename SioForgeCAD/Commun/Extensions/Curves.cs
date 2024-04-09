@@ -253,6 +253,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Polyline ToPolyline(this Curve curve)
         {
+            //Convert all curves to regular Polyline
             if (curve is Polyline ProjectionTargetPolyLine)
             {
                 return ProjectionTargetPolyLine.Clone() as Polyline;
@@ -260,6 +261,11 @@ namespace SioForgeCAD.Commun.Extensions
             if (curve is Ellipse ProjectionTargetEllipse)
             {
                 return ProjectionTargetEllipse.ToPolyline();
+            }
+            if (curve is Helix ProjectionTargetHelix)
+            {
+                Curve Converted = ProjectionTargetHelix.ToPolyline(true, true);
+                return Converted as Polyline;
             }
             if (curve is Spline ProjectionTargetSpline)
             {

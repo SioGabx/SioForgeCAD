@@ -85,16 +85,10 @@ namespace SioForgeCAD.Functions
                             CuttedPolyline.Remove(NewBoundary);
                             //-> Check the order
                             PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
-                            //Weird case where Substraction return 0 
+                            
+                            //Weird case where Substraction return 0 -> possible if the hatch is too small
                             if (SubResult.Count == 0)
                             {
-                               var list = InnerMergedCurves.AddToDrawing(3, true);
-                                list.Add(NewBoundary.AddToDrawing(3));
-                                Groups.Create("dfdf", "", list.ToObjectIdCollection());
-                                tr.Commit();
-                                return;
-
-
                                 Generic.WriteMessage("Une erreur c'est produite : impossible de découpper cette hachure. L'opération a été annulée");
                                 NewBoundary.Dispose();
                                 tr.Abort();
@@ -357,7 +351,7 @@ namespace SioForgeCAD.Functions
             {
                 SingleOnly = true,
                 SinglePickInSpace = true,
-                RejectObjectsOnLockedLayers = true,
+                RejectObjectsOnLockedLayers = false,
             };
             selectionOptions.Keywords.Add(NewLineKeyWord);
             string kws = selectionOptions.Keywords.GetDisplayString(true);
