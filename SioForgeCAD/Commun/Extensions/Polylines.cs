@@ -352,7 +352,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static Point3d GetInnerCentroid(this Polyline poly)
         {
             var polygon = poly.ToPolygon(10, false);
-            var pt = PolygonOperation.GetInnerCentroid(polygon, 5);
+            var pt = PolygonOperation.GetInnerCentroid(polygon, 1);
             if (polygon != poly) { polygon?.Dispose(); }
             return pt;
         }

@@ -29,10 +29,10 @@ namespace SioForgeCAD.Commun.Extensions
             return Points.From3DPoint(p);
         }
 
-        public static void AddToDrawing(this Point3d pnt)
+        public static ObjectId AddToDrawing(this Point3d pnt)
         {
             DBPoint dBPoint = new DBPoint(pnt);
-            dBPoint.AddToDrawing();
+            return dBPoint.AddToDrawing();
         }
 
         public static Point3d GetMiddlePoint(this Point3d A, Point3d B)

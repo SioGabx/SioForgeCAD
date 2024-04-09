@@ -83,13 +83,21 @@ namespace SioForgeCAD.Functions
 
                             //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
                             CuttedPolyline.Remove(NewBoundary);
+                            //-> Check the order
                             PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
                             //Weird case where Substraction return 0 
                             if (SubResult.Count == 0)
                             {
+                               var list = InnerMergedCurves.AddToDrawing(3, true);
+                                list.Add(NewBoundary.AddToDrawing(3));
+                                Groups.Create("dfdf", "", list.ToObjectIdCollection());
+                                tr.Commit();
+                                return;
+
+
                                 Generic.WriteMessage("Une erreur c'est produite : impossible de découpper cette hachure. L'opération a été annulée");
                                 NewBoundary.Dispose();
-                                tr.Commit();
+                                tr.Abort();
                                 return;
                             }
                             for (int i = 1; i < SubResult.Count; i++)

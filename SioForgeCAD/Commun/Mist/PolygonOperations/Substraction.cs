@@ -2,6 +2,7 @@
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun
@@ -13,26 +14,30 @@ namespace SioForgeCAD.Commun
             List<Curve> NewBoundaryHoles = new List<Curve>();
             List<Polyline> CuttedPolyline = new List<Polyline>() { BasePolygon.Boundary };
 
+            //Add existing hole to the substraction if not present
             var SubstractionPolygons = SubstractionPolygonsArg.ToList();
-            SubstractionPolygons.AddRange(BasePolygon.Holes);
+            SubstractionPolygons.AddRangeUnique(BasePolygon.Holes);
+         
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
-                using (var SubsPoly = SubstractionPolygonCurve.ToPolyline())
+                using (var SimplifiedSubstractionPolygonCurve = SubstractionPolygonCurve.ToPolyline())
                 {
-                    if (SubsPoly != null)
+                    if (SimplifiedSubstractionPolygonCurve != null)
                     {
                         foreach (Polyline NewBoundary in CuttedPolyline.ToArray())
                         {
-                            if (NewBoundary.IsSegmentIntersecting(SubsPoly, out _, Intersect.OnBothOperands))
+                            if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out _, Intersect.OnBothOperands))
                             {
-                                var Cuts = NewBoundary.Slice(SubsPoly);
+                                var Cuts = NewBoundary.Slice(SimplifiedSubstractionPolygonCurve);
+                                //if the boundary was cuted 
                                 if (Cuts.Count > 0)
                                 {
                                     CuttedPolyline.Remove(NewBoundary);
                                 }
                                 foreach (var CuttedNewBoundary in Cuts)
                                 {
-                                    if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SubsPoly))
+                                    //If cutted is inside a substraction polygon, we ignore it
+                                    if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SimplifiedSubstractionPolygonCurve))
                                     {
                                         continue;
                                     }
@@ -42,7 +47,8 @@ namespace SioForgeCAD.Commun
                             }
                             else
                             {
-                                if (SubsPoly.IsInside(NewBoundary, false))
+                                //If the substraction is not cutting the edge, then the subs is inside hole
+                                if (SimplifiedSubstractionPolygonCurve.IsInside(NewBoundary, false))
                                 {
                                     NewBoundaryHoles.Add(SubstractionPolygonCurve);
                                 }
