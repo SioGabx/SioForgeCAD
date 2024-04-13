@@ -1,12 +1,52 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class HatchsExtensions
     {
+        public static bool GetPolyHole(this Hatch Hachure, out PolyHole polyHole)
+        {
+            polyHole = null;
+            if (!Hachure.GetHatchPolylineV2(out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves))
+            {
+                return false;
+            }
+            List<Curve> ExternalMergedCurves = ExternalCurves.Join();
+            ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
+            List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
+            if (Hachure.HatchStyle == HatchStyle.Ignore)
+            {
+                InnerCurves.DeepDispose();
+                InnerCurves.Clear();
+            }
+            List<Curve> InnerMergedCurves = InnerCurves.Join();
+            InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
+
+            if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)
+            {
+                Generic.WriteMessage("Impossible de découpper cette hachure.");
+                return false;
+            }
+            if (ExternalMergedCurves.Count > 1)
+            {
+                Generic.WriteMessage("Impossible de découpper une hachure combinée.");
+                ExternalMergedCurves.DeepDispose();
+                return false;
+            }
+            var Boundary = ExternalMergedCurves[0].ToPolyline();
+            ExternalMergedCurves.DeepDispose();
+            polyHole = new PolyHole(Boundary, InnerMergedCurves.Cast<Polyline>());
+            return true;
+        }
+
+
+
+
         public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary)
         {
             var objectIdCollection = Hachure.GetAssociatedObjectIds();
@@ -44,7 +84,7 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-        public static List<(Curve, HatchLoopTypes)> GetHatchBoundary(Hatch hatch)
+        private static List<(Curve, HatchLoopTypes)> GetHatchBoundary(Hatch hatch)
         {
             int numberOfLoops = hatch.NumberOfLoops;
             var result = new List<(Curve, HatchLoopTypes)>(numberOfLoops);

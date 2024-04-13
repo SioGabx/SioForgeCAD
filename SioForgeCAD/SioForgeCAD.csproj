@@ -109,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
+    <Compile Include="Commun\Drawing\Hatchs.cs" />
     <Compile Include="Commun\Extensions\AttributeCollection.cs" />
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />

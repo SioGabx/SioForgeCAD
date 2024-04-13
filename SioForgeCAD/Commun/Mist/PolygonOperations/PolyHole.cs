@@ -1,21 +1,23 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace SioForgeCAD.Commun
 {
-    public class PolyHole
+    public class PolyHole : IDisposable
     {
         public Polyline Boundary;
         public List<Polyline> Holes;
 
-        public PolyHole(Polyline boundary, List<Polyline> holes)
+        public PolyHole(Polyline boundary, IEnumerable<Polyline> holes)
         {
             Boundary = boundary;
             if (holes != null)
             {
-                Holes = holes;
+                Holes = holes.ToList();
             }
             else
             {
@@ -44,6 +46,12 @@ namespace SioForgeCAD.Commun
             }
             return polyholes;
         }
+
+        public void Dispose()
+        {
+            Boundary.Dispose();
+            Holes.DeepDispose();
+        }
     }
 
     public static class PolyHoleExtensions
@@ -66,16 +74,5 @@ namespace SioForgeCAD.Commun
             }
             return holes;
         }
-
-        public static void Dispose(this IEnumerable<PolyHole> polyHolesList)
-        {
-            foreach (var item in polyHolesList)
-            {
-                item.Boundary.Dispose();
-                item.Holes.DeepDispose();
-            }
-        }
-
-
     }
 }

@@ -16,11 +16,10 @@ namespace SioForgeCAD.Functions
     {
         public static void CutHoleHatch()
         {
-            if (!GetHatch(out Hatch Hachure))
-            {
-                return;
-            }
-            if (!Hachure.GetHatchPolylineV2(out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves))
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+            if (!ed.GetHatch(out Hatch Hachure))
             {
                 return;
             }
@@ -31,47 +30,31 @@ namespace SioForgeCAD.Functions
                 Hachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
                 ExistingBoundaryStyle = AssociatedBoundary;
             }
-            List<Curve> ExternalMergedCurves = ExternalCurves.Join();
-            ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
-            List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
-            if (Hachure.HatchStyle == HatchStyle.Ignore)
-            {
-                InnerCurves.DeepDispose();
-                InnerCurves.Clear();
-            }
-            List<Curve> InnerMergedCurves = InnerCurves.Join();
-            InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
 
-            if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)
+            if (!Hachure.GetPolyHole(out var HatchPolyHole))
             {
-                Generic.WriteMessage("Impossible de découpper cette hachure.");
+                ExistingBoundaryStyle.Dispose();
                 return;
             }
-            if (ExternalMergedCurves.Count > 1)
-            {
-                Generic.WriteMessage("Impossible de découpper une hachure combinée.");
-                return;
-            }
-            var Boundary = ExternalMergedCurves[0].ToPolyline();
-            Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
+
             ed.SetImpliedSelection(new ObjectId[0]);
 
-            Polyline CutLine = GetCutPolyline(Boundary, out PromptStatus promptResult);
+            Polyline CutLine = GetCutPolyline(HatchPolyHole.Boundary, out PromptStatus promptResult);
             if (promptResult == PromptStatus.Keyword)
             {
-                CutLine = GetCutLine(Boundary);
+                CutLine = GetCutLine(HatchPolyHole.Boundary);
             }
 
             if (CutLine == null)
             {
+                ExistingBoundaryStyle.Dispose();
                 return;
             }
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 try
                 {
-                    List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
+                    List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? HatchPolyHole.Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
                     int NumberOfPolyline = CuttedPolyline.Count;
                     if (NumberOfPolyline > 1)
                     {
@@ -84,8 +67,8 @@ namespace SioForgeCAD.Functions
                             //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
                             CuttedPolyline.Remove(NewBoundary);
                             //-> Check the order
-                            PolygonOperation.Substraction(new PolyHole(NewBoundary, null), InnerMergedCurves.Cast<Polyline>(), out var SubResult);
-                            
+                            PolygonOperation.Substraction(new PolyHole(NewBoundary, null), HatchPolyHole.Holes, out var SubResult);
+
                             //Weird case where Substraction return 0 -> possible if the hatch is too small
                             if (SubResult.Count == 0)
                             {
@@ -106,7 +89,7 @@ namespace SioForgeCAD.Functions
                             if (NewBoundary != SubstractedNewBoundary) { NewBoundary.Dispose(); }
 
                             ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
-                            ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
+                            Hatchs.ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
 
                             CuttedPolyline.Remove(SubstractedNewBoundary);
                             SubstractedNewBoundary.Dispose();
@@ -116,23 +99,24 @@ namespace SioForgeCAD.Functions
                         Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
 
                     }
-                    else if (CheckIfHole(Boundary, CutLine))
+                    else if (CheckIfHole(HatchPolyHole.Boundary, CutLine))
                     {
                         ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
-                        ExistingBoundaryStyle.CopyPropertiesTo(Boundary);
+                        ExistingBoundaryStyle.CopyPropertiesTo(HatchPolyHole.Boundary);
 
                         //Hatch cutline -> remove the content if the cutline is cutting a hole
 
-                        PolygonOperation.Substraction(new PolyHole(CutLine, null), InnerMergedCurves.Cast<Polyline>(), out var CutLineSubResult);
+                        PolygonOperation.Substraction(new PolyHole(CutLine, null), HatchPolyHole.Holes, out var CutLineSubResult);
                         foreach (var item in CutLineSubResult)
                         {
-                            ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
+                            Hatchs.ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
                         }
 
 
                         //Generate a union of existing hole + new one
-                        InnerMergedCurves.Add(CutLine);
-                        PolygonOperation.Union(PolyHole.CreateFromList(InnerMergedCurves.Cast<Polyline>()), out var MergedHoles);
+                        var HatchHoles = HatchPolyHole.Holes;
+                        HatchHoles.Add(CutLine);
+                        PolygonOperation.Union(PolyHole.CreateFromList(HatchHoles), out var MergedHoles);
                         var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
                         //If hole is inside an hole, we add a new Hatch inside
                         foreach (var CurveA in Holes.ToArray())
@@ -145,7 +129,7 @@ namespace SioForgeCAD.Functions
                                 {
                                     if ((CurveA as Polyline).IsInside(CurveB as Polyline, true))
                                     {
-                                        ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
+                                        Hatchs.ApplyHatchV2(CurveAPoly, new List<Curve>(), Hachure);
                                         Holes.Remove(CurveA);
                                         CurveA.Dispose();
                                         break;
@@ -155,10 +139,10 @@ namespace SioForgeCAD.Functions
                         }
 
                         //Apply hatch to the boundary with the union holes
-                        ApplyHatchV2(Boundary, Holes, Hachure);
+                        Hatchs.ApplyHatchV2(HatchPolyHole.Boundary, Holes, Hachure);
                         Generic.WriteMessage($"Un trou a été créé dans la hachure");
                         MergedHoles.DeepDispose();
-                        CutLineSubResult.Dispose();
+                        CutLineSubResult.DeepDispose();
                     }
 
                     foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
@@ -172,101 +156,14 @@ namespace SioForgeCAD.Functions
                 {
                     //Cleanup
                     Hachure.Dispose();
-                    InnerMergedCurves.DeepDispose();
-                    ExternalMergedCurves.DeepDispose();
-                    ExistingBoundaryStyle.Dispose();
                     CutLine.Dispose();
-                    Boundary.Dispose();
+                    HatchPolyHole.Dispose();
+                    ExistingBoundaryStyle.Dispose();
                     PolygonOperation.SetSliceCache(null, null);
                 }
             }
         }
 
-
-        public static void ApplyHatchV2(Polyline OutsidePolyline, List<Curve> OuterMostCurves, Hatch hachure)
-        {
-            Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.TopTransaction)
-            {
-                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr); ;
-                DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
-                ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
-                if (OutsidePolyline.IsNewObject)
-                {
-                    OutsidePolyline.AddToDrawingCurrentTransaction();
-                }
-
-                List<ObjectId> Inside = new List<ObjectId>();
-                foreach (var InsidePolyline in OuterMostCurves)
-                {
-                    if (InsidePolyline == OutsidePolyline) { continue; }
-                    OutsidePolyline.CopyPropertiesTo(InsidePolyline);
-                    ObjectId polylineObjectId = InsidePolyline.ObjectId;
-                    if (InsidePolyline.IsNewObject)
-                    {
-                        polylineObjectId = btr.AppendEntity(InsidePolyline);
-                        tr.AddNewlyCreatedDBObject(InsidePolyline, true);
-                    }
-                    if (!DrawOrderCollection.Contains(polylineObjectId))
-                    {
-                        DrawOrderCollection.Add(polylineObjectId);
-                    }
-                    Inside.Add(polylineObjectId);
-                }
-                if (!DrawOrderCollection.Contains(OutsidePolyline.ObjectId))
-                {
-                    DrawOrderCollection.Add(OutsidePolyline.ObjectId);
-                }
-                ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
-
-
-                Hatch oHatch = new Hatch();
-                var oHatchObjectId = btr.AppendEntity(oHatch);
-                tr.AddNewlyCreatedDBObject(oHatch, true);
-                oHatch.Associative = true;
-                oHatch.AppendLoop(HatchLoopTypes.External, OutsideObjId);
-
-                foreach (var item in Inside)
-                {
-                    ObjectIdCollection InsideObjId = new ObjectIdCollection() { item };
-                    bool TryAppendLoop(HatchLoopTypes hatchLoopTypes)
-                    {
-                        try
-                        {
-                            oHatch.AppendLoop(hatchLoopTypes, InsideObjId);
-                            return true;
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex + " hatchLoopTypes : " + hatchLoopTypes.ToString());
-
-                        }
-                        return false;
-                    }
-
-                    _ = TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) | TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
-                        TryAppendLoop(HatchLoopTypes.Default);
-                }
-
-
-                oHatch.EvaluateHatch(true);
-                hachure.CopyPropertiesTo(oHatch);
-                //oHatch.HatchStyle = hachure.HatchStyle;
-                oHatch.HatchStyle = HatchStyle.Normal;
-
-                //Keep same draw order as old hatch
-                orderTable.MoveAbove(DrawOrderCollection, oHatchObjectId);
-                DrawOrderCollection.Insert(0, oHatchObjectId);
-                try
-                {
-                    orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.ToString());
-                }
-            }
-        }
 
 
         static bool CheckIfHole(Polyline Boundary, Polyline CutLine)
@@ -408,37 +305,6 @@ namespace SioForgeCAD.Functions
         }
 
 
-        public static bool GetHatch(out Hatch Hachure)
-        {
-            Hachure = null;
-            var db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                try
-                {
-                    while (true)
-                    {
-                        if (!ed.GetHatch(out ObjectId HatchObjectId))
-                        {
-                            return false;
-                        }
-
-                        if (HatchObjectId.GetDBObject() is Hatch hatch)
-                        {
-                            Hachure = hatch;
-                            break;
-                        }
-                    }
-                }
-                finally
-                {
-                    tr.Commit();
-                }
-            }
-
-            return true;
-        }
 
         public static Polyline GetPolylineFromNearestPointOnBoundary(Polyline Boundary, Points Origin, Points EndPoint)
         {

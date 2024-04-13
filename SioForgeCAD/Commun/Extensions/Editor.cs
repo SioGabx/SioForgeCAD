@@ -94,6 +94,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+     
+
+
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
         {
             while (true)
@@ -190,6 +193,37 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 HatchObjectId = Result.ObjectId;
             }
+            return true;
+        }
+
+        public static bool GetHatch(this Editor ed, out Hatch Hachure)
+        {
+            Hachure = null;
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    while (true)
+                    {
+                        if (!ed.GetHatch(out ObjectId HatchObjectId))
+                        {
+                            return false;
+                        }
+
+                        if (HatchObjectId.GetDBObject() is Hatch hatch)
+                        {
+                            Hachure = hatch;
+                            break;
+                        }
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
+                }
+            }
+
             return true;
         }
 
