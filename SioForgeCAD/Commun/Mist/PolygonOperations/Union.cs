@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +14,9 @@ namespace SioForgeCAD.Commun
     {
         public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult)
         {
+
+            var Holes = UnionHoles(PolyHoleList);
+
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
 
             //Check if Cutted line IsInside -> if true remove
@@ -93,31 +97,104 @@ namespace SioForgeCAD.Commun
             {
                 item.Dispose();
             }
-            UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves.Join().Cast<Polyline>());
+
+            UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves.Join().Cast<Polyline>(), Holes);
             return true;
         }
 
         private static List<Polyline> UnionHoles(List<PolyHole> PolyHoleList)
         {
             List<Polyline> HoleUnionResult = new List<Polyline>();
-
-            foreach (var PolyHole in PolyHoleList)
+            if (PolyHoleList.Count == 0)
             {
-                HoleUnionResult.AddRange(PolyHole.Holes);
-                foreach (var OtherPolyHole in PolyHoleList)
+                return new List<Polyline>();
+            }
+
+            foreach (var Hole in PolyHoleList.GetAllHoles())
+            {
+                HoleUnionResult.Add(Hole.Clone() as Polyline);
+            }
+
+            //Skip the first one
+            for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
+            {
+                var polyHole = PolyHoleList[PolyHoleListIndex];
+                foreach (var ParsedHole in HoleUnionResult.ToList())
                 {
-                    if (OtherPolyHole != PolyHole) { continue; }
-                    foreach (var Hole in HoleUnionResult)
+                    if (ParsedHole.IsSegmentIntersecting(polyHole.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
                     {
-                        if (Hole.IsSegmentIntersecting(OtherPolyHole.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))
+                        HoleUnionResult.Remove(ParsedHole);
+                        if (PolygonOperation.Substraction(new PolyHole(ParsedHole as Polyline, null), new Polyline[] { polyHole.Boundary }, out var SubResult))
                         {
-                            new PolyHole(Hole, null).Substraction(new Polyline[] { OtherPolyHole.Boundary }, out var SubstractionResult);
-                            HoleUnionResult.AddRange(SubstractionResult.GetBoundaries());
+                            HoleUnionResult.AddRange(SubResult.GetBoundaries());
+                        }
+                        if (!HoleUnionResult.Contains(ParsedHole))
+                        {
+                            ParsedHole.Dispose();
                         }
                     }
                 }
-
             }
+
+            //Remove part that is leaving inside 2 polygon, they will be calculated after. 
+            foreach (var Hole in HoleUnionResult.ToList())
+            {
+                int MaxNumberOfContainPolygon = 2;
+                foreach (var polyHole in PolyHoleList.GetBoundaries())
+                {
+                    if (Hole.GetInnerCentroid().IsInsidePolyline(polyHole))
+                    {
+                        MaxNumberOfContainPolygon--;
+                    }
+
+                    //if MaxNumberOfContainPolygon reach 0, that mean the hole is inside two or more boundary
+                    if (MaxNumberOfContainPolygon <= 0)
+                    {
+                        HoleUnionResult.Remove(Hole);
+                        Hole.Dispose();
+                    }
+                }
+            }
+
+
+            //Inner hole, get intersection
+            foreach (var PolyHoleA in PolyHoleList)
+            {
+                foreach (var PolyHoleB in PolyHoleList)
+                {
+                    if (PolyHoleB == PolyHoleA) { continue; }
+                    foreach (var HoleA in PolyHoleA.Holes)
+                    {
+                        foreach (var HoleB in PolyHoleB.Holes)
+                        {
+                            PolygonOperation.Intersection(new PolyHole(HoleA, null), new PolyHole(HoleB, null), out var IntersectResult);
+                            HoleUnionResult.AddRange(IntersectResult.GetBoundaries());
+                        }
+                    }
+                }
+            }
+
+            return HoleUnionResult;
+
+
+
+            //    foreach (var PolyHole in PolyHoleList)
+            //{
+            //    HoleUnionResult.AddRange(PolyHole.Holes);
+            //    foreach (var OtherPolyHole in PolyHoleList)
+            //    {
+            //        if (OtherPolyHole != PolyHole) { continue; }
+            //        foreach (var Hole in HoleUnionResult)
+            //        {
+            //            if (Hole.IsSegmentIntersecting(OtherPolyHole.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))
+            //            {
+            //                new PolyHole(Hole, null).Substraction(new Polyline[] { OtherPolyHole.Boundary }, out var SubstractionResult);
+            //                HoleUnionResult.AddRange(SubstractionResult.GetBoundaries());
+            //            }
+            //        }
+            //    }
+
+            //}
             return null;
         }
 

@@ -10,6 +10,52 @@ using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
+    public static class MERGEHATCH_V2
+    {
+        public static void Merge()
+        {
+            Editor ed = Generic.GetEditor();
+
+            if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
+            {
+                return;
+            }
+            if (!ed.GetHatch(out Hatch SecondHachure, "Veuillez selectionner une deuxième hachure"))
+            {
+                return;
+            }
+
+            if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
+            {
+                return;
+            }
+
+
+
+            if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult))
+            {
+                Database db = Generic.GetDatabase();
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    foreach (var item in unionResult)
+                    {
+                        item.Holes.AddToDrawing(3);
+                        item.Boundary.AddToDrawing(4);
+                    }
+                    tr.Commit();
+                }
+            }
+            FirstHachurePolyHole.Dispose();
+            SecondHachurePolyHole.Dispose();
+
+        }
+
+
+
+    }
+
+
+
     public static class MERGEHATCH
     {
         const double Margin = 0.01;

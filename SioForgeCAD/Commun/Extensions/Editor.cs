@@ -156,7 +156,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static bool GetHatch(this Editor ed, out ObjectId HatchObjectId)
+        public static bool GetHatch(this Editor ed, out ObjectId HatchObjectId, string AskText = null)
         {
             HatchObjectId = ObjectId.Null;
             SelectionSet BaseSelection = ed.SelectImplied()?.Value;
@@ -175,7 +175,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             if (HatchObjectId == ObjectId.Null)
             {
-                var option = new PromptEntityOptions("\nSelectionnez une hachure")
+                var option = new PromptEntityOptions("\n" + (string.IsNullOrWhiteSpace(AskText) ? "Selectionnez une hachure" : AskText))
                 {
                     AllowNone = true,
                     AllowObjectOnLockedLayer = false,
@@ -196,7 +196,7 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-        public static bool GetHatch(this Editor ed, out Hatch Hachure)
+        public static bool GetHatch(this Editor ed, out Hatch Hachure, string AskText = null)
         {
             Hachure = null;
             var db = Generic.GetDatabase();
@@ -206,7 +206,7 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     while (true)
                     {
-                        if (!ed.GetHatch(out ObjectId HatchObjectId))
+                        if (!ed.GetHatch(out ObjectId HatchObjectId, AskText))
                         {
                             return false;
                         }

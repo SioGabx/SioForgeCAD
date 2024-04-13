@@ -160,6 +160,7 @@
     <Compile Include="Commun\Mist\Json\JSONParser.cs" />
     <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\InnerCentroid.cs" />
+    <Compile Include="Commun\Mist\PolygonOperations\Intersection.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\PolyHole.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Substraction.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Union.cs" />

@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun
                 {
                     continue;
                 }
-                foreach (Polyline Poly in Polygon.ToArray())
+                foreach (Polyline Poly in Polygon.ToList())
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine, Intersect.OnBothOperands);
 
