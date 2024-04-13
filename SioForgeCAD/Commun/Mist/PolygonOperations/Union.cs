@@ -1,10 +1,8 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -175,27 +173,6 @@ namespace SioForgeCAD.Commun
             }
 
             return HoleUnionResult;
-
-
-
-            //    foreach (var PolyHole in PolyHoleList)
-            //{
-            //    HoleUnionResult.AddRange(PolyHole.Holes);
-            //    foreach (var OtherPolyHole in PolyHoleList)
-            //    {
-            //        if (OtherPolyHole != PolyHole) { continue; }
-            //        foreach (var Hole in HoleUnionResult)
-            //        {
-            //            if (Hole.IsSegmentIntersecting(OtherPolyHole.Boundary, out Point3dCollection IntersectionPointsFounds, Intersect.OnBothOperands))
-            //            {
-            //                new PolyHole(Hole, null).Substraction(new Polyline[] { OtherPolyHole.Boundary }, out var SubstractionResult);
-            //                HoleUnionResult.AddRange(SubstractionResult.GetBoundaries());
-            //            }
-            //        }
-            //    }
-
-            //}
-            return null;
         }
 
 

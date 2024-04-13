@@ -3,9 +3,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -78,7 +75,6 @@ namespace SioForgeCAD.Commun.Drawing
 
                 oHatch.EvaluateHatch(true);
                 hachure.CopyPropertiesTo(oHatch);
-                //oHatch.HatchStyle = hachure.HatchStyle;
                 oHatch.HatchStyle = HatchStyle.Normal;
 
                 //Keep same draw order as old hatch

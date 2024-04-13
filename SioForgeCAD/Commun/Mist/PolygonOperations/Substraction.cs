@@ -1,8 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun
@@ -17,7 +15,7 @@ namespace SioForgeCAD.Commun
             //Add existing hole to the substraction if not present
             var SubstractionPolygons = SubstractionPolygonsArg.ToList();
             SubstractionPolygons.AddRangeUnique(BasePolygon.Holes);
-         
+
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
                 using (var SimplifiedSubstractionPolygonCurve = SubstractionPolygonCurve.ToPolyline())

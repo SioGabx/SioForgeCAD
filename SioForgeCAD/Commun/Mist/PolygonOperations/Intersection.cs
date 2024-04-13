@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 

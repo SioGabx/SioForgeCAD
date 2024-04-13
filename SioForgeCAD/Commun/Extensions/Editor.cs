@@ -94,7 +94,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-     
+
 
 
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
