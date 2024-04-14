@@ -21,8 +21,11 @@ namespace SioForgeCAD.Commun
             {
                 foreach (var PolyHole in PolyHoleList)
                 {
-                    if (PolyHole.Boundary.IsSelfIntersecting(out _))
+                    PolyHole.Boundary.Cleanup();
+                    if (PolyHole.Boundary.IsSelfIntersecting(out var Points))
                     {
+                        Generic.WriteMessage("Self Intersecting detected. AllowMarginError is disabled");
+                        Points.AddToDrawing();
                         AllowMarginError = false;
                     }
                     if (!AllowMarginError)
@@ -47,7 +50,7 @@ namespace SioForgeCAD.Commun
 
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
-
+          
             //Check if Cutted line IsInside -> if true remove
             ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
@@ -105,7 +108,6 @@ namespace SioForgeCAD.Commun
             object _lock = new object();
             Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveA =>
             {
-
                 foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                 {
                     if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
@@ -124,6 +126,7 @@ namespace SioForgeCAD.Commun
 
             foreach (var item in ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves))
             {
+                item.AddToDrawing(2);
                 item.Dispose();
             }
 
@@ -152,8 +155,8 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            PossibleBoundary.AddToDrawing(6);
-            Holes.AddToDrawing(5);
+            //PossibleBoundary.AddToDrawing(6);
+            //Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
 
@@ -253,45 +256,35 @@ namespace SioForgeCAD.Commun
         private static List<PolyHole> OffsetPolyHole(ref PolyHole polyHole, double OffsetDistance)
         {
             List<PolyHole> polyHoles = new List<PolyHole>();
-            //Cleanup before offset
-            polyHole.Boundary.Cleanup();
-            for (int i = 0; i < polyHole.Boundary.NumberOfVertices; i++)
+            List<Polyline> OffsetCurve;
+            if (OffsetDistance < 0)
             {
-                if (polyHole.Boundary.GetSegmentType(i) == SegmentType.Arc)
-                {
-                    var Segment = polyHole.Boundary.GetArcSegmentAt(i);
-                    bool HasMarginRadius = Segment.Radius <= Margin;
-                    bool HasNotEnough = Segment.StartPoint.DistanceTo(Segment.EndPoint) <= OffsetDistance * 2;
-                    if (HasMarginRadius || HasNotEnough)
-                    {
-                        polyHole.Boundary.SetBulgeAt(i, 0);
-                    }
-                }
+                OffsetCurve = polyHole.Boundary.SmartShrinkOffset(OffsetDistance).ToList();
             }
-            polyHole.Boundary.Cleanup();
-            //(polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
-
-
-            var OffsetCurve = polyHole.Boundary.OffsetPolyline(OffsetDistance);
+            else
+            {
+                //Cleanup before offset
+                OffsetCurve = polyHole.Boundary.OffsetPolyline(OffsetDistance).Cast<Polyline>().ToList();
+            }
             if (OffsetCurve.Count == 0)
             {
                 (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
                 return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
-            var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
+            //var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
 
             polyHole.Boundary.Dispose();
 
-            if (MergedOffsetCurve.Count() == 1)
+            if (OffsetCurve.Count() == 1)
             {
-                polyHole.Boundary = MergedOffsetCurve.First();
+                polyHole.Boundary = OffsetCurve.First();
                 polyHoles.Add(polyHole);
                 return polyHoles;
             }
             else
             {
-                return PolyHole.CreateFromList(MergedOffsetCurve, polyHole.Holes);
+                return PolyHole.CreateFromList(OffsetCurve, polyHole.Holes);
             }
         }
 

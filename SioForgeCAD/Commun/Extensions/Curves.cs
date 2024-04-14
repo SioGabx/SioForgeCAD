@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -174,7 +175,12 @@ namespace SioForgeCAD.Commun.Extensions
                         {
                             continue;
                         }
-                        IntersectionFound.Add(point);
+
+                        if (curve1.GetClosestPointTo(point, false).DistanceTo(point) < Generic.MediumTolerance.EqualPoint && 
+                            curve2.GetClosestPointTo(point, false).DistanceTo(point) < Generic.MediumTolerance.EqualPoint)
+                        {
+                            IntersectionFound.Add(point);
+                        }
                     }
 
                 }
@@ -360,17 +366,17 @@ namespace SioForgeCAD.Commun.Extensions
             if (srcCurve is Line srcPolylineType)
             {
                 return srcPolylineType.ToPolyline();
-            }
-            if (srcCurve is Arc srcPArcType)
+            }else if (srcCurve is Arc srcPArcType)
             {
                 return srcPArcType.ToPolyline();
-            }
-
-            if (srcCurve is Ellipse srcPEllipseType)
+            }else if (srcCurve is Ellipse srcPEllipseType)
             {
                 return srcPEllipseType.Spline;
             }
-            return srcCurve;
+            else
+            {
+                return srcCurve.Clone() as Curve;
+            }
         }
 
 

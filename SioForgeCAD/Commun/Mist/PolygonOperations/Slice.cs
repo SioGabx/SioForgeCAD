@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -262,7 +263,11 @@ namespace SioForgeCAD.Commun
         {
             if (DblCollection.Count == 0)
             {
-                return new DBObjectCollection();
+                //If this is here, that mean maybe we found point near but not on the curve
+                return new DBObjectCollection
+                {
+                    polyline.Clone() as DBObject
+                };
             }
             try
             {

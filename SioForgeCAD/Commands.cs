@@ -481,6 +481,23 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
+        public void TESTSHRINKOFFSET()
+        {
+            Editor ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var poly = ed.GetPolyline("Selectionnez une polyligne");
+                int NumberOfVerticesBefore = poly.NumberOfVertices;
+                poly.UpgradeOpen();
+                var value = ed.GetDouble("Distance");
+                if (value.Status != PromptStatus.OK) { return; }
+                var curve = poly.SmartShrinkOffset(value.Value);
+                curve.AddToDrawing(5);
+                tr.Commit();
+            }
+        }
 
 
 
@@ -503,6 +520,21 @@ namespace SioForgeCAD
             }
         }
 
+        [CommandMethod("DEBUG", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
+        public void GENERATEBOUNDINGBOX()
+        {
+
+            Editor ed = Generic.GetEditor();
+            var result = ed.GetEntity("select");
+            if (result.Status != PromptStatus.OK) { return; }
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var ent = result.ObjectId.GetEntity();
+                ent.GetExtents().GetGeometry().AddToDrawingCurrentTransaction();
+                tr.Commit();
+            }
+        }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public void TRIANGLECC()

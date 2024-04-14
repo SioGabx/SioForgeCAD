@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -393,6 +394,78 @@ namespace SioForgeCAD.Commun.Extensions
             poly.ConvertFrom(poly2d, false);
             return poly;
         }
+
+        public static IEnumerable<Polyline> SmartShrinkOffset(this Polyline ArgPoly, double ShrinkDistance)
+        {
+            var poly = ArgPoly.Clone() as Polyline;
+            poly.Closed = true;
+
+            bool HasVertexRemoved = true;
+            while (HasVertexRemoved)
+            {
+                HasVertexRemoved = false;
+                int index = 1;
+                while (index < poly.GetReelNumberOfVertices() - 1)
+                {
+                    var CurrentPoint = poly.GetPoint2dAt(index);
+                    var NextPoint = poly.GetPoint2dAt(index + 1);
+                    if (poly.GetSegmentType(index) == SegmentType.Line)
+                    {
+                        var DistanceBetween = CurrentPoint.GetDistanceTo(NextPoint);
+                        //Debug.WriteLine("Distance : " + DistanceBetween);
+                        if (DistanceBetween <= Math.Abs(ShrinkDistance))
+                        {
+                            poly.RemoveVertexAt(index);
+                            continue;
+                        }
+                    }
+                    index++;
+                }
+            }
+            poly.Cleanup();
+            double OriginalPolyArea = poly.Area;
+            List<Curve> OriginalFilteredPolyCurves = new List<Curve>();
+            for (int i = 0; i < poly.NumberOfVertices; i++)
+            {
+                if (poly.GetSegmentType(i) == SegmentType.Arc)
+                {
+                    var Segment = poly.GetArcSegmentAt(i);
+                    bool HasMarginRadius = Segment.Radius > Math.Abs(ShrinkDistance);
+                    bool HasEnoughDistance = Segment.StartPoint.DistanceTo(Segment.EndPoint) > Math.Abs(ShrinkDistance) * 2;
+                    if (HasMarginRadius && HasEnoughDistance)
+                    {
+                        OriginalFilteredPolyCurves.Add(Segment.ToCircleOrArc());
+                    }
+                }
+                else if (poly.GetSegmentType(i) == SegmentType.Line)
+                {
+                    var Segment = poly.GetLineSegment2dAt(i);
+                    OriginalFilteredPolyCurves.Add(Segment.ToLine());
+                }
+            }
+            var OriginalFilteredMergedPolyCurves = OriginalFilteredPolyCurves.JoinMerge();
+
+            List<Curve> ShrinkOffsetPolyCurves = new List<Curve>();
+            foreach (var OriginalCurve in OriginalFilteredMergedPolyCurves)
+            {
+                ShrinkOffsetPolyCurves.AddRange(OriginalCurve.GetOffsetCurves(ShrinkDistance).Cast<Curve>());
+                ShrinkOffsetPolyCurves.AddRange(OriginalCurve.GetOffsetCurves(ShrinkDistance * -1).Cast<Curve>());
+            }
+
+            var ShrinkOffsetMergedPolyCurves = ShrinkOffsetPolyCurves.JoinMerge();
+            var ClosedPoly = ShrinkOffsetMergedPolyCurves.Where(p => p.Closed && p.Area < OriginalPolyArea).Cast<Polyline>().OrderBy(p => p.Area).ToList();
+
+            ShrinkOffsetMergedPolyCurves.RemoveCommun(ClosedPoly).DeepDispose();
+            ShrinkOffsetPolyCurves.DeepDispose();
+            OriginalFilteredPolyCurves.DeepDispose();
+            OriginalFilteredMergedPolyCurves.DeepDispose();
+            poly.Dispose();
+            return ClosedPoly;
+        }
+
+
+
+
 
         public static Point3d GetInnerCentroid(this Polyline poly)
         {

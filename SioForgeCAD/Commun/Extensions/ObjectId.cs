@@ -90,7 +90,7 @@ namespace SioForgeCAD.Commun
         public static ObjectIdCollection ToObjectIdCollection(this IEnumerable<ObjectId> objectId)
         {
             var NewObjectIdCollection = new ObjectIdCollection();
-            foreach (ObjectId ObjectId in NewObjectIdCollection)
+            foreach (ObjectId ObjectId in objectId)
             {
                 NewObjectIdCollection.Add(ObjectId);
             }
