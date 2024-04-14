@@ -42,6 +42,12 @@ namespace SioForgeCAD.Commun.Extensions
             double Y = (A.Y + B.Y) / 2;
             return new Point3d(X, Y, Z);
         }
+        public static Point3d GetMiddlePoint(this Point2d A, Point2d B)
+        {
+            double X = (A.X + B.X) / 2;
+            double Y = (A.Y + B.Y) / 2;
+            return new Point3d(X, Y, 0);
+        }
 
         public static Point3d GetIntermediatePoint(this Point3d A, Point3d B, double Pourcentage)
         {

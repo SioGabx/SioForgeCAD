@@ -491,7 +491,9 @@ namespace SioForgeCAD
                 var poly = ed.GetPolyline("Selectionnez une polyligne");
                 int NumberOfVerticesBefore = poly.NumberOfVertices;
                 poly.UpgradeOpen();
-                var value = ed.GetDouble("Distance");
+                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Distance");
+                promptDoubleOptions.DefaultValue = -0.01;
+                var value = ed.GetDouble(promptDoubleOptions);
                 if (value.Status != PromptStatus.OK) { return; }
                 var curve = poly.SmartShrinkOffset(value.Value);
                 curve.AddToDrawing(5);

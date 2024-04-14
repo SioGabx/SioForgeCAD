@@ -42,7 +42,6 @@ namespace SioForgeCAD.Functions
 
                 if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true))
                 {
-
                     foreach (PolyHole item in unionResult)
                     {
                         //Apply the hatch inside
