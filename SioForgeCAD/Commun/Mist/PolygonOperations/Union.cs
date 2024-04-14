@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun
                     if (PolyHole.Boundary.IsSelfIntersecting(out var Points))
                     {
                         Generic.WriteMessage("Self Intersecting detected. AllowMarginError is disabled");
-                        Points.AddToDrawing();
+                        //Points.AddToDrawing();
                         AllowMarginError = false;
                     }
                     if (!AllowMarginError)
@@ -50,7 +50,12 @@ namespace SioForgeCAD.Commun
 
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
-          
+
+            //foreach (var item in SplittedCurvesOrigin)
+            //{
+            //    item.Splitted.AddToDrawing(5);
+            //}
+
             //Check if Cutted line IsInside -> if true remove
             ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
@@ -124,14 +129,11 @@ namespace SioForgeCAD.Commun
                 }
             });
 
-            foreach (var item in ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves))
-            {
-                item.AddToDrawing(2);
-                item.Dispose();
-            }
+            ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves).DeepDispose();
 
 
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
+            GlobalSplittedCurves.RemoveCommun(PossibleBoundary).DeepDispose();
 
             //Check if generated union with boundary may result in hole,
             //only usefull if AllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
@@ -148,7 +150,10 @@ namespace SioForgeCAD.Commun
                             PossibleBoundary.Remove(BoundaryA);
                             //Because a hole is generated, the inner hole is reduced, we need to expand it back
                             var OffsetBoundaryA = BoundaryA.OffsetPolyline(Margin);
-                            Holes.AddRange(OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>());
+                            BoundaryA.Dispose();
+                            var MergedOffsetBoundaryA = OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>();
+                            Holes.AddRange(MergedOffsetBoundaryA);
+                            OffsetBoundaryA.ToList().RemoveCommun(MergedOffsetBoundaryA).DeepDispose();
                             break;
                         }
                     }
@@ -159,7 +164,6 @@ namespace SioForgeCAD.Commun
             //Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
-
             if (AllowMarginError)
             {
                 var UnionResultCopy = UnionResult.ToList();
@@ -168,10 +172,14 @@ namespace SioForgeCAD.Commun
                 {
                     PolyHole PolyHole = UnionResultCopy[i];
                     UnionResult.Remove(PolyHole);
-                    UnionResult.AddRange(OffsetPolyHole(ref PolyHole, -Margin));
+                    var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
+                    if (UndoMargin.Count == 0)
+                    {
+                        return false;
+                    }
+                    UnionResult.AddRange(UndoMargin);
                 }
             }
-
 
 
             return true;

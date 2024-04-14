@@ -18,6 +18,7 @@ namespace SioForgeCAD.Commun
             BaseCutLine.Elevation = BasePolyline.Elevation;
             //BasePolyline.Cleanup();
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
+           
             //InsideCutLines.AddToDrawing(5, true);
             List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
             foreach (Polyline CutLine in InsideCutLines)
@@ -46,7 +47,15 @@ namespace SioForgeCAD.Commun
                                 TempPoly.Cleanup();
                                 Polygon.Add(TempPoly);
                             }
+                            else
+                            {
+                                TempPoly.Dispose();
+                            }
                         }
+                    }
+                    else
+                    {
+                        SplittedPolylines.DeepDispose();
                     }
                 }
             }
@@ -249,7 +258,7 @@ namespace SioForgeCAD.Commun
                 if (Point.IsOnPolyline(polyline))
                 {
                     var param = polyline.GetParamAtPointX(Point);
-                    if (!DblCollection.Contains(param))
+                    if (!ContainsTolerance(DblCollection, param))
                     {
                         DblCollection.Add(param);
                         DblCollection.Add(param);
@@ -258,6 +267,19 @@ namespace SioForgeCAD.Commun
             }
             return DblCollection;
         }
+
+        private static bool ContainsTolerance(DoubleCollection doubles, double Value)
+        {
+            foreach (var item in doubles)
+            {
+                if (Math.Abs(item - Value) < Generic.MediumTolerance.EqualPoint)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
 
         public static DBObjectCollection TryGetSplitCurves(this Polyline polyline, DoubleCollection DblCollection)
         {

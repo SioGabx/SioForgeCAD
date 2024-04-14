@@ -30,30 +30,43 @@ namespace SioForgeCAD.Functions
                 ExistingBoundaryStyle = AssociatedBoundary;
             }
 
+
             if (!Hachure.GetPolyHole(out var HatchPolyHole))
             {
                 ExistingBoundaryStyle.Dispose();
                 return;
             }
 
+            
+
             ed.SetImpliedSelection(new ObjectId[0]);
 
             Polyline CutLine = GetCutPolyline(HatchPolyHole.Boundary, out PromptStatus promptResult);
             if (promptResult == PromptStatus.Keyword)
             {
+                CutLine.Dispose();
                 CutLine = GetCutLine(HatchPolyHole.Boundary);
             }
+            //CuttedPolyline.DeepDispose();
+            //CutLine.Dispose();
+            //Hachure.Dispose();
+            //HatchPolyHole.Dispose();
+            //ExistingBoundaryStyle.Dispose();
+            //return;
 
             if (CutLine == null)
             {
                 ExistingBoundaryStyle.Dispose();
                 return;
             }
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 try
                 {
                     List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? HatchPolyHole.Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
+
+
                     int NumberOfPolyline = CuttedPolyline.Count;
                     if (NumberOfPolyline > 1)
                     {
@@ -280,7 +293,7 @@ namespace SioForgeCAD.Functions
                             {
                                 continue;
                             }
-
+                            
                             if (IsValidCutLine(Boundary, polyline))
                             {
                                 return polyline;

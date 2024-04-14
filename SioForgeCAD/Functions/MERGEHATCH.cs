@@ -4,6 +4,8 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -37,7 +39,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-               
+
                 if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true))
                 {
 
@@ -52,10 +54,13 @@ namespace SioForgeCAD.Functions
                         }
 
                     }
-
                     //Delete old
                     DeleteOldHatch(FirstHachure);
                     DeleteOldHatch(SecondHachure);
+                }
+                else
+                {
+                    Generic.WriteMessage("Impossible de merger ces hachures. Vérifiez qu'elles se chevauchent");
                 }
 
                 FirstHachurePolyHole.Dispose();

@@ -400,6 +400,7 @@ namespace SioForgeCAD.Commun.Extensions
             var poly = ArgPoly.Clone() as Polyline;
             poly.Closed = true;
 
+            //(poly.Clone() as Entity).AddToDrawing(5);
             bool HasVertexRemoved = true;
             while (HasVertexRemoved)
             {
@@ -423,6 +424,8 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             poly.Cleanup();
+
+            //(poly.Clone() as Entity).AddToDrawing(6);
             double OriginalPolyArea = poly.Area;
             List<Curve> OriginalFilteredPolyCurves = new List<Curve>();
             for (int i = 0; i < poly.NumberOfVertices; i++)
@@ -456,15 +459,12 @@ namespace SioForgeCAD.Commun.Extensions
             var ClosedPoly = ShrinkOffsetMergedPolyCurves.Where(p => p.Closed && p.Area < OriginalPolyArea).Cast<Polyline>().OrderBy(p => p.Area).ToList();
 
             ShrinkOffsetMergedPolyCurves.RemoveCommun(ClosedPoly).DeepDispose();
-            ShrinkOffsetPolyCurves.DeepDispose();
+            ShrinkOffsetPolyCurves.RemoveCommun(ClosedPoly).DeepDispose();
             OriginalFilteredPolyCurves.DeepDispose();
             OriginalFilteredMergedPolyCurves.DeepDispose();
             poly.Dispose();
             return ClosedPoly;
         }
-
-
-
 
 
         public static Point3d GetInnerCentroid(this Polyline poly)
