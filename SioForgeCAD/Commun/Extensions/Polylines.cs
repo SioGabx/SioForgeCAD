@@ -176,12 +176,18 @@ namespace SioForgeCAD.Commun.Extensions
                     }
 
                 }
-
             }
             if (InverseCount % 2 != 0)
             {
                 InversePoly();
             }
+
+            if (polyline.Closed != true && polyline.StartPoint.IsEqualTo(polyline.EndPoint, Generic.LowTolerance))
+            {
+                polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
+                polyline.Closed = true;
+            }
+
 
         }
 

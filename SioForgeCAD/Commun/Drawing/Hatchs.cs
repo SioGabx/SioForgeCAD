@@ -13,11 +13,12 @@ namespace SioForgeCAD.Commun.Drawing
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
             {
-                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr); ;
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
                 ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
                 if (OutsidePolyline.IsNewObject)
                 {
+                    OutsidePolyline.Closed = true;
                     OutsidePolyline.AddToDrawingCurrentTransaction();
                 }
 
@@ -29,6 +30,7 @@ namespace SioForgeCAD.Commun.Drawing
                     ObjectId polylineObjectId = InsidePolyline.ObjectId;
                     if (InsidePolyline.IsNewObject)
                     {
+                        (InsidePolyline as Polyline).Closed = true;
                         polylineObjectId = btr.AppendEntity(InsidePolyline);
                         tr.AddNewlyCreatedDBObject(InsidePolyline, true);
                     }
@@ -55,6 +57,8 @@ namespace SioForgeCAD.Commun.Drawing
                 }
                 catch (Exception ex)
                 {
+                    (OutsidePolyline.Clone() as Entity).AddToDrawing(5);
+                    Generic.WriteMessage("Une erreur est survenue lors de la création de la hachure");
                     Debug.WriteLine(ex.ToString());
                     return null;
                 }

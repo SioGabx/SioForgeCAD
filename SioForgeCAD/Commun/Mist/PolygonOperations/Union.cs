@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,12 +11,10 @@ namespace SioForgeCAD.Commun
 {
     public static partial class PolygonOperation
     {
+        public const double Margin = 0.01;
         public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool AllowMarginError = false)
         {
-            const double Margin = 0.01;
             var Holes = UnionHoles(PolyHoleList);
-
-
 
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
             if (AllowMarginError)
@@ -141,20 +140,20 @@ namespace SioForgeCAD.Commun
                     {
                         if (BoundaryA == BoundaryB) { continue; }
 
-                        if (BoundaryA.GetInnerCentroid().IsInsidePolyline(BoundaryB))
+                        if (BoundaryA.IsInside(BoundaryB))
                         {
-                            Polyline Hole = BoundaryA;
                             PossibleBoundary.Remove(BoundaryA);
                             //Because a hole is generated, the inner hole is reduced, we need to expand it back
                             var OffsetBoundaryA = BoundaryA.OffsetPolyline(Margin);
-                            Hole = OffsetBoundaryA.Cast<Polyline>().JoinMerge().First() as Polyline;
-                            Holes.Add(Hole);
+                            Holes.AddRange(OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>());
                             break;
                         }
                     }
                 }
             }
 
+            PossibleBoundary.AddToDrawing(6);
+            Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
 
@@ -256,9 +255,28 @@ namespace SioForgeCAD.Commun
             List<PolyHole> polyHoles = new List<PolyHole>();
             //Cleanup before offset
             polyHole.Boundary.Cleanup();
+            for (int i = 0; i < polyHole.Boundary.NumberOfVertices; i++)
+            {
+                if (polyHole.Boundary.GetSegmentType(i) == SegmentType.Arc)
+                {
+                    var Segment = polyHole.Boundary.GetArcSegmentAt(i);
+                    bool HasMarginRadius = Segment.Radius <= Margin;
+                    bool HasNotEnough = Segment.StartPoint.DistanceTo(Segment.EndPoint) <= OffsetDistance * 2;
+                    if (HasMarginRadius || HasNotEnough)
+                    {
+                        polyHole.Boundary.SetBulgeAt(i, 0);
+                    }
+                }
+            }
+            polyHole.Boundary.Cleanup();
+            //(polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
+
+
             var OffsetCurve = polyHole.Boundary.OffsetPolyline(OffsetDistance);
             if (OffsetCurve.Count == 0)
             {
+                (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
+                return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
             var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
