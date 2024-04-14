@@ -10,10 +10,23 @@ namespace SioForgeCAD.Commun
 {
     public static partial class PolygonOperation
     {
-        public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult)
+        public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool AllowMarginError = false)
         {
-
+            const double Margin = 0.01;
             var Holes = UnionHoles(PolyHoleList);
+
+            if (AllowMarginError)
+            {
+                //Offset the PolyHole boundary so you can merge a nearly touching polyline
+                var PolyHoleListCopy = PolyHoleList.ToList();
+                for (int i = 0; i < PolyHoleListCopy.Count; i++)
+                {
+                    PolyHole PolyHole = PolyHoleListCopy[i];
+                    PolyHoleList.Remove(PolyHole);
+                    PolyHoleList.AddRange(OffsetPolyHole(ref PolyHole, Margin));
+                }
+            }
+
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
 
@@ -96,7 +109,50 @@ namespace SioForgeCAD.Commun
                 item.Dispose();
             }
 
-            UnionResult = PolyHole.CreateFromList(GlobalSplittedCurves.Join().Cast<Polyline>(), Holes);
+
+            var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
+
+            //Check if generated union with boundary may result in hole,
+            //only usefull if AllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
+            if (AllowMarginError)
+            {
+                foreach (var BoundaryA in PossibleBoundary.ToList())
+                {
+                    foreach (var BoundaryB in PossibleBoundary.ToList())
+                    {
+                        if (BoundaryA == BoundaryB) { continue; }
+
+                        if (BoundaryA.GetInnerCentroid().IsInsidePolyline(BoundaryB))
+                        {
+                            Polyline Hole = BoundaryA;
+                            PossibleBoundary.Remove(BoundaryA);
+                            //Because a hole is generated, the inner hole is reduced, we need to expand it back
+                            var OffsetBoundaryA = BoundaryA.OffsetPolyline(Margin);
+                            Hole = OffsetBoundaryA.Cast<Polyline>().JoinMerge().First() as Polyline;
+                            Holes.Add(Hole);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
+
+
+            if (AllowMarginError)
+            {
+                var UnionResultCopy = UnionResult.ToList();
+                //Offset the PolyHole boundary so you can merge a nearly touching polyline
+                for (int i = 0; i < UnionResultCopy.Count; i++)
+                {
+                    PolyHole PolyHole = UnionResultCopy[i];
+                    UnionResult.Remove(PolyHole);
+                    UnionResult.AddRange(OffsetPolyHole(ref PolyHole, -Margin));
+                }
+            }
+
+
+
             return true;
         }
 
@@ -176,6 +232,31 @@ namespace SioForgeCAD.Commun
         }
 
 
+        private static List<PolyHole> OffsetPolyHole(ref PolyHole polyHole, double OffsetDistance)
+        {
+            List<PolyHole> polyHoles = new List<PolyHole>();
+            //Cleanup before offset
+            polyHole.Boundary.Cleanup();
+            var OffsetCurve = polyHole.Boundary.OffsetPolyline(OffsetDistance);
+            if (OffsetCurve.Count == 0)
+            {
+                throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
+            }
+            var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
+
+            polyHole.Boundary.Dispose();
+
+            if (MergedOffsetCurve.Count() == 1)
+            {
+                polyHole.Boundary = MergedOffsetCurve.First();
+                polyHoles.Add(polyHole);
+                return polyHoles;
+            }
+            else
+            {
+                return PolyHole.CreateFromList(MergedOffsetCurve, polyHole.Holes);
+            }
+        }
 
 
         private static ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> GetSplittedCurves(List<Polyline> Polylines)

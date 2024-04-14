@@ -15,7 +15,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return false;
             }
-            List<Curve> ExternalMergedCurves = ExternalCurves.Join();
+            List<Curve> ExternalMergedCurves = ExternalCurves.JoinMerge();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
             List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
             if (Hachure.HatchStyle == HatchStyle.Ignore)
@@ -23,7 +23,7 @@ namespace SioForgeCAD.Commun.Extensions
                 InnerCurves.DeepDispose();
                 InnerCurves.Clear();
             }
-            List<Curve> InnerMergedCurves = InnerCurves.Join();
+            List<Curve> InnerMergedCurves = InnerCurves.JoinMerge();
             InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
 
             if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)

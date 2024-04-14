@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Hatchs
     {
-        public static void ApplyHatchV2(Polyline OutsidePolyline, List<Curve> OuterMostCurves, Hatch hachure)
+        public static Hatch ApplyHatchV2(Polyline OutsidePolyline, IEnumerable<Curve> OuterMostCurves, Hatch hachure)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.TopTransaction)
@@ -49,8 +49,15 @@ namespace SioForgeCAD.Commun.Drawing
                 var oHatchObjectId = btr.AppendEntity(oHatch);
                 tr.AddNewlyCreatedDBObject(oHatch, true);
                 oHatch.Associative = true;
-                oHatch.AppendLoop(HatchLoopTypes.External, OutsideObjId);
-
+                try
+                {
+                    oHatch.AppendLoop(HatchLoopTypes.External, OutsideObjId);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                    return null;
+                }
                 foreach (var item in Inside)
                 {
                     ObjectIdCollection InsideObjId = new ObjectIdCollection() { item };
@@ -88,6 +95,7 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     Debug.WriteLine(ex.ToString());
                 }
+                return oHatch;
             }
         }
 

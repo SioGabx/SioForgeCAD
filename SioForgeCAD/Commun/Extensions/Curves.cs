@@ -117,29 +117,29 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-        public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance, bool OffsetToInside)
+        public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance)
         {
             List<Curve> OffsetCurves = new List<Curve>();
-            if (OffsetToInside)
-            {
-                OffsetDistance = -Math.Abs(OffsetDistance);
-            }
+
             foreach (var ent in Curves)
             {
-                DBObjectCollection OffsetCurve = new DBObjectCollection();
-                if (ent is Polyline)
-                {
-                    OffsetCurve = ent.GetOffsetCurves((ent as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
-                }
-                else if (ent is Ellipse || ent is Circle)
-                {
-                    OffsetCurve = ent.GetOffsetCurves(OffsetDistance);
-                }
-
-                OffsetCurves.AddRange(OffsetCurve.ToList().Cast<Curve>());
+                OffsetCurves.AddRange(OffsetPolyline(ent, OffsetDistance).ToList().Cast<Curve>());
             }
-            Curves.DeepDispose();
             return OffsetCurves;
+        }
+
+        public static DBObjectCollection OffsetPolyline(this Curve Curve, double OffsetDistance)
+        {
+            DBObjectCollection OffsetCurve = new DBObjectCollection();
+            if (Curve is Polyline)
+            {
+                OffsetCurve = Curve.GetOffsetCurves((Curve as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
+            }
+            else if (Curve is Ellipse || Curve is Circle)
+            {
+                OffsetCurve = Curve.GetOffsetCurves(OffsetDistance);
+            }
+            return OffsetCurve;
         }
 
 
@@ -295,9 +295,15 @@ namespace SioForgeCAD.Commun.Extensions
             return null;
         }
 
-        public static List<Curve> Join(this IEnumerable<Curve> Curves)
+        public static List<Curve> JoinMerge(this IEnumerable<Curve> Curves)
         {
             List<Curve> entities = Curves.ToList();
+            if (entities.Count <= 1)
+            {
+                //No geometry to merge
+                return entities;
+            }
+
             for (int i = 0; i < entities.Count; i++)
             {
                 var JoignableEnt = entities[i].GetJoinableCurve();

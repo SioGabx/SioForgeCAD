@@ -328,19 +328,10 @@ namespace SioForgeCAD
         }
 
 
-
-
-
-        [CommandMethod("OLDMERGEHATCH", CommandFlags.UsePickSet)]
+        [CommandMethod("MERGEHATCH", CommandFlags.UsePickSet)]
         public static void MERGEHATCH()
         {
             Functions.MERGEHATCH.Merge();
-        }
-
-        [CommandMethod("MERGEHATCH2", CommandFlags.UsePickSet)]
-        public static void MERGEHATCH2()
-        {
-            Functions.MERGEHATCH_V2.Merge();
         }
 
         [CommandMethod("MERGEPOLYLIGNES", CommandFlags.UsePickSet)]

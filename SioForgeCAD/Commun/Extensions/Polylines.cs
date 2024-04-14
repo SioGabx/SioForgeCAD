@@ -114,12 +114,38 @@ namespace SioForgeCAD.Commun.Extensions
                     Vector2d vector1 = currentPoint.GetVectorTo(lastPoint).ToVector2d();
                     Vector2d vector2 = nextPoint.GetVectorTo(currentPoint).ToVector2d();
 
-                    bool IsColinear = vector1.IsColinear(vector2, Generic.MediumTolerance);
+                    bool IsColinear = vector1.IsColinear(vector2, Generic.MediumTolerance) && vector1.Length > 0;
+                    var HasBulgeLast = polyline.GetSegmentType(index - 1) == SegmentType.Arc;
                     var HasBulge = polyline.GetSegmentType(index) == SegmentType.Arc;
-                    if (!HasBulge && (IsColinear || currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance)))
+                    bool IsDuplicateVertex = currentPoint.IsEqualTo(nextPoint, Generic.LowTolerance);
+                    if (IsColinear || IsDuplicateVertex)
                     {
-                        polyline.RemoveVertexAt(index);
-                        HasAVertexRemoved = true;
+                        if (HasBulge && HasBulgeLast)
+                        {
+                            var lastBulge = polyline.GetBulgeAt(index - 1);
+                            var curBulge = polyline.GetBulgeAt(index);
+                            if (Math.Abs(Math.Abs(lastBulge) - Math.Abs(curBulge)) < Generic.MediumTolerance.EqualVector)
+                            {
+                                if (index == 1 && IsColinear && Math.Abs(vector1.Angle - vector2.Angle) >= Math.PI)
+                                {
+                                    polyline.RemoveVertexAt(index - 1);
+                                }
+                                else
+                                {
+                                    polyline.RemoveVertexAt(index);
+                                }
+                                HasAVertexRemoved = true;
+                            }
+                            else
+                            {
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            polyline.RemoveVertexAt(index);
+                            HasAVertexRemoved = true;
+                        }
                     }
                     else
                     {
@@ -186,10 +212,23 @@ namespace SioForgeCAD.Commun.Extensions
             void CreateSpline(NurbCurve3d nurb)
             {
                 if (spline is null)
+                {
                     spline = (Spline)Curve.CreateFromGeCurve(nurb);
+                }
                 else
+                {
                     using (var spl = (Spline)Curve.CreateFromGeCurve(nurb))
-                        spline.JoinEntity(spl);
+                    {
+                        try
+                        {
+                            spline.JoinEntity(spl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"GetSpline : Impossible to Join a Entity : {ex.Message}");
+                        }
+                    }
+                }
             }
             for (int i = 0; i < pline.NumberOfVertices; i++)
             {
