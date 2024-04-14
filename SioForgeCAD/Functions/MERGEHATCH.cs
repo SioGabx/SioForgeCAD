@@ -37,15 +37,8 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
-                bool AllowMarginError = true;
-                if (FirstHachurePolyHole.Boundary.IsSelfIntersecting(out _) || SecondHachurePolyHole.Boundary.IsSelfIntersecting(out _))
-                {
-                    AllowMarginError = false;
-                }
-
-
-                if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, AllowMarginError))
+               
+                if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true))
                 {
 
                     foreach (PolyHole item in unionResult)

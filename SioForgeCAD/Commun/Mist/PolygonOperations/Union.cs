@@ -15,6 +15,25 @@ namespace SioForgeCAD.Commun
             const double Margin = 0.01;
             var Holes = UnionHoles(PolyHoleList);
 
+
+
+            //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
+            if (AllowMarginError)
+            {
+                foreach (var PolyHole in PolyHoleList)
+                {
+                    if (PolyHole.Boundary.IsSelfIntersecting(out _))
+                    {
+                        AllowMarginError = false;
+                    }
+                    if (!AllowMarginError)
+                    {
+                        //Break if AllowMarginError have been set to false
+                        break;
+                    }
+                }
+            }
+
             if (AllowMarginError)
             {
                 //Offset the PolyHole boundary so you can merge a nearly touching polyline
