@@ -60,7 +60,7 @@ namespace SioForgeCAD.Commun
             //Check if Cutted line IsInside -> if true remove
             ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
-            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveOrigin =>
+            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = Settings.MultithreadingMaxNumberOfThread }, SplittedCurveOrigin =>
             {
                 HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
 
@@ -119,7 +119,7 @@ namespace SioForgeCAD.Commun
             //Groups.Create("hh", "", GlobalSplittedCurves.AddToDrawing(6, true).ToObjectIdCollection());
             //Remove IsOverlaping line
             object _lock = new object();
-            Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveA =>
+            Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = Settings.MultithreadingMaxNumberOfThread }, SplittedCurveA =>
             {
                 foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
                 {
@@ -321,7 +321,7 @@ namespace SioForgeCAD.Commun
             if (OffsetCurve.Count == 0)
             {
                 (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
-                Generic.WriteMessage("Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : " + OffsetDistance);
+                Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}. Un contour de la courbe à été dessinée");
                 return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }

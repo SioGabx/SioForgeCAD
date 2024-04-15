@@ -259,6 +259,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Polyline ToPolyline(this Curve curve)
         {
+            if (curve.IsDisposed)
+            {
+                return null;
+            }
             //Convert all curves to regular Polyline
             if (curve is Polyline ProjectionTargetPolyLine)
             {

@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun
@@ -18,6 +19,11 @@ namespace SioForgeCAD.Commun
 
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
+                if (SubstractionPolygonCurve == null || SubstractionPolygonCurve.IsDisposed)
+                {
+                    Debug.WriteLine("Error : SubstractionPolygonCurve was null or disposed");
+                    continue;
+                }
                 using (var SimplifiedSubstractionPolygonCurve = SubstractionPolygonCurve.ToPolyline())
                 {
                     if (SimplifiedSubstractionPolygonCurve != null)
