@@ -503,9 +503,36 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
+        public static void TESTMERGE()
+        {
+            Editor ed = Generic.GetEditor();
 
+            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
+            PromptSelectionResult selRes = ed.GetSelection();
+            if (selRes.Status != PromptStatus.OK)
+                return;
 
-        [CommandMethod("DEBUG", "POLYCLEAN", CommandFlags.UsePickSet)]
+            SelectionSet sel = selRes.Value;
+            List<Curve> Curves = new List<Curve>();
+
+            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId selectedObjectId in sel.GetObjectIds())
+                {
+                    DBObject ent = selectedObjectId.GetDBObject();
+                    if (ent is Curve)
+                    {
+                        Curve curv = ent.Clone() as Curve;
+                        Curves.Add(curv);
+                    }
+                }
+                Curves.JoinMerge().AddToDrawing(2);
+                tr.Commit();
+            }
+        }
+
+            [CommandMethod("DEBUG", "POLYCLEAN", CommandFlags.UsePickSet)]
         public void POLYCLEAN()
         {
             Editor ed = Generic.GetEditor();

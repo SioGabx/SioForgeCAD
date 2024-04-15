@@ -88,7 +88,7 @@ namespace SioForgeCAD.Commun
                         }
                         if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
                         {
-                            bool IsInsideHole = false;
+                            bool IsInsideNotIntersectingHole = false;
                             if (SplittedCurve.Closed)
                             {
                                 //If the geometry was not splitted, that mean the curve do not cross the boundary -> if it is inside a hole, we should keep it
@@ -96,13 +96,42 @@ namespace SioForgeCAD.Commun
                                 {
                                     if (SplittedCurve.GetInnerCentroid().IsInsidePolyline(PolyHole))
                                     {
-                                        IsInsideHole = true;
-                                        break;
+                                        var OriginalSizeCurves = SplittedCurveOrigin.GeometryOrigin.SmartOffset(-Margin);
+                                        if (OriginalSizeCurves.Count() < 1)
+                                        {
+                                            continue;
+                                        }
+                                        var OriginalSizeCurve = OriginalSizeCurves.First();
+                                        //OriginalSizeCurve.AddToDrawing(5);
+
+                                        if (OriginalSizeCurve.IsSegmentIntersecting(PolyHole, out var IntersectionPointsFound, Intersect.OnBothOperands))
+                                        {
+                                            int NumberOfGoodPoints = 0;
+                                            foreach (Point3d IntersectionPointFound in IntersectionPointsFound)
+                                            {
+
+                                                if (OriginalSizeCurve.GetClosestPointTo(IntersectionPointFound, false).DistanceTo(IntersectionPointFound) < Generic.MediumTolerance.EqualPoint)
+                                                {
+                                                    IntersectionPointFound.AddToDrawing(1);
+                                                    NumberOfGoodPoints++;
+                                                }
+                                            }
+                                            if (NumberOfGoodPoints <= 2)
+                                            {
+                                                IsInsideNotIntersectingHole = true;
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            IsInsideNotIntersectingHole = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
 
-                            if (!IsInsideHole)
+                            if (!IsInsideNotIntersectingHole)
                             {
                                 //SplittedCurve.AddToDrawing(1, true);
                                 //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
@@ -155,6 +184,7 @@ namespace SioForgeCAD.Commun
 
             ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves).DeepDispose();
 
+            //GlobalSplittedCurves.AddToDrawing(6, true);
 
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
             GlobalSplittedCurves.DeepDispose();
@@ -180,7 +210,7 @@ namespace SioForgeCAD.Commun
                                 BoundaryA.Dispose();
                                 var MergedOffsetBoundaryA = OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>();
                                 Holes.AddRange(MergedOffsetBoundaryA);
-                                OffsetBoundaryA.ToList().RemoveCommun(MergedOffsetBoundaryA).DeepDispose();
+                                OffsetBoundaryA.DeepDispose();
                             }
                             else
                             {
@@ -193,8 +223,8 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            PossibleBoundary.AddToDrawing(3, true);
-            //Holes.AddToDrawing(5);
+            //PossibleBoundary.AddToDrawing(3, true);
+            Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
             if (AllowMarginError)

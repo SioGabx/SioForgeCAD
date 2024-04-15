@@ -22,9 +22,20 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                if (!ed.GetHatch(out Hatch SecondHachure, "Veuillez selectionner une deuxième hachure"))
+
+                bool Reselect = true;
+                Hatch SecondHachure = null;
+                while (Reselect)
                 {
-                    return;
+                    Reselect = false;
+                    if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
+                    {
+                        return;
+                    }
+                    if (SecondHachure == FirstHachure)
+                    {
+                        Reselect = true;
+                    }
                 }
 
                 Entity ExistingBoundaryStyle = FirstHachure;
