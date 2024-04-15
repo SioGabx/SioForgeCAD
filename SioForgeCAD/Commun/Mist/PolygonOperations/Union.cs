@@ -59,7 +59,7 @@ namespace SioForgeCAD.Commun
             //Check if Cutted line IsInside -> if true remove
             ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
-            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = 1 }, SplittedCurveOrigin =>
+            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveOrigin =>
             {
                 HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
 
