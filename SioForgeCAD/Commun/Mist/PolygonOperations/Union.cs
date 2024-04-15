@@ -86,7 +86,7 @@ namespace SioForgeCAD.Commun
                             NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
                             NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                         }
-                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
+                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary)) // need to add a check if it overlaping an another, we sould remove it anyway
                         {
                             bool IsInsideNotIntersectingHole = false;
                             if (SplittedCurve.Closed)
