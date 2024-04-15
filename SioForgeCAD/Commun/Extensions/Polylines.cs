@@ -398,7 +398,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)
         {
             var poly = ArgPoly.Clone() as Polyline;
-            if (poly.NumberOfVertices < 3 || poly.Area <= Generic.MediumTolerance.EqualPoint)
+            if (poly.Area <= Generic.MediumTolerance.EqualPoint)
             {
                 return new Polyline[] {};
             }
@@ -473,7 +473,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
             OffsetPolylineResult.DeepDispose();
-            var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices > 2).ToList();
+            var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices >= 2).ToList();
             OffsetMergedPolylineResult.RemoveCommun(ReturnOffsetMergedPolylineResult).DeepDispose();
             foreach (var item in ReturnOffsetMergedPolylineResult)
             {

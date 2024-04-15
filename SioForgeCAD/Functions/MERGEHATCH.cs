@@ -51,6 +51,14 @@ namespace SioForgeCAD.Functions
                 }
 
 
+                //bool IsValidMerge = false;
+                //If SecondHachurePolyHole intersect FirstHachurePolyHole
+                //If SecondHachurePolyHole intersect with a hole of FirstHachurePolyHole
+                //expand SecondHachurePolyHole
+                //expand FirstHachurePolyHole Boundary and shrink holes
+                //Redo all previous check
+
+
                 if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true))
                 {
                     foreach (PolyHole item in unionResult)
