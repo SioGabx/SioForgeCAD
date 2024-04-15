@@ -51,15 +51,15 @@ namespace SioForgeCAD.Commun
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
 
-            //foreach (var item in SplittedCurvesOrigin)
+            //foreach (var curveItem in SplittedCurvesOrigin)
             //{
-            //    item.Splitted.AddToDrawing(5);
+            //    curveItem.Splitted.AddToDrawing(5);
             //}
 
             //Check if Cutted line IsInside -> if true remove
             ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
-            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveOrigin =>
+            Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = 1 }, SplittedCurveOrigin =>
             {
                 HashSet<Polyline> SplittedCurves = SplittedCurveOrigin.Splitted;
 
@@ -86,11 +86,19 @@ namespace SioForgeCAD.Commun
                             NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
                             NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                         }
-                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
+                        if (SplittedCurve.IsInside(NoArcPolyBase, false))// && !SplittedCurve.IsOverlaping(PolyBase.Boundary)
                         {
+                            //SplittedCurve.AddToDrawing(1, true);
                             SplittedCurves.Remove(SplittedCurve);
                             SplittedCurve.Dispose();
                         }
+
+                        //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
+                        //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
+                        //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
+
+                        //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
+
                     }
 
                 }
@@ -109,6 +117,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
+            //Groups.Create("hh", "", GlobalSplittedCurves.AddToDrawing(6, true).ToObjectIdCollection());
             //Remove IsOverlaping line
             object _lock = new object();
             Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = -1 }, SplittedCurveA =>
@@ -160,7 +169,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            //PossibleBoundary.AddToDrawing(6);
+            //PossibleBoundary.AddToDrawing(6, true);
             //Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
@@ -277,6 +286,7 @@ namespace SioForgeCAD.Commun
             if (OffsetCurve.Count == 0)
             {
                 (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
+                Generic.WriteMessage("Impossible de merger les courbes (erreur lors de l'offset des contours).");
                 return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
@@ -320,7 +330,16 @@ namespace SioForgeCAD.Commun
                 if (GlobalIntersectionPointsFounds.Count > 0)
                 {
                     var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
-                    SplittedCurvesOrigin.Add((PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet(), PolyBase));
+                    var Splitted = PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet();
+                    //Remove zero length line
+                    foreach (var curv in Splitted.ToList())
+                    {
+                        if (curv.Length <= Generic.LowTolerance.EqualPoint)
+                        {
+                            Splitted.Remove(curv);
+                        }
+                    }
+                    SplittedCurvesOrigin.Add((Splitted, PolyBase));
                 }
                 else
                 {

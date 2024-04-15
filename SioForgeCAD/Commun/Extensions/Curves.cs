@@ -307,7 +307,7 @@ namespace SioForgeCAD.Commun.Extensions
             if (entities.Count <= 1)
             {
                 //No geometry to merge
-                return entities;
+                return entities.Clone();
             }
 
             for (int i = 0; i < entities.Count; i++)

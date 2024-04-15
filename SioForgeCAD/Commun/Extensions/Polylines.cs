@@ -444,10 +444,33 @@ namespace SioForgeCAD.Commun.Extensions
                     index++;
                 }
             }
+
+            //Cleanup the line (NEEDED ! if not in futur please explain why)
             poly.Cleanup();
+            if (poly.IsClockwise())
+            {
+                poly.Inverse();
+            }
 
 
-            return poly.OffsetPolyline(ShrinkDistance).ToList().Cast<Polyline>();
+            var OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
+            if (OffsetPolylineResult.Count == 0)
+            {
+                poly.AddToDrawing(1, true);
+            }
+
+
+
+            var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
+            OffsetPolylineResult.DeepDispose();
+            var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices > 2).ToList();
+            OffsetMergedPolylineResult.RemoveCommun(ReturnOffsetMergedPolylineResult).DeepDispose();
+            foreach (var item in ReturnOffsetMergedPolylineResult)
+            {
+                item.Cleanup();
+            }
+
+            return ReturnOffsetMergedPolylineResult;
         }
         // public static IEnumerable<Polyline> SmartShrinkOffset(this Polyline ArgPoly, double ShrinkDistance)
         //{
@@ -549,12 +572,14 @@ namespace SioForgeCAD.Commun.Extensions
         public static bool IsInside(this Polyline LineA, Polyline LineB, bool CheckEach = true)
         {
             int NumberOfVertices = 1;
+            int ReelNumberOfVertices = LineA.GetReelNumberOfVertices();
             if (CheckEach)
             {
-                NumberOfVertices = LineA.GetReelNumberOfVertices();
+                NumberOfVertices = ReelNumberOfVertices;
             }
 
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
+            int PolylineSegmentIndex = 0;
+            while (PolylineSegmentIndex < NumberOfVertices)
             {
                 var PolylineSegment = LineA.GetSegmentAt(PolylineSegmentIndex);
                 if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
@@ -576,6 +601,15 @@ namespace SioForgeCAD.Commun.Extensions
                         return false;
                     }
                 }
+                else
+                {
+                    //No good point found, we run back the function
+                    if (NumberOfVertices < ReelNumberOfVertices - 1)
+                    {
+                        NumberOfVertices++;
+                    }
+                }
+                PolylineSegmentIndex++;
             }
             return true;
         }
