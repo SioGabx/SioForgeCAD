@@ -276,12 +276,12 @@ namespace SioForgeCAD.Commun
             List<Polyline> OffsetCurve;
             if (OffsetDistance < 0)
             {
-                OffsetCurve = polyHole.Boundary.SmartShrinkOffset(OffsetDistance).ToList();
+                OffsetCurve = polyHole.Boundary.SmartOffset(OffsetDistance).ToList();
             }
             else
             {
                 //Cleanup before offset
-                OffsetCurve = polyHole.Boundary.OffsetPolyline(OffsetDistance).Cast<Polyline>().ToList();
+                OffsetCurve = polyHole.Boundary.SmartOffset(OffsetDistance).Cast<Polyline>().ToList();
             }
             if (OffsetCurve.Count == 0)
             {

@@ -495,7 +495,7 @@ namespace SioForgeCAD
                 promptDoubleOptions.DefaultValue = -0.01;
                 var value = ed.GetDouble(promptDoubleOptions);
                 if (value.Status != PromptStatus.OK) { return; }
-                var curve = poly.SmartShrinkOffset(value.Value);
+                var curve = poly.SmartOffset(value.Value);
                 curve.AddToDrawing(5);
                 tr.Commit();
             }

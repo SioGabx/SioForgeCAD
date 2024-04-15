@@ -395,7 +395,7 @@ namespace SioForgeCAD.Commun.Extensions
             return poly;
         }
 
-        public static IEnumerable<Polyline> SmartShrinkOffset(this Polyline ArgPoly, double ShrinkDistance)
+        public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)
         {
             var poly = ArgPoly.Clone() as Polyline;
             poly.Closed = true;
@@ -452,14 +452,11 @@ namespace SioForgeCAD.Commun.Extensions
                 poly.Inverse();
             }
 
-
             var OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
             if (OffsetPolylineResult.Count == 0)
             {
                 poly.AddToDrawing(1, true);
             }
-
-
 
             var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
             OffsetPolylineResult.DeepDispose();
