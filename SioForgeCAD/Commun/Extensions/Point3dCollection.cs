@@ -16,11 +16,15 @@ namespace SioForgeCAD.Commun.Extensions
             return array;
         }
 
-        public static void AddToDrawing(this Point3dCollection collection)
+        public static void AddToDrawing(this Point3dCollection collection, int? ColorIndex = null)
         {
             foreach (Point3d item in collection)
             {
                 DBPoint dBPoint = new DBPoint(item);
+                if (ColorIndex != null)
+                {
+                    dBPoint.ColorIndex = (int)ColorIndex;
+                }
                 dBPoint.AddToDrawing();
             }
         }

@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                PolyHole.CreateFromList(Curves).Union(out List<PolyHole> UnionResult);
+                PolyHole.CreateFromList(Curves).Union(out List<PolyHole> UnionResult, true);
 
                 foreach (var polyh in UnionResult)
                 {

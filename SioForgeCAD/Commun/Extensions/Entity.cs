@@ -81,7 +81,15 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     Polyline TargetPolyline = Target as Polyline;
                     TargetPolyline.Elevation = OriginPolyline.Elevation;
-                    TargetPolyline.ConstantWidth = OriginPolyline.ConstantWidth;
+                    try
+                    {
+                        TargetPolyline.ConstantWidth = OriginPolyline.ConstantWidth;
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                        //eInvalidInput
+                        TargetPolyline.ConstantWidth = 0;
+                    }
                     TargetPolyline.Thickness = OriginPolyline.Thickness;
                 }
                 if (Origin is Polyline2d OriginPolyline2d)

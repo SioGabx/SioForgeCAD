@@ -12,10 +12,10 @@ namespace SioForgeCAD.Commun
     public static partial class PolygonOperation
     {
         public const double Margin = 0.01;
-        public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool AllowMarginError = false)
+        public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool RequireAllowMarginError = false)
         {
             var Holes = UnionHoles(PolyHoleList);
-
+            bool AllowMarginError = RequireAllowMarginError;
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
             if (AllowMarginError)
             {
@@ -86,19 +86,20 @@ namespace SioForgeCAD.Commun
                             NoArcPolyBase = PolyBase.Boundary.ToPolygon(Cleanup: false);
                             NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                         }
-                        if (SplittedCurve.IsInside(NoArcPolyBase, false))// && !SplittedCurve.IsOverlaping(PolyBase.Boundary)
+                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
                         {
-                            //SplittedCurve.AddToDrawing(1, true);
+                            //SplittedCurve.AddToDrawing(5, true);
+
+                            //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
+                            //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
+                            //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
+
+                            //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
+
+
                             SplittedCurves.Remove(SplittedCurve);
                             SplittedCurve.Dispose();
                         }
-
-                        //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
-                        //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
-                        //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
-
-                        //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
-
                     }
 
                 }
@@ -107,7 +108,7 @@ namespace SioForgeCAD.Commun
 
             List<Polyline> GlobalSplittedCurves = ConcurrentBagGlobalSplittedCurves.ToList();
 
-
+            //GlobalSplittedCurves.AddToDrawing(6, true);
 
             foreach (var item in NoArcPolygonCache)
             {
@@ -142,11 +143,12 @@ namespace SioForgeCAD.Commun
 
 
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
-            GlobalSplittedCurves.RemoveCommun(PossibleBoundary).DeepDispose();
+            GlobalSplittedCurves.DeepDispose();
 
             //Check if generated union with boundary may result in hole,
-            //only usefull if AllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
-            if (AllowMarginError)
+            //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
+            //PossibleBoundary.AddToDrawing(6, true);
+            if (RequireAllowMarginError)
             {
                 foreach (var BoundaryA in PossibleBoundary.ToList())
                 {
@@ -157,19 +159,27 @@ namespace SioForgeCAD.Commun
                         if (BoundaryA.IsInside(BoundaryB))
                         {
                             PossibleBoundary.Remove(BoundaryA);
-                            //Because a hole is generated, the inner hole is reduced, we need to expand it back
-                            var OffsetBoundaryA = BoundaryA.OffsetPolyline(Margin);
-                            BoundaryA.Dispose();
-                            var MergedOffsetBoundaryA = OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>();
-                            Holes.AddRange(MergedOffsetBoundaryA);
-                            OffsetBoundaryA.ToList().RemoveCommun(MergedOffsetBoundaryA).DeepDispose();
+                            if (AllowMarginError)
+                            {
+                                //Because a hole is generated, the inner hole is reduced, we need to expand it back
+                                var OffsetBoundaryA = BoundaryA.SmartOffset(Margin);
+                                BoundaryA.Dispose();
+                                var MergedOffsetBoundaryA = OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>();
+                                Holes.AddRange(MergedOffsetBoundaryA);
+                                OffsetBoundaryA.ToList().RemoveCommun(MergedOffsetBoundaryA).DeepDispose();
+                            }
+                            else
+                            {
+                                Holes.Add(BoundaryA);
+                            }
+
                             break;
                         }
                     }
                 }
             }
 
-            //PossibleBoundary.AddToDrawing(6, true);
+            //PossibleBoundary.AddToDrawing(3, true);
             //Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
@@ -182,11 +192,12 @@ namespace SioForgeCAD.Commun
                     PolyHole PolyHole = UnionResultCopy[i];
                     UnionResult.Remove(PolyHole);
                     var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
-                    if (UndoMargin.Count == 0)
-                    {
-                        return false;
-                    }
+                    
                     UnionResult.AddRange(UndoMargin);
+                }
+                if (UnionResultCopy.Count == 0)
+                {
+                    return false;
                 }
             }
 
@@ -274,19 +285,23 @@ namespace SioForgeCAD.Commun
         {
             List<PolyHole> polyHoles = new List<PolyHole>();
             List<Polyline> OffsetCurve;
+            if (polyHole.Boundary.NumberOfVertices < 3 || polyHole.Boundary.Area <= Generic.MediumTolerance.EqualPoint)
+            {
+                //degenrated geometry
+                return polyHoles;
+            }
             if (OffsetDistance < 0)
             {
                 OffsetCurve = polyHole.Boundary.SmartOffset(OffsetDistance).ToList();
             }
             else
             {
-                //Cleanup before offset
                 OffsetCurve = polyHole.Boundary.SmartOffset(OffsetDistance).Cast<Polyline>().ToList();
             }
             if (OffsetCurve.Count == 0)
             {
                 (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
-                Generic.WriteMessage("Impossible de merger les courbes (erreur lors de l'offset des contours).");
+                Generic.WriteMessage("Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : " + OffsetDistance);
                 return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
@@ -311,6 +326,7 @@ namespace SioForgeCAD.Commun
         {
             //This function split each polygon by other polygon intersection points
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = new ConcurrentBag<(HashSet<Polyline>, Polyline)>();
+
             foreach (var PolyBase in Polylines)
             {
                 if (PolyBase.IsDisposed) { continue; }
@@ -329,8 +345,17 @@ namespace SioForgeCAD.Commun
 
                 if (GlobalIntersectionPointsFounds.Count > 0)
                 {
-                    var SplitDouble = PolyBase.GetSplitPoints(GlobalIntersectionPointsFounds);
+                    //Make sure all points are on the line because IntersectWith give not egnouht precise value (0.0001). This fix some cut
+                    var OnLineIntersectionPointsFounds = new Point3dCollection();
+                    foreach (Point3d item in GlobalIntersectionPointsFounds)
+                    {
+                        OnLineIntersectionPointsFounds.Add(PolyBase.GetClosestPointTo(item, false));
+                    }
+
+                    var SplitDouble = PolyBase.GetSplitPoints(OnLineIntersectionPointsFounds);
                     var Splitted = PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet();
+                    //Splitted.AddToDrawing(color);
+
                     //Remove zero length line
                     foreach (var curv in Splitted.ToList())
                     {
