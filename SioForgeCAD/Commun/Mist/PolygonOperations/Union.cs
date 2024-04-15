@@ -88,17 +88,31 @@ namespace SioForgeCAD.Commun
                         }
                         if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary))
                         {
-                            //SplittedCurve.AddToDrawing(5, true);
+                            bool IsInsideHole = false;
+                            if (SplittedCurve.Closed)
+                            {
+                                //If the geometry was not splitted, that mean the curve do not cross the boundary -> if it is inside a hole, we should keep it
+                                foreach (var PolyHole in PolyBase.Holes)
+                                {
+                                    if (SplittedCurve.GetInnerCentroid().IsInsidePolyline(PolyHole))
+                                    {
+                                        IsInsideHole = true;
+                                        break;
+                                    }
+                                }
+                            }
 
-                            //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
-                            //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
-                            //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
+                            if (!IsInsideHole)
+                            {
+                                //SplittedCurve.AddToDrawing(1, true);
+                                //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
+                                //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
+                                //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
+                                //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
 
-                            //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
-
-
-                            SplittedCurves.Remove(SplittedCurve);
-                            SplittedCurve.Dispose();
+                                SplittedCurves.Remove(SplittedCurve);
+                                SplittedCurve.Dispose();
+                            }
                         }
                     }
 
@@ -179,7 +193,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            //PossibleBoundary.AddToDrawing(3, true);
+            PossibleBoundary.AddToDrawing(3, true);
             //Holes.AddToDrawing(5);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
@@ -192,7 +206,7 @@ namespace SioForgeCAD.Commun
                     PolyHole PolyHole = UnionResultCopy[i];
                     UnionResult.Remove(PolyHole);
                     var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
-                    
+
                     UnionResult.AddRange(UndoMargin);
                 }
                 if (UnionResultCopy.Count == 0)
