@@ -340,12 +340,23 @@ namespace SioForgeCAD
             Functions.MERGEPOLYLIGNES.Merge();
         }
 
-        [CommandMethod("MERGEPOLYLIGNESAU", CommandFlags.UsePickSet)]
-        public static void MERGEPOLYLIGNESAU()
+        //[CommandMethod("MERGEPOLYLIGNESAU", CommandFlags.UsePickSet)]
+        //public static void MERGEPOLYLIGNESAU()
+        //{
+        //    Functions.MERGEPOLYLIGNES.MergeUsingRegion();
+        //}
+        [CommandMethod("POLYLINEISCLOCKWISE", CommandFlags.UsePickSet)]
+        public void ISCLOCKWISE()
         {
-            Functions.MERGEPOLYLIGNES.MergeUsingRegion();
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            var result = ed.GetPolyline("Selectionnez une polyligne");
+            if (result == null)
+            {
+                return;
+            }
+            Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
         }
-
 
 
         [CommandMethod("VPLOCK")]
@@ -360,7 +371,11 @@ namespace SioForgeCAD
             Functions.VPLOCK.DoLockUnlock(false);
         }
 
-
+        [CommandMethod("POLYCLEAN", CommandFlags.UsePickSet)]
+        public void POLYCLEAN()
+        {
+            Functions.POLYCLEAN.PolyClean();
+        }
 
 
 
@@ -532,22 +547,7 @@ namespace SioForgeCAD
             }
         }
 
-            [CommandMethod("DEBUG", "POLYCLEAN", CommandFlags.UsePickSet)]
-        public void POLYCLEAN()
-        {
-            Editor ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                var poly = ed.GetPolyline("Selectionnez une polyligne");
-                int NumberOfVerticesBefore = poly.NumberOfVertices;
-                poly.UpgradeOpen();
-                poly.Cleanup();
-                int NumberOfVerticesAfter = poly.NumberOfVertices;
-                Generic.WriteMessage("La polyline à été simplifiée en supprimant " + (NumberOfVerticesBefore - NumberOfVerticesAfter));
-                tr.Commit();
-            }
-        }
+
 
         [CommandMethod("DEBUG", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
         public void GENERATEBOUNDINGBOX()
@@ -595,24 +595,7 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("DEBUG", "ISCLOCKWISE", CommandFlags.UsePickSet)]
-        public void ISCLOCKWISE()
-        {
-            var ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-            var result = ed.GetEntity("Selectionnez une polyligne");
-            if (result.Status != PromptStatus.OK)
-            {
-                return;
-            }
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                if (result.ObjectId.GetDBObject() is Polyline poly)
-                {
-                    Generic.WriteMessage("Polyligne is clockwise : " + poly.IsClockwise());
-                }
-            }
-        }
+
 
 
 #if DEBUG

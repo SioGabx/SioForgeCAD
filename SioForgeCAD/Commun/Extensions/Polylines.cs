@@ -103,7 +103,7 @@ namespace SioForgeCAD.Commun.Extensions
                     Point3d lastPoint = polyline.GetPoint3dAt(index - 1);
                     Point3d currentPoint = polyline.GetPoint3dAt(index);
                     Point3d nextPoint;
-                    if (polyline.GetReelNumberOfVertices() <= index + 1)
+                    if (polyline.NumberOfVertices <= index + 1)
                     {
                         nextPoint = polyline.StartPoint;
                     }
@@ -400,7 +400,7 @@ namespace SioForgeCAD.Commun.Extensions
             var poly = ArgPoly.Clone() as Polyline;
             if (poly.Area <= Generic.MediumTolerance.EqualPoint)
             {
-                return new Polyline[] {};
+                return new Polyline[] { };
             }
             poly.Closed = true;
 
@@ -409,7 +409,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 poly.Inverse();
             }
-            else if(ShrinkDistance > 0 && !IsClockwise)
+            else if (ShrinkDistance > 0 && !IsClockwise)
             {
                 poly.Inverse();
             }
@@ -417,7 +417,7 @@ namespace SioForgeCAD.Commun.Extensions
             //Forcing close can result in weird point, we need to cleanup these before executing a offset
             poly.Cleanup();
             List<Polyline> OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
-            
+
             if (OffsetPolylineResult.Count == 0)
             {
                 //If OffsetPolyline result in no geometry, we need to fix the polyline first : custom cleanup
@@ -488,7 +488,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             return ReturnOffsetMergedPolylineResult;
         }
-        
+
         public static Point3d GetInnerCentroid(this Polyline poly)
         {
             var polygon = poly.ToPolygon(10, false);
@@ -570,6 +570,20 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
             Tolerance tol = Generic.MediumTolerance;
+
+            bool IsClockwisePolyA = polylineA.IsClockwise();
+            bool IsClockwisePolyB = polylineB.IsClockwise();
+            if (IsClockwisePolyA != IsClockwisePolyB)
+            {
+                if (IsClockwisePolyA)
+                {
+                    polylineB.Inverse();
+                }
+                else
+                {
+                    polylineB.Inverse();
+                }
+            }
 
             for (int i = 0; i < polylineA.GetReelNumberOfVertices(); i++)
             {

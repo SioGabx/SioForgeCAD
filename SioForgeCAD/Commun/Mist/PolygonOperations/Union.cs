@@ -48,16 +48,6 @@ namespace SioForgeCAD.Commun
                     PolyHoleList.AddRange(OffsetPolyHole(ref PolyHole, Margin));
                 }
             }
-            else
-            {
-                foreach (var PolyHole in PolyHoleList)
-                {
-                    if (!PolyHole.Boundary.IsClockwise())
-                    {
-                        PolyHole.Boundary.Inverse();
-                    }
-                }
-            }
 
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
@@ -126,6 +116,12 @@ namespace SioForgeCAD.Commun
                 }
             }
 
+            //Cleanup for SplittedCurves
+            foreach (var Line in GlobalSplittedCurves)
+            {
+                Line.Cleanup();
+            }
+
             //Groups.Create("hh", "", GlobalSplittedCurves.AddToDrawing(6, true).ToObjectIdCollection());
             //Remove IsOverlaping line
             object _lock = new object();
@@ -149,14 +145,13 @@ namespace SioForgeCAD.Commun
 
             ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves).DeepDispose();
 
-            //GlobalSplittedCurves.AddToDrawing(6, true);
-
+            //GlobalSplittedCurves.AddToDrawing(1, true);
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
             GlobalSplittedCurves.DeepDispose();
+            //PossibleBoundary.AddToDrawing(6, true);
 
             //Check if generated union with boundary may result in hole,
             //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
-            //PossibleBoundary.AddToDrawing(6, true);
             if (RequestAllowMarginError)
             {
                 foreach (var BoundaryA in PossibleBoundary.ToList())
@@ -209,8 +204,6 @@ namespace SioForgeCAD.Commun
                     return false;
                 }
             }
-
-
             return true;
         }
 
@@ -256,7 +249,7 @@ namespace SioForgeCAD.Commun
                         {
                             foreach (var item in SubResult.GetBoundaries())
                             {
-                                HoleUnionResult.AddRange(item.SmartOffset(Margin)); 
+                                HoleUnionResult.AddRange(item.SmartOffset(Margin));
                             }
                         }
                         if (!HoleUnionResult.Contains(ParsedHole))

@@ -211,6 +211,7 @@
     <Compile Include="Functions\FORCEPOINTTOBEONSCREENBOUNDS.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\MERGEPOLYLIGNES.cs" />
+    <Compile Include="Functions\POLYCLEAN.cs" />
     <Compile Include="Functions\POLYLINE2DTOPOLYLINE.cs" />
     <Compile Include="Functions\POLYLINE3DTOPOLYLINE.cs" />
     <Compile Include="Functions\PURGEALL.cs" />
