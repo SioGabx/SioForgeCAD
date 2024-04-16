@@ -48,6 +48,16 @@ namespace SioForgeCAD.Commun
                     PolyHoleList.AddRange(OffsetPolyHole(ref PolyHole, Margin));
                 }
             }
+            else
+            {
+                foreach (var PolyHole in PolyHoleList)
+                {
+                    if (!PolyHole.Boundary.IsClockwise())
+                    {
+                        PolyHole.Boundary.Inverse();
+                    }
+                }
+            }
 
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());

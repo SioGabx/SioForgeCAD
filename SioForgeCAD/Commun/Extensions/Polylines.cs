@@ -404,6 +404,16 @@ namespace SioForgeCAD.Commun.Extensions
             }
             poly.Closed = true;
 
+            bool IsClockwise = poly.IsClockwise();
+            if (ShrinkDistance < 0 && IsClockwise)
+            {
+                poly.Inverse();
+            }
+            else if(ShrinkDistance > 0 && !IsClockwise)
+            {
+                poly.Inverse();
+            }
+
             //Forcing close can result in weird point, we need to cleanup these before executing a offset
             poly.Cleanup();
             List<Polyline> OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
@@ -459,10 +469,6 @@ namespace SioForgeCAD.Commun.Extensions
 
                 //Cleanup the line (NEEDED ! if not in futur please explain why)
                 poly.Cleanup();
-                if (poly.IsClockwise())
-                {
-                    poly.Inverse();
-                }
 
                 OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
                 if (OffsetPolylineResult.Count == 0)
