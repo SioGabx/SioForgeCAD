@@ -98,13 +98,15 @@ namespace SioForgeCAD.Functions
                             //Parse the first in list, if there is no new cut, this is the same as NewBoundary
                             Polyline SubstractedNewBoundary = SubResult[0].Boundary;
                             NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
-                            if (NewBoundary != SubstractedNewBoundary) { NewBoundary.Dispose(); }
+                            if (NewBoundary != SubstractedNewBoundary) { 
+                                //NewBoundary.Dispose(); 
+                            }
 
                             ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
                             Hatchs.ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
 
                             CuttedPolyline.Remove(SubstractedNewBoundary);
-                            SubstractedNewBoundary.Dispose();
+                            //SubstractedNewBoundary.Dispose();
 
                             NumberOfSlice++;
                         }

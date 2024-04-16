@@ -22,6 +22,7 @@ namespace SioForgeCAD.Commun
                 if (SubstractionPolygonCurve == null || SubstractionPolygonCurve.IsDisposed)
                 {
                     Debug.WriteLine("Error : SubstractionPolygonCurve was null or disposed");
+                    //Debugger.Break();
                     continue;
                 }
                 using (var SimplifiedSubstractionPolygonCurve = SubstractionPolygonCurve.ToPolyline())
@@ -64,6 +65,7 @@ namespace SioForgeCAD.Commun
 
             //Merge overlaping hole polyline
             Union(PolyHole.CreateFromList(NewBoundaryHoles.Cast<Polyline>()), out var HoleUnionResult);
+            NewBoundaryHoles.RemoveCommun(SubstractionPolygonsArg).DeepDispose();
             UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }

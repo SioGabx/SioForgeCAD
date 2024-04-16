@@ -147,7 +147,7 @@ namespace SioForgeCAD.Commun
 
             //GlobalSplittedCurves.AddToDrawing(1, true);
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
-            GlobalSplittedCurves.DeepDispose();
+            GlobalSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
             //PossibleBoundary.AddToDrawing(6, true);
 
             //Check if generated union with boundary may result in hole,
@@ -251,6 +251,10 @@ namespace SioForgeCAD.Commun
                             {
                                 HoleUnionResult.AddRange(item.SmartOffset(Margin));
                             }
+                        }
+                        if (PolyHoleBoundary != polyHole.Boundary)
+                        {
+                            PolyHoleBoundary.Dispose();
                         }
                         if (!HoleUnionResult.Contains(ParsedHole))
                         {
