@@ -249,16 +249,10 @@ namespace SioForgeCAD.Commun
                             {
                                 HoleUnionResult.AddRange(item.SmartOffset(Margin));
                             }
-                        }
-                        //if (PolyHoleBoundary != polyHole.Boundary)
-                        //{
-                        //    PolyHoleBoundary.Dispose();
-                        //}
-                        if (!HoleUnionResult.Contains(ParsedHole))
-                        {
-                            ParsedHole.Dispose();
+                            SubResult.DeepDispose();
                         }
                     }
+                    ParsedHole.Dispose();
                 }
             }
 
