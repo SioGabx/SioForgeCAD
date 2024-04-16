@@ -226,23 +226,21 @@ namespace SioForgeCAD.Commun
                 var polyHole = PolyHoleList[PolyHoleListIndex];
                 Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline;
 
-                List<Polyline> list = HoleUnionResult.ToList();
-                for (int i = 0; i < list.Count; i++)
+                List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
+                for (int i = 0; i < HoleUnionResultList.Count; i++)
                 {
-                    Polyline ParsedHole = list[i];
+                    Polyline ParsedHole = HoleUnionResultList[i];
                     if (RequestAllowMarginError)
                     {
                         var OffsetParsedHole = ParsedHole.SmartOffset(-Margin).ToList();
                         ParsedHole = OffsetParsedHole.First();
                         OffsetParsedHole.Remove(ParsedHole);
                         OffsetParsedHole.DeepDispose();
-                        list[i].Dispose();
                     }
 
                     if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
                     {
-                        HoleUnionResult.Remove(list[i]);
-
+                        HoleUnionResult.Remove(HoleUnionResultList[i]);
                         if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
                         {
                             foreach (var item in SubResult.GetBoundaries())
@@ -254,7 +252,11 @@ namespace SioForgeCAD.Commun
                     }
                     ParsedHole.Dispose();
                 }
+                HoleUnionResultList.RemoveCommun(HoleUnionResult).DeepDispose();
+                PolyHoleBoundary.Dispose();
             }
+
+            
 
             //Remove part that is leaving inside 2 polygon, they will be calculated after. 
             foreach (var Hole in HoleUnionResult.ToList())
@@ -293,7 +295,6 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-            //TODO : Merge each Polyline that are inside an another polyline;
 
             // HoleUnionResult.AddToDrawing(4, true);
             return HoleUnionResult;

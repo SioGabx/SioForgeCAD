@@ -485,7 +485,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 item.Cleanup();
             }
-
+            poly.Dispose();
             return ReturnOffsetMergedPolylineResult;
         }
 
