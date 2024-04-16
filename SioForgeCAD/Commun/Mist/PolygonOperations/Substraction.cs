@@ -22,7 +22,6 @@ namespace SioForgeCAD.Commun
                 if (SubstractionPolygonCurve == null || SubstractionPolygonCurve.IsDisposed)
                 {
                     Debug.WriteLine("Error : SubstractionPolygonCurve was null or disposed");
-                    //Debugger.Break();
                     continue;
                 }
                 using (var SimplifiedSubstractionPolygonCurve = SubstractionPolygonCurve.ToPolyline())
