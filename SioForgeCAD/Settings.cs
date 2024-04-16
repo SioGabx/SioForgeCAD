@@ -9,10 +9,10 @@
         public static string BlocNamePente = "_APUd_COTATIONS_Pentes";
 
         public static int TransientPrimaryColorIndex = 252;
-        public static int TransientSecondaryColorIndex = 255;
+        public static int TransientSecondaryColorIndex  = 255;
 
-        public static string VegblocLayerHeightName = "-APUd_VEG_HAUTEURS";
-        public static string VegblocLayerPrefix = "_APUd_VEG_";
+        public static string VegblocLayerHeightName  = "-APUd_VEG_HAUTEURS";
+        public static string VegblocLayerPrefix= "_APUd_VEG_";
         public static bool VegblocCopyGripDeselectAfterCopy = true;
         public static bool VegblocGeneratePeripheryCircles = false;
     }

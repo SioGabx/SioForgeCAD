@@ -1,10 +1,10 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -224,14 +224,16 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 else
                 {
-                    using var spl = (Spline)Curve.CreateFromGeCurve(nurb);
-                    try
+                    using (var spl = (Spline)Curve.CreateFromGeCurve(nurb))
                     {
-                        spline.JoinEntity(spl);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"GetSpline : Impossible to Join a Entity : {ex.Message}");
+                        try
+                        {
+                            spline.JoinEntity(spl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"GetSpline : Impossible to Join a Entity : {ex.Message}");
+                        }
                     }
                 }
             }
@@ -265,21 +267,23 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
 
-                using var Spline = poly.GetSpline();
-                Polyline Resultpoly;
-                if (NumberOfVertexPerArc > 0)
+                using (var Spline = poly.GetSpline())
                 {
-                    Resultpoly = Spline.ToPolyline(NumberOfVertex, false, true) as Polyline;
+                    Polyline Resultpoly;
+                    if (NumberOfVertexPerArc > 0)
+                    {
+                        Resultpoly = Spline.ToPolyline(NumberOfVertex, false, true) as Polyline;
+                    }
+                    else
+                    {
+                        Resultpoly = Spline.ToPolyline() as Polyline;
+                    }
+                    if (Cleanup)
+                    {
+                        Resultpoly.Cleanup();
+                    }
+                    return Resultpoly;
                 }
-                else
-                {
-                    Resultpoly = Spline.ToPolyline() as Polyline;
-                }
-                if (Cleanup)
-                {
-                    Resultpoly.Cleanup();
-                }
-                return Resultpoly;
             }
             return poly;
         }
@@ -396,7 +400,7 @@ namespace SioForgeCAD.Commun.Extensions
             var poly = ArgPoly.Clone() as Polyline;
             if (poly.Area <= Generic.MediumTolerance.EqualPoint)
             {
-                return Array.Empty<Polyline>();
+                return new Polyline[] { };
             }
             poly.Closed = true;
 
@@ -585,20 +589,9 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 var SegA = polylineA.GetSegmentAt(i);
                 var SegB = polylineB.GetSegmentAt(i);
-                if (!SegA.StartPoint.IsEqualTo(SegB.StartPoint, tol))
-                {
-                    return false;
-                }
-
-                if (!SegA.EndPoint.IsEqualTo(SegB.EndPoint, tol))
-                {
-                    return false;
-                }
-
-                if (SegA.Bulge != SegB.Bulge)
-                {
-                    return false;
-                }
+                if (!SegA.StartPoint.IsEqualTo(SegB.StartPoint, tol)) return false;
+                if (!SegA.EndPoint.IsEqualTo(SegB.EndPoint, tol)) return false;
+                if (SegA.Bulge != SegB.Bulge) return false;
             }
 
             return true;

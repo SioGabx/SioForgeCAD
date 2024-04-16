@@ -19,9 +19,7 @@ namespace SioForgeCAD.Functions
 
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
-            {
                 return;
-            }
 
             SelectionSet sel = selRes.Value;
             List<Polyline> Curves = new List<Polyline>();
@@ -61,9 +59,7 @@ namespace SioForgeCAD.Functions
             // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
-            {
                 return;
-            }
 
             SelectionSet sel = selRes.Value;
             List<Polyline> Curves = new List<Polyline>();

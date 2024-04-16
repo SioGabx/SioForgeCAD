@@ -1,5 +1,10 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -10,7 +15,7 @@ namespace SioForgeCAD.Commun.Extensions
             if (circularArc.EndPoint.IsEqualTo(circularArc.StartPoint) && circularArc.Radius > 0)
             {
                 var Circle = new Circle(circularArc.Center.ToPoint3d(), Vector3d.YAxis, circularArc.Radius);
-                return Circle;
+               return Circle;
             }
 
             double startAngle = circularArc.IsClockWise ? -circularArc.EndAngle : circularArc.StartAngle;

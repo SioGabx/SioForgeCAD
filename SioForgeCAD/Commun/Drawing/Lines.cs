@@ -48,11 +48,7 @@ namespace SioForgeCAD.Commun.Drawing
         {
             IntersectionPointsFounds = new Point3dCollection();
             line1.IntersectWith(line2, Intersect.OnBothOperands, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
-            if (IntersectionPointsFounds.Count == 0)
-            {
-                return false;
-            }
-
+            if (IntersectionPointsFounds.Count == 0) return false;
             return true;
         }
 

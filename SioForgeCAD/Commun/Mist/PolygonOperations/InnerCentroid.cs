@@ -28,10 +28,7 @@ namespace SioForgeCAD.Commun
             var cellSize = Math.Min(width, height);
             var h = cellSize / 2;
 
-            if (cellSize == 0)
-            {
-                return Extend.MinPoint;
-            }
+            if (cellSize == 0) return Extend.MinPoint;
 
             //a priority queue of cells in order of their "potential" (max distance to polygon)
             var cellQueue = new Queue<Cell>();

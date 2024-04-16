@@ -30,30 +30,32 @@ namespace SioForgeCAD.Commun.Drawing
         public static ObjectId AddToDrawing(this Entity entity, int? ColorIndex = null, bool Clone = false)
         {
             var db = Generic.GetDatabase();
-            using Transaction acTrans = db.TransactionManager.StartTransaction();
-            //BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-            BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
-
-            // Check if the entity is already in the database
-            if (entity.IsErased)
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
-                acTrans.Abort();
-                return ObjectId.Null;
-            }
-            if (Clone)
-            {
-                entity = entity.Clone() as Entity;
-            }
+                //BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
-            if (ColorIndex != null)
-            {
-                entity.ColorIndex = (int)ColorIndex;
-            }
+                // Check if the entity is already in the database
+                if (entity.IsErased)
+                {
+                    acTrans.Abort();
+                    return ObjectId.Null;
+                }
+                if (Clone)
+                {
+                    entity = entity.Clone() as Entity;
+                }
 
-            acBlkTblRec.AppendEntity(entity);
-            acTrans.AddNewlyCreatedDBObject(entity, true);
-            acTrans.Commit();
-            return entity.ObjectId;
+                if (ColorIndex != null)
+                {
+                    entity.ColorIndex = (int)ColorIndex;
+                }
+                
+                acBlkTblRec.AppendEntity(entity);
+                acTrans.AddNewlyCreatedDBObject(entity, true);
+                acTrans.Commit();
+                return entity.ObjectId;
+            }
         }
 
 

@@ -10,8 +10,6 @@ namespace SioForgeCAD.JSONParser
     //- Outputs JSON structures from an object
     //- Really simple API (new List<int> { 1, 2, 3 }).ToJson() == "[1,2,3]"
     //- Will only output public fields and property getters on objects
-    //
-    //https://github.com/zanders3/json
     public static class JSONWriter
     {
         public static string ToJson(this object item)
@@ -35,26 +33,17 @@ namespace SioForgeCAD.JSONParser
                 stringBuilder.Append('"');
                 string str = (string)item;
                 for (int i = 0; i < str.Length; ++i)
-                {
                     if (str[i] < ' ' || str[i] == '"' || str[i] == '\\')
                     {
                         stringBuilder.Append('\\');
                         int j = "\"\\\n\r\t\b\f".IndexOf(str[i]);
                         if (j >= 0)
-                        {
                             stringBuilder.Append("\"\\nrtbf"[j]);
-                        }
                         else
-                        {
                             stringBuilder.AppendFormat("u{0:X4}", (UInt32)str[i]);
-                        }
                     }
                     else
-                    {
                         stringBuilder.Append(str[i]);
-                    }
-                }
-
                 stringBuilder.Append('"');
             }
             else if (type == typeof(byte) || type == typeof(int))
@@ -81,14 +70,9 @@ namespace SioForgeCAD.JSONParser
                 for (int i = 0; i < list.Count; i++)
                 {
                     if (isFirst)
-                    {
                         isFirst = false;
-                    }
                     else
-                    {
                         stringBuilder.Append(',');
-                    }
-
                     AppendValue(stringBuilder, list[i]);
                 }
                 stringBuilder.Append(']');
@@ -110,14 +94,9 @@ namespace SioForgeCAD.JSONParser
                 foreach (object key in dict.Keys)
                 {
                     if (isFirst)
-                    {
                         isFirst = false;
-                    }
                     else
-                    {
                         stringBuilder.Append(',');
-                    }
-
                     stringBuilder.Append('\"');
                     stringBuilder.Append((string)key);
                     stringBuilder.Append("\":");
@@ -139,14 +118,9 @@ namespace SioForgeCAD.JSONParser
                         if (value != null)
                         {
                             if (isFirst)
-                            {
                                 isFirst = false;
-                            }
                             else
-                            {
                                 stringBuilder.Append(',');
-                            }
-
                             stringBuilder.Append('\"');
                             stringBuilder.Append(fieldInfos[i].Name);
                             stringBuilder.Append("\":");
@@ -163,14 +137,9 @@ namespace SioForgeCAD.JSONParser
                         if (value != null)
                         {
                             if (isFirst)
-                            {
                                 isFirst = false;
-                            }
                             else
-                            {
                                 stringBuilder.Append(',');
-                            }
-
                             stringBuilder.Append('\"');
                             stringBuilder.Append(propertyInfo[i].Name);
                             stringBuilder.Append("\":");
