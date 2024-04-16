@@ -104,7 +104,7 @@ namespace SioForgeCAD.Commun.Drawing
                 int index = 1;
                 while (bt.Has(newName))
                 {
-                    newName = $"{oldName}_{index}";
+                    newName = $"{oldName}_Copy{(index > 1 ? $" ({index})" : "")}";
                     index++;
                 }
                 return SymbolUtilityServices.RepairSymbolName(newName, false);
