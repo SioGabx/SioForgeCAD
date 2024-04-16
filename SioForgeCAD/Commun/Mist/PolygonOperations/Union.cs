@@ -224,13 +224,7 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                Polyline PolyHoleBoundary = polyHole.Boundary;
-
-                if (RequestAllowMarginError)
-                {
-                    PolyHoleBoundary = PolyHoleBoundary.SmartOffset(Margin).First();
-                }
-
+                Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline;
 
                 List<Polyline> list = HoleUnionResult.ToList();
                 for (int i = 0; i < list.Count; i++)
@@ -238,7 +232,11 @@ namespace SioForgeCAD.Commun
                     Polyline ParsedHole = list[i];
                     if (RequestAllowMarginError)
                     {
-                        ParsedHole = ParsedHole.SmartOffset(-Margin).First();
+                        var OffsetParsedHole = ParsedHole.SmartOffset(-Margin).ToList();
+                        ParsedHole = OffsetParsedHole.First();
+                        OffsetParsedHole.Remove(ParsedHole);
+                        OffsetParsedHole.DeepDispose();
+                        list[i].Dispose();
                     }
 
                     if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
