@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -176,7 +175,7 @@ namespace SioForgeCAD.Commun.Extensions
                             continue;
                         }
 
-                        if (curve1.GetClosestPointTo(point, false).DistanceTo(point) < Generic.MediumTolerance.EqualPoint && 
+                        if (curve1.GetClosestPointTo(point, false).DistanceTo(point) < Generic.MediumTolerance.EqualPoint &&
                             curve2.GetClosestPointTo(point, false).DistanceTo(point) < Generic.MediumTolerance.EqualPoint)
                         {
                             IntersectionFound.Add(point);
@@ -247,12 +246,30 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool HasEndPointOrStartPointInCommun(this Curve A, Curve B)
         {
-            if (A == null || B == null) return false;
+            if (A == null || B == null)
+            {
+                return false;
+            }
 
-            if (A.EndPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
-            if (A.EndPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
-            if (A.StartPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
-            if (A.StartPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
+            if (A.EndPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.EndPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.StartPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.StartPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
 
             return false;
         }
@@ -370,10 +387,12 @@ namespace SioForgeCAD.Commun.Extensions
             if (srcCurve is Line srcPolylineType)
             {
                 return srcPolylineType.ToPolyline();
-            }else if (srcCurve is Arc srcPArcType)
+            }
+            else if (srcCurve is Arc srcPArcType)
             {
                 return srcPArcType.ToPolyline();
-            }else if (srcCurve is Ellipse srcPEllipseType)
+            }
+            else if (srcCurve is Ellipse srcPEllipseType)
             {
                 return srcPEllipseType.Spline;
             }

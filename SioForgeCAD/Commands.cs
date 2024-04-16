@@ -188,7 +188,11 @@ namespace SioForgeCAD
             peo.SetRejectMessage("Only polylines accepted");
             peo.AddAllowedClass(typeof(Polyline), false);
             PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
+            if (per.Status != PromptStatus.OK)
+            {
+                return;
+            }
+
             ObjectId plId = per.ObjectId;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -197,10 +201,17 @@ namespace SioForgeCAD
                 Polyline pl = (Polyline)tr.GetObject(plId, OpenMode.ForRead);
                 (pl.GeometricExtents).ZoomExtents();
                 for (int i = 0; i < pl.NumberOfVertices; i++)
+                {
                     vtcs.Add(pl.GetPoint3dAt(i));
+                }
+
                 tr.Commit();
                 PromptSelectionResult psr = ed.SelectCrossingPolygon(vtcs);
-                if (psr.Status != PromptStatus.OK) return;
+                if (psr.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+
                 ObjectId[] ids = psr.Value.GetObjectIds();
                 ed.SetImpliedSelection(ids.Where(id => id != plId).ToArray());
             }
@@ -526,7 +537,9 @@ namespace SioForgeCAD
             // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
+            {
                 return;
+            }
 
             SelectionSet sel = selRes.Value;
             List<Curve> Curves = new List<Curve>();

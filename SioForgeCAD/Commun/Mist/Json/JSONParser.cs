@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
 
 namespace SioForgeCAD.JSONParser
@@ -25,6 +24,8 @@ namespace SioForgeCAD.JSONParser
     // - No JIT Emit support to parse structures quickly
     // - Limited to parsing <2GB JSON files (due to int.MaxValue)
     // - Parsing of abstract classes or interfaces is NOT supported and will throw an exception.
+    //
+    //https://github.com/zanders3/json
     public static class JSONParser
     {
         [ThreadStatic] static Stack<List<string>> splitArrayPool;
@@ -35,10 +36,25 @@ namespace SioForgeCAD.JSONParser
         public static T FromJson<T>(this string json)
         {
             // Initialize, if needed, the ThreadStatic variables
-            if (null == propertyInfoCache) propertyInfoCache = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
-            if (null == fieldInfoCache) fieldInfoCache = new Dictionary<Type, Dictionary<string, FieldInfo>>();
-            if (null == stringBuilder) stringBuilder = new StringBuilder();
-            if (null == splitArrayPool) splitArrayPool = new Stack<List<string>>();
+            if (null == propertyInfoCache)
+            {
+                propertyInfoCache = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
+            }
+
+            if (null == fieldInfoCache)
+            {
+                fieldInfoCache = new Dictionary<Type, Dictionary<string, FieldInfo>>();
+            }
+
+            if (null == stringBuilder)
+            {
+                stringBuilder = new StringBuilder();
+            }
+
+            if (null == splitArrayPool)
+            {
+                splitArrayPool = new Stack<List<string>>();
+            }
 
             //Remove all whitespace not within strings to make parsing simpler
             stringBuilder.Length = 0;
@@ -51,9 +67,11 @@ namespace SioForgeCAD.JSONParser
                     continue;
                 }
                 if (char.IsWhiteSpace(c))
+                {
                     continue;
+                }
 
-                stringBuilder.Append(c);
+                _ = stringBuilder.Append(c);
             }
 
             //Parse the thing!
@@ -62,23 +80,28 @@ namespace SioForgeCAD.JSONParser
 
         static int AppendUntilStringEnd(bool appendEscapeCharacter, int startIdx, string json)
         {
-            stringBuilder.Append(json[startIdx]);
+            _ = stringBuilder.Append(json[startIdx]);
             for (int i = startIdx + 1; i < json.Length; i++)
             {
                 if (json[i] == '\\')
                 {
                     if (appendEscapeCharacter)
-                        stringBuilder.Append(json[i]);
-                    stringBuilder.Append(json[i + 1]);
+                    {
+                        _ = stringBuilder.Append(json[i]);
+                    }
+
+                    _ = stringBuilder.Append(json[i + 1]);
                     i++;//Skip next character as it is escaped
                 }
                 else if (json[i] == '"')
                 {
-                    stringBuilder.Append(json[i]);
+                    _ = stringBuilder.Append(json[i]);
                     return i;
                 }
                 else
-                    stringBuilder.Append(json[i]);
+                {
+                    _ = stringBuilder.Append(json[i]);
+                }
             }
             return json.Length - 1;
         }
@@ -89,7 +112,10 @@ namespace SioForgeCAD.JSONParser
             List<string> splitArray = splitArrayPool.Count > 0 ? splitArrayPool.Pop() : new List<string>();
             splitArray.Clear();
             if (json.Length == 2)
+            {
                 return splitArray;
+            }
+
             int parseDepth = 0;
             stringBuilder.Length = 0;
             for (int i = 1; i < json.Length - 1; i++)
@@ -118,7 +144,7 @@ namespace SioForgeCAD.JSONParser
                         break;
                 }
 
-                stringBuilder.Append(json[i]);
+                _ = stringBuilder.Append(json[i]);
             }
 
             splitArray.Add(stringBuilder.ToString());
@@ -131,7 +157,10 @@ namespace SioForgeCAD.JSONParser
             if (type == typeof(string))
             {
                 if (json.Length <= 2)
+                {
                     return string.Empty;
+                }
+
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int i = 1; i < json.Length - 1; ++i)
                 {
@@ -140,52 +169,47 @@ namespace SioForgeCAD.JSONParser
                         int j = "\"\\nrtbf/".IndexOf(json[i + 1]);
                         if (j >= 0)
                         {
-                            stringBuilder.Append("\"\\\n\r\t\b\f/"[j]);
+                            _ = stringBuilder.Append("\"\\\n\r\t\b\f/"[j]);
                             ++i;
                             continue;
                         }
                         if (json[i + 1] == 'u' && i + 5 < json.Length - 1)
                         {
-                            UInt32 c = 0;
-                            if (UInt32.TryParse(json.Substring(i + 2, 4), System.Globalization.NumberStyles.AllowHexSpecifier, null, out c))
+                            if (uint.TryParse(json.AsSpan(i + 2, 4), System.Globalization.NumberStyles.AllowHexSpecifier, null, out uint c))
                             {
-                                stringBuilder.Append((char)c);
+                                _ = stringBuilder.Append((char)c);
                                 i += 5;
                                 continue;
                             }
                         }
                     }
-                    stringBuilder.Append(json[i]);
+                    _ = stringBuilder.Append(json[i]);
                 }
                 return stringBuilder.ToString();
             }
             if (type == typeof(int))
             {
-                int result;
-                int.TryParse(json, out result);
+                _ = int.TryParse(json, out int result);
                 return result;
             }
             if (type == typeof(byte))
             {
-                byte result;
-                byte.TryParse(json, out result);
+                _ = byte.TryParse(json, out byte result);
                 return result;
             }
             if (type == typeof(float))
             {
-                float result;
-                float.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out result);
+                _ = float.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float result);
                 return result;
             }
             if (type == typeof(double))
             {
-                double result;
-                double.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out result);
+                _ = double.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double result);
                 return result;
             }
             if (type == typeof(bool))
             {
-                return json.ToLower() == "true";
+                return json.Equals("true", StringComparison.CurrentCultureIgnoreCase);
             }
             if (json == "null")
             {
@@ -194,26 +218,36 @@ namespace SioForgeCAD.JSONParser
             if (type.IsArray)
             {
                 Type arrayType = type.GetElementType();
-                if (json[0] != '[' || json[json.Length - 1] != ']')
+                if (json[0] != '[' || json[^1] != ']')
+                {
                     return null;
+                }
 
                 List<string> elems = Split(json);
                 Array newArray = Array.CreateInstance(arrayType, elems.Count);
                 for (int i = 0; i < elems.Count; i++)
+                {
                     newArray.SetValue(ParseValue(arrayType, elems[i]), i);
+                }
+
                 splitArrayPool.Push(elems);
                 return newArray;
             }
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             {
                 Type listType = type.GetGenericArguments()[0];
-                if (json[0] != '[' || json[json.Length - 1] != ']')
+                if (json[0] != '[' || json[^1] != ']')
+                {
                     return null;
+                }
 
                 List<string> elems = Split(json);
                 var list = (IList)type.GetConstructor(new Type[] { typeof(int) }).Invoke(new object[] { elems.Count });
                 for (int i = 0; i < elems.Count; i++)
-                    list.Add(ParseValue(listType, elems[i]));
+                {
+                    _ = list.Add(ParseValue(listType, elems[i]));
+                }
+
                 splitArrayPool.Push(elems);
                 return list;
             }
@@ -228,25 +262,34 @@ namespace SioForgeCAD.JSONParser
 
                 //Refuse to parse dictionary keys that aren't of type string
                 if (keyType != typeof(string))
+                {
                     return null;
+                }
                 //Must be a valid dictionary element
                 if (json.Length == 0)
                 {
                     return null;
                 }
 
-                if (json[0] != '{' || json[json.Length - 1] != '}')
+                if (json[0] != '{' || json[^1] != '}')
+                {
                     return null;
+                }
                 //The list is split into key/value pairs only, this means the split must be divisible by 2 to be valid JSON
                 List<string> elems = Split(json);
                 if (elems.Count % 2 != 0)
+                {
                     return null;
+                }
 
                 var dictionary = (IDictionary)type.GetConstructor(new Type[] { typeof(int) }).Invoke(new object[] { elems.Count / 2 });
                 for (int i = 0; i < elems.Count; i += 2)
                 {
                     if (elems[i].Length <= 2)
+                    {
                         continue;
+                    }
+
                     string keyValue = elems[i].Substring(1, elems[i].Length - 2);
                     object val = ParseValue(valueType, elems[i + 1]);
                     dictionary.Add(keyValue, val);
@@ -257,7 +300,7 @@ namespace SioForgeCAD.JSONParser
             {
                 return ParseAnonymousValue(json);
             }
-            if (json[0] == '{' && json[json.Length - 1] == '}')
+            if (json[0] == '{' && json[^1] == '}')
             {
                 return ParseObject(type, json);
             }
@@ -268,70 +311,85 @@ namespace SioForgeCAD.JSONParser
         static object ParseAnonymousValue(string json)
         {
             if (json.Length == 0)
+            {
                 return null;
-            if (json[0] == '{' && json[json.Length - 1] == '}')
+            }
+
+            if (json[0] == '{' && json[^1] == '}')
             {
                 List<string> elems = Split(json);
                 if (elems.Count % 2 != 0)
+                {
                     return null;
+                }
+
                 var dict = new Dictionary<string, object>(elems.Count / 2);
                 for (int i = 0; i < elems.Count; i += 2)
+                {
                     dict.Add(elems[i].Substring(1, elems[i].Length - 2), ParseAnonymousValue(elems[i + 1]));
+                }
+
                 return dict;
             }
-            if (json[0] == '[' && json[json.Length - 1] == ']')
+            if (json[0] == '[' && json[^1] == ']')
             {
                 List<string> items = Split(json);
                 var finalList = new List<object>(items.Count);
                 for (int i = 0; i < items.Count; i++)
+                {
                     finalList.Add(ParseAnonymousValue(items[i]));
+                }
+
                 return finalList;
             }
-            if (json[0] == '"' && json[json.Length - 1] == '"')
+            if (json[0] == '"' && json[^1] == '"')
             {
                 string str = json.Substring(1, json.Length - 2);
                 return str.Replace("\\", string.Empty);
             }
             if (char.IsDigit(json[0]) || json[0] == '-')
             {
-                if (json.Contains("."))
+                if (json.Contains('.'))
                 {
-                    double result;
-                    double.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out result);
+                    _ = double.TryParse(json, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double result);
                     return result;
                 }
                 else
                 {
-                    int result;
-                    int.TryParse(json, out result);
+                    _ = int.TryParse(json, out int result);
                     return result;
                 }
             }
             if (json == "true")
+            {
                 return true;
+            }
+
             if (json == "false")
+            {
                 return false;
+            }
             // handles json == "null" as well as invalid JSON
             return null;
         }
 
         static object ParseObject(Type type, string json)
         {
-            object instance = FormatterServices.GetUninitializedObject(type);
+            object instance = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
 
             //The list is split into key/value pairs only, this means the split must be divisible by 2 to be valid JSON
             List<string> elems = Split(json);
             if (elems.Count % 2 != 0)
+            {
                 return instance;
+            }
 
-            Dictionary<string, FieldInfo> nameToField;
-            Dictionary<string, PropertyInfo> nameToProperty;
-            if (!fieldInfoCache.TryGetValue(type, out nameToField))
+            if (!fieldInfoCache.TryGetValue(type, out Dictionary<string, FieldInfo> nameToField))
             {
                 nameToField = type.GetFields().Where(field => field.IsPublic).ToDictionary(field => field.Name);
                 fieldInfoCache.Add(type, nameToField);
             }
-            if (!propertyInfoCache.TryGetValue(type, out nameToProperty))
+            if (!propertyInfoCache.TryGetValue(type, out Dictionary<string, PropertyInfo> nameToProperty))
             {
                 nameToProperty = type.GetProperties().ToDictionary(p => p.Name);
                 propertyInfoCache.Add(type, nameToProperty);
@@ -340,16 +398,21 @@ namespace SioForgeCAD.JSONParser
             for (int i = 0; i < elems.Count; i += 2)
             {
                 if (elems[i].Length <= 2)
+                {
                     continue;
+                }
+
                 string key = elems[i].Substring(1, elems[i].Length - 2);
                 string value = elems[i + 1];
 
-                FieldInfo fieldInfo;
-                PropertyInfo propertyInfo;
-                if (nameToField.TryGetValue(key, out fieldInfo))
+                if (nameToField.TryGetValue(key, out FieldInfo fieldInfo))
+                {
                     fieldInfo.SetValue(instance, ParseValue(fieldInfo.FieldType, value));
-                else if (nameToProperty.TryGetValue(key, out propertyInfo))
+                }
+                else if (nameToProperty.TryGetValue(key, out PropertyInfo propertyInfo))
+                {
                     propertyInfo.SetValue(instance, ParseValue(propertyInfo.PropertyType, value), null);
+                }
             }
 
             return instance;

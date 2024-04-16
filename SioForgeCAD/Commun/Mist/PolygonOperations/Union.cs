@@ -224,28 +224,26 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                Polyline PolyHoleBoundary = polyHole.Boundary;
-
-                if (RequestAllowMarginError)
-                {
-                    PolyHoleBoundary = PolyHoleBoundary.SmartOffset(Margin).First();
-                }
-
+                using Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline;
 
                 List<Polyline> list = HoleUnionResult.ToList();
                 for (int i = 0; i < list.Count; i++)
                 {
-                    Polyline ParsedHole = list[i];
+                    using Polyline OriginalUnionResultParsedHole = list[i] as Polyline;
+                    Polyline ParsedHole = OriginalUnionResultParsedHole;
                     if (RequestAllowMarginError)
                     {
-                        ParsedHole = ParsedHole.SmartOffset(-Margin).First();
+                        var OffsetParsedHoleCollection = ParsedHole.SmartOffset(-Margin).ToList();
+                        ParsedHole = OffsetParsedHoleCollection.First();
+                        OffsetParsedHoleCollection.Remove(ParsedHole);
+                        OffsetParsedHoleCollection.DeepDispose();
                     }
 
                     if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
                     {
                         HoleUnionResult.Remove(list[i]);
 
-                        if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
+                        if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), [PolyHoleBoundary], out var SubResult))
                         {
                             foreach (var item in SubResult.GetBoundaries())
                             {
@@ -263,7 +261,6 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-
             //Remove part that is leaving inside 2 polygon, they will be calculated after. 
             foreach (var Hole in HoleUnionResult.ToList())
             {
@@ -336,7 +333,7 @@ namespace SioForgeCAD.Commun
 
             polyHole.Boundary.Dispose();
 
-            if (OffsetCurve.Count() == 1)
+            if (OffsetCurve.Count == 1)
             {
                 polyHole.Boundary = OffsetCurve.First();
                 polyHoles.Add(polyHole);

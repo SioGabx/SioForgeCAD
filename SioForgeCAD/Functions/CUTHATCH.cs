@@ -37,9 +37,9 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            
 
-            ed.SetImpliedSelection(new ObjectId[0]);
+
+            ed.SetImpliedSelection(Array.Empty<ObjectId>());
 
             Polyline CutLine = GetCutPolyline(HatchPolyHole.Boundary, out PromptStatus promptResult);
             if (promptResult == PromptStatus.Keyword)
@@ -98,7 +98,8 @@ namespace SioForgeCAD.Functions
                             //Parse the first in list, if there is no new cut, this is the same as NewBoundary
                             Polyline SubstractedNewBoundary = SubResult[0].Boundary;
                             NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
-                            if (NewBoundary != SubstractedNewBoundary) { 
+                            if (NewBoundary != SubstractedNewBoundary)
+                            {
                                 //NewBoundary.Dispose(); 
                             }
 
@@ -295,7 +296,7 @@ namespace SioForgeCAD.Functions
                             {
                                 continue;
                             }
-                            
+
                             if (IsValidCutLine(Boundary, polyline))
                             {
                                 return polyline;

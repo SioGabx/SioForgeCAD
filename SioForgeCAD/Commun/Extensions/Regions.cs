@@ -230,9 +230,13 @@ namespace SioForgeCAD.Commun.Extensions
                             }
                         }
                         if (loop.LoopType == LoopType.LoopExterior)
+                        {
                             yield return (HatchLoopTypes.External, edgePtrCollection, edgeTypeCollection);
+                        }
                         else
+                        {
                             yield return (HatchLoopTypes.Default, edgePtrCollection, edgeTypeCollection);
+                        }
                     }
                 }
             }

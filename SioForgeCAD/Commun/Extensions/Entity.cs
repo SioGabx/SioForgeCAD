@@ -23,19 +23,17 @@ namespace SioForgeCAD.Commun.Extensions
         public static void EraseObject(this Entity ObjectToErase)
         {
             Document doc = Generic.GetDocument();
-            using (Transaction tr = doc.TransactionManager.StartTransaction())
+            using Transaction tr = doc.TransactionManager.StartTransaction();
+            if (ObjectToErase.IsErased)
             {
-                if (ObjectToErase.IsErased)
-                {
-                    return;
-                }
-                ObjectToErase.UpgradeOpen();
-                if (!ObjectToErase.IsErased)
-                {
-                    ObjectToErase.Erase(true);
-                }
-                tr.Commit();
+                return;
             }
+            ObjectToErase.UpgradeOpen();
+            if (!ObjectToErase.IsErased)
+            {
+                ObjectToErase.Erase(true);
+            }
+            tr.Commit();
         }
 
         public static void CopyPropertiesTo(this Entity Origin, Entity Target)
@@ -140,11 +138,11 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                if (ent is Polyline) { return ((Polyline)ent).Area; }
-                if (ent is Hatch) { return ((Hatch)ent).Area; }
-                if (ent is Circle) { return ((Circle)ent).Area; }
-                if (ent is Ellipse) { return ((Ellipse)ent).Area; }
-                if (ent is Region) { return ((Region)ent).Area; }
+                if (ent is Polyline polyline) { return polyline.Area; }
+                if (ent is Hatch hatch) { return hatch.Area; }
+                if (ent is Circle circle) { return circle.Area; }
+                if (ent is Ellipse ellipse) { return ellipse.Area; }
+                if (ent is Region region) { return region.Area; }
             }
             catch (Exception ex)
             {
@@ -208,32 +206,25 @@ namespace SioForgeCAD.Commun.Extensions
         public static void AddXData(Entity ent, TypedValue typedValue)
         {
             Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+            using Transaction tr = db.TransactionManager.StartTransaction();
+            ent.UpgradeOpen();
+
+            RegAppTable regTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
+            string AppName = Generic.GetExtensionDLLName();
+            if (!regTable.Has(AppName))
             {
-                ent.UpgradeOpen();
-
-                RegAppTable regTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
-                string AppName = Generic.GetExtensionDLLName();
-                if (!regTable.Has(AppName))
+                regTable.UpgradeOpen();
+                RegAppTableRecord app = new RegAppTableRecord
                 {
-                    regTable.UpgradeOpen();
-                    RegAppTableRecord app = new RegAppTableRecord();
-                    app.Name = AppName;
-                    regTable.Add(app);
-                    tr.AddNewlyCreatedDBObject(app, true);
-                }
-                //https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-A2A628B0-3699-4740-A215-C560E7242F63
-                if (typedValue == null)
-                {
-                    ent.XData = new ResultBuffer(new TypedValue(1001, AppName));
-                }
-                else
-                {
-                    ent.XData = new ResultBuffer(new TypedValue(1001, AppName), typedValue);
-                }
-
-                tr.Commit();
+                    Name = AppName
+                };
+                regTable.Add(app);
+                tr.AddNewlyCreatedDBObject(app, true);
             }
+            //https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-A2A628B0-3699-4740-A215-C560E7242F63
+            ent.XData = new ResultBuffer(new TypedValue(1001, AppName), typedValue);
+
+            tr.Commit();
         }
 
 

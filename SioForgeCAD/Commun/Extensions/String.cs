@@ -48,7 +48,11 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string RemoveDiacritics(this string str)
         {
-            if (null == str) return null;
+            if (null == str)
+            {
+                return null;
+            }
+
             var chars = str
                 .Normalize(NormalizationForm.FormD)
                 .ToCharArray()

@@ -80,8 +80,16 @@ namespace SioForgeCAD.Commun
                 AllowDuplicates = false
             };
             PromptSelectionResult pointSelectionResult = ed.GetSelection(SelectPointsPromptOption, PointSelectionFilter);
-            if (pointSelectionResult.Status == PromptStatus.Error) return;
-            if (pointSelectionResult.Status == PromptStatus.Cancel) return;
+            if (pointSelectionResult.Status == PromptStatus.Error)
+            {
+                return;
+            }
+
+            if (pointSelectionResult.Status == PromptStatus.Cancel)
+            {
+                return;
+            }
+
             SelectionSet pointSelectionSet = pointSelectionResult.Value;
             int numberOfPoints = pointSelectionSet.Count;
             if (numberOfPoints < 3)
@@ -130,10 +138,12 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
             }
             if (IgnoredPointWithSameCoordinatesCount > 0)
+            {
                 ed.WriteMessage(
                   "\nIgnored {0} point(s) with same coordinates.",
                   IgnoredPointWithSameCoordinatesCount
                 );
+            }
 
 
             // Supertriangle
@@ -141,10 +151,25 @@ namespace SioForgeCAD.Commun
             yMin = yCoordinates[0]; yMax = yMin;
             for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
             {
-                if (xCoordinates[PtsIndex] < xMin) xMin = xCoordinates[PtsIndex];
-                if (xCoordinates[PtsIndex] > xMax) xMax = xCoordinates[PtsIndex];
-                if (yCoordinates[PtsIndex] < xMin) yMin = yCoordinates[PtsIndex];
-                if (yCoordinates[PtsIndex] > xMin) yMax = yCoordinates[PtsIndex];
+                if (xCoordinates[PtsIndex] < xMin)
+                {
+                    xMin = xCoordinates[PtsIndex];
+                }
+
+                if (xCoordinates[PtsIndex] > xMax)
+                {
+                    xMax = xCoordinates[PtsIndex];
+                }
+
+                if (yCoordinates[PtsIndex] < xMin)
+                {
+                    yMin = yCoordinates[PtsIndex];
+                }
+
+                if (yCoordinates[PtsIndex] > xMin)
+                {
+                    yMax = yCoordinates[PtsIndex];
+                }
             }
             deltaX = xMax - xMin; deltaY = yMax - yMin;
             xMid = (xMin + xMax) / 2; yMid = (yMin + yMax) / 2;
@@ -310,11 +335,14 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
             }
             if (thinTriangleFoundCount > 0)
+            {
                 ed.WriteMessage(
                   "\nWarning! {0} thin triangle(s) found!" +
                   " Wrong result possible!",
                   thinTriangleFoundCount
                 );
+            }
+
             Application.UpdateScreen();
         }
     }

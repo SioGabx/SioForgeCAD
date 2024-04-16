@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,7 @@ namespace SioForgeCAD.Commun
             BaseCutLine.Elevation = BasePolyline.Elevation;
             //BasePolyline.Cleanup();
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
-           
+
             //InsideCutLines.AddToDrawing(5, true);
             List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
             foreach (Polyline CutLine in InsideCutLines)
