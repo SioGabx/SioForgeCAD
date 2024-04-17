@@ -411,26 +411,26 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)
         {
-            var poly = ArgPoly.Clone() as Polyline;
-            if (poly.Area <= Generic.MediumTolerance.EqualPoint)
+            using (var poly = ArgPoly.Clone() as Polyline)
             {
-                return Array.Empty<Polyline>();
-            }
-            poly.Closed = true;
+                if (poly.Area <= Generic.MediumTolerance.EqualPoint)
+                {
+                    return Array.Empty<Polyline>();
+                }
+                poly.Closed = true;
 
-            //Forcing close can result in weird point, we need to cleanup these before executing a offset
-            poly.Cleanup();
+                //Forcing close can result in weird point, we need to cleanup these before executing a offset
+                poly.Cleanup();
 
-            using (poly)
-            {
                 IEnumerable<Polyline> OffsetResult = InternalSmartOffset(poly);
-                if (OffsetResult.Count() == 0)
+                if (!OffsetResult.Any())
                 {
                     poly.Inverse();
                     OffsetResult = InternalSmartOffset(poly);
                 }
                 return OffsetResult;
             }
+
             IEnumerable<Polyline> InternalSmartOffset(Polyline InternalPoly)
             {
                 List<Polyline> OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();

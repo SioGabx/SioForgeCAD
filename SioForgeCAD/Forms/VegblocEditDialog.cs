@@ -18,9 +18,7 @@ namespace SioForgeCAD.Forms
             if (Ctrl is TextBox textbox)
             {
                 value = textbox.Text;
-            }
-
-            if (Ctrl is ComboBox combobox)
+            }else if (Ctrl is ComboBox combobox)
             {
                 value = combobox.Text;
             }
