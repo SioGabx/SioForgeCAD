@@ -421,14 +421,16 @@ namespace SioForgeCAD.Commun.Extensions
             //Forcing close can result in weird point, we need to cleanup these before executing a offset
             poly.Cleanup();
 
-            IEnumerable<Polyline> OffsetResult = InternalSmartOffset(poly);
-            if (OffsetResult.Count() == 0)
+            using (poly)
             {
-                poly.Inverse();
-                OffsetResult = InternalSmartOffset(poly);
+                IEnumerable<Polyline> OffsetResult = InternalSmartOffset(poly);
+                if (OffsetResult.Count() == 0)
+                {
+                    poly.Inverse();
+                    OffsetResult = InternalSmartOffset(poly);
+                }
+                return OffsetResult;
             }
-            return OffsetResult;
-
             IEnumerable<Polyline> InternalSmartOffset(Polyline InternalPoly)
             {
                 List<Polyline> OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
@@ -498,7 +500,6 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     item.Cleanup();
                 }
-                InternalPoly.Dispose();
                 return ReturnOffsetMergedPolylineResult;
             }
         }
