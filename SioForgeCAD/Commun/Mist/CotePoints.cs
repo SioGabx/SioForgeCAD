@@ -11,7 +11,7 @@ namespace SioForgeCAD.Commun
 {
     public class CotePoints
     {
-        public static CotePoints Null = null;
+        public static readonly CotePoints Null = null;
         public Points Points { get; }
         public double Altitude { get; }
 
@@ -428,7 +428,7 @@ namespace SioForgeCAD.Commun
                         }
                         else
                         {
-                            throw ex;
+                            throw;
                         }
                     }
                 }

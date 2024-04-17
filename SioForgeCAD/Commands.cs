@@ -9,7 +9,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -61,60 +60,60 @@ namespace SioForgeCAD
 
 
         [CommandMethod("CCI")]
-        public void CCI()
+        public static void CCI()
         {
             new Functions.CCI().Compute();
         }
 
         [CommandMethod("CCP")]
-        public void CCP()
+        public static void CCP()
         {
             new Functions.CCP().Compute();
         }
         [CommandMethod("CCD")]
-        public void CCD()
+        public static void CCD()
         {
             new Functions.CCD().Compute();
         }
 
         [CommandMethod("CCA")]
-        public void CCA()
+        public static void CCA()
         {
             Functions.CCA.Compute();
         }
 
         [CommandMethod("CCXREF", CommandFlags.Redraw)]
-        public void CCXREF()
+        public static void CCXREF()
         {
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
         [CommandMethod("RENBLK", CommandFlags.Redraw)]
-        public void RENBLK()
+        public static void RENBLK()
         {
             Functions.RENBLK.RenameBloc();
         }
 
         [CommandMethod("BLKMAKEUNIQUE", CommandFlags.Redraw)]
-        public void BLKMAKEUNIQUE()
+        public static void BLKMAKEUNIQUE()
         {
             new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
         }
 
         [CommandMethod("BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
-        public void BLKMAKEUNIQUEEACH()
+        public static void BLKMAKEUNIQUEEACH()
         {
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
 
         [CommandMethod("BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
-        public void BLKSETTOBYBBLOCK()
+        public static void BLKSETTOBYBBLOCK()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock();
         }
 
         [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
-        public void DRAWPERPENDICULARLINEFROMPOINT()
+        public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
             Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
         }
@@ -179,35 +178,6 @@ namespace SioForgeCAD
         }
 
 
-        [CommandMethod("SelectInPolyline")]
-        public void SelectInPolylineCmd()
-        {
-            Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
-            PromptEntityOptions peo = new PromptEntityOptions("\nSelect a polyline: ");
-            peo.SetRejectMessage("Only polylines accepted");
-            peo.AddAllowedClass(typeof(Polyline), false);
-            PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
-            ObjectId plId = per.ObjectId;
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            using (Point3dCollection vtcs = new Point3dCollection())
-            {
-                Polyline pl = (Polyline)tr.GetObject(plId, OpenMode.ForRead);
-                (pl.GeometricExtents).ZoomExtents();
-                for (int i = 0; i < pl.NumberOfVertices; i++)
-                    vtcs.Add(pl.GetPoint3dAt(i));
-                tr.Commit();
-                PromptSelectionResult psr = ed.SelectCrossingPolygon(vtcs);
-                if (psr.Status != PromptStatus.OK) return;
-                ObjectId[] ids = psr.Value.GetObjectIds();
-                ed.SetImpliedSelection(ids.Where(id => id != plId).ToArray());
-            }
-        }
-
-
-
         [CommandMethod("RRR", CommandFlags.UsePickSet)]
         public static void RRR()
         {
@@ -216,13 +186,13 @@ namespace SioForgeCAD
 
         [CommandMethod("BLKINSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
         [CommandMethod("INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
-        public void BLKINSEDIT()
+        public static void BLKINSEDIT()
         {
             Functions.BLKINSEDIT.MoveBasePoint();
         }
 
         [CommandMethod("RP2", CommandFlags.Transparent)]
-        public void RP2()
+        public static void RP2()
         {
             Functions.RP2.RotateUCS();
         }
@@ -240,25 +210,25 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("VEGBLOC", CommandFlags.Modal)]
-        public void VEGBLOC()
+        public static void VEGBLOC()
         {
             Functions.VEGBLOC.Create();
         }
 
         [CommandMethod("VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
-        public void VEGBLOCEDIT()
+        public static void VEGBLOCEDIT()
         {
             Functions.VEGBLOCEDIT.Edit();
         }
 
         [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
-        public void VEGBLOCCOPYGRIP()
+        public static void VEGBLOCCOPYGRIP()
         {
             Functions.VEGBLOCCOPYGRIP.AddGrip();
         }
 
         [CommandMethod("VEGBLOCLEGEND", CommandFlags.UsePickSet)]
-        public void VEGBLOCLEGEND()
+        public static void VEGBLOCLEGEND()
         {
             Functions.VEGBLOCLEGEND.Add();
         }
@@ -296,20 +266,9 @@ namespace SioForgeCAD
 
 
         [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
-        public void SCALEBY()
+        public static void SCALEBY()
         {
             Functions.SCALEBY.ScaleBy();
-        }
-
-        [CommandMethod("FORCEPOINTTOBEONSCREENBOUNDS_ON", CommandFlags.Transparent)]
-        public void FORCEPOINTTOBEONSCREENBOUNDS_ON()
-        {
-            Functions.FORCEPOINTTOBEONSCREENBOUNDS.Enable();
-        }
-        [CommandMethod("FORCEPOINTTOBEONSCREENBOUNDS_OFF", CommandFlags.Transparent)]
-        public void FORCEPOINTTOBEONSCREENBOUNDS_OFF()
-        {
-            Functions.FORCEPOINTTOBEONSCREENBOUNDS.Disable();
         }
 
 
@@ -346,10 +305,9 @@ namespace SioForgeCAD
         //    Functions.MERGEPOLYLIGNES.MergeUsingRegion();
         //}
         [CommandMethod("POLYLINEISCLOCKWISE", CommandFlags.UsePickSet)]
-        public void ISCLOCKWISE()
+        public static void ISCLOCKWISE()
         {
             var ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
             var result = ed.GetPolyline("Selectionnez une polyligne");
             if (result == null)
             {
@@ -372,7 +330,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("POLYCLEAN", CommandFlags.UsePickSet)]
-        public void POLYCLEAN()
+        public static void POLYCLEAN()
         {
             Functions.POLYCLEAN.PolyClean();
         }
@@ -497,7 +455,7 @@ namespace SioForgeCAD
 
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
-        public void TESTSHRINKOFFSET()
+        public static void TESTSHRINKOFFSET()
         {
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
@@ -506,8 +464,10 @@ namespace SioForgeCAD
                 var poly = ed.GetPolyline("Selectionnez une polyligne");
                 int NumberOfVerticesBefore = poly.NumberOfVertices;
                 poly.UpgradeOpen();
-                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Distance");
-                promptDoubleOptions.DefaultValue = -0.01;
+                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Distance")
+                {
+                    DefaultValue = -0.01
+                };
                 var value = ed.GetDouble(promptDoubleOptions);
                 if (value.Status != PromptStatus.OK) { return; }
                 var curve = poly.SmartOffset(value.Value);
@@ -550,7 +510,7 @@ namespace SioForgeCAD
 
 
         [CommandMethod("DEBUG", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
-        public void GENERATEBOUNDINGBOX()
+        public static void GENERATEBOUNDINGBOX()
         {
 
             Editor ed = Generic.GetEditor();
@@ -566,13 +526,13 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
-        public void TRIANGLECC()
+        public static void TRIANGLECC()
         {
             Commun.Triangulate.TriangulateCommand();
         }
 
         [CommandMethod("DEBUG", "READXDATA", CommandFlags.UsePickSet)]
-        public void READXDATA()
+        public static void READXDATA()
         {
 
             var ed = Generic.GetEditor();

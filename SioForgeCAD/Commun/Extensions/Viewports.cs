@@ -21,7 +21,8 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return new IntegerCollection() { };
             }
-            IList<int> vps = new List<int>();
+
+            List<int> vps = new List<int>();
 
             Transaction tr = db.TransactionManager.StartTransaction();
             using (tr)

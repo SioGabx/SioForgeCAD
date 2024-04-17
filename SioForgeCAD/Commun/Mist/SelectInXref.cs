@@ -23,7 +23,7 @@ namespace SioForgeCAD.Commun
             PromptNestedEntityResult nestedEntRes = ed.GetNestedEntity(nestedEntOpt);
             if (nestedEntRes.Status != PromptStatus.OK)
             {
-                return (new ObjectId[0], ObjectId.Null, nestedEntRes.Status);
+                return (System.Array.Empty<ObjectId>(), ObjectId.Null, nestedEntRes.Status);
             }
             (ObjectId[] XrefObjectId, ObjectId SelectedObjectId) = nestedEntRes.GetEntityInChildXref();
             return (XrefObjectId, SelectedObjectId, nestedEntRes.Status);

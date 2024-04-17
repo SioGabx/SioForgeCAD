@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -156,16 +155,16 @@ namespace SioForgeCAD.Commun
                 return polyline;
             }
 
-            private void DebugDraw()
-            {
-                Polyline poly = GetBox();
-                poly.AddToDrawing();
-                MText text = new MText();
-                text.Location = CenterPoint;
-                text.TextHeight = 0.1;
-                text.Contents = DistanceFromCenterToPolygon.ToString();
-                text.AddToDrawing();
-            }
+            //private void DebugDraw()
+            //{
+            //    Polyline poly = GetBox();
+            //    poly.AddToDrawing();
+            //    MText text = new MText();
+            //    text.Location = CenterPoint;
+            //    text.TextHeight = 0.1;
+            //    text.Contents = DistanceFromCenterToPolygon.ToString();
+            //    text.AddToDrawing();
+            //}
 
             //distance from point to polygon outline (negative if point is outside)
             private double PointToPolygonDist(Point3d Point, Polyline polygon, Point3dCollection PtnsCollection)

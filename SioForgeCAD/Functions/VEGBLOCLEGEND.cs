@@ -72,14 +72,16 @@ namespace SioForgeCAD.Functions
                             BlockReference.TransformBy(scaleMatrix);
 
                             Point3d textPosition = BlockReference.Position + new Vector3d(1.5, 0, 0);
-                            MText text = new MText();
-                            text.Contents = name.Split('_').Last();
-                            text.Location = textPosition;
-                            text.Height = 0.1;
-                            text.TextHeight = 0.1;
-                            text.Attachment = AttachmentPoint.MiddleLeft;
-                            text.Normal = Vector3d.ZAxis;
-                            text.Rotation = 0;
+                            MText text = new MText
+                            {
+                                Contents = name.Split('_').Last(),
+                                Location = textPosition,
+                                Height = 0.1,
+                                TextHeight = 0.1,
+                                Attachment = AttachmentPoint.MiddleLeft,
+                                Normal = Vector3d.ZAxis,
+                                Rotation = 0
+                            };
                             text.AddToDrawingCurrentTransaction();
 
                         }

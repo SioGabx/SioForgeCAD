@@ -217,8 +217,10 @@ namespace SioForgeCAD.Commun.Extensions
                 if (!regTable.Has(AppName))
                 {
                     regTable.UpgradeOpen();
-                    RegAppTableRecord app = new RegAppTableRecord();
-                    app.Name = AppName;
+                    RegAppTableRecord app = new RegAppTableRecord
+                    {
+                        Name = AppName
+                    };
                     regTable.Add(app);
                     tr.AddNewlyCreatedDBObject(app, true);
                 }

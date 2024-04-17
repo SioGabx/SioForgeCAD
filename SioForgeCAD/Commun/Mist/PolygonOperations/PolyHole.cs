@@ -51,6 +51,7 @@ namespace SioForgeCAD.Commun
         {
             Boundary.Dispose();
             Holes.DeepDispose();
+            GC.SuppressFinalize(this);
         }
     }
 

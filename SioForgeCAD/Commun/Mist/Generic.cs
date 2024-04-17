@@ -12,8 +12,8 @@ namespace SioForgeCAD.Commun
 {
     public static class Generic
     {
-        public static Tolerance LowTolerance = new Tolerance(1e-3, 1e-3); //0.001
-        public static Tolerance MediumTolerance = new Tolerance(1e-5, 1e-5); //0.00001
+        public static readonly Tolerance LowTolerance = new Tolerance(1e-3, 1e-3); //0.001
+        public static readonly Tolerance MediumTolerance = new Tolerance(1e-5, 1e-5); //0.00001
         public static void ReadWriteToFileResource(string name, string ToFilePath)
         {
             // Determine path

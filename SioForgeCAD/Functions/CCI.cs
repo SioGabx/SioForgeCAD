@@ -44,7 +44,7 @@ namespace SioForgeCAD.Functions
                         }
                         else
                         {
-                            KeyWords = new string[] { };
+                            KeyWords = Array.Empty<string>();
                         }
                         var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez les emplacements des points cote", Points.Null, KeyWords);
                         Points Indermediaire = InsertionTransientPointsValues.Point;

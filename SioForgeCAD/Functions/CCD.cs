@@ -93,7 +93,7 @@ namespace SioForgeCAD.Functions
         }
 
 
-        private double? GetSlopeValue()
+        private static double? GetSlopeValue()
         {
             Editor ed = Generic.GetEditor();
             PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions($"\nIndiquez un pourcentage de pente (chiffres négatifs pour descendre)")

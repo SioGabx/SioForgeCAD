@@ -50,7 +50,7 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     entity.ColorIndex = (int)ColorIndex;
                 }
-                
+
                 acBlkTblRec.AppendEntity(entity);
                 acTrans.AddNewlyCreatedDBObject(entity, true);
                 acTrans.Commit();

@@ -25,6 +25,9 @@
     <StartProgram>C:\Program Files\Autodesk\AutoCAD 2021\acad.exe</StartProgram>
     <StartArguments>/nologo /b "start.scr"</StartArguments>
   </PropertyGroup>
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -208,7 +211,6 @@
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
-    <Compile Include="Functions\FORCEPOINTTOBEONSCREENBOUNDS.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\MERGEPOLYLIGNES.cs" />
     <Compile Include="Functions\POLYCLEAN.cs" />
@@ -227,6 +229,7 @@
     <Compile Include="Functions\VEGBLOCEDIT.cs" />
     <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VPLOCK.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -276,6 +279,10 @@
     <Content Include="icon.ico" />
     <Content Include="Ressources\checked.png" />
     <Content Include="Ressources\RainBowRamp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

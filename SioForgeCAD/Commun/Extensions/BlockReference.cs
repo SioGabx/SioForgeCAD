@@ -136,10 +136,10 @@ namespace SioForgeCAD.Commun.Extensions
             Transaction tr = Generic.GetDatabase().TransactionManager.TopTransaction;
             foreach (AttributeReference attRef in target.AttributeCollection.GetObjects())
             {
-                if (attribs.ContainsKey(attRef.Tag))
+                if (attribs.TryGetValue(attRef.Tag, out string value))
                 {
                     tr.GetObject(attRef.ObjectId, OpenMode.ForWrite);
-                    attRef.TextString = attribs[attRef.Tag];
+                    attRef.TextString = value;
                 }
             }
         }

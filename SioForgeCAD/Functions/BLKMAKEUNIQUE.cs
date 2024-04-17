@@ -44,7 +44,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                     selectedBlockIds = per.Value.GetObjectIds();
-                    ed.SetImpliedSelection(new ObjectId[0]);
+                    ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
                 }
                 else
                 {
@@ -99,9 +99,9 @@ namespace SioForgeCAD.Functions
 
         private string GetUniqueBlockName(string oldName)
         {
-            if (RegroupBlockDefinitionIfSameName && RenamedBlockNames.ContainsKey(oldName))
+            if (RegroupBlockDefinitionIfSameName && RenamedBlockNames.TryGetValue(oldName, out string value))
             {
-                return RenamedBlockNames[oldName];
+                return value;
             }
             string newName = BlockReferences.GetUniqueBlockName(oldName);
             if (RegroupBlockDefinitionIfSameName)

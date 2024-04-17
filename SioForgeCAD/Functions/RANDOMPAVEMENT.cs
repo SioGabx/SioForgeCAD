@@ -164,7 +164,6 @@ namespace SioForgeCAD.Functions
 
         private static bool GetPavementsParameters(out ProportionalRandomSelector<List<(int, int)>> randomSelector)
         {
-            randomSelector = null;
             if (!GetProportionalRandomSelector(out randomSelector)) { return false; }
             if (!GetDouble("Indiquez le taux de remplissage de 0 à 100%", ref PavementFill)) { return false; }
             return true;

@@ -122,7 +122,7 @@ namespace SioForgeCAD.Commun
             return;
         }
 
-        public void RedrawTransEntities(Drawable entity)
+        public static void RedrawTransEntities(Drawable entity)
         {
             TransientManager.CurrentTransientManager.UpdateTransient(entity, new IntegerCollection());
         }
@@ -248,6 +248,8 @@ namespace SioForgeCAD.Commun
             DisposeStaticDrawable();
 
             ClearTransGraphics();
+
+            GC.SuppressFinalize(this);
         }
     }
 

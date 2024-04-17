@@ -1,10 +1,10 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -400,7 +400,7 @@ namespace SioForgeCAD.Commun.Extensions
             var poly = ArgPoly.Clone() as Polyline;
             if (poly.Area <= Generic.MediumTolerance.EqualPoint)
             {
-                return new Polyline[] { };
+                return Array.Empty<Polyline>();
             }
             poly.Closed = true;
 

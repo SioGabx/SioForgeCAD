@@ -12,7 +12,7 @@ namespace SioForgeCAD.Forms
         }
 
 
-        private bool HasError(Control Ctrl)
+        private static bool HasError(Control Ctrl)
         {
             string value = null;
             if (Ctrl is TextBox)

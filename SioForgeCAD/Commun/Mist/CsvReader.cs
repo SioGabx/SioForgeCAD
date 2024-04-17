@@ -172,7 +172,6 @@ namespace SioForgeCAD.Commun.Mist
             {
                 if (idx < fieldsCount)
                 {
-                    var f = fields[idx];
                     return fields[idx].GetValue(buffer);
                 }
                 return null;
@@ -384,7 +383,7 @@ namespace SioForgeCAD.Commun.Mist
                 return len > 0 ? GetString(buf, Start, len) : String.Empty;
             }
 
-            private string GetString(char[] buf, int start, int len)
+            private static string GetString(char[] buf, int start, int len)
             {
                 var bufLen = buf.Length;
                 start = start < bufLen ? start : start % bufLen;

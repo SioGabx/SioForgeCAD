@@ -112,7 +112,7 @@ namespace SioForgeCAD.Functions
                         }
                     }
 
-                    ed.SetImpliedSelection(new ObjectId[0]);
+                    ed.SetImpliedSelection(Array.Empty<ObjectId>());
                     ed.SetImpliedSelection(SelectedBlocObjectIdArray.ToArray());
                     tr.Commit();
                 }

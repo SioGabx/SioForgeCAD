@@ -256,7 +256,7 @@ namespace SioForgeCAD.Commun
                 PolyHoleBoundary.Dispose();
             }
 
-            
+
 
             //Remove part that is leaving inside 2 polygon, they will be calculated after. 
             foreach (var Hole in HoleUnionResult.ToList())
@@ -329,7 +329,7 @@ namespace SioForgeCAD.Commun
 
             polyHole.Boundary.Dispose();
 
-            if (OffsetCurve.Count() == 1)
+            if (OffsetCurve.Count == 1)
             {
                 polyHole.Boundary = OffsetCurve.First();
                 polyHoles.Add(polyHole);

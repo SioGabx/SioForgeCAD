@@ -29,10 +29,7 @@ namespace SioForgeCAD.Commun
         {
             try
             {
-                if (HightLightedObject.Contains(ObjectId))
-                {
-                    HightLightedObject.Remove(ObjectId);
-                }
+                HightLightedObject.Remove(ObjectId);
                 ObjectId.GetEntity().Unhighlight();
             }
             catch (Exception ex)

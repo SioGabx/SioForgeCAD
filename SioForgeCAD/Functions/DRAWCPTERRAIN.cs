@@ -27,7 +27,7 @@ namespace SioForgeCAD.Functions
         }
 
 
-        private Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
+        private static Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
         {
             List<Line> ListOfPerpendicularLines = null;
             try

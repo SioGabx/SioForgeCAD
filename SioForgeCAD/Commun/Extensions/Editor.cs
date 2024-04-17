@@ -63,7 +63,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
-            objectId = new ObjectId[0];
+            objectId = Array.Empty<ObjectId>();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
