@@ -56,9 +56,14 @@ namespace SioForgeCAD.Functions
                 //expand FirstHachurePolyHole Boundary and shrink holes
                 //Redo all previous check
 
-
-                if (PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true))
+                bool UnionSuccess = PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true);
+                if (!UnionSuccess)
                 {
+                    Generic.WriteMessage("Impossible de merger ces hachures. Veuillez verifier qu'elles se superposent");
+                }
+                else
+                {
+
                     foreach (PolyHole item in unionResult)
                     {
                         //Apply the hatch inside
@@ -74,11 +79,6 @@ namespace SioForgeCAD.Functions
                     DeleteOldHatch(FirstHachure);
                     DeleteOldHatch(SecondHachure);
                 }
-                else
-                {
-                    Generic.WriteMessage("Impossible de merger ces hachures. Vérifiez qu'elles se chevauchent");
-                }
-
                 FirstHachurePolyHole.Dispose();
                 SecondHachurePolyHole.Dispose();
                 tr.Commit();

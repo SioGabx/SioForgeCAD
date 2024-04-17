@@ -423,9 +423,13 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 poly.Inverse();
             }
+            if (ShrinkDistance < 0)
+            {
+                poly.AddToDrawing(1, true);
+            }
 
-            //Forcing close can result in weird point, we need to cleanup these before executing a offset
-            poly.Cleanup();
+                //Forcing close can result in weird point, we need to cleanup these before executing a offset
+                poly.Cleanup();
             List<Polyline> OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
 
             if (OffsetPolylineResult.Count == 0)
@@ -481,10 +485,6 @@ namespace SioForgeCAD.Commun.Extensions
                 poly.Cleanup();
 
                 OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
-                if (OffsetPolylineResult.Count == 0)
-                {
-                    poly.AddToDrawing(1, true);
-                }
             }
 
             var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();

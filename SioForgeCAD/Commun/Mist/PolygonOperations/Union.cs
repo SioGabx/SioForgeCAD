@@ -193,17 +193,21 @@ namespace SioForgeCAD.Commun
             {
                 var UnionResultCopy = UnionResult.ToList();
                 //Offset the PolyHole boundary so you can merge a nearly touching polyline
+                
+                if (UnionResultCopy.Count == 0)
+                {
+                    return false;
+                }
                 for (int i = 0; i < UnionResultCopy.Count; i++)
                 {
                     PolyHole PolyHole = UnionResultCopy[i];
                     UnionResult.Remove(PolyHole);
                     var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
-
+                    if (UndoMargin.Count == 0)
+                    {
+                        return false;
+                    }
                     UnionResult.AddRange(UndoMargin);
-                }
-                if (UnionResultCopy.Count == 0)
-                {
-                    return false;
                 }
             }
             return true;
@@ -322,7 +326,7 @@ namespace SioForgeCAD.Commun
             }
             if (OffsetCurve.Count == 0)
             {
-                (polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
+                //(polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
                 Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}. Un contour de la courbe à été dessinée");
                 return polyHoles;
                 throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
