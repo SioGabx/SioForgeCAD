@@ -138,13 +138,24 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static double TryGetArea(this Entity ent)
         {
+            if (ent == null || ent.IsDisposed)
+            {
+                return 0;
+            }
             try
             {
-                if (ent is Polyline) { return ((Polyline)ent).Area; }
-                if (ent is Hatch) { return ((Hatch)ent).Area; }
-                if (ent is Circle) { return ((Circle)ent).Area; }
-                if (ent is Ellipse) { return ((Ellipse)ent).Area; }
-                if (ent is Region) { return ((Region)ent).Area; }
+                switch (ent) { 
+                    case Polyline _: 
+                        return ((Polyline)ent).Area; 
+                    case Hatch _: 
+                        return ((Hatch)ent).Area; 
+                    case Circle _: 
+                        return ((Circle)ent).Area; 
+                    case Ellipse _: 
+                        return ((Ellipse)ent).Area; 
+                    case Region _: 
+                        return ((Region)ent).Area; 
+                }
             }
             catch (Exception ex)
             {

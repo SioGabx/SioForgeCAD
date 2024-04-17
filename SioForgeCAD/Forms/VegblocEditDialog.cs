@@ -15,18 +15,18 @@ namespace SioForgeCAD.Forms
         private static bool HasError(Control Ctrl)
         {
             string value = null;
-            if (Ctrl is TextBox)
+            if (Ctrl is TextBox textbox)
             {
-                value = ((TextBox)Ctrl).Text;
+                value = textbox.Text;
             }
 
-            if (Ctrl is ComboBox)
+            if (Ctrl is ComboBox combobox)
             {
-                value = ((ComboBox)Ctrl).Text;
+                value = combobox.Text;
             }
             if (string.IsNullOrWhiteSpace(value))
             {
-                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("Veuillez completer l'ensemble des champs");
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Veuillez completer l'ensemble des champs");
                 Ctrl.Focus();
                 return true;
             }

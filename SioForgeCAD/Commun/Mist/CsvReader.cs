@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun.Mist
     {
 
         public string Delimiter { get; private set; }
-        int delimLength;
+        readonly int delimLength;
 
         /// <summary>
         /// Size of the circular buffer. Buffer size limits max length of the CSV line that can be processed. 
@@ -38,7 +38,7 @@ namespace SioForgeCAD.Commun.Mist
         /// </summary>
         public bool TrimFields { get; set; } = true;
 
-        TextReader rdr;
+        readonly TextReader rdr;
 
         public CsvReader(TextReader rdr) : this(rdr, ",")
         {
