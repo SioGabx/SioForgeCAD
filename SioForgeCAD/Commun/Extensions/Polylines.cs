@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System;
@@ -266,24 +267,33 @@ namespace SioForgeCAD.Commun.Extensions
                         NumberOfVertex += NumberOfVertexPerArc;
                     }
                 }
+                var NewPoly = new Polyline();
 
-                using (var Spline = poly.GetSpline())
+                for (int VerticeIndex = 0; VerticeIndex < poly.NumberOfVertices; VerticeIndex++)
                 {
-                    Polyline Resultpoly;
-                    if (NumberOfVertexPerArc > 0)
+                    var CurrentPoint = poly.GetPoint3dAt(VerticeIndex);
+                    NewPoly.AddVertex(CurrentPoint);
+                    if (poly.GetSegmentType(VerticeIndex) == SegmentType.Line)
                     {
-                        Resultpoly = Spline.ToPolyline(NumberOfVertex, false, true) as Polyline;
+                        
+                        continue;
                     }
-                    else
+                    else if (poly.GetSegmentType(VerticeIndex) == SegmentType.Arc)
                     {
-                        Resultpoly = Spline.ToPolyline() as Polyline;
+                        var Segment = poly.GetArcSegmentAt(VerticeIndex);
+                        var Arc = Segment.ToCircleOrArc();
+                        var ReelNumberOfVertex = NumberOfVertexPerArc * Math.Max(Math.Abs(poly.GetBulgeAt(VerticeIndex)), 1);
+                        var Interval = (Arc.EndParam - Arc.StartParam) / (ReelNumberOfVertex + 2);
+                        for (int NumberOfInterval = 1; NumberOfInterval < ReelNumberOfVertex + 2; NumberOfInterval++)
+                        {
+                            var Pt = Arc.GetPointAtParam(Arc.StartParam + (Interval * NumberOfInterval));
+                            NewPoly.AddVertex(Pt, 0, 0, 0);
+                        }
                     }
-                    if (Cleanup)
-                    {
-                        Resultpoly.Cleanup();
-                    }
-                    return Resultpoly;
                 }
+
+                NewPoly.Closed = poly.Closed;
+                return NewPoly;
             }
             return poly;
         }

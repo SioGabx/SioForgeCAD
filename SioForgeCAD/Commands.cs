@@ -451,6 +451,31 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
+        public static void CURVEPOLYTOPOLYGON()
+        {
+            Editor ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var poly = ed.GetPolyline("Selectionnez une polyligne");
+                int NumberOfVerticesBefore = poly.NumberOfVertices;
+                poly.UpgradeOpen();
+                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Number Of Segment per Arc")
+                {
+                    DefaultValue = 3
+                };
+                var value = ed.GetDouble(promptDoubleOptions);
+                if (value.Status != PromptStatus.OK) { return; }
+                var Polygon = poly.ToPolygon((uint)value.Value);
+                poly.CopyPropertiesTo(Polygon);
+                Polygon.AddToDrawing(5);
+                poly.EraseObject();
+                tr.Commit();
+            }
+        }
+
+
 
 
 

@@ -98,6 +98,8 @@ namespace SioForgeCAD.Commun
                             SplittedCurves.Remove(SplittedCurve);
                             SplittedCurve.Dispose();
                         }
+                        //NoArcPolyBase.AddToDrawing(1, true);
+                        //PolyBase.Boundary.AddToDrawing(5, true);
                     }
 
                 }
