@@ -150,7 +150,7 @@ namespace SioForgeCAD.Commun
             //GlobalSplittedCurves.AddToDrawing(1, true);
             var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
             GlobalSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
-            //PossibleBoundary.AddToDrawing(6, true);
+            //PossibleBoundary.AddToDrawing(5, true);
 
             //Check if generated union with boundary may result in hole,
             //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
@@ -185,15 +185,15 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            //PossibleBoundary.AddToDrawing(3, true);
-            //Holes.AddToDrawing(5);
+            //PossibleBoundary.AddToDrawing(1, true);
+            //Holes.AddToDrawing(1, true);
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
             if (AllowMarginError)
             {
                 var UnionResultCopy = UnionResult.ToList();
                 //Offset the PolyHole boundary so you can merge a nearly touching polyline
-                
+
                 if (UnionResultCopy.Count == 0)
                 {
                     return false;

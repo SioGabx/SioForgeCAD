@@ -275,19 +275,21 @@ namespace SioForgeCAD.Commun.Extensions
                     NewPoly.AddVertex(CurrentPoint);
                     if (poly.GetSegmentType(VerticeIndex) == SegmentType.Line)
                     {
-                        
+
                         continue;
                     }
                     else if (poly.GetSegmentType(VerticeIndex) == SegmentType.Arc)
                     {
                         var Segment = poly.GetArcSegmentAt(VerticeIndex);
-                        var Arc = Segment.ToCircleOrArc();
-                        var ReelNumberOfVertex = NumberOfVertexPerArc * Math.Max(Math.Abs(poly.GetBulgeAt(VerticeIndex)), 1);
-                        var Interval = (Arc.EndParam - Arc.StartParam) / (ReelNumberOfVertex + 1);
-                        for (int NumberOfInterval = 1; NumberOfInterval < ReelNumberOfVertex + 1; NumberOfInterval++)
+                        using (var Arc = Segment.ToCircleOrArc())
                         {
-                            var Pt = Arc.GetPointAtParam(Arc.StartParam + (Interval * NumberOfInterval));
-                            NewPoly.AddVertex(Pt, 0, 0, 0);
+                            var ReelNumberOfVertex = NumberOfVertexPerArc * Math.Max(Math.Abs(poly.GetBulgeAt(VerticeIndex)), 1);
+                            var Interval = (Arc.EndParam - Arc.StartParam) / (ReelNumberOfVertex + 1);
+                            for (int NumberOfInterval = 1; NumberOfInterval < ReelNumberOfVertex + 1; NumberOfInterval++)
+                            {
+                                var Pt = Arc.GetPointAtParam(Arc.StartParam + (Interval * NumberOfInterval));
+                                NewPoly.AddVertex(Pt, 0, 0, 0);
+                            }
                         }
                     }
                 }
@@ -405,6 +407,8 @@ namespace SioForgeCAD.Commun.Extensions
             return poly;
         }
 
+
+
         public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)
         {
             var poly = ArgPoly.Clone() as Polyline;
@@ -414,89 +418,89 @@ namespace SioForgeCAD.Commun.Extensions
             }
             poly.Closed = true;
 
-            bool IsClockwise = poly.IsClockwise();
-            if (ShrinkDistance < 0 && IsClockwise)
+            //Forcing close can result in weird point, we need to cleanup these before executing a offset
+            poly.Cleanup();
+
+            IEnumerable<Polyline> OffsetResult = InternalSmartOffset(poly);
+            if (OffsetResult.Count() == 0)
             {
                 poly.Inverse();
+                OffsetResult = InternalSmartOffset(poly);
             }
-            else if (ShrinkDistance > 0 && !IsClockwise)
-            {
-                poly.Inverse();
-            }
-            if (ShrinkDistance < 0)
-            {
-                poly.AddToDrawing(1, true);
-            }
+            return OffsetResult;
 
-                //Forcing close can result in weird point, we need to cleanup these before executing a offset
-                poly.Cleanup();
-            List<Polyline> OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
-
-            if (OffsetPolylineResult.Count == 0)
+            IEnumerable<Polyline> InternalSmartOffset(Polyline InternalPoly)
             {
-                //If OffsetPolyline result in no geometry, we need to fix the polyline first : custom cleanup
-                bool HasVertexRemoved = true;
-                while (HasVertexRemoved)
+                List<Polyline> OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
+
+                if (OffsetPolylineResult.Count == 0)
                 {
-                    HasVertexRemoved = false;
-                    int index = 0;
-                    while (index < poly.GetReelNumberOfVertices())
+                    //If OffsetPolyline result in no geometry, we need to fix the polyline first : custom cleanup
+                    bool HasVertexRemoved = true;
+                    while (HasVertexRemoved)
                     {
-                        var CurrentPoint = poly.GetPoint2dAt(index);
-                        int nextPoint = index + 1;
-                        if (nextPoint >= poly.GetReelNumberOfVertices())
+                        HasVertexRemoved = false;
+                        int index = 0;
+                        while (index < InternalPoly.GetReelNumberOfVertices())
                         {
-                            nextPoint = 0;
-                        }
-                        var NextPoint = poly.GetPoint2dAt(nextPoint);
-                        var DistanceBetween = CurrentPoint.GetDistanceTo(NextPoint);
-                        if (poly.GetSegmentType(index) == SegmentType.Line)
-                        {
-                            //Small line that we cant offset;
-                            if (DistanceBetween <= Math.Abs(ShrinkDistance))
+                            var CurrentPoint = InternalPoly.GetPoint2dAt(index);
+                            int nextPoint = index + 1;
+                            if (nextPoint >= InternalPoly.GetReelNumberOfVertices())
                             {
-                                poly.RemoveVertexAt(index);
-                                continue;
+                                nextPoint = 0;
                             }
-                        }
-                        else if (poly.GetSegmentType(index) == SegmentType.Arc)
-                        {
-                            //If there is 0.2 with gap, that mean previous offset generated Arc, we need to remove those.
-                            var Segment = poly.GetArcSegmentAt(index);
-                            //Multiply by 2 + 5% of error margin
-                            if (DistanceBetween <= Math.Abs(ShrinkDistance) * 2.05)
+                            var NextPoint = InternalPoly.GetPoint2dAt(nextPoint);
+                            var DistanceBetween = CurrentPoint.GetDistanceTo(NextPoint);
+                            if (InternalPoly.GetSegmentType(index) == SegmentType.Line)
                             {
-                                var Arc = Segment.ToCircleOrArc();
-                                var ArcMidPoint = Arc.GetPointAtParam((Arc.StartParam + Arc.EndParam) / 2);
-                                var SegMidPoint = CurrentPoint.GetMiddlePoint(NextPoint);
-
-                                var NewPoint = ArcMidPoint.TransformBy(Matrix3d.Displacement(SegMidPoint.GetVectorTo(ArcMidPoint).SetLength(Math.Abs(ShrinkDistance * 100))));
-
-                                poly.SetBulgeAt(index, 0);
-                                poly.AddVertexAt(index + 1, NewPoint.ToPoint2d(), 0, 0, 0);
-                                continue;
+                                //Small line that we cant offset;
+                                if (DistanceBetween <= Math.Abs(ShrinkDistance))
+                                {
+                                    InternalPoly.RemoveVertexAt(index);
+                                    continue;
+                                }
                             }
+                            else if (InternalPoly.GetSegmentType(index) == SegmentType.Arc)
+                            {
+                                //If there is 0.2 with gap, that mean previous offset generated Arc, we need to remove those.
+                                var Segment = InternalPoly.GetArcSegmentAt(index);
+                                //Multiply by 2 + 5% of error margin
+                                if (DistanceBetween <= Math.Abs(ShrinkDistance) * 2.05)
+                                {
+                                    using (var Arc = Segment.ToCircleOrArc())
+                                    {
+                                        var ArcMidPoint = Arc.GetPointAtParam((Arc.StartParam + Arc.EndParam) / 2);
+                                        var SegMidPoint = CurrentPoint.GetMiddlePoint(NextPoint);
+
+                                        var NewPoint = ArcMidPoint.TransformBy(Matrix3d.Displacement(SegMidPoint.GetVectorTo(ArcMidPoint).SetLength(Math.Abs(ShrinkDistance * 100))));
+
+                                        InternalPoly.SetBulgeAt(index, 0);
+                                        InternalPoly.AddVertexAt(index + 1, NewPoint.ToPoint2d(), 0, 0, 0);
+                                        continue;
+                                    }
+                                }
+                            }
+                            index++;
                         }
-                        index++;
                     }
+
+                    //Cleanup the line (NEEDED ! if not in futur please explain why)
+                    InternalPoly.Cleanup();
+
+                    OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
                 }
 
-                //Cleanup the line (NEEDED ! if not in futur please explain why)
-                poly.Cleanup();
-
-                OffsetPolylineResult = poly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
+                var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
+                OffsetPolylineResult.DeepDispose();
+                var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices >= 2).ToList();
+                OffsetMergedPolylineResult.RemoveCommun(ReturnOffsetMergedPolylineResult).DeepDispose();
+                foreach (var item in ReturnOffsetMergedPolylineResult)
+                {
+                    item.Cleanup();
+                }
+                InternalPoly.Dispose();
+                return ReturnOffsetMergedPolylineResult;
             }
-
-            var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
-            OffsetPolylineResult.DeepDispose();
-            var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices >= 2).ToList();
-            OffsetMergedPolylineResult.RemoveCommun(ReturnOffsetMergedPolylineResult).DeepDispose();
-            foreach (var item in ReturnOffsetMergedPolylineResult)
-            {
-                item.Cleanup();
-            }
-            poly.Dispose();
-            return ReturnOffsetMergedPolylineResult;
         }
 
         public static Point3d GetInnerCentroid(this Polyline poly)

@@ -63,7 +63,6 @@ namespace SioForgeCAD.Functions
                 }
                 else
                 {
-
                     foreach (PolyHole item in unionResult)
                     {
                         //Apply the hatch inside
