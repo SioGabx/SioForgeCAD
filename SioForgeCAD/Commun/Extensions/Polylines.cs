@@ -255,7 +255,7 @@ namespace SioForgeCAD.Commun.Extensions
             return spline;
         }
 
-        public static Polyline ToPolygon(this Polyline poly, uint NumberOfVertexPerArc = 0, bool Cleanup = true)
+        public static Polyline ToPolygon(this Polyline poly, uint NumberOfVertexPerArc = 15)
         {
             if (poly.HasBulges)
             {
@@ -283,8 +283,8 @@ namespace SioForgeCAD.Commun.Extensions
                         var Segment = poly.GetArcSegmentAt(VerticeIndex);
                         var Arc = Segment.ToCircleOrArc();
                         var ReelNumberOfVertex = NumberOfVertexPerArc * Math.Max(Math.Abs(poly.GetBulgeAt(VerticeIndex)), 1);
-                        var Interval = (Arc.EndParam - Arc.StartParam) / (ReelNumberOfVertex + 2);
-                        for (int NumberOfInterval = 1; NumberOfInterval < ReelNumberOfVertex + 2; NumberOfInterval++)
+                        var Interval = (Arc.EndParam - Arc.StartParam) / (ReelNumberOfVertex + 1);
+                        for (int NumberOfInterval = 1; NumberOfInterval < ReelNumberOfVertex + 1; NumberOfInterval++)
                         {
                             var Pt = Arc.GetPointAtParam(Arc.StartParam + (Interval * NumberOfInterval));
                             NewPoly.AddVertex(Pt, 0, 0, 0);
@@ -501,7 +501,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3d GetInnerCentroid(this Polyline poly)
         {
-            var polygon = poly.ToPolygon(10, false);
+            var polygon = poly.ToPolygon(10);
             var pt = PolygonOperation.GetInnerCentroid(polygon, 1);
             if (polygon != poly) { polygon?.Dispose(); }
             return pt;

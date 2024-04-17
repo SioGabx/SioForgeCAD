@@ -113,7 +113,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                Polyline NoArcPoly = polyline.ToPolygon();
+                Polyline NoArcPoly = polyline.ToPolygon(15);
                 var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
                 if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
                 return point.ToPoint2d().IsPointInsidePolygonMcMartin(Pnts);
