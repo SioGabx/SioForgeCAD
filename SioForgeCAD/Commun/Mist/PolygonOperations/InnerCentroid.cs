@@ -46,7 +46,7 @@ namespace SioForgeCAD.Commun
             var bestCell = GetCentroidCell(PolylinePolygon, PolygonPtnsCollection);
 
             //special case for rectangular polygons
-            Point3d bboxCellPoint = new Point3d(Extend.MinPoint.X + width / 2, Extend.MinPoint.Y + height / 2, 0);
+            Point3d bboxCellPoint = new Point3d(Extend.MinPoint.X + (width / 2), Extend.MinPoint.Y + (height / 2), 0);
             var bboxCell = new Cell(bboxCellPoint, 0, PolylinePolygon, PolygonPtnsCollection, null);
             if (bboxCell.DistanceFromCenterToPolygon > bestCell.DistanceFromCenterToPolygon) { bestCell = bboxCell; }
 
@@ -91,7 +91,7 @@ namespace SioForgeCAD.Commun
             {
                 var a = PolygonPtnsCollection[i];
                 var b = PolygonPtnsCollection[j];
-                var f = a.X * b.Y - b.X * a.Y;
+                var f = (a.X * b.Y) - (b.X * a.Y);
                 x += (a.X + b.X) * f;
                 y += (a.Y + b.Y) * f;
                 area += f * 3;
@@ -100,7 +100,6 @@ namespace SioForgeCAD.Commun
             return new Cell(new Point3d(x / area, y / area, 0), 0, polygon, PolygonPtnsCollection, false);
         }
 
-
         private class Cell
         {
             public Cell(Point3d pt, double h, Polyline polygon, Point3dCollection PtnsCollection, bool? FullyInside)
@@ -108,7 +107,7 @@ namespace SioForgeCAD.Commun
                 CenterPoint = pt;
                 HalfCellSize = h;
                 DistanceFromCenterToPolygon = PointToPolygonDist(pt, polygon, PtnsCollection);
-                MaxDistanceToPolygonWithingACell = DistanceFromCenterToPolygon + HalfCellSize * Math.Sqrt(2);
+                MaxDistanceToPolygonWithingACell = DistanceFromCenterToPolygon + (HalfCellSize * Math.Sqrt(2));
                 if (FullyInside is null)
                 {
                     IsFullyInside = CheckFullyInside(polygon);

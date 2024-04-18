@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-
 namespace SioForgeCAD.Commun
 {
     public class PolyHole : IDisposable
@@ -24,7 +23,6 @@ namespace SioForgeCAD.Commun
                 Holes = new List<Polyline>();
             }
         }
-
 
         public static List<PolyHole> CreateFromList(IEnumerable<Polyline> polylines, IEnumerable<Polyline> PossibleHole = null)
         {

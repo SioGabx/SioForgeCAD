@@ -14,12 +14,12 @@ namespace SioForgeCAD.Commun
         // Fonction pour trouver le point d'intersection entre une ligne et un vecteur
         public static Point3d FindIntersection(Point3d startPoint, Vector3d vector, Line line)
         {
-            double t = ((line.EndPoint.X - line.StartPoint.X) * (startPoint.Y - line.StartPoint.Y) -
-                        (line.EndPoint.Y - line.StartPoint.Y) * (startPoint.X - line.StartPoint.X)) /
-                        ((line.EndPoint.Y - line.StartPoint.Y) * vector.X - (line.EndPoint.X - line.StartPoint.X) * vector.Y);
+            double t = (((line.EndPoint.X - line.StartPoint.X) * (startPoint.Y - line.StartPoint.Y)) -
+                        ((line.EndPoint.Y - line.StartPoint.Y) * (startPoint.X - line.StartPoint.X))) /
+                        (((line.EndPoint.Y - line.StartPoint.Y) * vector.X) - ((line.EndPoint.X - line.StartPoint.X) * vector.Y));
 
             // Calculer le point d'intersection
-            Point3d intersectionPoint = startPoint + t * vector;
+            Point3d intersectionPoint = startPoint + (t * vector);
             return intersectionPoint;
         }
 
@@ -35,11 +35,6 @@ namespace SioForgeCAD.Commun
             Vector3d perpVector = (m_perp != double.PositiveInfinity) ? new Vector3d(1, m_perp, 0) : new Vector3d(0, 1, 0);
             return PerpendicularPointCurrentSCU - (PerpendicularPointCurrentSCU + perpVector);
         }
-
-
-
-
-
 
         public static List<Line> GetListOfPerpendicularLinesFromPoint(Points BasePoint, Polyline TargetPolyline, bool CheckForSegmentIntersections = true)
         {
@@ -93,8 +88,5 @@ namespace SioForgeCAD.Commun
             }
             return false;
         }
-
-
-
     }
 }

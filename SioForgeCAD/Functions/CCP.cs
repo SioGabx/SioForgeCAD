@@ -95,8 +95,6 @@ namespace SioForgeCAD.Functions
                 EndPoint = FirstPointCoteLocation;
             }
 
-
-
             using (Line acLine = new Line(StartPoint, EndPoint))
             {
                 try

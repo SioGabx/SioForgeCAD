@@ -19,7 +19,7 @@ namespace SioForgeCAD.Functions
         {
             static readonly Random Random = new Random();
             private readonly List<(T Value, int Pourcentage)> percentageItemsDict;
-            public ProportionalRandomSelector() => percentageItemsDict = new List<(T, int)>() { };
+            public ProportionalRandomSelector() => percentageItemsDict = new List<(T, int)>();
 
             public void AddPercentageItem(T item, int percentage) => percentageItemsDict.Add((item, percentage));
 
@@ -64,7 +64,6 @@ namespace SioForgeCAD.Functions
 
                 var TriangleVectors = GetTriangleVectorsBasedFromVectors(BaseLine, DirectionLine);
 
-
                 while (true)
                 {
                     Point3d StartPoint = BaseLine.StartPoint.TransformBy(Matrix3d.Displacement(BaseLine.GetVector3d().Inverse().SetLength(Largeur)));
@@ -72,7 +71,6 @@ namespace SioForgeCAD.Functions
                     Point3d LastDiagonalPoint = StartPoint;
                     Point3d LastDrawingPoint = StartPoint;
                     double BaseLineHeight = (TriangleVectors.ABVector).FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, StartPoint).DistanceTo(BaseLine.EndPoint);
-
 
                     int NumberOfGrid = (int)Math.Ceiling(BaseLineHeight / Largeur);
 
@@ -129,8 +127,6 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-
 
         public static Point3d GetPointOnGridNearestFromBaseLine(Vector3d ACVector, Vector3d ABVector, Vector3d BCVector, double Largeur, ref Point3d LastDiagonalPoint, ref Point3d LastDrawingPoint)
         {
@@ -259,18 +255,4 @@ namespace SioForgeCAD.Functions
             return true;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

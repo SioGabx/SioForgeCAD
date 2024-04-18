@@ -37,7 +37,7 @@ namespace SioForgeCAD.Commun
         {
             ObjectId layerId = entity.LayerId;
             LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
-            return (layerRecord != null && layerRecord.IsLocked);
+            return layerRecord?.IsLocked == true;
         }
         public static bool IsLayerLocked(string Name)
         {
@@ -48,8 +48,7 @@ namespace SioForgeCAD.Commun
                 ObjectId layerId = layerTable[Name];
                 LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
                 trans.Commit();
-                bool IsLocked = layerRecord != null && layerRecord.IsLocked;
-                return IsLocked;
+                return layerRecord?.IsLocked == true;
             }
         }
 
@@ -92,8 +91,6 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
-
         public static ObjectId GetLayerIdByName(string layerName, Database db = null)
         {
             if (db == null)
@@ -121,21 +118,11 @@ namespace SioForgeCAD.Commun
             Database db = Generic.GetDatabase();
             using (Transaction acTrans = doc.TransactionManager.StartTransaction())
             {
-                LayerTable acLyrTbl;
-                acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                LayerTable acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
                 acTrans.Commit();
-                if (acLyrTbl.Has(layername))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return acLyrTbl.Has(layername);
             }
         }
-
-
 
         public static void CreateLayer(string Name, Color Color, LineWeight LineWeight, Transparency Transparence, bool IsPlottable)
         {
@@ -145,7 +132,7 @@ namespace SioForgeCAD.Commun
             {
                 LayerTable acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
 
-                if (acLyrTbl.Has(Name) == false)
+                if (!acLyrTbl.Has(Name))
                 {
                     using (LayerTableRecord acLyrTblRec = new LayerTableRecord())
                     {
@@ -242,7 +229,6 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
         public static Autodesk.AutoCAD.Colors.Color GetLayerColor(string LayerName)
         {
             ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(LayerName);
@@ -259,7 +245,5 @@ namespace SioForgeCAD.Commun
                 return layerTableRecord.Color;
             }
         }
-
-
     }
 }

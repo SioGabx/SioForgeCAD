@@ -87,7 +87,6 @@ namespace SioForgeCAD.Functions
                                 {
                                     Debug.WriteLine(ex.Message);
                                 }
-
                             }
                         }
                     }

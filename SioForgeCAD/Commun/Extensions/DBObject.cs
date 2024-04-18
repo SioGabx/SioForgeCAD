@@ -1,9 +1,4 @@
 ﻿namespace SioForgeCAD.Commun.Extensions
 {
-    public static class DBObjectExtensions
-    {
-
-
-
-    }
+    public static class DBObjectExtensions { }
 }

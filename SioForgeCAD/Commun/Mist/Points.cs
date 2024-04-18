@@ -91,5 +91,4 @@ namespace SioForgeCAD.Commun
             return new Points(point.SCG.Flatten());
         }
     }
-
 }

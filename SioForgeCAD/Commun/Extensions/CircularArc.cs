@@ -33,18 +33,9 @@ namespace SioForgeCAD.Commun.Extensions
 
             if (circArc.EndPoint.IsEqualTo(circArc.StartPoint) && circArc.Radius > 0)
             {
-                var Circle = new Circle(circArc.Center, Vector3d.YAxis, circArc.Radius);
-                return Circle;
+                return new Circle(circArc.Center, Vector3d.YAxis, circArc.Radius);
             }
-            return (new Arc(center, normal, circArc.Radius, circArc.StartAngle + num, circArc.EndAngle + num));
+            return new Arc(center, normal, circArc.Radius, circArc.StartAngle + num, circArc.EndAngle + num);
         }
-
-
-
-
-
-
-
-
     }
 }

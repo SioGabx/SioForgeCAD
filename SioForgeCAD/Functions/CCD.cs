@@ -38,7 +38,6 @@ namespace SioForgeCAD.Functions
             };
         }
 
-
         public void PlacePoint(CotePoints PointCote)
         {
             bool IsMultiplePlacement = false;
@@ -92,11 +91,10 @@ namespace SioForgeCAD.Functions
             } while (IsMultiplePlacement);
         }
 
-
         private static double? GetSlopeValue()
         {
             Editor ed = Generic.GetEditor();
-            PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions($"\nIndiquez un pourcentage de pente (chiffres négatifs pour descendre)")
+            PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions("\nIndiquez un pourcentage de pente (chiffres négatifs pour descendre)")
             {
                 DefaultValue = Properties.Settings.Default.SlopeValue
             };

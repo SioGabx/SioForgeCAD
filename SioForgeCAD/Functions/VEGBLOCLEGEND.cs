@@ -12,7 +12,6 @@ namespace SioForgeCAD.Functions
 {
     public static class VEGBLOCLEGEND
     {
-
         public static void Add()
         {
             var ed = Generic.GetEditor();
@@ -51,8 +50,6 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                 }
 
-
-
                 // Trie par ordre alphabétique
                 blockNames.Sort();
 
@@ -83,15 +80,11 @@ namespace SioForgeCAD.Functions
                                 Rotation = 0
                             };
                             text.AddToDrawingCurrentTransaction();
-
                         }
                         tr.Commit();
                     }
                 }
-
             }
         }
-
-
     }
 }

@@ -51,9 +51,7 @@ namespace SioForgeCAD.Functions
             {
                 Layers.SetLock(CurrentLayerName, true);
             }
-
         }
-
 
         public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type, out string BlockData, out bool WasSuccessfullyCreated)
         {
@@ -68,7 +66,7 @@ namespace SioForgeCAD.Functions
 
             const string ErrorParseDoubleMessage = "Génération du bloc \"{0}\" ignorée : Impossible de convertir \"{1}\" en nombre.";
 
-            NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingWhite;
+            const NumberStyles NumberStyle = NumberStyles.Integer | NumberStyles.AllowDecimalPoint;
             if (!double.TryParse(StrHeight, NumberStyle, CultureInfo.InvariantCulture, out double Height))
             {
                 Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrHeight));
@@ -111,7 +109,6 @@ namespace SioForgeCAD.Functions
             return BlocName;
         }
 
-
         public static string GetDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
         {
             Dictionary<string, string> data = new Dictionary<string, string>
@@ -126,9 +123,6 @@ namespace SioForgeCAD.Functions
             return data.ToJson();
         }
 
-
-
-
         public static ObjectId AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
         {
             Editor ed = Generic.GetEditor();
@@ -138,7 +132,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
-                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\nIndiquez l'emplacements du bloc", Origin);
+                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
                 Points NewPointLocation = InsertionTransientPointsValues.Point;
                 PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 
@@ -152,7 +146,6 @@ namespace SioForgeCAD.Functions
             }
             return BlkObjectId;
         }
-
 
         private static Color GetColorFromHeight(double HeightInMeters)
         {
@@ -210,7 +203,6 @@ namespace SioForgeCAD.Functions
                 return Circle.ObjectId;
             }
 
-
             const double TextBlocDisplayNameSizeReduceRatios = 0.15;
             var TextBlocDisplayName = new MText
             {
@@ -224,7 +216,6 @@ namespace SioForgeCAD.Functions
                 Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
             };
             BlocGeometry.Add(TextBlocDisplayName);
-
 
             if (Height > 0)
             {
@@ -242,7 +233,7 @@ namespace SioForgeCAD.Functions
                 {
                     Contents = Height.ToString(),
                     Layer = Settings.VegblocLayerHeightName,
-                    Location = new Point3d(0, 0 - WidthRadius * 0.7, 0),
+                    Location = new Point3d(0, 0 - (WidthRadius * 0.7), 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,
                     TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
@@ -260,7 +251,7 @@ namespace SioForgeCAD.Functions
             {
                 return Color.FromRgb(0, 0, 0);
             }
-            double IsContrasted = (299 * BlocColor.Red + 587 * BlocColor.Green + 114 * BlocColor.Blue) / 1000;
+            double IsContrasted = ((299 * BlocColor.Red) + (587 * BlocColor.Green) + (114 * BlocColor.Blue)) / 1000;
             if (IsContrasted > 160)
             {
                 return Color.FromRgb(0, 0, 0);
@@ -270,8 +261,6 @@ namespace SioForgeCAD.Functions
                 return Color.FromRgb(255, 255, 255);
             }
         }
-
-
 
         private static void GetBlocDisplayName(string OriginalName, out string ShortName, out string CompleteName)
         {
@@ -341,7 +330,6 @@ namespace SioForgeCAD.Functions
                     {
                         ShortName += Cultivar[0];
                     }
-
                 }
 
                 CompleteName += " " + Cultivar;
@@ -366,7 +354,6 @@ namespace SioForgeCAD.Functions
             return;
         }
 
-
         private static string ParseNameValue(object value)
         {
             string valueStr = value?.ToString();
@@ -374,7 +361,7 @@ namespace SioForgeCAD.Functions
             {
                 return null;
             }
-            string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
+            const string IllegalAppostropheChar = "'’ʾ′ˊˈꞌ‘ʿ‵ˋʼ\"“”«»„";
             valueStr = valueStr.Replace(IllegalAppostropheChar.ToCharArray(), '\'');
 
             valueStr = valueStr.RemoveDiacritics();
@@ -394,8 +381,6 @@ namespace SioForgeCAD.Functions
 
             return valueStr;
         }
-
-
 
         private static Color GetRandomColor()
         {
@@ -418,5 +403,4 @@ namespace SioForgeCAD.Functions
             return Drawable.Color;
         }
     }
-
 }

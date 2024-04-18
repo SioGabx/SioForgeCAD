@@ -30,7 +30,7 @@ namespace SioForgeCAD.Commun
                     mx2 = (x2 + x3) / 2;
                     my2 = (y2 + y3) / 2;
                     xc = (x2 + x1) / 2;
-                    yc = m2 * (xc - mx2) + my2;
+                    yc = (m2 * (xc - mx2)) + my2;
                 }
                 else if (Math.Abs(y3 - y2) < eps)
                 {
@@ -38,7 +38,7 @@ namespace SioForgeCAD.Commun
                     mx1 = (x1 + x2) / 2;
                     my1 = (y1 + y2) / 2;
                     xc = (x3 + x2) / 2;
-                    yc = m1 * (xc - mx1) + my1;
+                    yc = (m1 * (xc - mx1)) + my1;
                 }
                 else
                 {
@@ -56,14 +56,14 @@ namespace SioForgeCAD.Commun
                         mx2 = (x2 + x3) / 2;
                         my1 = (y1 + y2) / 2;
                         my2 = (y2 + y3) / 2;
-                        xc = (m1 * mx1 - m2 * mx2 + my2 - my1) / (m1 - m2);
-                        yc = m1 * (xc - mx1) + my1;
+                        xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
+                        yc = (m1 * (xc - mx1)) + my1;
                     }
                 }
             }
             dx = x2 - xc;
             dy = y2 - yc;
-            r = dx * dx + dy * dy;
+            r = (dx * dx) + (dy * dy);
             return result;
         }
 
@@ -96,16 +96,16 @@ namespace SioForgeCAD.Commun
             double[] yCoordinates = new double[numberOfPoints + 3];
             double[] zCoordinates = new double[numberOfPoints + 3];
             // Triangle definitions
-            int[] vertexPoint1 = new int[numberOfPoints * 2 + 1];
-            int[] vertexPoint2 = new int[numberOfPoints * 2 + 1];
-            int[] vertexPoint3 = new int[numberOfPoints * 2 + 1];
+            int[] vertexPoint1 = new int[(numberOfPoints * 2) + 1];
+            int[] vertexPoint2 = new int[(numberOfPoints * 2) + 1];
+            int[] vertexPoint3 = new int[(numberOfPoints * 2) + 1];
             // Circumscribed circle
-            double[] centerXValues = new double[numberOfPoints * 2 + 1];
-            double[] centerYValues = new double[numberOfPoints * 2 + 1];
-            double[] radiusValues = new double[numberOfPoints * 2 + 1];
+            double[] centerXValues = new double[(numberOfPoints * 2) + 1];
+            double[] centerYValues = new double[(numberOfPoints * 2) + 1];
+            double[] radiusValues = new double[(numberOfPoints * 2) + 1];
             double xMin, yMin, xMax, yMax, deltaX, deltaY, xMid, yMid;
-            int[] edge1 = new int[numberOfPoints * 2 + 1];
-            int[] edge2 = new int[numberOfPoints * 2 + 1];
+            int[] edge1 = new int[(numberOfPoints * 2) + 1];
+            int[] edge2 = new int[(numberOfPoints * 2) + 1];
             ObjectId[] idArray = pointSelectionSet.GetObjectIds();
             Transaction tr = db.TransactionManager.StartTransaction();
             using (tr)
@@ -130,11 +130,12 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
             }
             if (IgnoredPointWithSameCoordinatesCount > 0)
+            {
                 ed.WriteMessage(
                   "\nIgnored {0} point(s) with same coordinates.",
                   IgnoredPointWithSameCoordinatesCount
                 );
-
+            }
 
             // Supertriangle
             xMin = xCoordinates[0]; xMax = xMin;
@@ -160,7 +161,7 @@ namespace SioForgeCAD.Commun
             vertexPoint2[0] = PtsIndex;
             PtsIndex++;
             xCoordinates[PtsIndex] = xMid;
-            yCoordinates[PtsIndex] = yMid + 100 * (deltaX + deltaY + 1);
+            yCoordinates[PtsIndex] = yMid + (100 * (deltaX + deltaY + 1));
             zCoordinates[PtsIndex] = 0;
             vertexPoint3[0] = PtsIndex;
             numberOfTriangles = 1;
@@ -310,11 +311,14 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
             }
             if (thinTriangleFoundCount > 0)
+            {
                 ed.WriteMessage(
                   "\nWarning! {0} thin triangle(s) found!" +
                   " Wrong result possible!",
                   thinTriangleFoundCount
                 );
+            }
+
             Application.UpdateScreen();
         }
     }

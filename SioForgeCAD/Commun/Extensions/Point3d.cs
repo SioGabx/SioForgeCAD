@@ -92,7 +92,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             foreach (var item in pointsB)
             {
-                if (pointsA.Contains(item) != true) { return false; }
+                if (!pointsA.Contains(item)) { return false; }
             }
             return true;
         }
@@ -117,7 +117,6 @@ namespace SioForgeCAD.Commun.Extensions
                 var Pnts = NoArcPoly.GetPoints().ToPoint3dCollection();
                 if (NoArcPoly != polyline) { NoArcPoly.Dispose(); }
                 return point.ToPoint2d().IsPointInsidePolygonMcMartin(Pnts);
-
             }
             catch (Autodesk.AutoCAD.Runtime.Exception ex)
             {
@@ -161,13 +160,11 @@ namespace SioForgeCAD.Commun.Extensions
             return newCollection;
         }
 
-
         public static double GetArea(Point2d pt1, Point2d pt2, Point2d pt3)
         {
             return (((pt2.X - pt1.X) * (pt3.Y - pt1.Y)) -
                         ((pt3.X - pt1.X) * (pt2.Y - pt1.Y))) / 2.0;
         }
-
 
         public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
@@ -200,7 +197,6 @@ namespace SioForgeCAD.Commun.Extensions
             return isOn;
         }
 
-
         /// <summary>
         /// Determines whether a point is inside a polyline
         /// </summary>
@@ -212,8 +208,7 @@ namespace SioForgeCAD.Commun.Extensions
             int counter = 0;
             int VertexCount = verts.Count;
             Point2d p1 = verts[0].ToPoint2d();
-            int index = 1;
-            while ((index <= VertexCount))
+            for (int index = 1; (index <= VertexCount); index++)
             {
                 Point2d p2 = verts[index % VertexCount].ToPoint2d();
                 if (p.Y > Math.Min(p1.Y, p2.Y) && p.Y <= Math.Max(p1.Y, p2.Y) && p.X <= Math.Max(p1.X, p2.X))
@@ -226,18 +221,11 @@ namespace SioForgeCAD.Commun.Extensions
                             counter++;
                         }
                     }
-
                 }
                 p1 = p2;
-                index++;
             }
-            if ((counter % 2) == 0)
-            {
-                return false;
-            }
-            return true;
+            return (counter % 2) != 0;
         }
-
 
         public static bool IsPointInsidePolygonMcMartin(this Point2d p, Point3dCollection verts)
         {
@@ -275,7 +263,7 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         // compute intersection of pgon segment with +X ray, note
                         //if >= point's X; if so, the ray hits it.
-                        if ((vtx1[0] - (vtx1[1] - ty) * (vtx0[0] - vtx1[0]) / (vtx0[1] - vtx1[1])) >= tx)
+                        if ((vtx1[0] - ((vtx1[1] - ty) * (vtx0[0] - vtx1[0]) / (vtx0[1] - vtx1[1]))) >= tx)
                         {
                             inside_flag = !inside_flag;
                         }
@@ -287,18 +275,5 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return inside_flag;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

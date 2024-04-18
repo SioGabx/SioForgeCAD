@@ -6,7 +6,7 @@ using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
-    public class SCALEBY
+    public static class SCALEBY
     {
         public static void ScaleBy()
         {
@@ -49,10 +49,7 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                     }
                 }
-
             }
-
-
         }
     }
 }

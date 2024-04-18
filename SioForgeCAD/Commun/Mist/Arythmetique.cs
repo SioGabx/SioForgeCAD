@@ -62,7 +62,7 @@ namespace SioForgeCAD.Commun
         public static double ComputePointFromSlopePourcentage(double OriginAltitude, double DistanceFromOrigin, double Slope)
         {
             const double PourcentageToDecimalRatio = 0.01;
-            double Altimetrie = Math.Abs(OriginAltitude) + (Slope * PourcentageToDecimalRatio) * Math.Abs(DistanceFromOrigin);
+            double Altimetrie = Math.Abs(OriginAltitude) + (Slope * PourcentageToDecimalRatio * Math.Abs(DistanceFromOrigin));
             return Altimetrie;
         }
     }

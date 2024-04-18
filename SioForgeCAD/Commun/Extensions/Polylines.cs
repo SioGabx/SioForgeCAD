@@ -1,7 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +7,6 @@ using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
-
     public static class PolylinesExtensions
     {
         public static int GetReelNumberOfVertices(this Polyline TargetPolyline)
@@ -27,7 +24,7 @@ namespace SioForgeCAD.Commun.Extensions
             int NumberOfVertices = TargetPolyline.NumberOfVertices;
             double Bulge = TargetPolyline.GetBulgeAt(Index);
             var PolylineSegmentStart = TargetPolyline.GetPoint3dAt(Index);
-            Index += 1;
+            Index++;
             if (Index >= NumberOfVertices)
             {
                 Index = 0;
@@ -55,7 +52,7 @@ namespace SioForgeCAD.Commun.Extensions
                 area += Point3dExtensions.GetArea(p0, pline.GetPoint2dAt(i), pline.GetPoint2dAt(i + 1));
                 if (pline.GetBulgeAt(i) != 0.0)
                 {
-                    area += pline.GetArcSegment2dAt(i).GetArea(); ;
+                    area += pline.GetArcSegment2dAt(i).GetArea();
                 }
             }
             if ((pline.GetBulgeAt(last) != 0.0) && pline.Closed)
@@ -64,9 +61,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return area;
         }
-
-
-
 
         public static DBObjectCollection BreakAt(this Polyline poly, params Point3d[] points)
         {
@@ -155,7 +149,6 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
 
-
                 index = 0;
                 while (index < polyline.GetReelNumberOfVertices())
                 {
@@ -176,7 +169,6 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         index++;
                     }
-
                 }
             }
             if (InverseCount % 2 != 0)
@@ -184,13 +176,11 @@ namespace SioForgeCAD.Commun.Extensions
                 InversePoly();
             }
 
-            if (polyline.Closed != true && polyline.StartPoint.IsEqualTo(polyline.EndPoint, Generic.LowTolerance))
+            if (!polyline.Closed && polyline.StartPoint.IsEqualTo(polyline.EndPoint, Generic.LowTolerance))
             {
                 polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
                 polyline.Closed = true;
             }
-
-
         }
 
         public static void Inverse(this Polyline poly)
@@ -275,7 +265,6 @@ namespace SioForgeCAD.Commun.Extensions
                     NewPoly.AddVertex(CurrentPoint);
                     if (poly.GetSegmentType(VerticeIndex) == SegmentType.Line)
                     {
-
                         continue;
                     }
                     else if (poly.GetSegmentType(VerticeIndex) == SegmentType.Arc)
@@ -324,8 +313,6 @@ namespace SioForgeCAD.Commun.Extensions
             Poly.AppendVertex(Vertex);
         }
 
-
-
         public static void AddVertexIfNotExist(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
         {
             for (int i = 0; i < Poly.NumberOfVertices; i++)
@@ -371,8 +358,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
         public static Polyline ToPolyline(this Polyline3d poly3d)
         {
             if (poly3d.PolyType == Poly3dType.SimplePoly)
@@ -406,8 +391,6 @@ namespace SioForgeCAD.Commun.Extensions
             poly.ConvertFrom(poly2d, false);
             return poly;
         }
-
-
 
         public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)
         {
@@ -494,7 +477,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                 var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();
                 OffsetPolylineResult.DeepDispose();
-                var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p != null && p.Closed && p.NumberOfVertices >= 2).ToList();
+                var ReturnOffsetMergedPolylineResult = OffsetMergedPolylineResult.Cast<Polyline>().Where(p => p?.Closed == true && p.NumberOfVertices >= 2).ToList();
                 OffsetMergedPolylineResult.RemoveCommun(ReturnOffsetMergedPolylineResult).DeepDispose();
                 foreach (var item in ReturnOffsetMergedPolylineResult)
                 {
@@ -540,8 +523,7 @@ namespace SioForgeCAD.Commun.Extensions
                 NumberOfVertices = ReelNumberOfVertices;
             }
 
-            int PolylineSegmentIndex = 0;
-            while (PolylineSegmentIndex < NumberOfVertices)
+            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < NumberOfVertices; PolylineSegmentIndex++)
             {
                 var PolylineSegment = LineA.GetSegmentAt(PolylineSegmentIndex);
                 if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
@@ -571,11 +553,9 @@ namespace SioForgeCAD.Commun.Extensions
                         NumberOfVertices++;
                     }
                 }
-                PolylineSegmentIndex++;
             }
             return true;
         }
-
 
         public static bool IsSameAs(this Polyline polylineA, Polyline polylineB)
         {
@@ -612,8 +592,6 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-
-
         public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect)
         {
             IntersectionPointsFounds = new Point3dCollection();
@@ -632,12 +610,5 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return false;
         }
-
-
-
-
-
-
     }
 }
-

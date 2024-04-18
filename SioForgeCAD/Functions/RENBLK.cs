@@ -23,7 +23,7 @@ namespace SioForgeCAD.Functions
             ObjectId[] SelectedBlocObjectIdArray;
             var ActualSelection = ed.SelectImplied().Value;
 
-            if (ActualSelection != null && ActualSelection.Count > 1)
+            if (ActualSelection?.Count > 1)
             {
                 var ListOfUniqueBlockName = new List<string>();
                 foreach (ObjectId SelectedBlocObjectId in ActualSelection.GetObjectIds())

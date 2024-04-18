@@ -20,13 +20,12 @@ namespace SioForgeCAD.Commun.Extensions
         {
             foreach (DBObject item in collection)
             {
-                if (item != null && !item.IsDisposed)
+                if (item?.IsDisposed == false)
                 {
                     item.Dispose();
                 }
             }
             collection.Dispose();
         }
-
     }
 }

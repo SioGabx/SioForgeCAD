@@ -12,7 +12,6 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 return Draw(acLine, ColorIndex);
             }
-
         }
 
         public static ObjectId Draw(Points center, double radius, int ColorIndex = 256)
@@ -41,7 +40,5 @@ namespace SioForgeCAD.Commun.Drawing
                 return acLine.ObjectId;
             }
         }
-
-
     }
 }

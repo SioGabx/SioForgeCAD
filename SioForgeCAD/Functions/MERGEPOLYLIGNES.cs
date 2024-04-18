@@ -6,7 +6,6 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -34,11 +33,11 @@ namespace SioForgeCAD.Functions
                         Curves.Add(curv);
                     }
                 }
-                if (Curves.Count <= 0)
+                if (Curves.Count == 0)
                 {
                     return;
                 }
-                PolyHole.CreateFromList(Curves).Union(out List<PolyHole> UnionResult, true);
+                PolygonOperation.Union(PolyHole.CreateFromList(Curves), out List<PolyHole> UnionResult, true);
 
                 foreach (var polyh in UnionResult)
                 {
@@ -79,7 +78,7 @@ namespace SioForgeCAD.Functions
                         Curves.Add(curv);
                     }
                 }
-                if (Curves.Count <= 0)
+                if (Curves.Count == 0)
                 {
                     return;
                 }
@@ -87,9 +86,7 @@ namespace SioForgeCAD.Functions
 
                 sw.Start();
                 {
-                    var UnionResult = Curves.RegionMerge(); ;
-
-                    foreach (var polyh in UnionResult)
+                    foreach (var polyh in Curves.RegionMerge())
                     {
                         polyh.ColorIndex = 3;
                         polyh.AddToDrawing();

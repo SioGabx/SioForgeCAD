@@ -9,7 +9,6 @@ namespace SioForgeCAD.Commun
 {
     public static class SelectInXref
     {
-
         public static (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) Select(string Message, Point3d? NonInterractivePickedPoint = null)
         {
             Editor ed = Generic.GetEditor();
@@ -49,32 +48,16 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
                 return string.Join(">", Path);
             }
-
         }
-
-
 
         public static Points TransformPointInXrefsToCurrent(Point3d XrefPosition, IEnumerable<ObjectId> NestedXrefsContainer)
         {
             Point3d BlkPosition = XrefPosition;
             foreach (ObjectId objectId in NestedXrefsContainer)
             {
-                BlkPosition = Points.From3DPoint(BlockReferenceExtensions.ProjectXrefPointToCurrentSpace(objectId, BlkPosition)).SCG;
+                BlkPosition = Points.From3DPoint(BlkPosition.ProjectXrefPointToCurrentSpace(objectId)).SCG;
             }
             return BlkPosition.ToPoints();
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

@@ -66,7 +66,6 @@ namespace SioForgeCAD.Commun
             Properties.Settings.Default.Save();
         }
 
-
         public static bool NullPointExit(CotePoints cotePoints)
         {
             Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
@@ -82,7 +81,6 @@ namespace SioForgeCAD.Commun
             }
             return false;
         }
-
 
         private static double GetCote(Points Origin)
         {
@@ -109,7 +107,7 @@ namespace SioForgeCAD.Commun
             PromptDoubleResult PromptDoubleAltitudeResult = ed.GetDouble(PromptDoubleAltitudeOptions);
 
             //remove the point where the altitude is asked
-            if (PointDrawingEntityObjectId.IsErased == false)
+            if (!PointDrawingEntityObjectId.IsErased)
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
@@ -178,7 +176,6 @@ namespace SioForgeCAD.Commun
 
             foreach (int index in StringPointPosition)
             {
-
                 int n = index;
                 while (n > 0 && char.IsDigit(OriginalString[n - 1]))
                 {
@@ -216,13 +213,8 @@ namespace SioForgeCAD.Commun
             return null;
         }
 
-
-
-
-
         public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint)
         {
-
             var ed = Generic.GetEditor();
             (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
             List<ObjectId> XrefObjectId = XrefSelection.XrefObjectId.ToList();
@@ -292,26 +284,22 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-
             return new CotePoints(BlockPosition, Altimetrie ?? 0);
-
         }
-
-
 
         private static CotePoints GetBloc(string Message)
         {
             var db = Generic.GetDatabase();
             var ed = Generic.GetEditor();
 
-            do
+            while (true)
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     //list of available SelectionFilter : https://help.autodesk.com/view/ACD/2018/ENU/?guid=GUID-7D07C886-FD1D-4A0C-A7AB-B4D21F18E484
                     TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
                     SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
-                    string PromptSelectionKeyWordString = SelectionPointsType.Points.ToString().CapitalizeFirstLetters(2);
+                    string PromptSelectionKeyWordString = nameof(SelectionPointsType.Points).CapitalizeFirstLetters(2);
                     PromptEntityOptions PromptBlocSelectionOptions = new PromptEntityOptions($"{Message} [{PromptSelectionKeyWordString}]")
                     {
                         AllowNone = false,
@@ -335,7 +323,6 @@ namespace SioForgeCAD.Commun
                             throw new Autodesk.AutoCAD.Runtime.Exception(Autodesk.AutoCAD.Runtime.ErrorStatus.OK, PromptBlocSelectionResult.StringResult);
                         }
                         SelectedObject = PromptBlocSelectionResult.ObjectId.GetEntity();
-
                     } while (!(SelectedObject is BlockReference));
                     BlockReference blockReference = SelectedObject as BlockReference;
                     ObjectId SelectedBlocObjectId = blockReference.ObjectId;
@@ -373,13 +360,13 @@ namespace SioForgeCAD.Commun
                     tr.Commit();
                     return new CotePoints(CoteLocation, Altitude ?? 0);
                 }
-            } while (true);
+            }
         }
 
         public static CotePoints GetCotePoints(string Message, Points Origin)
         {
             var ed = Generic.GetEditor();
-            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message} [{SelectionPointsType.Bloc}]\n", SelectionPointsType.Bloc.ToString());
+            PromptPointOptions PromptPointOptions = new PromptPointOptions($"{Message} [{SelectionPointsType.Bloc}]\n", nameof(SelectionPointsType.Bloc));
 
             if (Origin != null)
             {
@@ -420,11 +407,10 @@ namespace SioForgeCAD.Commun
                     catch (Autodesk.AutoCAD.Runtime.Exception ex)
                     {
                         Autodesk.AutoCAD.Runtime.Exception AutEx = ex;
-                        if (AutEx.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.OK && ex.Message.IgnoreCaseEquals(SelectionPointsType.Points.ToString()))
+                        if (AutEx.ErrorStatus == Autodesk.AutoCAD.Runtime.ErrorStatus.OK && ex.Message.IgnoreCaseEquals(nameof(SelectionPointsType.Points)))
                         {
                             SaveSelectionPointsType(SelectionPointsType.Points);
                             IsLooping = true;
-                            continue;
                         }
                         else
                         {

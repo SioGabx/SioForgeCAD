@@ -46,15 +46,13 @@ namespace SioForgeCAD.Commun.Extensions
             var det = CrossProduct(vector.ToVector2d(), xAxisWCS); //vector.X * xAxisWCS.Y - vector.Y * xAxisWCS.X;     
             var angle = Math.Atan2(det, dot);
             double angleDegrees = angle * (180.0 / Math.PI);
-            angleDegrees = (angleDegrees < 0) ? (360.0 + angleDegrees) : angleDegrees;
-            return angleDegrees;
+            return (angleDegrees < 0) ? (360.0 + angleDegrees) : angleDegrees;
         }
 
         public static Vector2d ToVector2d(this Vector3d vector)
         {
             return new Vector2d(vector.X, vector.Y);
         }
-
 
         /// <summary>
         /// Gets the dot produc of two Vector2ds.
@@ -64,7 +62,7 @@ namespace SioForgeCAD.Commun.Extensions
         /// <returns>The dot product.</returns>
         public static double DotProduct(this Vector2d v1, Vector2d v2)
         {
-            return v1.X * v2.X + v1.Y * v2.Y;
+            return (v1.X * v2.X) + (v1.Y * v2.Y);
         }
 
         /// <summary>
@@ -75,7 +73,7 @@ namespace SioForgeCAD.Commun.Extensions
         /// <returns>The cross product.</returns>
         public static double CrossProduct(this Vector2d v1, Vector2d v2)
         {
-            return v1.X * v2.Y - v1.Y * v2.X;
+            return (v1.X * v2.Y) - (v1.Y * v2.X);
         }
 
         public static bool IsColinear(this Vector3d v1, Vector3d v2, Tolerance tol)
@@ -96,9 +94,8 @@ namespace SioForgeCAD.Commun.Extensions
             double c = SecondVector.DotProduct(SecondVector);
             double d = FirstVector.DotProduct(deltaStartPoints);
             double e = SecondVector.DotProduct(deltaStartPoints);
-            double s = (a * e - b * d) / (a * c - b * b);
-            return SecondVectorBasePoint + s * SecondVector;
+            double s = ((a * e) - (b * d)) / ((a * c) - (b * b));
+            return SecondVectorBasePoint + (s * SecondVector);
         }
-
     }
 }

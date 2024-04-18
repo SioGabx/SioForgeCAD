@@ -202,7 +202,6 @@ namespace SioForgeCAD.Functions
                 }
                 var blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
 
-
                 foreach (ObjectId entId in blockDef)
                 {
                     Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
@@ -254,7 +253,6 @@ namespace SioForgeCAD.Functions
                 }
 
                 tr.Commit();
-
             }
             using (Transaction tr2 = db.TransactionManager.StartTransaction())
             {

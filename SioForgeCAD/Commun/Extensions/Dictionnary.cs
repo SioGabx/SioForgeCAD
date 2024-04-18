@@ -16,7 +16,5 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return string.Empty;
         }
-
-
     }
 }

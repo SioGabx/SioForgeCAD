@@ -35,7 +35,6 @@ namespace SioForgeCAD.Commun
             return ObjectIds;
         }
 
-
         public static DBObject GetNoTransactionDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
         {
             var db = Generic.GetDatabase();
@@ -71,7 +70,6 @@ namespace SioForgeCAD.Commun
             return objs;
         }
 
-
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<Entity> entities)
         {
             return entities.Cast<DBObject>().ToDBObjectCollection();
@@ -96,7 +94,6 @@ namespace SioForgeCAD.Commun
             }
             return NewObjectIdCollection;
         }
-
 
         public static DBObjectCollection ToDBObjectCollection(this IEnumerable<DBObject> entities)
         {
@@ -136,7 +133,6 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
         public static void Join(this ObjectIdCollection A, ObjectIdCollection B)
         {
             foreach (ObjectId ent in B)
@@ -173,6 +169,5 @@ namespace SioForgeCAD.Commun
             acHatch.EvaluateHatch(true);
             return acHatch;
         }
-
     }
 }

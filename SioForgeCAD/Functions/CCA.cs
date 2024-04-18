@@ -33,8 +33,8 @@ namespace SioForgeCAD.Functions
             while (true)
             {
                 NumberOfPointArealdyInserted++;
-                double Altitude = PointCote.Altitude + StepValue * NumberOfPointArealdyInserted;
-                Dictionary<string, string> ComputeValue(Points Intermediaire)
+                double Altitude = PointCote.Altitude + (StepValue * NumberOfPointArealdyInserted);
+                Dictionary<string, string> ComputeValue(Points _)
                 {
                     return new Dictionary<string, string>() {
                         { "ALTIMETRIE", Altitude.ToString("#.00") }
@@ -52,7 +52,7 @@ namespace SioForgeCAD.Functions
                         Signe = "+";
                     }
                     string KeyWord = $"{Altitude - StepValue}{Signe}{StepValue}";
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 
@@ -70,7 +70,7 @@ namespace SioForgeCAD.Functions
         public static double? GetStepValueToAdd()
         {
             Editor ed = Generic.GetEditor();
-            PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions($"\nVeuillez indiquer le montant que vous souhaitez additionner ou soustraire.")
+            PromptDoubleOptions pDoubleOpts = new PromptDoubleOptions("\nVeuillez indiquer le montant que vous souhaitez additionner ou soustraire.")
             {
                 DefaultValue = Properties.Settings.Default.StepValue
             };

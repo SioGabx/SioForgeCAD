@@ -17,7 +17,7 @@ namespace SioForgeCAD.Commun.Drawing
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
-                string BlockName = SymbolUtilityServices.RepairSymbolName(Name, false); ;
+                string BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
 
                 if (bt.Has(BlockName))
                 {
@@ -47,8 +47,6 @@ namespace SioForgeCAD.Commun.Drawing
                 return btrId;
             }
         }
-
-
 
         public static ObjectId RenameBlockAndInsert(ObjectId BlockReferenceObjectId, string OldName, string NewName)
         {
@@ -90,10 +88,6 @@ namespace SioForgeCAD.Commun.Drawing
             return acIdMap2[newBlocRefenceId].Value;
         }
 
-
-
-
-
         public static string GetUniqueBlockName(string oldName)
         {
             Database db = Generic.GetDatabase();
@@ -101,16 +95,13 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 string newName = oldName;
-                int index = 1;
-                while (bt.Has(newName))
+                for (int index = 1; bt.Has(newName); index++)
                 {
                     newName = $"{oldName}_Copy{(index > 1 ? $" ({index})" : "")}";
-                    index++;
                 }
                 return SymbolUtilityServices.RepairSymbolName(newName, false);
             }
         }
-
 
         public static bool IsBlockExist(string BlocName)
         {
@@ -191,7 +182,7 @@ namespace SioForgeCAD.Commun.Drawing
                         {
                             DBObject obj = id.GetObject(OpenMode.ForRead);
                             AttributeDefinition attDef = obj as AttributeDefinition;
-                            if ((attDef != null) && (!attDef.Constant))
+                            if (attDef?.Constant == false)
                             {
                                 string PropertyName = attDef.Tag.ToUpperInvariant();
                                 if (AttributesValues.ContainsKey(PropertyName))
@@ -269,12 +260,10 @@ namespace SioForgeCAD.Commun.Drawing
                             btr.Erase();
                         }
                     }
-
                 }
                 trans.Commit();
             }
         }
-
 
         public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues, string Layer = null)
         {
@@ -302,7 +291,6 @@ namespace SioForgeCAD.Commun.Drawing
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
                 BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
 
                 if (!bt.Has(BlocName))

@@ -16,19 +16,17 @@ using System.IO;
 
 namespace SioForgeCAD.Commun.Mist
 {
-
     /// <summary>
     /// Fast and memory efficient implementation of CSV reader (3x times faster than CsvHelper).
     /// </summary>
     /// <remarks>API is similar to CSVHelper CsvReader.</remarks>
     public class CsvReader
     {
-
-        public string Delimiter { get; private set; }
+        public string Delimiter { get; }
         readonly int delimLength;
 
         /// <summary>
-        /// Size of the circular buffer. Buffer size limits max length of the CSV line that can be processed. 
+        /// Size of the circular buffer. Buffer size limits max length of the CSV line that can be processed.
         /// </summary>
         /// <remarks>Default buffer size is 32kb.</remarks>
         public int BufferSize { get; set; } = 32768;
@@ -312,7 +310,6 @@ namespace SioForgeCAD.Commun.Mist
                         currentField.End = charPos;
                         break;
                 }
-
             }
             if (!eof)
             {
@@ -331,7 +328,6 @@ namespace SioForgeCAD.Commun.Mist
 
             return true;
         }
-
 
         internal sealed class Field
         {
@@ -397,10 +393,6 @@ namespace SioForgeCAD.Commun.Mist
                 }
                 return new string(buf, start, len);
             }
-
         }
-
     }
-
-
 }

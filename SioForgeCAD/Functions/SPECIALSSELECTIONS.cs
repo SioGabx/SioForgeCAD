@@ -21,7 +21,6 @@ namespace SioForgeCAD.Functions
             ed.SetImpliedSelection(psr.Value);
         }
 
-
         public static void InsideCrossingPolyline()
         {
             Database db = Generic.GetDatabase();
@@ -37,7 +36,6 @@ namespace SioForgeCAD.Functions
             var Objects = ed.SelectCrossingPolygon(collection).Value.GetObjectIds().ToList();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
                 Objects.Remove(TerrainBasePolyline.ObjectId);
                 ed.SetImpliedSelection(Objects.ToArray());
                 ed.SetCurrentView(SavedView);
@@ -70,4 +68,3 @@ namespace SioForgeCAD.Functions
         }
     }
 }
-

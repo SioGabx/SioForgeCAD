@@ -39,10 +39,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
-
-
         /// <summary>
         /// Gets the point at a specified parameter on curve.
         /// </summary>
@@ -62,7 +58,6 @@ namespace SioForgeCAD.Commun.Extensions
             return cv.GetPointAtParameter(param);
         }
 
-
         /// <summary>
         /// Gets all points on curve whose parameters are an arithmetic sequence starting from 0.
         /// </summary>
@@ -76,9 +71,6 @@ namespace SioForgeCAD.Commun.Extensions
                 yield return cv.GetPointAtParam(param);
             }
         }
-
-
-
 
         /// <summary>
         /// Order the collection by contiguous curves ([n].EndPoint equals to [n+1].StartPoint)
@@ -99,7 +91,6 @@ namespace SioForgeCAD.Commun.Extensions
                 var pt = array[i++].EndPoint;
                 if ((index = list.FindIndex(c => c.StartPoint.IsEqualTo(pt))) != -1)
                 {
-
                     array[i] = list[index];
                 }
                 else if ((index = list.FindIndex(c => c.EndPoint.IsEqualTo(pt))) != -1)
@@ -116,7 +107,6 @@ namespace SioForgeCAD.Commun.Extensions
             return array;
         }
 
-
         public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance)
         {
             List<Curve> OffsetCurves = new List<Curve>();
@@ -130,18 +120,16 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static DBObjectCollection OffsetPolyline(this Curve Curve, double OffsetDistance)
         {
-            DBObjectCollection OffsetCurve = new DBObjectCollection();
             if (Curve is Polyline)
             {
-                OffsetCurve = Curve.GetOffsetCurves((Curve as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
+                return Curve.GetOffsetCurves((Curve as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
             }
             else if (Curve is Ellipse || Curve is Circle)
             {
-                OffsetCurve = Curve.GetOffsetCurves(OffsetDistance);
+                return Curve.GetOffsetCurves(OffsetDistance);
             }
-            return OffsetCurve;
+            return new DBObjectCollection();
         }
-
 
         public static bool IsSelfIntersecting(this Curve poly, out Point3dCollection IntersectionFound)
         {
@@ -181,22 +169,13 @@ namespace SioForgeCAD.Commun.Extensions
                             IntersectionFound.Add(point);
                         }
                     }
-
                 }
                 // Need to be disposed explicitely
                 // since entities are not DB resident
                 entities[i].Dispose();
             }
 
-            if (IntersectionFound.Count == 0)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-
+            return IntersectionFound.Count != 0;
         }
 
         public static bool CanBeJoinWith(this Curve A, Curve B)
@@ -226,11 +205,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
 
-            if (!A.HasEndPointOrStartPointInCommun(B))
-            {
-                return false;
-            }
-            return true;
+            return A.HasEndPointOrStartPointInCommun(B);
         }
 
         public static bool IsCurveCanClose(this Curve PolyA, Curve PolyB)
@@ -320,7 +295,6 @@ namespace SioForgeCAD.Commun.Extensions
                 entities[i] = JoignableEnt;
             }
 
-
             for (int i = entities.Count - 1; i >= 0; i--)
             {
                 for (int j = i - 1; j >= 0; j--)
@@ -347,7 +321,6 @@ namespace SioForgeCAD.Commun.Extensions
                                 addCurve.Dispose();
                             }
 
-
                             // reset i to the start (as it has changed)
                             i = entities.Count;
                             j = 0;
@@ -362,7 +335,6 @@ namespace SioForgeCAD.Commun.Extensions
 
             return entities;
         }
-
 
         private static Curve GetJoinableCurve(this Curve srcCurve)
         {
@@ -383,8 +355,6 @@ namespace SioForgeCAD.Commun.Extensions
                 return srcCurve.Clone() as Curve;
             }
         }
-
-
 
         public static List<Curve> RegionMerge(this IEnumerable<Curve> Curves)
         {

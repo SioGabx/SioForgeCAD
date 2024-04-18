@@ -6,7 +6,6 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Leaders
     {
-
         public static void Draw(object Content, Point3d BasePointArgs, Point3d TextPositionArgs)
         {
             // Start a transaction
@@ -43,8 +42,6 @@ namespace SioForgeCAD.Commun.Drawing
                     acTrans.Commit();
                 }
             }
-
-
         }
     }
 }

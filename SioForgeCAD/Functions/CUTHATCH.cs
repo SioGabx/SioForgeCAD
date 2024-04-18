@@ -30,14 +30,11 @@ namespace SioForgeCAD.Functions
                 ExistingBoundaryStyle = AssociatedBoundary;
             }
 
-
             if (!Hachure.GetPolyHole(out var HatchPolyHole))
             {
                 ExistingBoundaryStyle.Dispose();
                 return;
             }
-
-
 
             ed.SetImpliedSelection(Array.Empty<ObjectId>());
 
@@ -64,8 +61,7 @@ namespace SioForgeCAD.Functions
             {
                 try
                 {
-                    List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult is null ? HatchPolyHole.Boundary.Slice(CutLine) : PolygonOperation.LastSliceResult;
-
+                    List<Polyline> CuttedPolyline = PolygonOperation.LastSliceResult ?? PolygonOperation.Slice(HatchPolyHole.Boundary, CutLine);
 
                     int NumberOfPolyline = CuttedPolyline.Count;
                     if (NumberOfPolyline > 1)
@@ -112,7 +108,6 @@ namespace SioForgeCAD.Functions
                             NumberOfSlice++;
                         }
                         Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
-
                     }
                     else if (CheckIfHole(HatchPolyHole.Boundary, CutLine))
                     {
@@ -126,7 +121,6 @@ namespace SioForgeCAD.Functions
                         {
                             Hatchs.ApplyHatchV2(item.Boundary.Clone() as Polyline, item.Holes.Cast<Curve>().ToList(), Hachure);
                         }
-
 
                         //Generate a union of existing hole + new one
                         var HatchHoles = HatchPolyHole.Holes;
@@ -155,7 +149,7 @@ namespace SioForgeCAD.Functions
 
                         //Apply hatch to the boundary with the union holes
                         Hatchs.ApplyHatchV2(HatchPolyHole.Boundary, Holes, Hachure);
-                        Generic.WriteMessage($"Un trou a été créé dans la hachure");
+                        Generic.WriteMessage("Un trou a été créé dans la hachure");
                         MergedHoles.DeepDispose();
                         CutLineSubResult.DeepDispose();
                     }
@@ -179,8 +173,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
-
         static bool CheckIfHole(Polyline Boundary, Polyline CutLine)
         {
             if (!CutLine.Closed)
@@ -198,13 +190,8 @@ namespace SioForgeCAD.Functions
 
             var IntersectionFound = new Point3dCollection();
             CutLine.IntersectWith(Boundary, Intersect.OnBothOperands, IntersectionFound, IntPtr.Zero, IntPtr.Zero);
-            if (IntersectionFound.Count > 0)
-            {
-                return false;
-            }
-            return true;
+            return IntersectionFound.Count <= 0;
         }
-
 
         public static Polyline GetCutLine(Polyline Boundary)
         {
@@ -242,7 +229,6 @@ namespace SioForgeCAD.Functions
             return null;
         }
 
-
         public static Polyline GetCutPolyline(Polyline Boundary, out PromptStatus promptStatus)
         {
             //To do : allow multiple selection
@@ -268,8 +254,7 @@ namespace SioForgeCAD.Functions
             selectionOptions.Keywords.Add(NewLineKeyWord);
             string kws = selectionOptions.Keywords.GetDisplayString(true);
             selectionOptions.MessageForAdding = "Selectionnez un polyline qui coupe la hachure ou " + kws;
-            selectionOptions.KeywordInput += delegate (object sender, SelectionTextInputEventArgs e) { throw new Exception("Keyword") { }; };
-
+            selectionOptions.KeywordInput += (object sender, SelectionTextInputEventArgs e) => throw new Exception("Keyword");
 
             try
             {
@@ -306,7 +291,6 @@ namespace SioForgeCAD.Functions
                                 Generic.WriteMessage("La polyligne ne coupe pas la hachure");
                                 continue;
                             }
-
                         }
                     }
                 }
@@ -316,10 +300,7 @@ namespace SioForgeCAD.Functions
                 promptStatus = PromptStatus.Keyword;
                 return null;
             }
-
         }
-
-
 
         public static Polyline GetPolylineFromNearestPointOnBoundary(Polyline Boundary, Points Origin, Points EndPoint)
         {
@@ -341,7 +322,7 @@ namespace SioForgeCAD.Functions
 
         public static bool IsValidCutLine(Polyline Boundary, Polyline CutLine)
         {
-            List<Polyline> CuttedPolyline = Boundary.Slice(CutLine);
+            List<Polyline> CuttedPolyline = PolygonOperation.Slice(Boundary, CutLine);
             int NumberOfPolyline = CuttedPolyline.Count;
             //CuttedPolyline.Remove(Boundary);
             //CuttedPolyline.DeepDispose();
@@ -423,5 +404,4 @@ namespace SioForgeCAD.Functions
             }
         }
     }
-
 }

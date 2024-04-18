@@ -51,7 +51,6 @@ namespace SioForgeCAD.Commun.Extensions
             return Dim;
         }
 
-
         public static bool CollideWith(this Extents3d a, Extents3d b)
         {
             return !(b.Left() > a.Right() || b.Right() < a.Left() || b.Top() < a.Bottom() || b.Bottom() > a.Top());
@@ -93,7 +92,6 @@ namespace SioForgeCAD.Commun.Extensions
             return extent;
         }
 
-
         public static Extents3d GetExtents(this IEnumerable<ObjectId> entities)
         {
             List<Entity> list = new List<Entity>();
@@ -107,7 +105,6 @@ namespace SioForgeCAD.Commun.Extensions
             return list.GetExtents();
         }
 
-
         public static Point3d GetCenter(this Extents3d extents)
         {
             Point3d TopLeft = new Point3d(extents.MinPoint.X, extents.MaxPoint.Y, 0);
@@ -118,7 +115,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static void Expand(this ref Extents3d extents, double factor)
         {
             var center = extents.GetCenter();
-            extents = new Extents3d(center + factor * (extents.MinPoint - center), center + factor * (extents.MaxPoint - center));
+            extents = new Extents3d(center + (factor * (extents.MinPoint - center)), center + (factor * (extents.MaxPoint - center)));
         }
 
         public static bool IsPointIn(this Extents3d extents, Point3d point)
@@ -127,7 +124,6 @@ namespace SioForgeCAD.Commun.Extensions
                 && point.Y >= extents.MinPoint.Y && point.Y <= extents.MaxPoint.Y
                 && point.Z >= extents.MinPoint.Z && point.Z <= extents.MaxPoint.Z;
         }
-
 
         public static bool IsInside(this Polyline LineB, Extents3d extents, bool CheckEach = true)
         {
@@ -163,7 +159,6 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-
         public static Point3d GetCenter(this IEnumerable<ObjectId> entIds)
         {
             return entIds.GetExtents().GetCenter();
@@ -179,8 +174,6 @@ namespace SioForgeCAD.Commun.Extensions
             outline.Closed = true;
             return outline;
         }
-
-
 
         // Lifted from
         // http://docs.autodesk.com/ACD/2010/ENU/AutoCAD%20.NET%20Developer%27s%20Guide/files/WS1a9193826455f5ff2566ffd511ff6f8c7ca-4363.htm
@@ -223,9 +216,5 @@ namespace SioForgeCAD.Commun.Extensions
                 ed.SetCurrentView(acView);
             }
         }
-
-
-
-
     }
 }

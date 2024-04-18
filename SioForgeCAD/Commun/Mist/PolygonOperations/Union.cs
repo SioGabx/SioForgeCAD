@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ namespace SioForgeCAD.Commun
     public static partial class PolygonOperation
     {
         public const double Margin = 0.01;
-        public static bool Union(this List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool RequestAllowMarginError = false)
+        public static bool Union(List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool RequestAllowMarginError = false)
         {
             bool AllowMarginError = RequestAllowMarginError;
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
@@ -48,7 +47,6 @@ namespace SioForgeCAD.Commun
                     PolyHoleList.AddRange(OffsetPolyHole(ref PolyHole, Margin));
                 }
             }
-
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
 
@@ -101,7 +99,6 @@ namespace SioForgeCAD.Commun
                         //NoArcPolyBase.AddToDrawing(1, true);
                         //PolyBase.Boundary.AddToDrawing(5, true);
                     }
-
                 }
                 ConcurrentBagGlobalSplittedCurves.AddRange(SplittedCurves);
             });
@@ -230,39 +227,37 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                using (Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline) { 
-
-                    List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
-                for (int i = 0; i < HoleUnionResultList.Count; i++)
+                using (Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline)
                 {
-                    Polyline ParsedHole = HoleUnionResultList[i];
-                    if (RequestAllowMarginError)
+                    List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
+                    for (int i = 0; i < HoleUnionResultList.Count; i++)
                     {
-                        var OffsetParsedHole = ParsedHole.SmartOffset(-Margin).ToList();
-                        ParsedHole = OffsetParsedHole.First();
-                        OffsetParsedHole.Remove(ParsedHole);
-                        OffsetParsedHole.DeepDispose();
-                    }
-
-                    if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
-                    {
-                        HoleUnionResult.Remove(HoleUnionResultList[i]);
-                        if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
+                        Polyline ParsedHole = HoleUnionResultList[i];
+                        if (RequestAllowMarginError)
                         {
-                            foreach (var item in SubResult.GetBoundaries())
-                            {
-                                HoleUnionResult.AddRange(item.SmartOffset(Margin));
-                            }
-                            SubResult.DeepDispose();
+                            var OffsetParsedHole = ParsedHole.SmartOffset(-Margin).ToList();
+                            ParsedHole = OffsetParsedHole.First();
+                            OffsetParsedHole.Remove(ParsedHole);
+                            OffsetParsedHole.DeepDispose();
                         }
+
+                        if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
+                        {
+                            HoleUnionResult.Remove(HoleUnionResultList[i]);
+                            if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
+                            {
+                                foreach (var item in SubResult.GetBoundaries())
+                                {
+                                    HoleUnionResult.AddRange(item.SmartOffset(Margin));
+                                }
+                                SubResult.DeepDispose();
+                            }
+                        }
+                        ParsedHole.Dispose();
                     }
-                    ParsedHole.Dispose();
-                }
-                HoleUnionResultList.RemoveCommun(HoleUnionResult).DeepDispose();
+                    HoleUnionResultList.RemoveCommun(HoleUnionResult).DeepDispose();
                 }
             }
-
-
 
             //Remove part that is leaving inside 2 polygon, they will be calculated after. 
             foreach (var Hole in HoleUnionResult.ToList())
@@ -284,7 +279,6 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-
             //Inner hole, get intersection
             foreach (var PolyHoleA in PolyHoleList)
             {
@@ -305,7 +299,6 @@ namespace SioForgeCAD.Commun
             // HoleUnionResult.AddToDrawing(4, true);
             return HoleUnionResult;
         }
-
 
         private static List<PolyHole> OffsetPolyHole(ref PolyHole polyHole, double OffsetDistance)
         {
@@ -346,7 +339,6 @@ namespace SioForgeCAD.Commun
                 return PolyHole.CreateFromList(OffsetCurve, polyHole.Holes);
             }
         }
-
 
         private static ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> GetSplittedCurves(List<Polyline> Polylines)
         {
@@ -404,9 +396,5 @@ namespace SioForgeCAD.Commun
             }
             return SplittedCurvesOrigin;
         }
-
-
-
-
     }
 }

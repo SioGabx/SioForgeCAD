@@ -25,7 +25,6 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
             this._onHotGripAction = OnHotGripAction;
         }
 
-
         public void EnableOverrule(bool enable)
         {
             if (enable)
@@ -61,10 +60,8 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
             return false;
         }
 
-
         public override void GetGripPoints(Entity entity, GripDataCollection grips, double curViewUnitSize, int gripSize, Vector3d curViewDir, GetGripPointsFlags bitFlags)
         {
-
             if (IsApplicable(entity))
             {
                 //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
@@ -84,7 +81,6 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                 };
 
                 grips.Add(grip);
-
 
                 if (!_hideOriginals)
                 {

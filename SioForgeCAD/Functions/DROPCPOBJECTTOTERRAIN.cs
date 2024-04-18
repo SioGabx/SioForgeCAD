@@ -100,8 +100,6 @@ namespace SioForgeCAD.Functions
             }
             Vector3d translationVector = FinalPoint - blkRef.Position;
             blkRef.TransformBy(Matrix3d.Displacement(translationVector));
-
         }
-
     }
 }

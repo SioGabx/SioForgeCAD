@@ -39,7 +39,6 @@ namespace SioForgeCAD.Commun.Drawing
             Collinear
         }
 
-
         public static PolylineSide CheckPointSide(this Polyline BasePolyline, Point3d TargetPoint)
         {
             for (int segmentIndex = 0; segmentIndex < BasePolyline.NumberOfVertices - 1; segmentIndex++)
@@ -51,7 +50,7 @@ namespace SioForgeCAD.Commun.Drawing
                 Vector2d pointVector = new Vector2d(TargetPoint.X - startPoint.X, TargetPoint.Y - startPoint.Y);
 
                 //cross product
-                double crossProduct = polylineVector.X * pointVector.Y - polylineVector.Y * pointVector.X;
+                double crossProduct = (polylineVector.X * pointVector.Y) - (polylineVector.Y * pointVector.X);
 
                 if (crossProduct < 0)
                 {
@@ -68,7 +67,6 @@ namespace SioForgeCAD.Commun.Drawing
             return PolylineSide.Collinear;
         }
 
-
         public static bool IsAtLeftSide(this Polyline BasePolyline, Point3d TargetPoint)
         {
             return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Left;
@@ -77,7 +75,6 @@ namespace SioForgeCAD.Commun.Drawing
         {
             return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Right;
         }
-
 
         public static ObjectId Draw(IEnumerable<Points> listOfPoints)
         {
@@ -94,6 +91,5 @@ namespace SioForgeCAD.Commun.Drawing
                 }
             }
         }
-
     }
 }

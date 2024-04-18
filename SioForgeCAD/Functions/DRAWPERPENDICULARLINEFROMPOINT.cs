@@ -64,9 +64,7 @@ namespace SioForgeCAD.Functions
                     ListOfPerpendicularLines.DeepDispose();
                     trans.Commit();
                 }
-
             }
-
         }
     }
 }

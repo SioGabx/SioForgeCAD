@@ -109,7 +109,6 @@ namespace SioForgeCAD.Commun.Extensions
                                         {
                                             nextPt = cv.EndPoint;
                                         }
-
                                         else
                                         {
                                             // cv.EndPoint == nextPt
@@ -132,7 +131,6 @@ namespace SioForgeCAD.Commun.Extensions
                         {
                             finished = true;
                         }
-
                     }
                     // If there are any Regions in the collection, recurse to explode and add their geometry
                     if (nonCvCnt > 0 && cvs.Count > 0)
@@ -157,7 +155,6 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         finished = true;
                     }
-
                 }
             }
             return res;
@@ -175,9 +172,8 @@ namespace SioForgeCAD.Commun.Extensions
 
                 if (a.StartAngle > a.EndAngle)
                 {
-                    newStart = a.StartAngle - 8 * Math.Atan(1);
+                    newStart = a.StartAngle - (8 * Math.Atan(1));
                 }
-
                 else
                 {
                     newStart = a.StartAngle;
@@ -191,13 +187,9 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     bulge = -bulge;
                 }
-
             }
             return bulge;
         }
-
-
-
 
         public static IEnumerable<(HatchLoopTypes, Curve2dCollection, IntegerCollection)> GetLoops(this Region region)
         {
@@ -237,16 +229,5 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
     }
 }

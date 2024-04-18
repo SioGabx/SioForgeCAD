@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
                 Editor ed = Generic.GetEditor();
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
+                    const string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
                     var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null);
                     if (GetBlockInXref == null)
                     {
@@ -33,7 +33,7 @@ namespace SioForgeCAD.Functions
                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
 
                     Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                    if (BlockReferenceExtensions.DoesBlockExist(BlockPosition.SCG, Settings.BlocNameAltimetrie, AltimetrieStr))
+                    if (BlockPosition.SCG.IsThereABlockReference(Settings.BlocNameAltimetrie, AltimetrieStr))
                     {
                         Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
                     }
@@ -47,5 +47,4 @@ namespace SioForgeCAD.Functions
             }
         }
     }
-
 }

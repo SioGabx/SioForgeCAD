@@ -4,7 +4,6 @@ using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 
-
 namespace SioForgeCAD.Commun
 {
     public static partial class PolygonOperation
@@ -16,7 +15,7 @@ namespace SioForgeCAD.Commun
 
             if (PolyHoleA.Boundary.IsSegmentIntersecting(PolyHoleB.Boundary, out Point3dCollection _, Intersect.OnBothOperands))
             {
-                var SliceResult = PolyHoleA.Boundary.Slice(PolyHoleB.Boundary);
+                var SliceResult = PolygonOperation.Slice(PolyHoleA.Boundary, PolyHoleB.Boundary);
                 foreach (var item in SliceResult)
                 {
                     if (item.GetInnerCentroid().IsInsidePolyline(PolyHoleA.Boundary) && item.GetInnerCentroid().IsInsidePolyline(PolyHoleB.Boundary))
@@ -54,16 +53,10 @@ namespace SioForgeCAD.Commun
             //if there is hole, we substract them from the boundary
             foreach (var boundary in BoundaryIntersectionResult.ToList())
             {
-                boundary.Substraction(PolyHoleHoles, out var TempIntersectionResult);
+                PolygonOperation.Substraction(boundary, PolyHoleHoles, out var TempIntersectionResult);
                 IntersectionResult.AddRange(TempIntersectionResult);
             }
             return true;
         }
-
-
-
-
-
-
     }
 }

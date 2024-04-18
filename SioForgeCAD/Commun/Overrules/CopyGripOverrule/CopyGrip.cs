@@ -21,7 +21,7 @@ namespace SioForgeCAD.Commun.Overrules
         }
 
         public ObjectId EntityId { get; set; } = ObjectId.Null;
-        public Action<ObjectId> OnHotGripAction { get; set; } = (ObjectId) => { Generic.WriteMessage("GRIPPED"); };
+        public Action<ObjectId> OnHotGripAction { get; set; } = (_) => Generic.WriteMessage("GRIPPED");
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
@@ -35,7 +35,6 @@ namespace SioForgeCAD.Commun.Overrules
 
             Point3d Origin = new Point3d(x, y, 0.0);
 
-
             Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
             Vector3d XVector = ucs.CoordinateSystem3d.Xaxis;
@@ -44,8 +43,6 @@ namespace SioForgeCAD.Commun.Overrules
             Point3d OriginBottom = Origin.Displacement(-YVector, offset);
             Point3d OriginLeft = Origin.Displacement(-XVector, offset);
             Point3d OriginRight = Origin.Displacement(XVector, offset);
-
-
 
             Point3d Transform(Point3d point, Vector3d Vector)
             {
@@ -58,7 +55,6 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(OriginTop, XVector), //B
                 Transform(Transform(Origin, XVector), YVector), //C
 
-                
                 Transform(OriginRight, YVector), //D
                 Transform(OriginRight, -YVector), //E
                 Transform(Transform(Origin, XVector), -YVector), //F
@@ -71,7 +67,6 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(OriginLeft, YVector), //K
                 Transform(Transform(Origin, -XVector), YVector), //L
             };
-
 
             worldDraw.SubEntityTraits.FillType = FillType.FillAlways;
             if (type == DrawType.HoverGrip)

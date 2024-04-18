@@ -20,7 +20,7 @@ namespace SioForgeCAD.Functions
         {
             static readonly Random Random = new Random();
             private readonly List<(T Value, int Pourcentage)> percentageItemsDict;
-            public ProportionalRandomSelector() => percentageItemsDict = new List<(T, int)>() { };
+            public ProportionalRandomSelector() => percentageItemsDict = new List<(T, int)>();
 
             public void AddPercentageItem(T item, int percentage) => percentageItemsDict.Add((item, percentage));
 
@@ -135,7 +135,6 @@ namespace SioForgeCAD.Functions
                                 NumberSelected++;
                                 pavement.IsSelected = true;
                             }
-
                         }
                     }
                 }
@@ -227,10 +226,6 @@ namespace SioForgeCAD.Functions
             return result;
         }
 
-
-
-
-
         public static bool GetDouble(string Prompt, ref double Value)
         {
             var getDoubleOption = new PromptDoubleOptions(Prompt)
@@ -249,7 +244,6 @@ namespace SioForgeCAD.Functions
             Value = GetLargeurValue.Value;
             return true;
         }
-
 
         private static bool GetDrawingVector(out Line ColumnsLine, out Line RowsLine)
         {
@@ -270,7 +264,5 @@ namespace SioForgeCAD.Functions
 
             return true;
         }
-
-
     }
 }

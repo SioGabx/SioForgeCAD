@@ -10,8 +10,5 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return new IntegerCollection(list.ToArray());
         }
-
-
-
     }
 }

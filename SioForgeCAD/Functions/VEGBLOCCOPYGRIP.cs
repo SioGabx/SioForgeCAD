@@ -21,7 +21,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         public static void AddGrip()
         {
             if (!Instance.IsEnabled)
@@ -74,7 +73,6 @@ namespace SioForgeCAD.Functions
                     }
                 }
             }
-
         }
     }
 }

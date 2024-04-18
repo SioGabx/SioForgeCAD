@@ -26,10 +26,8 @@ namespace SioForgeCAD.Commun.Extensions
             return blockDef;
         }
 
-
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
-
             if (blockRef.IsDynamicBlock)
             {
                 try
@@ -42,7 +40,6 @@ namespace SioForgeCAD.Commun.Extensions
                         return btr.Name;
                     }
                 }
-
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex);
@@ -85,7 +82,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
         public static IEnumerable<KeyValuePair<string, AttributeReference>> GetAttributesByTag(this BlockReference source)
         {
             foreach (var att in source.AttributeCollection.GetObjects())
@@ -93,7 +89,6 @@ namespace SioForgeCAD.Commun.Extensions
                 yield return new KeyValuePair<string, AttributeReference>(att.Tag, att);
             }
         }
-
 
         /// <summary>
         /// Gets all the attribute values by tag.
@@ -104,7 +99,6 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return source.GetAttributesByTag().ToDictionary(p => p.Key, p => p.Value.TextString);
         }
-
 
         /// <summary>
         /// Sets the value to the attribute.
@@ -144,7 +138,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Point3d ProjectXrefPointToCurrentSpace(ObjectId xrefId, Point3d pointInXref)
+        public static Point3d ProjectXrefPointToCurrentSpace(this Point3d pointInXref, ObjectId xrefId)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -170,7 +164,7 @@ namespace SioForgeCAD.Commun.Extensions
             return Point3d.Origin;
         }
 
-        public static bool DoesBlockExist(Point3d position, string blockName, string attributeValue)
+        public static bool IsThereABlockReference(this Point3d position, string blockName, string attributeValue)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -211,6 +205,5 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
         }
-
     }
 }

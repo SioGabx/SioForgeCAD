@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using System;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {
@@ -26,9 +27,10 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
         }
-
-
     }
 }

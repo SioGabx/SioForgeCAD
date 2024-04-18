@@ -52,7 +52,6 @@ namespace SioForgeCAD.Forms
                     }
                 }
             }
-
         }
 
         private bool IsContiguousSelection()
@@ -156,7 +155,7 @@ namespace SioForgeCAD.Forms
                 minRow = Math.Min(minRow, cellRow);
                 minCol = Math.Min(minCol, cellCol);
             }
-            DataGridViewCell currentCell = SelectedCells.Where(cell => (cell.RowIndex == minRow && cell.ColumnIndex == minCol)).First();
+            DataGridViewCell currentCell = SelectedCells.First(cell => cell.RowIndex == minRow && cell.ColumnIndex == minCol);
             int NumberOfColumnsSelected = SelectedCells.Select(s => s.ColumnIndex).Distinct().Count();
             int NumberOfRowSelected = SelectedCells.Select(s => s.RowIndex).Distinct().Count();
 
@@ -249,7 +248,7 @@ namespace SioForgeCAD.Forms
                     {
                         if (!ComboBoxCell.Items.Contains(cellContent))
                         {
-                            (column as DataGridViewComboBoxColumn).Items.Add(cellContent);
+                            (column as DataGridViewComboBoxColumn)?.Items.Add(cellContent);
                         }
                         ComboBoxCell.Value = cellContent;
                     }
@@ -261,7 +260,6 @@ namespace SioForgeCAD.Forms
                 }
             }
         }
-
 
         public static string[][] ParseCSV(string input, string delimiter = "\t")
         {
@@ -282,7 +280,7 @@ namespace SioForgeCAD.Forms
 
         private void VegblocDialog_Load(object sender, EventArgs e)
         {
-            int defaultNumberOfRows = 20;
+            const int defaultNumberOfRows = 20;
 
             // Add empty rows to the DataGridView
             for (int i = 0; i < defaultNumberOfRows; i++)
@@ -318,9 +316,5 @@ namespace SioForgeCAD.Forms
             }
             return Rows;
         }
-
-
-
-
     }
 }

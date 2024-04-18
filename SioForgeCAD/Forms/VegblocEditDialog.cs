@@ -11,14 +11,14 @@ namespace SioForgeCAD.Forms
             this.DialogResult = DialogResult.Cancel;
         }
 
-
         private static bool HasError(Control Ctrl)
         {
             string value = null;
             if (Ctrl is TextBox textbox)
             {
                 value = textbox.Text;
-            }else if (Ctrl is ComboBox combobox)
+            }
+            else if (Ctrl is ComboBox combobox)
             {
                 value = combobox.Text;
             }
@@ -37,7 +37,6 @@ namespace SioForgeCAD.Forms
             {
                 return;
             }
-
 
             this.DialogResult = DialogResult.OK;
         }

@@ -17,7 +17,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
             List<Curve> ExternalMergedCurves = ExternalCurves.JoinMerge();
             ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
-            List<Curve> InnerCurves = OtherCurves.Select(tuple => tuple.curve).ToList();
+            List<Curve> InnerCurves = OtherCurves.ConvertAll(tuple => tuple.curve);
             if (Hachure.HatchStyle == HatchStyle.Ignore)
             {
                 InnerCurves.DeepDispose();
@@ -43,9 +43,6 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
-
-
-
         public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary)
         {
             var objectIdCollection = Hachure.GetAssociatedObjectIds();
@@ -61,7 +58,6 @@ namespace SioForgeCAD.Commun.Extensions
         //{
         //    Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
         //}
-
 
         public static bool GetHatchPolylineV2(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
         {
@@ -180,7 +176,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return result;
         }
-
 
         public static Hatch HatchRegion(this Region region, Transaction tr, bool Associative = true)
         {

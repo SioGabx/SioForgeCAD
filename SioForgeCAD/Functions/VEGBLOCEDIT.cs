@@ -7,6 +7,7 @@ using SioForgeCAD.Forms;
 using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 
@@ -63,25 +64,22 @@ namespace SioForgeCAD.Functions
             {
                 try
                 {
-                    Dictionary<string, string> BlocDataFromLegacy = new Dictionary<string, string>()
-                {
-                    {"BlocName", BlkRef.GetBlockReferenceName()},
-                    {"CompleteName", OldVeg[0]},
-                    {"Width",OldVeg[1].Split(':')[1]},
-                    {"Height",OldVeg[2].Split(':')[1]},
-                    {"Type", BlkRef.GetBlockReferenceName().Replace(Settings.VegblocLayerPrefix, "").Replace(OldVeg[0], "").Replace("_","") },
-                };
-                    return BlocDataFromLegacy;
+                    return new Dictionary<string, string>() {
+                        {"BlocName", BlkRef.GetBlockReferenceName()},
+                        {"CompleteName", OldVeg[0]},
+                        {"Width",OldVeg[1].Split(':')[1]},
+                        {"Height",OldVeg[2].Split(':')[1]},
+                        {"Type", BlkRef.GetBlockReferenceName().Replace(Settings.VegblocLayerPrefix, "").Replace(OldVeg[0], "").Replace("_","") },
+                    };
                 }
-                catch (System.Exception) { }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
             }
 
             return null;
         }
-
-
-
-
 
         public static void Edit()
         {
@@ -110,7 +108,6 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-
                 var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, EditDialog, true);
                 if (DialogResult != System.Windows.Forms.DialogResult.OK)
                 {
@@ -121,7 +118,6 @@ namespace SioForgeCAD.Functions
                 string Width = EditDialog.WidthInput.Text;
                 string Height = EditDialog.HeightInput.Text;
                 string Type = EditDialog.TypeInput.Text;
-
 
                 if (BlkRef.IsEntityOnLockedLayer())
                 {
@@ -139,7 +135,6 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                 }
-
 
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out string BlockData, out bool WasCreated);
                 if (string.IsNullOrWhiteSpace(NewBlockName))
@@ -180,10 +175,8 @@ namespace SioForgeCAD.Functions
                 ReplaceAllBlockReference(tr, OldBlockNewRenameName, NewBlockName);
                 Layers.Merge(OldBlockName, NewBlockName);
                 tr.Commit();
-
             }
         }
-
 
         public static void ReplaceAllBlockReference(Transaction tr, string OldBlockName, string NewBlockName)
         {
@@ -209,10 +202,6 @@ namespace SioForgeCAD.Functions
             }
 
             BlockReferences.Purge(OldBlockName);
-
         }
-
-
-
     }
 }

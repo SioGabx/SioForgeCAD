@@ -22,7 +22,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
         public static List<T> RemoveCommun<T>(this IEnumerable<T> list, IEnumerable<T> ItemsToRemove)
         {
             List<T> NewList = list.ToList();
@@ -48,6 +47,5 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return NewList;
         }
-
     }
 }

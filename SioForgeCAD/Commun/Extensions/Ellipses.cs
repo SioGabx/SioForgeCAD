@@ -139,7 +139,6 @@ namespace SioForgeCAD.Commun.Extensions
             return pline;
         }
         */
-
         public static Polyline ToPolyline(this Ellipse ellipse)
         {
             return ellipse.Spline.ToPolyline(10, true, true) as Polyline;

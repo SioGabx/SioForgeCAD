@@ -50,14 +50,13 @@ namespace SioForgeCAD
                 case "Settings":
                     break;
                 case "Register":
-                    Commun.PluginRegister.Register();
+                    PluginRegister.Register();
                     break;
                 case "Unregister":
-                    Commun.PluginRegister.Unregister();
+                    PluginRegister.Unregister();
                     break;
             }
         }
-
 
         [CommandMethod("CCI")]
         public static void CCI()
@@ -177,7 +176,6 @@ namespace SioForgeCAD
             Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
         }
 
-
         [CommandMethod("RRR", CommandFlags.UsePickSet)]
         public static void RRR()
         {
@@ -257,22 +255,17 @@ namespace SioForgeCAD
             Functions.PURGEALL.Purge();
         }
 
-
         [CommandMethod("CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH()
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
 
-
         [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
         public static void SCALEBY()
         {
             Functions.SCALEBY.ScaleBy();
         }
-
-
-
 
         [CommandMethod("INNERCENTROID", CommandFlags.UsePickSet)]
         public static void INNERCENTROID()
@@ -286,7 +279,6 @@ namespace SioForgeCAD
             var pnts = PolygonOperation.GetInnerCentroid(polygon, 5);
             pnts.AddToDrawing();
         }
-
 
         [CommandMethod("MERGEHATCH", CommandFlags.UsePickSet)]
         public static void MERGEHATCH()
@@ -317,7 +309,6 @@ namespace SioForgeCAD
             Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
         }
 
-
         [CommandMethod("VPLOCK")]
         public static void VPLOCK()
         {
@@ -336,72 +327,6 @@ namespace SioForgeCAD
             Functions.POLYCLEAN.PolyClean();
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         [CommandMethod("TESTtraytooltip")]
         public static void TESTtraytooltip()
         {
@@ -409,48 +334,31 @@ namespace SioForgeCAD
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
             //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
 
-
             TrayItem ti = new TrayItem
             {
                 ToolTipText = "My tray item tooltip"
             };
             var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
             var iconHandle = bitmap.GetHicon();
-            ti.Icon = System.Drawing.Icon.FromHandle(iconHandle);
+            ti.Icon = Icon.FromHandle(iconHandle);
 
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
 
-            Autodesk.AutoCAD.Windows.Pane pane = new Autodesk.AutoCAD.Windows.Pane
+            Pane pane = new Pane
             {
                 // pane.Icon = ti.Icon;
                 ToolTipText = "My Pane tooltip",
-                Style = Autodesk.AutoCAD.Windows.PaneStyles.Normal
+                Style = PaneStyles.Normal
             };
             //pane.Ba
-            pane.MouseDown += new Autodesk.AutoCAD.Windows.StatusBarMouseDownEventHandler(HelloWorld);
+            pane.MouseDown += HelloWorld;
             Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.Panes.Add(pane);
         }
 
-        public static void HelloWorld(object sender, Autodesk.AutoCAD.Windows.StatusBarMouseDownEventArgs e)
+        public static void HelloWorld(object sender, StatusBarMouseDownEventArgs e)
         {
             MessageBox.Show("hello");
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
         public static void CURVEPOLYTOPOLYGON()
@@ -476,10 +384,6 @@ namespace SioForgeCAD
             }
         }
 
-
-
-
-
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()
         {
@@ -501,8 +405,6 @@ namespace SioForgeCAD
                 tr.Commit();
             }
         }
-
-
 
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
@@ -533,12 +435,9 @@ namespace SioForgeCAD
             }
         }
 
-
-
         [CommandMethod("DEBUG", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
         public static void GENERATEBOUNDINGBOX()
         {
-
             Editor ed = Generic.GetEditor();
             var result = ed.GetEntity("select");
             if (result.Status != PromptStatus.OK) { return; }
@@ -554,13 +453,12 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
         {
-            Commun.Triangulate.TriangulateCommand();
+            Triangulate.TriangulateCommand();
         }
 
         [CommandMethod("DEBUG", "READXDATA", CommandFlags.UsePickSet)]
         public static void READXDATA()
         {
-
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
             var result = ed.GetEntity("Selectionnez un object");
@@ -576,13 +474,9 @@ namespace SioForgeCAD
                     {
                         Generic.WriteMessage(item.ToString());
                     }
-
                 }
             }
         }
-
-
-
 
 #if DEBUG
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
@@ -603,9 +497,9 @@ namespace SioForgeCAD
                 {
                     double x = RandomNumber(-200, 200);
                     double y = RandomNumber(-50, 50);
-                    double alti = RandomNumber(100, 120) + RandomNumber(0, 99) * 0.01;
+                    double alti = RandomNumber(100, 120) + (RandomNumber(0, 99) * 0.01);
                     Point3d point = new Point3d(x, y, alti);
-                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
+                    BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
                 }
                 tr.Commit();
             }

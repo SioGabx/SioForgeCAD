@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun
 {
     public static partial class PolygonOperation
     {
-        public static bool Substraction(this PolyHole BasePolygon, IEnumerable<Polyline> SubstractionPolygonsArg, out List<PolyHole> UnionResult)
+        public static bool Substraction(PolyHole BasePolygon, IEnumerable<Polyline> SubstractionPolygonsArg, out List<PolyHole> UnionResult)
         {
             List<Curve> NewBoundaryHoles = new List<Curve>();
             List<Polyline> CuttedPolyline = new List<Polyline>() { BasePolygon.Boundary };
@@ -19,7 +19,7 @@ namespace SioForgeCAD.Commun
 
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
-                if (SubstractionPolygonCurve == null || SubstractionPolygonCurve.IsDisposed)
+                if (SubstractionPolygonCurve?.IsDisposed != false)
                 {
                     Debug.WriteLine("Error : SubstractionPolygonCurve was null or disposed");
                     continue;
@@ -32,7 +32,7 @@ namespace SioForgeCAD.Commun
                         {
                             if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out _, Intersect.OnBothOperands))
                             {
-                                var Cuts = NewBoundary.Slice(SimplifiedSubstractionPolygonCurve);
+                                var Cuts = PolygonOperation.Slice(NewBoundary, SimplifiedSubstractionPolygonCurve);
                                 //if the boundary was cuted 
                                 if (Cuts.Count > 0)
                                 {
@@ -68,6 +68,5 @@ namespace SioForgeCAD.Commun
             UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }
-
     }
 }

@@ -13,7 +13,7 @@ namespace SioForgeCAD.Commun.Drawing
                 DBDictionary gd = db.GroupDictionaryId.GetDBObject(OpenMode.ForWrite) as DBDictionary;
                 int DuplicateNameIndex = 0;
 
-                string GroupName = SymbolUtilityServices.RepairSymbolName(Name, false); ;
+                string GroupName = SymbolUtilityServices.RepairSymbolName(Name, false);
 
                 while (gd.Contains(GroupName))
                 {

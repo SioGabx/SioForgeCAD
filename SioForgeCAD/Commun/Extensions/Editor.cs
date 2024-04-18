@@ -5,7 +5,6 @@ using System;
 using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
-
 namespace SioForgeCAD.Commun.Extensions
 {
     public enum AngleUnit { Radians, Degrees }
@@ -38,7 +37,6 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Extents3d GetCurrentViewBound(this Editor ed, double shrinkScale = 1.0)
         {
-
             //Get current view size
             Size vSize = GetCurrentViewSize(ed);
 
@@ -50,16 +48,11 @@ namespace SioForgeCAD.Commun.Extensions
             //need to be transformed back to World CS
             Point3d cent = ((Point3d)Application.GetSystemVariable("VIEWCTR")).TransformBy(ed.CurrentUserCoordinateSystem);
 
-            Point3d minPoint = new Point3d(cent.X - w / 2.0, cent.Y - h / 2.0, 0);
-            Point3d maxPoint = new Point3d(cent.X + w / 2.0, cent.Y + h / 2.0, 0);
+            Point3d minPoint = new Point3d(cent.X - (w / 2.0), cent.Y - (h / 2.0), 0);
+            Point3d maxPoint = new Point3d(cent.X + (w / 2.0), cent.Y + (h / 2.0), 0);
 
             return new Extents3d(minPoint, maxPoint);
         }
-
-
-
-
-
 
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
@@ -93,9 +86,6 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
-
-
 
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
         {
@@ -160,7 +150,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             HatchObjectId = ObjectId.Null;
             SelectionSet BaseSelection = ed.SelectImplied()?.Value;
-            if (BaseSelection != null && BaseSelection.Count > 0)
+            if (BaseSelection?.Count > 0)
             {
                 foreach (ObjectId item in BaseSelection.GetObjectIds())
                 {
@@ -226,6 +216,5 @@ namespace SioForgeCAD.Commun.Extensions
 
             return true;
         }
-
     }
 }

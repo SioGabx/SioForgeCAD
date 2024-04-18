@@ -58,7 +58,6 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-
         public static ObjectId AddToDrawingCurrentTransaction(this Entity entity)
         {
             var db = Generic.GetDatabase();
@@ -68,7 +67,6 @@ namespace SioForgeCAD.Commun.Drawing
             var objid = acBlkTblRec.AppendEntity(entity);
             acTrans.AddNewlyCreatedDBObject(entity, true);
             return objid;
-
         }
     }
 }

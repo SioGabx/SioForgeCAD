@@ -48,7 +48,6 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-
                 //bool IsValidMerge = false;
                 //If SecondHachurePolyHole intersect FirstHachurePolyHole
                 //If SecondHachurePolyHole intersect with a hole of FirstHachurePolyHole
@@ -72,7 +71,6 @@ namespace SioForgeCAD.Functions
                         {
                             Hatch.Origin = FirstHachure.Origin;
                         }
-
                     }
                     //Delete old
                     DeleteOldHatch(FirstHachure);
@@ -84,7 +82,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         private static void DeleteOldHatch(Hatch Hachure)
         {
             foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
@@ -94,7 +91,4 @@ namespace SioForgeCAD.Functions
             Hachure.ObjectId.EraseObject();
         }
     }
-
-
-
 }

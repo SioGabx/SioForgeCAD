@@ -55,16 +55,5 @@ namespace SioForgeCAD.Commun
             regAcadAppKey.Close();
             Generic.WriteMessage($"{sAppName} à été supprimée avec succès");
         }
-
-
-
-
-
-
-
-
-
-
-
     }
 }

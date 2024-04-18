@@ -26,7 +26,6 @@ namespace SioForgeCAD.Functions
             public Vector3d Vector3D { get; set; }
         }
 
-
         private static Points GetProjectedPointOnBaseTerrain(Points BasePoint, Polyline Terrain)
         {
             List<Line> ListOfPerpendicularLines = null;
@@ -61,7 +60,7 @@ namespace SioForgeCAD.Functions
             SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
             PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = $"\nSelectionnez des côtes à projeter",
+                MessageForAdding = "\nSelectionnez des côtes à projeter",
                 RejectObjectsOnLockedLayers = false
             };
             var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
@@ -86,7 +85,6 @@ namespace SioForgeCAD.Functions
                         ent.Dispose();
                     }
                     Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
-
                 }
                 insertionTransientPoints.Dispose();
                 HightLighter.UnhighlightAll(SelectedCoteBloc);
@@ -121,28 +119,33 @@ namespace SioForgeCAD.Functions
                 terrainPoints.Add(TerrainPoint);
             }
             terrainPoints = terrainPoints.OrderBy(TerrainPoint => TerrainPoint.DistanceFromTerrainStart).ToList();
+            if (terrainPoints.Count > 0)
+            {
+                TerrainPoint FirstOrderedTerrainPoint = terrainPoints.First();
+                TerrainPoint LastOrderedTerrainPoint = terrainPoints.Last();
 
-            TerrainPoint StartTerPoint = new TerrainPoint()
-            {
-                StartPoint = TerrainBasePolyline.StartPoint.ToPoints(),
-                Block = terrainPoints.First().Block,
-                Altitude = terrainPoints.First().Altitude,
-                DistanceFromTerrainStart = 0
-            };
-            TerrainPoint EndTerPoint = new TerrainPoint()
-            {
-                StartPoint = TerrainBasePolyline.EndPoint.ToPoints(),
-                Block = terrainPoints.Last().Block,
-                Altitude = terrainPoints.Last().Altitude,
-                DistanceFromTerrainStart = TerrainBasePolyline.Length
-            };
-            if (terrainPoints.First().DistanceFromTerrainStart != StartTerPoint.DistanceFromTerrainStart)
-            {
-                terrainPoints.Insert(0, StartTerPoint);
-            }
-            if (terrainPoints.Last().DistanceFromTerrainStart != EndTerPoint.DistanceFromTerrainStart)
-            {
-                terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
+                TerrainPoint StartTerPoint = new TerrainPoint()
+                {
+                    StartPoint = TerrainBasePolyline.StartPoint.ToPoints(),
+                    Block = FirstOrderedTerrainPoint.Block,
+                    Altitude = FirstOrderedTerrainPoint.Altitude,
+                    DistanceFromTerrainStart = 0
+                };
+                TerrainPoint EndTerPoint = new TerrainPoint()
+                {
+                    StartPoint = TerrainBasePolyline.EndPoint.ToPoints(),
+                    Block = LastOrderedTerrainPoint.Block,
+                    Altitude = LastOrderedTerrainPoint.Altitude,
+                    DistanceFromTerrainStart = TerrainBasePolyline.Length
+                };
+                if (FirstOrderedTerrainPoint.DistanceFromTerrainStart != StartTerPoint.DistanceFromTerrainStart)
+                {
+                    terrainPoints.Insert(0, StartTerPoint);
+                }
+                if (LastOrderedTerrainPoint.DistanceFromTerrainStart != EndTerPoint.DistanceFromTerrainStart)
+                {
+                    terrainPoints.Insert(terrainPoints.Count, EndTerPoint);
+                }
             }
             return terrainPoints;
         }
@@ -173,7 +176,6 @@ namespace SioForgeCAD.Functions
                 return CoteMinimalMaximumMultipleOfFive;
             }
         }
-
 
         public List<Entity> GetTerrain(Points points)
         {
@@ -223,7 +225,6 @@ namespace SioForgeCAD.Functions
         {
             return startPoint.SCG.Add(vector3d).ToPoints();
         }
-
     }
 
     internal class DrawCPTerrainInsertionTransientPoints : GetPointTransient
@@ -248,7 +249,6 @@ namespace SioForgeCAD.Functions
             bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);
             return IsLastPointInverted != IsNewPointInverted;
         }
-
 
         public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
         {

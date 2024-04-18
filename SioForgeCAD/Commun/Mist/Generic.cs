@@ -24,7 +24,7 @@ namespace SioForgeCAD.Commun
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed.WriteMessage(message.ToString() + "\n");
+            ed.WriteMessage(message + "\n");
         }
 
         public static void LoadLispFromStringCommand(string lispCode)
@@ -33,8 +33,6 @@ namespace SioForgeCAD.Commun
             string loadCommand = $"(eval '{lispCode})";
             doc.SendStringToExecute(loadCommand, true, false, false);
         }
-
-
 
         public static string GetExtensionDLLName()
         {
@@ -47,8 +45,7 @@ namespace SioForgeCAD.Commun
             var db = GetDatabase();
             using (Transaction newTransaction = doc.TransactionManager.StartTransaction())
             {
-                BlockTable newBlockTable;
-                newBlockTable = newTransaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTable newBlockTable = newTransaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord newBlockTableRecord = Generic.GetCurrentSpaceBlockTableRecord(newTransaction);
                 TextStyleTable newTextStyleTable = newTransaction.GetObject(db.TextStyleTableId, OpenMode.ForRead) as TextStyleTable;
 
@@ -69,24 +66,11 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
-
-
-
-
-
-
         public static Transparency GetTransparencyFromAlpha(int Alpha)
         {
             byte AlphaByte = ((byte)(255 * (100 - Alpha) / 100));
             return new Autodesk.AutoCAD.Colors.Transparency(AlphaByte);
         }
-
-
-
-
-
-
 
         public static Document GetDocument()
         {
@@ -127,11 +111,5 @@ namespace SioForgeCAD.Commun
             await ed.CommandAsync(args);
             Application.SetSystemVariable("CMDECHO", cmdecho);
         }
-
-
-
-
-
-
     }
 }

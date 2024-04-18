@@ -99,7 +99,7 @@ namespace SioForgeCAD.Commun
                             {
                                 string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
                                 AttributeElement.Color = GetTransGraphicsColor(AttributeElement, false);
-                                if (Values != null && Values.ContainsKey(AttributeDefinitionName))
+                                if (Values?.ContainsKey(AttributeDefinitionName) == true)
                                 {
                                     if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
                                     {
@@ -157,7 +157,6 @@ namespace SioForgeCAD.Commun
                 }
                 StaticDrawable?.Clear();
             }
-
         }
 
         public void DisposeEntities()
@@ -212,7 +211,6 @@ namespace SioForgeCAD.Commun
                     StaticDrawable.Add(DrawableClone);
                 }
             }
-
         }
 
         public virtual Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
@@ -224,7 +222,7 @@ namespace SioForgeCAD.Commun
         {
             if (IsStaticDrawable)
             {
-                byte Alpha = (255 * (100 - 50) / 100);
+                const byte Alpha = (255 * (100 - 50) / 100);
                 Drawable.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Alpha);
             }
             return Drawable.Transparency;
@@ -276,7 +274,7 @@ namespace SioForgeCAD.Commun
             }
 
             ed.PointMonitor += handler;
-            PromptPointOptions pointOptions = new PromptPointOptions("\n" + Message.ToString());
+            PromptPointOptions pointOptions = new PromptPointOptions("\n" + Message);
             foreach (string KeyWord in KeyWords)
             {
                 if (string.IsNullOrWhiteSpace(KeyWord)) { continue; }
@@ -328,13 +326,11 @@ namespace SioForgeCAD.Commun
             return true;
         }
 
-
         public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
         {
             Matrix3d mat = Matrix3d.Displacement(currentPoint.GetVectorTo(destinationPoint));
             entity.TransformBy(mat);
         }
-
     }
 
     public class GetAngleTransient : TransientBase
@@ -346,7 +342,6 @@ namespace SioForgeCAD.Commun
             this.OriginPoint = OriginPoint;
             this.SecondPoint = SecondPoint;
         }
-
 
         public override Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
@@ -364,7 +359,9 @@ namespace SioForgeCAD.Commun
         {
             if (Drawable is Hatch || IsStaticDrawable)
             {
-                byte Alpha = (255 * (100 - 50) / 100);
+                //50% alpha
+                const byte AlphaPourcentage = 50;
+                const byte Alpha = (255 * (100 - AlphaPourcentage) / 100);
                 Drawable.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Alpha);
             }
             return Drawable.Transparency;
@@ -431,7 +428,5 @@ namespace SioForgeCAD.Commun
             Matrix3d rotationMatrix = Matrix3d.Rotation(rotationAngle, Vector3d.ZAxis, OriginPoint.SCG);
             entity.TransformBy(rotationMatrix);
         }
-
     }
-
 }

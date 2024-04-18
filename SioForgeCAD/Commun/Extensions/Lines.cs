@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 
-
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class LinesExtentions
@@ -27,31 +26,31 @@ namespace SioForgeCAD.Commun.Extensions
             if (b1.X == b2.X)
             {
                 lambda = (b1.X - a1.X) / (a2.X - b1.X);
-                double Y = (a1.Y + lambda * a2.Y) / (1 + lambda);
+                double Y = (a1.Y + (lambda * a2.Y)) / (1 + lambda);
                 miu = (Y - b1.Y) / (b2.Y - Y);
             }
             else if (a1.X == a2.X)
             {
                 miu = (a1.X - b1.X) / (b2.X - a1.X);
-                double Y = (b1.Y + miu * b2.Y) / (1 + miu);
+                double Y = (b1.Y + (miu * b2.Y)) / (1 + miu);
                 lambda = (Y - a1.Y) / (a2.Y - Y);
             }
             else if (b1.Y == b2.Y)
             {
                 lambda = (b1.Y - a1.Y) / (a2.Y - b1.Y);
-                double X = (a1.X + lambda * a2.X) / (1 + lambda);
+                double X = (a1.X + (lambda * a2.X)) / (1 + lambda);
                 miu = (X - b1.X) / (b2.X - X);
             }
             else if (a1.Y == a2.Y)
             {
                 miu = (a1.Y - b1.Y) / (b2.Y - a1.Y);
-                double X = (b1.X + miu * b2.X) / (1 + miu);
+                double X = (b1.X + (miu * b2.X)) / (1 + miu);
                 lambda = (X - a1.X) / (a2.X - X);
             }
             else
             {
-                lambda = (b1.X * a1.Y - b2.X * a1.Y - a1.X * b1.Y + b2.X * b1.Y + a1.X * b2.Y - b1.X * b2.Y) / (-b1.X * a2.Y + b2.X * a2.Y + a2.X * b1.Y - b2.X * b1.Y - a2.X * b2.Y + b1.X * b2.Y);
-                miu = (-a2.X * a1.Y + b1.X * a1.Y + a1.X * a2.Y - b1.X * a2.Y - a1.X * b1.Y + a2.X * b1.Y) / (a2.X * a1.Y - b2.X * a1.Y - a1.X * a2.Y + b2.X * a2.Y + a1.X * b2.Y - a2.X * b2.Y); // from Mathematica
+                lambda = ((b1.X * a1.Y) - (b2.X * a1.Y) - (a1.X * b1.Y) + (b2.X * b1.Y) + (a1.X * b2.Y) - (b1.X * b2.Y)) / ((-b1.X * a2.Y) + (b2.X * a2.Y) + (a2.X * b1.Y) - (b2.X * b1.Y) - (a2.X * b2.Y) + (b1.X * b2.Y));
+                miu = ((-a2.X * a1.Y) + (b1.X * a1.Y) + (a1.X * a2.Y) - (b1.X * a2.Y) - (a1.X * b1.Y) + (a2.X * b1.Y)) / ((a2.X * a1.Y) - (b2.X * a1.Y) - (a1.X * a2.Y) + (b2.X * a2.Y) + (a1.X * b2.Y) - (a2.X * b2.Y)); // from Mathematica
             }
 
             bool result = false;
@@ -90,7 +89,5 @@ namespace SioForgeCAD.Commun.Extensions
             poly.AddVertexAt(1, arc.EndPoint.ToPoint2d(), 0, 0, 0);
             return poly;
         }
-
-
     }
 }

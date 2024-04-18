@@ -18,7 +18,6 @@ namespace SioForgeCAD.Functions
         {
             while (true)
             {
-
                 Editor ed = Generic.GetEditor();
                 Database db = Generic.GetDatabase();
                 FirstPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un premier point", null);
@@ -89,7 +88,6 @@ namespace SioForgeCAD.Functions
         }
     }
 
-
     internal class CCIInsertionTransientPoints : GetPointTransient
     {
         public CCIInsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
@@ -111,11 +109,9 @@ namespace SioForgeCAD.Functions
             if (Drawable is Polyline)
             {
                 return Color.FromColorIndex(ColorMethod.ByColor, (short)Settings.TransientSecondaryColorIndex);
-
             }
             return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
         }
-
 
         public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
         {
@@ -125,7 +121,5 @@ namespace SioForgeCAD.Functions
             }
             base.TransformEntities(entity, currentPoint, destinationPoint);
         }
-
     }
-
 }

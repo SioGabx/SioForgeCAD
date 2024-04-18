@@ -19,7 +19,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             if (db.TileMode)
             {
-                return new IntegerCollection() { };
+                return new IntegerCollection();
             }
 
             List<int> vps = new List<int>();
@@ -32,7 +32,7 @@ namespace SioForgeCAD.Commun.Extensions
                 // Are we in paper space and not inside a floating
                 // viewport? Then only the paper space viewport itself
                 // is of interest
-                if (vp != null && vp.Number == 1)
+                if (vp?.Number == 1)
                 {
                     vps.Add(1);
                 }
@@ -42,9 +42,9 @@ namespace SioForgeCAD.Commun.Extensions
                     // will display transients in active viewports
                     foreach (ObjectId vpId in db.GetViewports(false))
                     {
-                        vp = (Autodesk.AutoCAD.DatabaseServices.Viewport)tr.GetObject(vpId, OpenMode.ForRead);
+                        vp = (Viewport)tr.GetObject(vpId, OpenMode.ForRead);
                         vps.Add(vp.Number);
-                    };
+                    }
                 }
                 tr.Commit();
             }

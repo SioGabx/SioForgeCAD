@@ -35,22 +35,22 @@ namespace SioForgeCAD.JSONParser
         public static T FromJson<T>(this string json)
         {
             // Initialize, if needed, the ThreadStatic variables
-            if (null == propertyInfoCache)
+            if (propertyInfoCache == null)
             {
                 propertyInfoCache = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
             }
 
-            if (null == fieldInfoCache)
+            if (fieldInfoCache == null)
             {
                 fieldInfoCache = new Dictionary<Type, Dictionary<string, FieldInfo>>();
             }
 
-            if (null == stringBuilder)
+            if (stringBuilder == null)
             {
                 stringBuilder = new StringBuilder();
             }
 
-            if (null == splitArrayPool)
+            if (splitArrayPool == null)
             {
                 splitArrayPool = new Stack<List<string>>();
             }

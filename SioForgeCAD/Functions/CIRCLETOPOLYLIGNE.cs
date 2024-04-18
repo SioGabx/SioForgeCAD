@@ -11,7 +11,7 @@ namespace SioForgeCAD.Functions
 {
     public static class CIRCLETOPOLYLIGNE
     {
-        public class ContextMenu
+        public static class ContextMenu
         {
             private static ContextMenuExtension cme;
 
@@ -19,7 +19,7 @@ namespace SioForgeCAD.Functions
             {
                 cme = new ContextMenuExtension();
                 MenuItem mi = new MenuItem("Convertir en polyligne");
-                mi.Click += new EventHandler(OnConvert);
+                mi.Click += OnConvert;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = Entity.GetClass(typeof(Circle));
                 Application.AddObjectContextMenuExtension(rxc, cme);
@@ -37,9 +37,6 @@ namespace SioForgeCAD.Functions
                 doc.SendStringToExecute("_.CIRCLETOPOLYLIGNE ", true, false, false);
             }
         }
-
-
-
 
         public static void ConvertCirclesToPolylines()
         {

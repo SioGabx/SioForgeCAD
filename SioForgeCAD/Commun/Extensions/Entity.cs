@@ -9,7 +9,6 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class EntityExtensions
     {
-
         public static List<T> Clone<T>(this IEnumerable<T> list)
         {
             List<T> NewList = new List<T>();
@@ -138,23 +137,24 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static double TryGetArea(this Entity ent)
         {
-            if (ent == null || ent.IsDisposed)
+            if (ent?.IsDisposed != false)
             {
                 return 0;
             }
             try
             {
-                switch (ent) { 
-                    case Polyline _: 
-                        return ((Polyline)ent).Area; 
-                    case Hatch _: 
-                        return ((Hatch)ent).Area; 
-                    case Circle _: 
-                        return ((Circle)ent).Area; 
-                    case Ellipse _: 
-                        return ((Ellipse)ent).Area; 
-                    case Region _: 
-                        return ((Region)ent).Area; 
+                switch (ent)
+                {
+                    case Polyline _:
+                        return ((Polyline)ent).Area;
+                    case Hatch _:
+                        return ((Hatch)ent).Area;
+                    case Circle _:
+                        return ((Circle)ent).Area;
+                    case Ellipse _:
+                        return ((Ellipse)ent).Area;
+                    case Region _:
+                        return ((Region)ent).Area;
                 }
             }
             catch (Exception ex)
@@ -163,7 +163,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return 0;
         }
-
 
         public static void AddXData(this Entity ent, string value)
         {
@@ -214,9 +213,7 @@ namespace SioForgeCAD.Commun.Extensions
             return list;
         }
 
-
-
-        public static void AddXData(Entity ent, TypedValue typedValue)
+        public static void AddXData(this Entity ent, TypedValue typedValue)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -236,23 +233,9 @@ namespace SioForgeCAD.Commun.Extensions
                     tr.AddNewlyCreatedDBObject(app, true);
                 }
                 //https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-A2A628B0-3699-4740-A215-C560E7242F63
-                if (typedValue == null)
-                {
-                    ent.XData = new ResultBuffer(new TypedValue(1001, AppName));
-                }
-                else
-                {
-                    ent.XData = new ResultBuffer(new TypedValue(1001, AppName), typedValue);
-                }
-
+                ent.XData = new ResultBuffer(new TypedValue(1001, AppName), typedValue);
                 tr.Commit();
             }
         }
-
-
-
-
-
-
     }
 }

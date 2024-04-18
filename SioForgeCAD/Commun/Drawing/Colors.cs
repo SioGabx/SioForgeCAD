@@ -21,8 +21,5 @@
             Autodesk.AutoCAD.Colors.Color colors = Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, EnumValue);
             return colors;
         }
-
-
     }
-
 }

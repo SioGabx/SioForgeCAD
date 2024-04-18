@@ -14,23 +14,10 @@ namespace SioForgeCAD.Commun.Extensions
             return (value >= min) && (value <= max);
         }
 
-
         public static double IntermediatePercentage(this double a, double b, double percentage)
         {
-            //For A = 100, B = 200, Percentage = 25, this return 125
-            // Ensure 'a' is the smaller value and 'b' is the larger one
-            //if (a > b)
-            //{
-            //    (b, a) = (a, b);
-            //}
-
             // Calculate the intermediate percentage
-            double intermediatePercentage = a + (percentage * (b - a) / 100);
-
-            return intermediatePercentage;
+            return (double)(a + (percentage * (b - a) / 100));
         }
-
-
-
     }
 }

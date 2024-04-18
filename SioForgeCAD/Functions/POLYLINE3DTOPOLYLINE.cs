@@ -11,7 +11,7 @@ namespace SioForgeCAD.Functions
 {
     public static class POLYLINE3DTOPOLYLIGNE
     {
-        public class ContextMenu
+        public static class ContextMenu
         {
             private static ContextMenuExtension cme;
 
@@ -19,7 +19,7 @@ namespace SioForgeCAD.Functions
             {
                 cme = new ContextMenuExtension();
                 MenuItem mi = new MenuItem("Convertir en polyligne");
-                mi.Click += new EventHandler(OnConvert);
+                mi.Click += OnConvert;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = Entity.GetClass(typeof(Polyline3d));
                 Application.AddObjectContextMenuExtension(rxc, cme);

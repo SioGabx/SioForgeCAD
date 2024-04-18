@@ -46,7 +46,6 @@ namespace SioForgeCAD.Commun.Drawing
                 }
                 ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
 
-
                 Hatch oHatch = new Hatch();
                 var oHatchObjectId = btr.AppendEntity(oHatch);
                 tr.AddNewlyCreatedDBObject(oHatch, true);
@@ -79,10 +78,9 @@ namespace SioForgeCAD.Commun.Drawing
                         return false;
                     }
 
-                    _ = TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) | TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
+                    _ = TryAppendLoop(HatchLoopTypes.Default & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Outermost & HatchLoopTypes.Polyline) || TryAppendLoop(HatchLoopTypes.Derived & HatchLoopTypes.Polyline) ||
                         TryAppendLoop(HatchLoopTypes.Default);
                 }
-
 
                 oHatch.EvaluateHatch(true);
                 hachure.CopyPropertiesTo(oHatch);
@@ -102,6 +100,5 @@ namespace SioForgeCAD.Commun.Drawing
                 return oHatch;
             }
         }
-
     }
 }

@@ -40,7 +40,6 @@ namespace SioForgeCAD.Forms
             UserInputBox.SelectAll();
         }
 
-
         private void PromptAcceptButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;

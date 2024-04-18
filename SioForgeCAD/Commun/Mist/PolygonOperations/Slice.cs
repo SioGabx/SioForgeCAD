@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun
     public static partial class PolygonOperation
     {
         public static List<Polyline> LastSliceResult = null;
-        public static List<Polyline> Slice(this Polyline BasePolyline, Polyline BaseCutLine)
+        public static List<Polyline> Slice(Polyline BasePolyline, Polyline BaseCutLine)
         {
             BaseCutLine.Elevation = BasePolyline.Elevation;
             //BasePolyline.Cleanup();
@@ -64,7 +64,6 @@ namespace SioForgeCAD.Commun
             return Polygon;
         }
 
-
         public static void SetSliceCache(List<Polyline> CachePolygon, Polyline BasePolyline)
         {
             if (CachePolygon != null && CachePolygon != null)
@@ -76,7 +75,6 @@ namespace SioForgeCAD.Commun
                         LastSliceResult?.Remove(item);
                     }
                 }
-
             }
             if (BasePolyline != null)
             {
@@ -84,7 +82,6 @@ namespace SioForgeCAD.Commun
             }
             LastSliceResult = CachePolygon;
         }
-
 
         public static List<Polyline> RecreateClosedPolyline(DBObjectCollection SplittedPolylines, Polyline CutLine)
         {
@@ -99,8 +96,8 @@ namespace SioForgeCAD.Commun
                 }
             }
             List<DBObject> Polylines = SplittedPolylines.ToList();
-            List<DBObject> ClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == true).ToList();
-            List<DBObject> NotClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed == false).ToList();
+            List<DBObject> ClosedPolylines = Polylines.Where((poly) => (poly as Polyline).Closed).ToList();
+            List<DBObject> NotClosedPolylines = Polylines.Where((poly) => !(poly as Polyline).Closed).ToList();
 
             int index = 0;
             while (NotClosedPolylines.Count > index)
@@ -136,7 +133,6 @@ namespace SioForgeCAD.Commun
                     ClosedPolylines.Add(PolyligneA);
                 }
                 index++;
-
             }
 
             List<Polyline> CutedClosePolyligne = new List<Polyline>();
@@ -149,14 +145,12 @@ namespace SioForgeCAD.Commun
             }
 
             SplittedPolylines.ToList().Cast<Polyline>()
-                .Where(polyligne => !(CutedClosePolyligne
-                .Contains(polyligne)))
+                .Where(polyligne => !CutedClosePolyligne
+                .Contains(polyligne))
                 .ToList()
                 .DeepDispose();
             return CutedClosePolyligne;
         }
-
-
 
         private static DBObjectCollection GetInsideCutLines(this Polyline BoundaryPolyline, Polyline CutLine)
         {
@@ -200,7 +194,6 @@ namespace SioForgeCAD.Commun
                                 InsideCutLine_A.JoinEntity(InsideCutLine_B);
                                 InsideCutLines.Remove(InsideCutLine_B);
                                 InsideCutLine_B.Dispose();
-
                             }
                         }
                     }
@@ -238,7 +231,6 @@ namespace SioForgeCAD.Commun
                             {
                                 InsideCutLine.SetPointAt(InsideCutLine.NumberOfVertices - 1, NewEndPoint.ToPoint2d());
                             }
-
                         }
                     }
                 }
@@ -246,7 +238,6 @@ namespace SioForgeCAD.Commun
 
             return InsideCutLines;
         }
-
 
         public static DoubleCollection GetSplitPoints(this Polyline polyline, Point3dCollection IntersectionPointsFounds)
         {
@@ -279,7 +270,6 @@ namespace SioForgeCAD.Commun
             return false;
         }
 
-
         public static DBObjectCollection TryGetSplitCurves(this Polyline polyline, DoubleCollection DblCollection)
         {
             if (DblCollection.Count == 0)
@@ -297,11 +287,10 @@ namespace SioForgeCAD.Commun
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("TryGetSplitCurves" + ex.ToString());
+                Debug.WriteLine("TryGetSplitCurves" + ex);
             }
             return new DBObjectCollection();
         }
-
 
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
         {

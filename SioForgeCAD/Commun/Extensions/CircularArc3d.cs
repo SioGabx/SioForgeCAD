@@ -9,14 +9,11 @@ namespace SioForgeCAD.Commun.Extensions
             return new EllipticalArc3d(
                 arc.Center,
                 arc.ReferenceVector,
-                (arc.Normal.CrossProduct(arc.ReferenceVector)).GetNormal(),
+                arc.Normal.CrossProduct(arc.ReferenceVector).GetNormal(),
                 arc.Radius,
                 arc.Radius,
                 arc.StartAngle,
                 arc.EndAngle);
         }
-
-
-
     }
 }
