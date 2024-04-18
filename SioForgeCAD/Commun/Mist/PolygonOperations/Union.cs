@@ -230,9 +230,9 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline;
+                using (Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline) { 
 
-                List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
+                    List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
                 for (int i = 0; i < HoleUnionResultList.Count; i++)
                 {
                     Polyline ParsedHole = HoleUnionResultList[i];
@@ -259,7 +259,7 @@ namespace SioForgeCAD.Commun
                     ParsedHole.Dispose();
                 }
                 HoleUnionResultList.RemoveCommun(HoleUnionResult).DeepDispose();
-                PolyHoleBoundary.Dispose();
+                }
             }
 
 
@@ -392,6 +392,7 @@ namespace SioForgeCAD.Commun
                         if (curv.Length <= Generic.LowTolerance.EqualPoint)
                         {
                             Splitted.Remove(curv);
+                            curv.Dispose();
                         }
                     }
                     SplittedCurvesOrigin.Add((Splitted, PolyBase));
