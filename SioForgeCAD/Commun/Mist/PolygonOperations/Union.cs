@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -216,8 +217,8 @@ namespace SioForgeCAD.Commun
             var ExtendAfterUnionSize = ExtendAfterUnion.Size();
 
             //If size of the extend is different, that mean the union failled at some point
-            return ExtendBeforeUnionSize.Width == ExtendAfterUnionSize.Width
-                && ExtendBeforeUnionSize.Height == ExtendAfterUnionSize.Height;
+            return Math.Abs(ExtendBeforeUnionSize.Width - ExtendAfterUnionSize.Width) < Generic.LowTolerance.EqualPoint
+                && Math.Abs(ExtendBeforeUnionSize.Height - ExtendAfterUnionSize.Height) < Generic.LowTolerance.EqualPoint;
         }
 
         private static List<Polyline> UnionHoles(List<PolyHole> PolyHoleList, bool RequestAllowMarginError = false)
