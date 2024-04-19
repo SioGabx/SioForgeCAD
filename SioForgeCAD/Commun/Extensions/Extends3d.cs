@@ -43,12 +43,11 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Size Size(this Extents3d extends)
         {
-            var Dim = new Size
+            return new Size
             {
                 Width = extends.TopLeft().DistanceTo(extends.TopRight()),
                 Height = extends.BottomLeft().DistanceTo(extends.BottomRight())
             };
-            return Dim;
         }
 
         public static bool CollideWith(this Extents3d a, Extents3d b)

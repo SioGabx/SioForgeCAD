@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,7 +20,7 @@ namespace SioForgeCAD.Commun
 
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
-                if (SubstractionPolygonCurve?.IsDisposed != false)
+                if (SubstractionPolygonCurve?.IsDisposed == true)
                 {
                     Debug.WriteLine("Error : SubstractionPolygonCurve was null or disposed");
                     continue;
@@ -30,8 +31,9 @@ namespace SioForgeCAD.Commun
                     {
                         foreach (Polyline NewBoundary in CuttedPolyline.ToArray())
                         {
-                            if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out _, Intersect.OnBothOperands))
+                            if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out var pts, Intersect.OnBothOperands))
                             {
+                                //pts.AddToDrawing(5);
                                 var Cuts = PolygonOperation.Slice(NewBoundary, SimplifiedSubstractionPolygonCurve);
                                 //if the boundary was cuted 
                                 if (Cuts.Count > 0)
@@ -40,8 +42,9 @@ namespace SioForgeCAD.Commun
                                 }
                                 foreach (var CuttedNewBoundary in Cuts)
                                 {
-                                    //If cutted is inside a substraction polygon, we ignore it
-                                    if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SimplifiedSubstractionPolygonCurve))
+                                    //If cutted is inside a substraction polygon, we ignore it,
+                                    //we check if Cuts.Count > 1, if is inside and Cuts.Count == 1, mean that IsSegmentIntersecting have false result
+                                    if (CuttedNewBoundary.GetInnerCentroid().IsInsidePolyline(SimplifiedSubstractionPolygonCurve) && Cuts.Count > 1)
                                     {
                                         continue;
                                     }
@@ -64,7 +67,7 @@ namespace SioForgeCAD.Commun
 
             //Merge overlaping hole polyline
             Union(PolyHole.CreateFromList(NewBoundaryHoles.Cast<Polyline>()), out var HoleUnionResult);
-            NewBoundaryHoles.RemoveCommun(SubstractionPolygonsArg).DeepDispose();
+            NewBoundaryHoles.RemoveCommun(SubstractionPolygonsArg).RemoveCommun(BasePolygon.Holes).DeepDispose();
             UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }

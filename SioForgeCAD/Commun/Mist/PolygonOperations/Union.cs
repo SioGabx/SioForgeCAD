@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -35,6 +36,8 @@ namespace SioForgeCAD.Commun
             }
 
             var Holes = UnionHoles(PolyHoleList, AllowMarginError);
+
+            Extents3d ExtendBeforeUnion = PolyHoleList.GetBoundaries().GetExtents();
 
             if (AllowMarginError)
             {
@@ -207,7 +210,14 @@ namespace SioForgeCAD.Commun
                     UnionResult.AddRange(UndoMargin);
                 }
             }
-            return true;
+
+            Extents3d ExtendAfterUnion = UnionResult.GetBoundaries().GetExtents();
+            var ExtendBeforeUnionSize = ExtendBeforeUnion.Size();
+            var ExtendAfterUnionSize = ExtendAfterUnion.Size();
+
+            //If size of the extend is different, that mean the union failled at some point
+            return ExtendBeforeUnionSize.Width == ExtendAfterUnionSize.Width
+                && ExtendBeforeUnionSize.Height == ExtendAfterUnionSize.Height;
         }
 
         private static List<Polyline> UnionHoles(List<PolyHole> PolyHoleList, bool RequestAllowMarginError = false)
@@ -296,7 +306,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            // HoleUnionResult.AddToDrawing(4, true);
+            //HoleUnionResult.AddToDrawing(4, true);
             return HoleUnionResult;
         }
 
