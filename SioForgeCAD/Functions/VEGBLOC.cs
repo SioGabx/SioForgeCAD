@@ -149,9 +149,9 @@ namespace SioForgeCAD.Functions
 
         private static Color GetColorFromHeight(double HeightInMeters)
         {
-            Bitmap RainBowRamp = Properties.Resources.RainBowRamp;
+            Bitmap ColorRamp = Properties.Resources.VEGBLOC_ColorRamp;
             int HeightInPixel = (int)Math.Floor(HeightInMeters * 100);
-            System.Drawing.Color couleurPixel = RainBowRamp.GetPixel(Math.Min(HeightInPixel + 1, RainBowRamp.Width - 1), 0);
+            System.Drawing.Color couleurPixel = ColorRamp.GetPixel(Math.Min(HeightInPixel + 1, ColorRamp.Width - 1), 0);
 
             byte rouge = couleurPixel.R;
             byte vert = couleurPixel.G;

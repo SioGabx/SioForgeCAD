@@ -93,9 +93,39 @@ namespace SioForgeCAD.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap RainBowRamp {
+        internal static System.Drawing.Bitmap PICKSTYLETRAY_Icon_OFF {
             get {
-                object obj = ResourceManager.GetObject("RainBowRamp", resourceCulture);
+                object obj = ResourceManager.GetObject("PICKSTYLETRAY_Icon_OFF", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PICKSTYLETRAY_Icon_ON {
+            get {
+                object obj = ResourceManager.GetObject("PICKSTYLETRAY_Icon_ON", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap VEGBLOC_ColorRamp {
+            get {
+                object obj = ResourceManager.GetObject("VEGBLOC_ColorRamp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap VEGBLOC_Validate {
+            get {
+                object obj = ResourceManager.GetObject("VEGBLOC_Validate", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

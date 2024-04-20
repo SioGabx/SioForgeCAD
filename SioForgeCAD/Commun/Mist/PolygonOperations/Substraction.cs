@@ -31,7 +31,7 @@ namespace SioForgeCAD.Commun
                     {
                         foreach (Polyline NewBoundary in CuttedPolyline.ToArray())
                         {
-                            if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out var pts, Intersect.OnBothOperands))
+                            if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out var _, Intersect.OnBothOperands))
                             {
                                 //pts.AddToDrawing(5);
                                 var Cuts = PolygonOperation.Slice(NewBoundary, SimplifiedSubstractionPolygonCurve);

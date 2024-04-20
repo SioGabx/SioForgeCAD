@@ -23,6 +23,8 @@ namespace SioForgeCAD
             Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
+
+            Functions.PICKSTYLETRAY.AddTray();
         }
 
         public void Terminate()
@@ -327,37 +329,10 @@ namespace SioForgeCAD
             Functions.POLYCLEAN.PolyClean();
         }
 
-        [CommandMethod("TESTtraytooltip")]
-        public static void TESTtraytooltip()
+        [CommandMethod("PICKSTYLETRAY")]
+        public static void PICKSTYLETRAY()
         {
-            //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
-            //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
-            //https://forums.autodesk.com/t5/net/statusbar-contextmenu-position/td-p/7249697/page/2
-
-            TrayItem ti = new TrayItem
-            {
-                ToolTipText = "My tray item tooltip"
-            };
-            var bitmap = new Bitmap("C:\\Users\\AMPLITUDE PAYSAGE\\Downloads\\testico\\ico.png"); // or get it from resource
-            var iconHandle = bitmap.GetHicon();
-            ti.Icon = Icon.FromHandle(iconHandle);
-
-            Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.TrayItems.Add(ti);
-
-            Pane pane = new Pane
-            {
-                // pane.Icon = ti.Icon;
-                ToolTipText = "My Pane tooltip",
-                Style = PaneStyles.Normal
-            };
-            //pane.Ba
-            pane.MouseDown += HelloWorld;
-            Autodesk.AutoCAD.ApplicationServices.Application.StatusBar.Panes.Add(pane);
-        }
-
-        public static void HelloWorld(object sender, StatusBarMouseDownEventArgs e)
-        {
-            MessageBox.Show("hello");
+            Functions.PICKSTYLETRAY.AddTray();
         }
 
         [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]

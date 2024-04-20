@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VegblocDialog));
             this.DataGrid = new System.Windows.Forms.DataGridView();
             this.NAME = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HEIGHT = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -124,7 +123,7 @@
             // ValidateButton
             // 
             this.ValidateButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.ValidateButton.Image = ((System.Drawing.Image)(resources.GetObject("ValidateButton.Image")));
+            this.ValidateButton.Image = global::SioForgeCAD.Properties.Resources.VEGBLOC_Validate;
             this.ValidateButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.ValidateButton.Name = "ValidateButton";
             this.ValidateButton.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);

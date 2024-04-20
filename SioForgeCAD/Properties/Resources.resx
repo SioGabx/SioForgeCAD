@@ -118,8 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="RainBowRamp" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Ressources\RainBowRamp.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="PICKSTYLETRAY_Icon_OFF" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Ressources\PICKSTYLETRAY_Icon_OFF.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PICKSTYLETRAY_Icon_ON" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Ressources\PICKSTYLETRAY_Icon_ON.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VEGBLOC_ColorRamp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Ressources\VEGBLOC_ColorRamp.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VEGBLOC_Validate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Ressources\VEGBLOC_Validate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="_APUd_COTATIONS_Altimetries" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Commun\Blocks\_APUd_COTATIONS_Altimetries.dwg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

@@ -213,6 +213,7 @@
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\MERGEPOLYLIGNES.cs" />
+    <Compile Include="Functions\PICKSTYLETRAY.cs" />
     <Compile Include="Functions\POLYCLEAN.cs" />
     <Compile Include="Functions\POLYLINE2DTOPOLYLINE.cs" />
     <Compile Include="Functions\POLYLINE3DTOPOLYLINE.cs" />
@@ -278,6 +279,10 @@
   <ItemGroup>
     <Content Include="icon.ico" />
     <Content Include="Ressources\checked.png" />
+    <None Include="Ressources\VEGBLOC_Validate.png" />
+    <None Include="Ressources\VEGBLOC_ColorRamp.png" />
+    <None Include="Ressources\PICKSTYLETRAY_Icon_OFF.png" />
+    <None Include="Ressources\PICKSTYLETRAY_Icon_ON.png" />
     <Content Include="Ressources\RainBowRamp.png" />
   </ItemGroup>
   <ItemGroup>
