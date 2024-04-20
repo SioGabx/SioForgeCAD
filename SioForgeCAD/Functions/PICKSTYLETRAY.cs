@@ -1,19 +1,15 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
     public static class PICKSTYLETRAY
     {
         private static readonly Pane PickStylePane = new Pane();
+        private static readonly ContextMenu ContextMenu = new ContextMenu();
 
         private static void SystemVariableChanged(object sender, SystemVariableChangedEventArgs e)
         {
@@ -28,7 +24,7 @@ namespace SioForgeCAD.Functions
             var StatusBar = Autodesk.AutoCAD.ApplicationServices.Application.StatusBar;
             if (StatusBar.Panes.IndexOf(PickStylePane) == -1)
             {
-                PickStylePane.ToolTipText = "Select boudaries with hatch";
+                PickStylePane.ToolTipText = "Switch PICKSTYLE between associative hatch selection.";
                 PickStylePane.Style = PaneStyles.Normal;
                 PickStylePane.Icon = GetImage(IsActive());
                 PickStylePane.MouseDown += TrayClick;
@@ -36,6 +32,37 @@ namespace SioForgeCAD.Functions
                 var LineWeightPaneIndex = StatusBar.Panes.IndexOf(LineWeightPane);
                 StatusBar.Panes.Insert(LineWeightPaneIndex + 1, PickStylePane);
                 Autodesk.AutoCAD.ApplicationServices.Application.SystemVariableChanged += SystemVariableChanged;
+                AddTrayContextMenu();
+            }
+        }
+
+        private static void AddTrayContextMenu()
+        {
+            var PickStyle0 = new System.Windows.Forms.MenuItem("0 - No group selection or associative hatch selection");
+            var PickStyle1 = new System.Windows.Forms.MenuItem("1 - Group selection");
+            var PickStyle2 = new System.Windows.Forms.MenuItem("2 - Associative hatch selection");
+            var PickStyle3 = new System.Windows.Forms.MenuItem("3 - Group selection and associative hatch selection");
+
+            PickStyle0.Tag = "0";
+            PickStyle1.Tag = "1";
+            PickStyle2.Tag = "2";
+            PickStyle3.Tag = "3";
+
+            PickStyle0.Click += (o, e) => SetPickStyle(0);
+            PickStyle1.Click += (o, e) => SetPickStyle(1);
+            PickStyle2.Click += (o, e) => SetPickStyle(2);
+            PickStyle3.Click += (o, e) => SetPickStyle(3);
+
+            ContextMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] { PickStyle0, PickStyle1, PickStyle2, PickStyle3 });
+            UpdateCheckedTrayContextMenuMenuItem(GetPickStyle());
+        }
+
+        private static void UpdateCheckedTrayContextMenuMenuItem(short PickStyleValue)
+        {
+            string PickStyleStringValue = PickStyleValue.ToString();
+            foreach (System.Windows.Forms.MenuItem menuItem in ContextMenu.MenuItems)
+            {
+                menuItem.Checked = menuItem.Tag.ToString() == PickStyleStringValue;
             }
         }
 
@@ -50,8 +77,7 @@ namespace SioForgeCAD.Functions
 
         private static bool IsActive()
         {
-            var Variable = Autodesk.AutoCAD.ApplicationServices.Application.GetSystemVariable("PICKSTYLE");
-            if (Variable is short Value)
+            if (GetPickStyle() is short Value)
             {
                 /*
                     0 = No group selection or associative hatch selection
@@ -64,28 +90,50 @@ namespace SioForgeCAD.Functions
             return false;
         }
 
+
+        private static void SetPickStyle(short Value)
+        {
+            Autodesk.AutoCAD.ApplicationServices.Application.SetSystemVariable("PICKSTYLE", Value);
+            UpdateCheckedTrayContextMenuMenuItem(Value);
+            Generic.WriteMessage($"PICKSTYLE is now set to {Value}");
+        }
+
         private static void SetPickStyle(bool Active)
         {
             if (Active)
             {
-                Autodesk.AutoCAD.ApplicationServices.Application.SetSystemVariable("PICKSTYLE", 2);
+                SetPickStyle(2);
             }
             else
             {
-                Autodesk.AutoCAD.ApplicationServices.Application.SetSystemVariable("PICKSTYLE", 1);
+                SetPickStyle(1);
             }
+        }
+
+        private static short GetPickStyle()
+        {
+            return (short)Autodesk.AutoCAD.ApplicationServices.Application.GetSystemVariable("PICKSTYLE");
         }
 
         public static void UpdateTray()
         {
             PickStylePane.Icon.Dispose();
             PickStylePane.Icon = GetImage(IsActive());
+            UpdateCheckedTrayContextMenuMenuItem(GetPickStyle());
         }
 
         private static void TrayClick(object sender, StatusBarMouseDownEventArgs e)
         {
-            SetPickStyle(!IsActive());
-            UpdateTray();
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                SetPickStyle(!IsActive());
+                UpdateTray();
+            }
+            else
+            {
+                var loc = PickStylePane.PointToClient(Cursor.Position);
+                PickStylePane.DisplayContextMenu(ContextMenu, loc);
+            }
         }
     }
 }
