@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using System.Drawing;
 using System.Windows.Forms;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
@@ -21,7 +22,7 @@ namespace SioForgeCAD.Functions
 
         public static void AddTray()
         {
-            var StatusBar = Autodesk.AutoCAD.ApplicationServices.Application.StatusBar;
+            var StatusBar = AcApp.StatusBar;
             if (StatusBar.Panes.IndexOf(PickStylePane) == -1)
             {
                 PickStylePane.ToolTipText = "Switch PICKSTYLE between associative hatch selection.";
@@ -31,7 +32,7 @@ namespace SioForgeCAD.Functions
                 var LineWeightPane = StatusBar.GetDefaultPane(DefaultPane.LineWeight);
                 var LineWeightPaneIndex = StatusBar.Panes.IndexOf(LineWeightPane);
                 StatusBar.Panes.Insert(LineWeightPaneIndex + 1, PickStylePane);
-                Autodesk.AutoCAD.ApplicationServices.Application.SystemVariableChanged += SystemVariableChanged;
+                AcApp.SystemVariableChanged += SystemVariableChanged;
                 AddTrayContextMenu();
             }
         }
@@ -75,6 +76,11 @@ namespace SioForgeCAD.Functions
             }
         }
 
+        private static short GetPickStyle()
+        {
+            return (short)AcApp.GetSystemVariable("PICKSTYLE");
+        }
+
         private static bool IsActive()
         {
             if (GetPickStyle() is short Value)
@@ -90,11 +96,9 @@ namespace SioForgeCAD.Functions
             return false;
         }
 
-
         private static void SetPickStyle(short Value)
         {
-            Autodesk.AutoCAD.ApplicationServices.Application.SetSystemVariable("PICKSTYLE", Value);
-            UpdateCheckedTrayContextMenuMenuItem(Value);
+            AcApp.SetSystemVariable("PICKSTYLE", Value);
             Generic.WriteMessage($"PICKSTYLE is now set to {Value}");
         }
 
@@ -110,11 +114,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static short GetPickStyle()
-        {
-            return (short)Autodesk.AutoCAD.ApplicationServices.Application.GetSystemVariable("PICKSTYLE");
-        }
-
         public static void UpdateTray()
         {
             PickStylePane.Icon.Dispose();
@@ -124,10 +123,9 @@ namespace SioForgeCAD.Functions
 
         private static void TrayClick(object sender, StatusBarMouseDownEventArgs e)
         {
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
                 SetPickStyle(!IsActive());
-                UpdateTray();
             }
             else
             {
