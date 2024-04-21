@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Runtime;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -44,5 +46,34 @@ namespace SioForgeCAD.Commun.Extensions
                 tr.Commit();
             }
         }
+
+        public static ObjectId EntLast(this Database db, Type type = null)
+        {
+            // Autodesk.AutoCAD.Internal.Utils.EntLast();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
+                RXClass RXClassType = type == null ? null : RXClass.GetClass(type);
+                ObjectId EntLastObjectId = ObjectId.Null;
+                foreach (ObjectId objId in btr)
+                {
+                    if (RXClassType == null || objId.ObjectClass == RXClassType)
+                    {
+                        EntLastObjectId = objId;
+                    }
+                }
+                tr.Commit();
+                return EntLastObjectId;
+            }
+        }
+
+
+
+
     }
+
+
+
+
 }
+

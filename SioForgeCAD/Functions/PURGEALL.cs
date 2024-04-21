@@ -7,10 +7,10 @@ namespace SioForgeCAD.Functions
     {
         public static void Purge()
         {
-            var Database = Generic.GetDatabase();
-            Database.PurgeRasterImages();
-            Database.Purge();
-            Database.PurgeRegisteredApplication();
+            var db = Generic.GetDatabase();
+            db.PurgeRasterImages();
+            db.Purge();
+            db.PurgeRegisteredApplication();
         }
     }
 }

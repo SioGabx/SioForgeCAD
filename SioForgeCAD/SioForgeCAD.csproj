@@ -114,6 +114,7 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Commun\Drawing\Hatchs.cs" />
     <Compile Include="Commun\Extensions\AttributeCollection.cs" />
+    <Compile Include="Commun\Extensions\Bitmap.cs" />
     <Compile Include="Commun\Extensions\CircularArc.cs" />
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
@@ -210,6 +211,7 @@
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
+    <Compile Include="Functions\EMBEDIMAGE.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\MERGEPOLYLIGNES.cs" />

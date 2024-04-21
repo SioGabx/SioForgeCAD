@@ -333,7 +333,15 @@ namespace SioForgeCAD
             Functions.PICKSTYLETRAY.AddTray();
         }
 
-        [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
+        [CommandMethod("EMBEDIMAGEASOLE", CommandFlags.UsePickSet)]
+        public static void EMBEDIMAGEASOLE()
+        {
+            Functions.EMBEDIMAGEASOLE.EmbedToOle();
+        }
+
+
+
+            [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
         public static void CURVEPOLYTOPOLYGON()
         {
             Editor ed = Generic.GetEditor();
