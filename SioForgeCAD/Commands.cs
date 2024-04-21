@@ -58,144 +58,144 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("CCI")]
+        [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
         public static void CCI()
         {
             new Functions.CCI().Compute();
         }
 
-        [CommandMethod("CCP")]
+        [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
         public static void CCP()
         {
             new Functions.CCP().Compute();
         }
-        [CommandMethod("CCD")]
+        [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
         public static void CCD()
         {
             new Functions.CCD().Compute();
         }
 
-        [CommandMethod("CCA")]
+        [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
         public static void CCA()
         {
             Functions.CCA.Compute();
         }
 
-        [CommandMethod("CCXREF", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
         public static void CCXREF()
         {
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
-        [CommandMethod("RENBLK", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "RENBLK", CommandFlags.Redraw)]
         public static void RENBLK()
         {
             Functions.RENBLK.RenameBloc();
         }
 
-        [CommandMethod("BLKMAKEUNIQUE", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUE", CommandFlags.Redraw)]
         public static void BLKMAKEUNIQUE()
         {
             new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
         }
 
-        [CommandMethod("BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
         public static void BLKMAKEUNIQUEEACH()
         {
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
 
-        [CommandMethod("BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
         public static void BLKSETTOBYBBLOCK()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock();
         }
 
-        [CommandMethod("DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
             Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
         }
 
-        [CommandMethod("CIRCLETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "CIRCLETOPOLYLIGNE", CommandFlags.UsePickSet)]
         public static void CIRCLETOPOLYLIGNE()
         {
             Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
         }
-        [CommandMethod("ELLIPSETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "ELLIPSETOPOLYLIGNE", CommandFlags.UsePickSet)]
         public static void ELLIPSETOPOLYLIGNE()
         {
             Functions.ELLIPSETOPOLYLIGNE.ConvertEllipseToPolylines();
         }
 
-        [CommandMethod("POLYLINE3DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYLINE3DTOPOLYLIGNE", CommandFlags.UsePickSet)]
         public static void POLYLINE3DTOPOLYLIGNE()
         {
             Functions.POLYLINE3DTOPOLYLIGNE.ConvertPolyline3dToPolylines();
         }
 
-        [CommandMethod("POLYLINE2DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYLINE2DTOPOLYLIGNE", CommandFlags.UsePickSet)]
         public static void POLYLINE2DTOPOLYLIGNE()
         {
             Functions.POLYLINE2DTOPOLYLIGNE.ConvertPolyline2dToPolylines();
         }
 
-        [CommandMethod("DRAWCPTERRAIN", CommandFlags.UsePickSet | CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "DRAWCPTERRAIN", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWCPTERRAIN()
         {
             new Functions.DRAWCPTERRAIN().DrawTerrainFromSelectedPoints();
         }
 
-        [CommandMethod("DROPCPOBJECTTOTERRAIN", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "DROPCPOBJECTTOTERRAIN", CommandFlags.UsePickSet)]
         public static void DROPCPOBJECTTOTERRAIN()
         {
             Functions.DROPCPOBJECTTOTERRAIN.Project();
         }
 
-        [CommandMethod("FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
         public static void FORCELAYERCOLORTOENTITY()
         {
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
-        [CommandMethod("SSCL", CommandFlags.Transparent)]
+        [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
         public static void SSCL()
         {
             Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
         }
 
-        [CommandMethod("SSOC", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "SSOC", CommandFlags.Redraw)]
         public static void SSOC()
         {
             Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
         }
 
-        [CommandMethod("SSOF", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "SSOF", CommandFlags.Redraw)]
         public static void SSOF()
         {
             Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
         }
 
-        [CommandMethod("RRR", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "RRR", CommandFlags.UsePickSet)]
         public static void RRR()
         {
             Functions.RRR.Rotate();
         }
 
-        [CommandMethod("BLKINSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
-        [CommandMethod("INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
         public static void BLKINSEDIT()
         {
             Functions.BLKINSEDIT.MoveBasePoint();
         }
 
-        [CommandMethod("RP2", CommandFlags.Transparent)]
+        [CommandMethod("SIOFORGECAD", "RP2", CommandFlags.Transparent)]
         public static void RP2()
         {
             Functions.RP2.RotateUCS();
         }
 
-        [CommandMethod("TAREA")]
+        [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Modal)]
         public void TAREA()
         {
             throw new NotImplementedException();
@@ -207,67 +207,67 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        [CommandMethod("VEGBLOC", CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
         public static void VEGBLOC()
         {
             Functions.VEGBLOC.Create();
         }
 
-        [CommandMethod("VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
         public static void VEGBLOCEDIT()
         {
             Functions.VEGBLOCEDIT.Edit();
         }
 
-        [CommandMethod("VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public static void VEGBLOCCOPYGRIP()
         {
             Functions.VEGBLOCCOPYGRIP.AddGrip();
         }
 
-        [CommandMethod("VEGBLOCLEGEND", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOCLEGEND", CommandFlags.UsePickSet)]
         public static void VEGBLOCLEGEND()
         {
             Functions.VEGBLOCLEGEND.Add();
         }
 
-        [CommandMethod("BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK()
         {
             Functions.BLKTOSTATICBLOCK.Convert();
         }
 
-        [CommandMethod("BATTLEMENTS")]
+        [CommandMethod("SIOFORGECAD", "BATTLEMENTS", CommandFlags.Modal)]
         public static void BATTLEMENTS()
         {
             Functions.BATTLEMENTS.Draw();
         }
 
-        [CommandMethod("RANDOMPAVEMENT")]
+        [CommandMethod("SIOFORGECAD", "RANDOMPAVEMENT", CommandFlags.Modal)]
         public static void RANDOMPAVEMENT()
         {
             Functions.RANDOMPAVEMENT.Draw();
         }
 
-        [CommandMethod("PURGEALL")]
+        [CommandMethod("SIOFORGECAD", "PURGEALL", CommandFlags.Modal)]
         public static void PURGEALL()
         {
             Functions.PURGEALL.Purge();
         }
 
-        [CommandMethod("CUTHATCH", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH()
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
 
-        [CommandMethod("SCALEBY", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         public static void SCALEBY()
         {
             Functions.SCALEBY.ScaleBy();
         }
 
-        [CommandMethod("INNERCENTROID", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "INNERCENTROID", CommandFlags.UsePickSet)]
         public static void INNERCENTROID()
         {
             Editor ed = Generic.GetEditor();
@@ -280,13 +280,13 @@ namespace SioForgeCAD
             pnts.AddToDrawing();
         }
 
-        [CommandMethod("MERGEHATCH", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
         public static void MERGEHATCH()
         {
             Functions.MERGEHATCH.Merge();
         }
 
-        [CommandMethod("MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void MERGEPOLYLIGNES()
         {
             Functions.MERGEPOLYLIGNES.Merge();
@@ -297,7 +297,7 @@ namespace SioForgeCAD
         //{
         //    Functions.MERGEPOLYLIGNES.MergeUsingRegion();
         //}
-        [CommandMethod("POLYLINEISCLOCKWISE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYLINEISCLOCKWISE", CommandFlags.UsePickSet)]
         public static void ISCLOCKWISE()
         {
             var ed = Generic.GetEditor();
@@ -309,31 +309,31 @@ namespace SioForgeCAD
             Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
         }
 
-        [CommandMethod("VPLOCK")]
+        [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.Modal)]
         public static void VPLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(true);
         }
 
-        [CommandMethod("VPUNLOCK")]
+        [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.Modal)]
         public static void VPUNLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(false);
         }
 
-        [CommandMethod("POLYCLEAN", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYCLEAN", CommandFlags.UsePickSet)]
         public static void POLYCLEAN()
         {
             Functions.POLYCLEAN.PolyClean();
         }
 
-        [CommandMethod("PICKSTYLETRAY")]
+        [CommandMethod("SIOFORGECAD", "PICKSTYLETRAY", CommandFlags.Transparent)]
         public static void PICKSTYLETRAY()
         {
             Functions.PICKSTYLETRAY.AddTray();
         }
 
-        [CommandMethod("EMBEDIMAGEASOLE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "EMBEDIMAGEASOLE", CommandFlags.UsePickSet)]
         public static void EMBEDIMAGEASOLE()
         {
             Functions.EMBEDIMAGEASOLE.EmbedToOle();
@@ -341,7 +341,7 @@ namespace SioForgeCAD
 
 
 
-            [CommandMethod("DEBUG", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
+            [CommandMethod("SIOFORGECAD", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
         public static void CURVEPOLYTOPOLYGON()
         {
             Editor ed = Generic.GetEditor();
@@ -416,7 +416,7 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("DEBUG", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
         public static void GENERATEBOUNDINGBOX()
         {
             Editor ed = Generic.GetEditor();

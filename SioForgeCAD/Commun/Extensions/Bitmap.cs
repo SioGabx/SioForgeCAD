@@ -44,7 +44,7 @@ namespace SioForgeCAD.Commun.Extensions
                 g.Clear(System.Drawing.Color.Transparent);
                 g.TranslateTransform(newWidth / 2, newHeight / 2);
                 g.RotateTransform((float)(angleRadians * (180 / Math.PI)));
-                g.DrawImage(image, new Point(-(image.Width / 2), -(image.Height / 2)));
+                g.DrawImage(image, new Rectangle(-image.Width / 2, -image.Height / 2, image.Width, image.Height));
             }
             return rotatedImage;
         }
