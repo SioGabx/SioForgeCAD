@@ -1,4 +1,5 @@
 ﻿using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
@@ -6,8 +7,10 @@ namespace SioForgeCAD.Functions
     {
         public static void Purge()
         {
-            Generic.Command("_-PURGE", "_ALL", "*", "N");
-            Generic.Command("_-PURGE", "_REGAPPS", "*", "N");
+            var Database = Generic.GetDatabase();
+            Database.PurgeRasterImages();
+            Database.Purge();
+            Database.PurgeRegisteredApplication();
         }
     }
 }
