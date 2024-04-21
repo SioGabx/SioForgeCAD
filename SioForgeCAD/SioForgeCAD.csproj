@@ -127,7 +127,7 @@
     <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
-    <Compile Include="Commun\Drawing\Colors.cs" />
+    <Compile Include="Commun\Extensions\Colors.cs" />
     <Compile Include="Commun\Drawing\Entities.cs" />
     <Compile Include="Commun\Drawing\Groups.cs" />
     <Compile Include="Commun\Drawing\Leaders.cs" />

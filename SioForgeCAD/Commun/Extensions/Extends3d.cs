@@ -46,7 +46,7 @@ namespace SioForgeCAD.Commun.Extensions
             return new Size
             {
                 Width = extends.TopLeft().DistanceTo(extends.TopRight()),
-                Height = extends.BottomLeft().DistanceTo(extends.BottomRight())
+                Height = extends.TopLeft().DistanceTo(extends.BottomLeft())
             };
         }
 

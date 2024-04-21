@@ -29,7 +29,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Image RotateImage(this Image image, double angleRadians)
+        public static Image RotateImage(this Image image, double angleRadians, System.Drawing.Color BackgroundColor)
         {
             angleRadians = (-angleRadians) % (2 * Math.PI);
             double sin = Math.Abs(Math.Sin(angleRadians));
@@ -41,7 +41,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Graphics g = Graphics.FromImage(rotatedImage))
             {
-                g.Clear(System.Drawing.Color.Transparent);
+                g.Clear(BackgroundColor);
                 g.TranslateTransform(newWidth / 2, newHeight / 2);
                 g.RotateTransform((float)(angleRadians * (180 / Math.PI)));
                 g.DrawImage(image, new Rectangle(-image.Width / 2, -image.Height / 2, image.Width, image.Height));

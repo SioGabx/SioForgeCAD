@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -95,6 +96,17 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     Polyline TargetPolyline = Target as Polyline;
                     TargetPolyline.Elevation = OriginPolyline2d.Elevation;
+                }
+
+                if (Origin is Ole2Frame OriginOle2Frame)
+                {
+                    Ole2Frame TargetOle2Frame = Target as Ole2Frame;
+                    TargetOle2Frame.AutoOutputQuality = OriginOle2Frame.AutoOutputQuality;
+                    TargetOle2Frame.LockAspect = OriginOle2Frame.LockAspect;
+                    TargetOle2Frame.WcsHeight = OriginOle2Frame.WcsHeight;
+                    TargetOle2Frame.WcsWidth = OriginOle2Frame.WcsWidth;
+                    TargetOle2Frame.ScaleHeight = OriginOle2Frame.ScaleHeight;
+                    TargetOle2Frame.ScaleWidth = OriginOle2Frame.ScaleWidth;
                 }
             }
 
@@ -237,5 +249,20 @@ namespace SioForgeCAD.Commun.Extensions
                 tr.Commit();
             }
         }
+
+        public static void TransformToFitBoundingBox(this Entity ent, Extents3d FitBoundingBox)
+        {
+            var entExtent = ent.GetExtents();
+            var entExtentSize = entExtent.Size();
+            var FitBoundingBoxSize = FitBoundingBox.Size();
+
+            double scaleX = entExtentSize.Width / FitBoundingBoxSize.Width;
+            double scaleY = entExtentSize.Height / FitBoundingBoxSize.Height;
+            ent.TransformBy(Matrix3d.Scaling(Math.Min(scaleX, scaleY), entExtent.MinPoint));
+        }
+
+
+
+
     }
 }
