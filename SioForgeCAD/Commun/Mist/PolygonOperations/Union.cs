@@ -14,6 +14,13 @@ namespace SioForgeCAD.Commun
         public const double Margin = 0.01;
         public static bool Union(List<PolyHole> PolyHoleList, out List<PolyHole> UnionResult, bool RequestAllowMarginError = false)
         {
+            //Don't run if we have no element to union
+            if (PolyHoleList.Count == 0)
+            {
+                UnionResult = new List<PolyHole>();
+                return false;
+            }
+
             bool AllowMarginError = RequestAllowMarginError;
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
             if (AllowMarginError)
