@@ -271,13 +271,15 @@ namespace SioForgeCAD
         public static void INNERCENTROID()
         {
             Editor ed = Generic.GetEditor();
-            var poly = ed.GetPolyline("Select poly", false);
-            var polygon = poly.ToPolygon(10);
-            polygon.AddToDrawing();
-            var PtnsCollection = polygon.GetPoints().ToPoint3dCollection();
-            PtnsCollection.Add(PtnsCollection[0]);
-            var pnts = PolygonOperation.GetInnerCentroid(polygon, 5);
-            pnts.AddToDrawing();
+            using (var poly = ed.GetPolyline("Select poly", false))
+            {
+                var polygon = poly.ToPolygon(10);
+                polygon.AddToDrawing();
+                var PtnsCollection = polygon.GetPoints().ToPoint3dCollection();
+                PtnsCollection.Add(PtnsCollection[0]);
+                var pnts = PolygonOperation.GetInnerCentroid(polygon, 5);
+                pnts.AddToDrawing();
+            }
         }
 
         [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
@@ -301,12 +303,14 @@ namespace SioForgeCAD
         public static void ISCLOCKWISE()
         {
             var ed = Generic.GetEditor();
-            var result = ed.GetPolyline("Selectionnez une polyligne");
-            if (result == null)
+            using (var result = ed.GetPolyline("Selectionnez une polyligne"))
             {
-                return;
+                if (result == null)
+                {
+                    return;
+                }
+                Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
             }
-            Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
         }
 
         [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.Modal)]
@@ -341,27 +345,29 @@ namespace SioForgeCAD
 
 
 
-            [CommandMethod("SIOFORGECAD", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
         public static void CURVEPOLYTOPOLYGON()
         {
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var poly = ed.GetPolyline("Selectionnez une polyligne");
-                int NumberOfVerticesBefore = poly.NumberOfVertices;
-                poly.UpgradeOpen();
-                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Number Of Segment per Arc")
+                using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone: false))
                 {
-                    DefaultValue = 3
-                };
-                var value = ed.GetDouble(promptDoubleOptions);
-                if (value.Status != PromptStatus.OK) { return; }
-                var Polygon = poly.ToPolygon((uint)value.Value);
-                poly.CopyPropertiesTo(Polygon);
-                Polygon.AddToDrawing(5);
-                poly.EraseObject();
-                tr.Commit();
+                    int NumberOfVerticesBefore = poly.NumberOfVertices;
+                    poly.UpgradeOpen();
+                    PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Number Of Segment per Arc")
+                    {
+                        DefaultValue = 3
+                    };
+                    var value = ed.GetDouble(promptDoubleOptions);
+                    if (value.Status != PromptStatus.OK) { return; }
+                    var Polygon = poly.ToPolygon((uint)value.Value);
+                    poly.CopyPropertiesTo(Polygon);
+                    Polygon.AddToDrawing(5);
+                    poly.EraseObject();
+                    tr.Commit();
+                }
             }
         }
 
@@ -371,8 +377,8 @@ namespace SioForgeCAD
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
+            using (var poly = ed.GetPolyline("Selectionnez une polyligne"))
             {
-                var poly = ed.GetPolyline("Selectionnez une polyligne");
                 int NumberOfVerticesBefore = poly.NumberOfVertices;
                 poly.UpgradeOpen();
                 PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Distance")
@@ -384,6 +390,7 @@ namespace SioForgeCAD
                 var curve = poly.SmartOffset(value.Value);
                 curve.AddToDrawing(5);
                 tr.Commit();
+
             }
         }
 

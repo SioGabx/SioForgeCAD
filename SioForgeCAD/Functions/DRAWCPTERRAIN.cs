@@ -51,44 +51,46 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain");
-            if (TerrainBasePolyline == null)
+            using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
             {
-                return;
-            }
-            TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
-            SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
-            PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
-            {
-                MessageForAdding = "\nSelectionnez des côtes à projeter",
-                RejectObjectsOnLockedLayers = false
-            };
-            var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
-            if (BlockRefSelection.Status != PromptStatus.OK) { return; }
-
-            using (Transaction trans = db.TransactionManager.StartTransaction())
-            {
-                ObjectId[] SelectedCoteBloc = BlockRefSelection.Value.GetObjectIds();
-                this.TerrainBasePolyline = TerrainBasePolyline;
-                this.TerrainPoints = GetTerrainPoints(SelectedCoteBloc);
-                this.TerrainBaseAltimetrie = GetMinimalAltimetrie();
-
-                DrawCPTerrainInsertionTransientPoints insertionTransientPoints = new DrawCPTerrainInsertionTransientPoints(GetTerrain, TerrainBasePolyline);
-                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe", Points.Null);
-                if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
+                if (TerrainBasePolyline == null)
                 {
-                    List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);
-                    ObjectIdCollection EntitiesObjectIdCollection = new ObjectIdCollection();
-                    foreach (Entity ent in Terrain)
-                    {
-                        EntitiesObjectIdCollection.Add(ent.AddToDrawing());
-                        ent.Dispose();
-                    }
-                    Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
+                    return;
                 }
-                insertionTransientPoints.Dispose();
-                HightLighter.UnhighlightAll(SelectedCoteBloc);
-                trans.Commit();
+                TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
+                SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
+                PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nSelectionnez des côtes à projeter",
+                    RejectObjectsOnLockedLayers = false
+                };
+                var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
+                if (BlockRefSelection.Status != PromptStatus.OK) { return; }
+
+                using (Transaction trans = db.TransactionManager.StartTransaction())
+                {
+                    ObjectId[] SelectedCoteBloc = BlockRefSelection.Value.GetObjectIds();
+                    this.TerrainBasePolyline = TerrainBasePolyline;
+                    this.TerrainPoints = GetTerrainPoints(SelectedCoteBloc);
+                    this.TerrainBaseAltimetrie = GetMinimalAltimetrie();
+
+                    DrawCPTerrainInsertionTransientPoints insertionTransientPoints = new DrawCPTerrainInsertionTransientPoints(GetTerrain, TerrainBasePolyline);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe", Points.Null);
+                    if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
+                    {
+                        List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);
+                        ObjectIdCollection EntitiesObjectIdCollection = new ObjectIdCollection();
+                        foreach (Entity ent in Terrain)
+                        {
+                            EntitiesObjectIdCollection.Add(ent.AddToDrawing());
+                            ent.Dispose();
+                        }
+                        Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
+                    }
+                    insertionTransientPoints.Dispose();
+                    HightLighter.UnhighlightAll(SelectedCoteBloc);
+                    trans.Commit();
+                }
             }
         }
 

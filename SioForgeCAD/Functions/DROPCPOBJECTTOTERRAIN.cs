@@ -16,44 +16,46 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            Polyline TerrainBasePolyline = ed.GetPolyline("Sélectionnez une polyligne comme base de terrain");
-            if (TerrainBasePolyline == null)
+            using (Polyline TerrainBasePolyline = ed.GetPolyline("Sélectionnez une polyligne comme base de terrain"))
             {
-                return;
-            }
-            var PromptSelectEntitiesOptions = new PromptSelectionOptions()
-            {
-                MessageForAdding = "Selectionnez les entités à projeter sur le terrain via le UCS courrant"
-            };
-
-            var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
-
-            if (AllSelectedObject.Status != PromptStatus.OK)
-            {
-                return;
-            }
-            var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
-
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId SelectedObjectId in AllSelectedObjectIds)
+                if (TerrainBasePolyline == null)
                 {
-                    if (Layers.IsEntityOnLockedLayer(SelectedObjectId))
-                    {
-                        continue;
-                    }
+                    return;
+                }
+                var PromptSelectEntitiesOptions = new PromptSelectionOptions()
+                {
+                    MessageForAdding = "Selectionnez les entités à projeter sur le terrain via le UCS courrant"
+                };
 
-                    //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
-                    //if ent is block, then we move the point, else if entity, first get extend and then move it
-                    using (Entity SelectedEntity = SelectedObjectId.GetEntity(OpenMode.ForWrite))
+                var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
+
+                if (AllSelectedObject.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+                var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
+
+                using (Transaction acTrans = db.TransactionManager.StartTransaction())
+                {
+                    foreach (ObjectId SelectedObjectId in AllSelectedObjectIds)
                     {
-                        if (SelectedEntity is BlockReference blkRef)
+                        if (Layers.IsEntityOnLockedLayer(SelectedObjectId))
                         {
-                            TerrainBasePolyline.DropBlockReference(blkRef);
+                            continue;
+                        }
+
+                        //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
+                        //if ent is block, then we move the point, else if entity, first get extend and then move it
+                        using (Entity SelectedEntity = SelectedObjectId.GetEntity(OpenMode.ForWrite))
+                        {
+                            if (SelectedEntity is BlockReference blkRef)
+                            {
+                                TerrainBasePolyline.DropBlockReference(blkRef);
+                            }
                         }
                     }
+                    acTrans.Commit();
                 }
-                acTrans.Commit();
             }
         }
 

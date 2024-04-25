@@ -11,7 +11,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static bool GetPolyHole(this Hatch Hachure, out PolyHole polyHole)
         {
             polyHole = null;
-            if (!Hachure.GetHatchPolylineV2(out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves))
+            if (!Hachure.GetHatchPolyline(out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves))
             {
                 return false;
             }
@@ -49,17 +49,12 @@ namespace SioForgeCAD.Commun.Extensions
             Boundary = null;
             if (objectIdCollection.Count >= 1)
             {
-                Curve Curve = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Curve;
-                Boundary = Curve;
+                Boundary = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Curve;
             }
             return objectIdCollection.Count;
         }
-        //public static void ReGenerateBoundaryCommand(this Hatch Hachure)
-        //{
-        //    Generic.Command("_-HATCHEDIT", Hachure.ObjectId, "_Boundary", "_Polyline", "_YES");
-        //}
 
-        public static bool GetHatchPolylineV2(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
+        public static bool GetHatchPolyline(this Hatch Hachure, out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves)
         {
             ExternalCurves = new List<Curve>();
             OtherCurves = new List<(Curve curve, HatchLoopTypes looptype)>();

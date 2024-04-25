@@ -87,7 +87,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true)
+        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
         {
             while (true)
             {
@@ -117,32 +117,34 @@ namespace SioForgeCAD.Commun.Extensions
                     return null;
                 }
                 Entity SelectedEntity = polyResult.Value[0].ObjectId.GetNoTransactionDBObject(OpenMode.ForRead) as Entity;
-                if (SelectedEntity is Line ProjectionTargetLine)
+                if (SelectedEntity is Polyline ProjectionTargetPolyline)
                 {
-                    SelectedEntity = ProjectionTargetLine.ToPolyline();
+                    if (Clone) {
+                    return (Polyline)ProjectionTargetPolyline.Clone();
+                    }
+                    else
+                    {
+                        return ProjectionTargetPolyline;
+                    }
+                }
+                else  if (SelectedEntity is Line ProjectionTargetLine)
+                {
+                    return ProjectionTargetLine.ToPolyline();
+                }
+                else  if (SelectedEntity is Ellipse ProjectionTargetEllipse)
+                {
+                    return ProjectionTargetEllipse.ToPolyline();
+                }
+                else  if (SelectedEntity is Circle ProjectionTargetCircle)
+                {
+                    return ProjectionTargetCircle.ToPolyline();
+                }
+                else  if (SelectedEntity is Spline ProjectionTargetSpline)
+                {
+                    return (Polyline)ProjectionTargetSpline.ToPolyline();
                 }
 
-                if (SelectedEntity is Ellipse ProjectionTargetEllipse)
-                {
-                    SelectedEntity = ProjectionTargetEllipse.ToPolyline();
-                }
-
-                if (SelectedEntity is Circle ProjectionTargetCircle)
-                {
-                    SelectedEntity = ProjectionTargetCircle.ToPolyline();
-                }
-
-                if (SelectedEntity is Spline ProjectionTargetSpline)
-                {
-                    SelectedEntity = ProjectionTargetSpline.ToPolyline();
-                }
-
-                if (!(SelectedEntity is Polyline ProjectionTarget))
-                {
-                    Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
-                    continue;
-                }
-                return ProjectionTarget;
+                Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
             }
         }
 

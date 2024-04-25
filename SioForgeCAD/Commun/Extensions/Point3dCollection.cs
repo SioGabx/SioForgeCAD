@@ -54,10 +54,22 @@ namespace SioForgeCAD.Commun.Extensions
             return UCSPoint3dCollection;
         }
 
+        public static Point3dCollection Flatten(this Point3dCollection SCGPoint3DCollection, double Elevation = 0)
+        {
+            Point3dCollection FlattenPoint3dCollection = new Point3dCollection();
+            foreach (Point3d point in SCGPoint3DCollection)
+            {
+                FlattenPoint3dCollection.Add(new Point3d(point.X, point.Y, Elevation));
+            }
+            return FlattenPoint3dCollection;
+        }
+
         public static Point3dCollection ToPoint3dCollection(this IEnumerable<Point3d> IEnumCollection)
         {
             return new Point3dCollection(IEnumCollection.ToArray());
         }
+
+
 
         public static bool ContainsTolerance(this Point3dCollection collection, Point3d Point, Tolerance? CustomTolerance = null)
         {
