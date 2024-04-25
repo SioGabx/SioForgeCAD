@@ -122,7 +122,7 @@ namespace SioForgeCAD.Commun
                         NotClosedPolylines.Remove(PolyligneB);
                         index--;
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         Debug.WriteLine("RecreateClosedPolyline :" + ex);
                     }

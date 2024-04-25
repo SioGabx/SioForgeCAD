@@ -8,31 +8,14 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Windows.Controls;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
 namespace SioForgeCAD
 {
-    public class Commands : IExtensionApplication
+    public class Commands
     {
-        public void Initialize()
-        {
-            Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
-            Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
-            Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
-            Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
-
-            Functions.PICKSTYLETRAY.AddTray();
-        }
-
-        public void Terminate()
-        {
-            Functions.CIRCLETOPOLYLIGNE.ContextMenu.Detach();
-            Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Detach();
-            Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Detach();
-            Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Detach();
-        }
-
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
         {
@@ -201,10 +184,10 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Modal)]
-        public void TLEN()
+        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.UsePickSet)]
+        public static void TLEN()
         {
-            throw new NotImplementedException();
+            Functions.TLEN.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
@@ -402,7 +385,6 @@ namespace SioForgeCAD
                 var curve = poly.SmartOffset(value.Value);
                 curve.AddToDrawing(5);
                 tr.Commit();
-
             }
         }
 

@@ -326,7 +326,7 @@ namespace SioForgeCAD.Commun.Extensions
                             j = 0;
                         }
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         Debug.WriteLine("\nError: n{0}", ex.Message);
                     }

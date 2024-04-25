@@ -227,6 +227,7 @@
     <Compile Include="Functions\BLKSETTOBYBBLOCK.cs" />
     <Compile Include="Functions\SCALEBY.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
+    <Compile Include="Functions\TLEN.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />

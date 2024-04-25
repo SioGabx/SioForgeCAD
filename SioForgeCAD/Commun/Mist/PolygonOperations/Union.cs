@@ -339,7 +339,7 @@ namespace SioForgeCAD.Commun
                 //(polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
                 Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}. Un contour de la courbe à été dessinée");
                 return polyHoles;
-                throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
+                throw new Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
             //var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
 

@@ -24,7 +24,7 @@ namespace SioForgeCAD.Commun
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed.WriteMessage(message + "\n");
+            ed.WriteMessage($"\n{message}\n");
         }
 
         public static void LoadLispFromStringCommand(string lispCode)
@@ -69,7 +69,7 @@ namespace SioForgeCAD.Commun
         public static Transparency GetTransparencyFromAlpha(int Alpha)
         {
             byte AlphaByte = ((byte)(255 * (100 - Alpha) / 100));
-            return new Autodesk.AutoCAD.Colors.Transparency(AlphaByte);
+            return new Transparency(AlphaByte);
         }
 
         public static Document GetDocument()

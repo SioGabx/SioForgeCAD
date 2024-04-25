@@ -170,7 +170,7 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static void SetLayerColor(string LayerName, Autodesk.AutoCAD.Colors.Color color)
+        public static void SetLayerColor(string LayerName, Color color)
         {
             Database db = Generic.GetDatabase();
 
@@ -229,13 +229,13 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static Autodesk.AutoCAD.Colors.Color GetLayerColor(string LayerName)
+        public static Color GetLayerColor(string LayerName)
         {
             ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(LayerName);
             return GetLayerColor(LayerTableRecordObjId);
         }
 
-        public static Autodesk.AutoCAD.Colors.Color GetLayerColor(ObjectId LayerTableRecordObjId)
+        public static Color GetLayerColor(ObjectId LayerTableRecordObjId)
         {
             Database db = Generic.GetDatabase();
             using (Transaction trans = db.TransactionManager.StartTransaction())

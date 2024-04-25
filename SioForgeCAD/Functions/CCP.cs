@@ -101,7 +101,7 @@ namespace SioForgeCAD.Functions
                 {
                     PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(StartPoint), Vector3d.ZAxis);
                 }
-                catch (System.Exception)
+                catch (Exception)
                 {
                     PointsAngleVectorInRadians = -1;
                 }

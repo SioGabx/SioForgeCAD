@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun;
 using System;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
+using AcAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD
 {
@@ -9,6 +10,7 @@ namespace SioForgeCAD
         public void Initialize()
         {
             AcAp.Idle += OnIdle;
+            InitPlugin();
         }
 
         private void OnIdle(object sender, EventArgs e)
@@ -17,11 +19,20 @@ namespace SioForgeCAD
             if (doc != null)
             {
                 AcAp.Idle -= OnIdle;
-                doc.Editor.WriteMessage("\nSioForgeCAD - Copyright © HOFFMANN François - 2024.\n");
+                doc.Editor.WriteMessage($"\n{Generic.GetExtensionDLLName()} - Copyright © HOFFMANN François / SioGabx - {DateTime.Now.Year}.\n");
             }
         }
 
-        public void Terminate()
-        { }
+        public static void InitPlugin()
+        {
+            Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
+            Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
+            Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
+            Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
+
+            Functions.PICKSTYLETRAY.AddTray();
+        }
+
+        public void Terminate() { }
     }
 }

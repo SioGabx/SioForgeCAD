@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun
     static class HightLighter
     {
         private static readonly List<ObjectId> HightLightedObject = new List<ObjectId>();
-        public static void RegisterHighlight(this Autodesk.AutoCAD.DatabaseServices.ObjectId ObjectId)
+        public static void RegisterHighlight(this ObjectId ObjectId)
         {
             if (!HightLightedObject.Contains(ObjectId))
             {
@@ -16,16 +16,16 @@ namespace SioForgeCAD.Commun
             }
             ObjectId.GetEntity().Highlight();
         }
-        public static void RegisterHighlight(this Autodesk.AutoCAD.DatabaseServices.Entity Entity)
+        public static void RegisterHighlight(this Entity Entity)
         {
             RegisterHighlight(Entity.ObjectId);
         }
 
-        public static void RegisterUnhighlight(this Autodesk.AutoCAD.DatabaseServices.Entity Entity)
+        public static void RegisterUnhighlight(this Entity Entity)
         {
             RegisterUnhighlight(Entity.ObjectId);
         }
-        public static void RegisterUnhighlight(this Autodesk.AutoCAD.DatabaseServices.ObjectId ObjectId)
+        public static void RegisterUnhighlight(this ObjectId ObjectId)
         {
             try
             {

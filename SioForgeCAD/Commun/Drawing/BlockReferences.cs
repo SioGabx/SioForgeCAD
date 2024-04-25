@@ -156,7 +156,7 @@ namespace SioForgeCAD.Commun.Drawing
                 BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
                 if (!bt.Has(BlocName))
                 {
-                    throw new System.Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
+                    throw new Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
                 }
                 BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
                 //Also open modelspace - we'll be adding our BlockReference to it

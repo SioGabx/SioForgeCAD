@@ -87,27 +87,35 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
+
+
+        public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
-            while (true)
+            PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
             {
-                PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
-                {
-                    MessageForAdding = Message,
-                    SingleOnly = true,
-                    SinglePickInSpace = true,
-                    RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers,
-                };
-                TypedValue[] filterList = new TypedValue[] {
+                MessageForAdding = Message,
+                SingleOnly = SingleOnly,
+                SinglePickInSpace = true,
+                RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers,
+            };
+            TypedValue[] filterList = new TypedValue[] {
                     new TypedValue((int)DxfCode.Operator, "<or"),
                     new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
                     new TypedValue((int)DxfCode.Start, "LINE"),
+                    new TypedValue((int)DxfCode.Start, "ARC"),
                     new TypedValue((int)DxfCode.Start, "ELLIPSE"),
                     new TypedValue((int)DxfCode.Start, "CIRCLE"),
                     new TypedValue((int)DxfCode.Start, "SPLINE"),
                     new TypedValue((int)DxfCode.Operator, "or>"),
                 };
-                PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
+            return ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
+        }
+
+        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
+        {
+            while (true)
+            {
+                PromptSelectionResult polyResult = ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
                 if (polyResult.Status == PromptStatus.Error)
                 {
                     continue;
@@ -119,27 +127,32 @@ namespace SioForgeCAD.Commun.Extensions
                 Entity SelectedEntity = polyResult.Value[0].ObjectId.GetNoTransactionDBObject(OpenMode.ForRead) as Entity;
                 if (SelectedEntity is Polyline ProjectionTargetPolyline)
                 {
-                    if (Clone) {
-                    return (Polyline)ProjectionTargetPolyline.Clone();
+                    if (Clone)
+                    {
+                        return (Polyline)ProjectionTargetPolyline.Clone();
                     }
                     else
                     {
                         return ProjectionTargetPolyline;
                     }
                 }
-                else  if (SelectedEntity is Line ProjectionTargetLine)
+                else if (SelectedEntity is Line ProjectionTargetLine)
                 {
                     return ProjectionTargetLine.ToPolyline();
                 }
-                else  if (SelectedEntity is Ellipse ProjectionTargetEllipse)
+                else if (SelectedEntity is Ellipse ProjectionTargetEllipse)
                 {
                     return ProjectionTargetEllipse.ToPolyline();
                 }
-                else  if (SelectedEntity is Circle ProjectionTargetCircle)
+                else if (SelectedEntity is Circle ProjectionTargetCircle)
                 {
                     return ProjectionTargetCircle.ToPolyline();
                 }
-                else  if (SelectedEntity is Spline ProjectionTargetSpline)
+                else if (SelectedEntity is Arc ProjectionTargetArc)
+                {
+                    return ProjectionTargetArc.ToPolyline();
+                }
+                else if (SelectedEntity is Spline ProjectionTargetSpline)
                 {
                     return (Polyline)ProjectionTargetSpline.ToPolyline();
                 }

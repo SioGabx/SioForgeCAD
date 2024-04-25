@@ -41,7 +41,7 @@ namespace SioForgeCAD.Commun
                 List<string> Path = new List<string>();
                 foreach (ObjectId id in res.GetContainers().Reverse())
                 {
-                    BlockReference container = tr.GetObject(id, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.BlockReference;
+                    BlockReference container = tr.GetObject(id, OpenMode.ForRead) as BlockReference;
 
                     Path.Add(container.Name);
                 }

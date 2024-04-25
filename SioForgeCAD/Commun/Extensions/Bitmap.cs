@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class BitmapExtensions
     {
-        public static BitmapSource ToBitmapSource(this System.Drawing.Image Image)
+        public static BitmapSource ToBitmapSource(this Image Image)
         {
             using (var ms = new MemoryStream())
             {
