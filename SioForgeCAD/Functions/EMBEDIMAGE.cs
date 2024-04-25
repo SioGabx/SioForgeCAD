@@ -1,16 +1,11 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using SioForgeCAD.Commun;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using SioForgeCAD.Commun.Extensions;
 using Autodesk.AutoCAD.Geometry;
-using System.Diagnostics;
+using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Drawing.Imaging;
+using System.Windows;
 
 namespace SioForgeCAD.Functions
 {
@@ -27,7 +22,7 @@ namespace SioForgeCAD.Functions
             {
                 if (ent.ObjectId.GetDBObject() is RasterImage rasterImage)
                 {
-                    
+
                     System.Drawing.Image bitmap = System.Drawing.Image.FromFile(rasterImage.Path);
                     bool ImageHasAlpha = bitmap.PixelFormat.HasFlag(PixelFormat.Alpha);
                     //Todo : warning color if rotate and / or if alpha
@@ -42,7 +37,7 @@ namespace SioForgeCAD.Functions
                     //Get last created entity of type Ole2Frame
                     var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
                     Ole2Frame InsertedOLE = InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) as Ole2Frame;
-                    
+
                     //Move OLE at the right position
                     var rasterImageExtend = rasterImage.GetExtents();
                     TransformToFitBoundingBox(InsertedOLE, rasterImageExtend);

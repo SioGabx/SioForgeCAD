@@ -12,7 +12,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
-            using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone:false))
+            using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone: false))
             {
                 if (poly == null)
                 {

@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace SioForgeCAD.Commun.Extensions
