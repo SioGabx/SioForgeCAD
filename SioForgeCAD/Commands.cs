@@ -201,7 +201,7 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        //[CommandMethod("TLEN")]
+        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Modal)]
         public void TLEN()
         {
             throw new NotImplementedException();
@@ -341,6 +341,18 @@ namespace SioForgeCAD
         public static void EMBEDIMAGEASOLE()
         {
             Functions.EMBEDIMAGEASOLE.EmbedToOle();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CHANGESPACECOPY", CommandFlags.UsePickSet)]
+        public static void CHANGESPACECOPY()
+        {
+            throw new NotImplementedException();
+        }
+
+        [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.UsePickSet)]
+        public static void DELETESUBGROUP()
+        {
+            throw new NotImplementedException();
         }
 
 
