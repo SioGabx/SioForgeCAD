@@ -226,6 +226,7 @@
     <Compile Include="Functions\RRR.cs" />
     <Compile Include="Functions\BLKSETTOBYBBLOCK.cs" />
     <Compile Include="Functions\SCALEBY.cs" />
+    <Compile Include="Functions\SCALEFIT.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
     <Compile Include="Functions\TLEN.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />

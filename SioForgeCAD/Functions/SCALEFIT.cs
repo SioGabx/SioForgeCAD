@@ -3,12 +3,13 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System;
 
 namespace SioForgeCAD.Functions
 {
-    public static class SCALEBY
+    public static class SCALEFIT
     {
-        public static void ScaleBy()
+        public static void ScaleFit()
         {
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
@@ -16,7 +17,7 @@ namespace SioForgeCAD.Functions
             PromptSelectionResult selResult = ed.GetSelection();
             if (selResult.Status == PromptStatus.OK)
             {
-                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Indiquez une echelle d'agrandissement ou de réduction")
+                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Indiquez la largeur minimal à respecter")
                 {
                     AllowArbitraryInput = true,
                     AllowNegative = false,
@@ -26,18 +27,23 @@ namespace SioForgeCAD.Functions
                 var AskRatioResult = ed.GetDouble(promptDoubleOptions);
                 if (AskRatioResult.Status == PromptStatus.OK)
                 {
-                    double Ratio = AskRatioResult.Value;
+                    double TargetSize = AskRatioResult.Value;
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         foreach (SelectedObject selObj in selResult.Value)
                         {
                             if (selObj?.ObjectId.GetDBObject(OpenMode.ForWrite) is Entity ent)
                             {
-                                var TransformCenter = ent.GetExtents().GetCenter();
+                                var EntExtend = ent.GetExtents();
+                                var TransformCenter = EntExtend.GetCenter();
+                                var EntExtendSize = EntExtend.Size();
+                                var MaxSize = Math.Max(EntExtendSize.Width, EntExtendSize.Height);
+
                                 if (ent is BlockReference blkRef)
                                 {
                                     TransformCenter = blkRef.Position;
                                 }
+                                var Ratio = TargetSize / MaxSize;
                                 Matrix3d scaleMatrix = Matrix3d.Scaling(Ratio, TransformCenter);
                                 ent.TransformBy(scaleMatrix);
                             }
