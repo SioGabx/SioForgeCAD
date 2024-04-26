@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
             PromptSelectionResult selResult = ed.GetSelection();
             if (selResult.Status == PromptStatus.OK)
             {
-                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Indiquez la largeur minimal à respecter")
+                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions($"Indiquez la distance que vous souhaitez définir pour la plus grande largeur {(selResult.Value.Count > 1 ? "de l'entité" : "des entités séléctionnées")}")
                 {
                     AllowArbitraryInput = true,
                     AllowNegative = false,
