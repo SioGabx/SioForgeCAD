@@ -248,6 +248,12 @@ namespace SioForgeCAD
             Functions.SCALEBY.ScaleBy();
         }
 
+        [CommandMethod("SIOFORGECAD", "SCALEFIT", CommandFlags.UsePickSet)]
+        public static void SCALEFIT()
+        {
+            Functions.SCALEFIT.ScaleFit();
+        }
+
         [CommandMethod("SIOFORGECAD", "INNERCENTROID", CommandFlags.UsePickSet)]
         public static void INNERCENTROID()
         {
