@@ -9,6 +9,7 @@ namespace SioForgeCAD.Functions
 {
     public static class SCALEFIT
     {
+        public static double LastScaleFitTargetSize = 1;
         public static void ScaleFit()
         {
             var ed = Generic.GetEditor();
@@ -22,12 +23,13 @@ namespace SioForgeCAD.Functions
                     AllowArbitraryInput = true,
                     AllowNegative = false,
                     AllowZero = false,
-                    DefaultValue = 1,
+                    DefaultValue = LastScaleFitTargetSize,
                 };
                 var AskRatioResult = ed.GetDouble(promptDoubleOptions);
                 if (AskRatioResult.Status == PromptStatus.OK)
                 {
                     double TargetSize = AskRatioResult.Value;
+                    LastScaleFitTargetSize = TargetSize;
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         foreach (SelectedObject selObj in selResult.Value)

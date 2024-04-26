@@ -8,6 +8,7 @@ namespace SioForgeCAD.Functions
 {
     public static class SCALEBY
     {
+        public static double LastScaleByRatio = 1;
         public static void ScaleBy()
         {
             var ed = Generic.GetEditor();
@@ -21,12 +22,13 @@ namespace SioForgeCAD.Functions
                     AllowArbitraryInput = true,
                     AllowNegative = false,
                     AllowZero = false,
-                    DefaultValue = 1,
+                    DefaultValue = LastScaleByRatio,
                 };
                 var AskRatioResult = ed.GetDouble(promptDoubleOptions);
                 if (AskRatioResult.Status == PromptStatus.OK)
                 {
                     double Ratio = AskRatioResult.Value;
+                    LastScaleByRatio = Ratio;
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         foreach (SelectedObject selObj in selResult.Value)
