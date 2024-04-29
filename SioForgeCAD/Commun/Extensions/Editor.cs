@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using System;
+using System.Linq;
 using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
@@ -111,11 +112,52 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
         }
 
+
+        public static bool GetImpliedSelection(this Editor ed, out PromptSelectionResult SelectionResult)
+        {
+            //Try to get the selection if PickFirst / implied selection is defined if true, we clear it
+            SelectionResult = ed.SelectImplied();
+            ed.SetImpliedSelection(Array.Empty<ObjectId>());
+            return SelectionResult.Status == PromptStatus.OK;
+        }
+
+        public static void AddToImpliedSelection(this Editor ed, ObjectId objectId)
+        {
+            if (ed.GetImpliedSelection(out var CurrentSelectionResult) && CurrentSelectionResult.Status == PromptStatus.OK)
+            {
+                var CurrentSelectionSet = CurrentSelectionResult.Value.GetObjectIds().ToArray();
+                CurrentSelectionSet.Append(objectId);
+                ed.SetImpliedSelection(CurrentSelectionSet.ToArray());
+            }
+            else
+            {
+                ed.SetImpliedSelection(new ObjectId[1] { objectId });
+            }
+        }
+
         public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
         {
-            while (true)
+            return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone);
+        }
+
+        public static Polyline GetPolyline(this Editor ed, out ObjectId EntObjectId, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
+        {
+            EntObjectId = ObjectId.Null;
+            for (int index = 0; true; index++)
             {
-                PromptSelectionResult polyResult = ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
+                PromptSelectionResult polyResult;
+                if (index == 0)
+                {
+                    if (!ed.GetImpliedSelection(out polyResult))
+                    {
+                        ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
+                    }
+                }
+                else
+                {
+                    polyResult = ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
+                }
+
                 if (polyResult.Status == PromptStatus.Error)
                 {
                     continue;
@@ -124,7 +166,8 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     return null;
                 }
-                Entity SelectedEntity = polyResult.Value[0].ObjectId.GetNoTransactionDBObject(OpenMode.ForRead) as Entity;
+                EntObjectId = polyResult.Value[0].ObjectId;
+                Entity SelectedEntity = EntObjectId.GetNoTransactionDBObject(OpenMode.ForRead) as Entity;
                 if (SelectedEntity is Polyline ProjectionTargetPolyline)
                 {
                     if (Clone)

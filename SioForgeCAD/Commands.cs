@@ -98,30 +98,30 @@ namespace SioForgeCAD
             Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
         }
 
-        [CommandMethod("SIOFORGECAD", "CIRCLETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "CIRCLETOPOLYLIGNE", CommandFlags.Redraw)]
         public static void CIRCLETOPOLYLIGNE()
         {
             Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
         }
-        [CommandMethod("SIOFORGECAD", "ELLIPSETOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "ELLIPSETOPOLYLIGNE", CommandFlags.Redraw)]
         public static void ELLIPSETOPOLYLIGNE()
         {
             Functions.ELLIPSETOPOLYLIGNE.ConvertEllipseToPolylines();
         }
 
-        [CommandMethod("SIOFORGECAD", "POLYLINE3DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYLINE3DTOPOLYLIGNE", CommandFlags.Redraw)]
         public static void POLYLINE3DTOPOLYLIGNE()
         {
             Functions.POLYLINE3DTOPOLYLIGNE.ConvertPolyline3dToPolylines();
         }
 
-        [CommandMethod("SIOFORGECAD", "POLYLINE2DTOPOLYLIGNE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "POLYLINE2DTOPOLYLIGNE", CommandFlags.Redraw)]
         public static void POLYLINE2DTOPOLYLIGNE()
         {
             Functions.POLYLINE2DTOPOLYLIGNE.ConvertPolyline2dToPolylines();
         }
 
-        [CommandMethod("SIOFORGECAD", "DRAWCPTERRAIN", CommandFlags.UsePickSet | CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "DRAWCPTERRAIN", CommandFlags.Redraw)]
         public static void DRAWCPTERRAIN()
         {
             new Functions.DRAWCPTERRAIN().DrawTerrainFromSelectedPoints();
@@ -163,8 +163,8 @@ namespace SioForgeCAD
             Functions.RRR.Rotate();
         }
 
-        [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
-        [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet | CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
         public static void BLKINSEDIT()
         {
             Functions.BLKINSEDIT.MoveBasePoint();
@@ -182,7 +182,7 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw )]
         public static void TLEN()
         {
             Functions.TLEN.Compute();
@@ -194,7 +194,7 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
-        [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.Modal | CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.UsePickSet)]
         public static void VEGBLOCEDIT()
         {
             Functions.VEGBLOCEDIT.Edit();

@@ -14,7 +14,6 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             TypedValue[] tvs = new TypedValue[] {
                 new TypedValue((int)DxfCode.LayerName,Layers.GetCurrentLayerName()),
-               // new TypedValue((int)DxfCode.Start,"LINE"),
             };
             SelectionFilter sf = new SelectionFilter(tvs);
             PromptSelectionResult psr = ed.SelectAll(sf);
@@ -25,7 +24,7 @@ namespace SioForgeCAD.Functions
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-            using (Polyline Boundary = ed.GetPolyline("\nSélectionnez une polyligne qui delimite / croise les objects à selectionner", false))
+            using (Polyline Boundary = ed.GetPolyline(out ObjectId EntObjectId, "\nSélectionnez une polyligne qui delimite / croise les objects à selectionner", false))
             {
                 if (Boundary is null)
                 {
@@ -45,12 +44,11 @@ namespace SioForgeCAD.Functions
                 var Objects = SelectCrossingPolygonResult?.Value?.GetObjectIds()?.ToList();
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    Objects.Remove(Boundary.ObjectId);
+                    Objects.Remove(EntObjectId);
                     ed.SetImpliedSelection(Objects.ToArray());
                     ed.SetCurrentView(SavedView);
                     tr.Commit();
                 }
-                ed.Regen();
             }
         }
 
@@ -83,7 +81,6 @@ namespace SioForgeCAD.Functions
                     ed.SetCurrentView(SavedView);
                     tr.Commit();
                 }
-                ed.Regen();
             }
         }
     }

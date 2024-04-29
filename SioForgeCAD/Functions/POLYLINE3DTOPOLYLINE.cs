@@ -4,8 +4,10 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
@@ -49,25 +51,27 @@ namespace SioForgeCAD.Functions
                 BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 using (btr)
                 {
-                    PromptSelectionResult selResult = ed.GetSelection();
+                    if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
+                    {
+                        selResult = ed.GetSelection();
+                    }
                     if (selResult.Status == PromptStatus.OK)
                     {
-                        SelectionSet selSet = selResult.Value;
-
-                        foreach (SelectedObject selObj in selSet)
+                        List<ObjectId> ConvertionResult = new List<ObjectId>();
+                        foreach (SelectedObject selObj in selResult.Value)
                         {
                             if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
                             {
                                 Polyline3d poly3d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline3d;
                                 using (Polyline pline = poly3d.ToPolyline())
                                 {
-                                    poly3d.CopyPropertiesTo(pline);
-                                    btr.AppendEntity(pline);
-                                    tr.AddNewlyCreatedDBObject(pline, true);
+                                    poly3d.CopyPropertiesTo(pline); 
+                                    ConvertionResult.Add(pline.AddToDrawing());
                                     poly3d.Erase();
                                 }
                             }
                         }
+                        ed.SetImpliedSelection(ConvertionResult.ToArray());
                     }
                 }
                 tr.Commit();

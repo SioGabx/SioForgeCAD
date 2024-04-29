@@ -15,7 +15,10 @@ namespace SioForgeCAD.Functions
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
 
-            var AllSelectedObject = ed.GetCurves("\nVeuillez sélectionner les courbes à mesurer", false, false);
+            if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
+            {
+                AllSelectedObject = ed.GetCurves("\nVeuillez sélectionner les courbes à mesurer", false, false);
+            }
 
             if (AllSelectedObject.Status != PromptStatus.OK)
             {
@@ -23,7 +26,6 @@ namespace SioForgeCAD.Functions
             }
 
             var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
-
             using (var tr = doc.TransactionManager.StartTransaction())
             {
                 double TotalLength = 0;
@@ -40,6 +42,7 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage(Message);
                 Application.ShowAlertDialog(Message);
                 System.Windows.Clipboard.SetText(TotalLength.ToString());
+                ed.SetImpliedSelection(AllSelectedObjectIds);
                 tr.Commit();
             }
         }
