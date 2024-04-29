@@ -159,14 +159,19 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     case Polyline _:
                         return ((Polyline)ent).Area;
-                    case Hatch _:
-                        return ((Hatch)ent).Area;
+                    case Hatch hatch:
+                        var HatchArea = hatch.Area;
+                        return HatchArea;
                     case Circle _:
                         return ((Circle)ent).Area;
                     case Ellipse _:
                         return ((Ellipse)ent).Area;
                     case Region _:
                         return ((Region)ent).Area;
+                    case Arc _:
+                        return ((Arc)ent).Area;
+                    case Spline _:
+                        return ((Spline)ent).Area;
                 }
             }
             catch (Exception ex)

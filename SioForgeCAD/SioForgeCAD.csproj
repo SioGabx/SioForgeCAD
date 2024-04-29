@@ -228,6 +228,7 @@
     <Compile Include="Functions\SCALEBY.cs" />
     <Compile Include="Functions\SCALEFIT.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
+    <Compile Include="Functions\TAREA.cs" />
     <Compile Include="Functions\TLEN.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />

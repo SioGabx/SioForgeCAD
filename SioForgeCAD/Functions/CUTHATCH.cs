@@ -74,7 +74,6 @@ namespace SioForgeCAD.Functions
 
                             //Subtract the new edge with each hole from the polybase. If the polyline is divided by two or more, we add it to the list of curves remaining to be processed
                             CuttedPolyline.Remove(NewBoundary);
-                            //-> Check the order
                             PolygonOperation.Substraction(new PolyHole(NewBoundary, null), HatchPolyHole.Holes, out var SubResult);
 
                             //Weird case where Substraction return 0 -> possible if the hatch is too small
@@ -94,17 +93,11 @@ namespace SioForgeCAD.Functions
                             //Parse the first in list, if there is no new cut, this is the same as NewBoundary
                             Polyline SubstractedNewBoundary = SubResult[0].Boundary;
                             NewBoundaryHoles = SubResult[0].Holes.Cast<Curve>().ToList();
-                            if (NewBoundary != SubstractedNewBoundary)
-                            {
-                                //NewBoundary.Dispose(); 
-                            }
 
                             ExistingBoundaryStyle.CopyPropertiesTo(SubstractedNewBoundary);
                             Hatchs.ApplyHatchV2(SubstractedNewBoundary, NewBoundaryHoles, Hachure);
 
                             CuttedPolyline.Remove(SubstractedNewBoundary);
-                            //SubstractedNewBoundary.Dispose();
-
                             NumberOfSlice++;
                         }
                         Generic.WriteMessage($"La hachure à été divisée en {NumberOfSlice}");
@@ -125,7 +118,7 @@ namespace SioForgeCAD.Functions
                         //Generate a union of existing hole + new one
                         var HatchHoles = HatchPolyHole.Holes;
                         HatchHoles.Add(CutLine);
-                        PolygonOperation.Union(PolyHole.CreateFromList(HatchHoles), out var MergedHoles);
+                        PolygonOperation.Union(PolyHole.CreateFromList(HatchHoles), out var MergedHoles, true);
                         var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
                         //If hole is inside an hole, we add a new Hatch inside
                         foreach (var CurveA in Holes.ToArray())

@@ -176,10 +176,10 @@ namespace SioForgeCAD
             Functions.RP2.RotateUCS();
         }
 
-        [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]
         public void TAREA()
         {
-            throw new NotImplementedException();
+            Functions.TAREA.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw )]
