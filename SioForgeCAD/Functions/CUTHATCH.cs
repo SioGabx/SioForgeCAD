@@ -157,10 +157,10 @@ namespace SioForgeCAD.Functions
                 finally
                 {
                     //Cleanup
-                    Hachure.Dispose();
-                    CutLine.Dispose();
-                    HatchPolyHole.Dispose();
-                    ExistingBoundaryStyle.Dispose();
+                    Hachure?.Dispose();
+                    CutLine?.Dispose();
+                    HatchPolyHole?.Dispose();
+                    ExistingBoundaryStyle?.Dispose();
                     PolygonOperation.SetSliceCache(null, null);
                 }
             }

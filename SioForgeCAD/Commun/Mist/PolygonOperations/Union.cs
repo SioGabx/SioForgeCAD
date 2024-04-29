@@ -248,9 +248,12 @@ namespace SioForgeCAD.Commun
                         if (RequestAllowMarginError)
                         {
                             var OffsetParsedHole = ParsedHole.SmartOffset(-Margin).ToList();
-                            ParsedHole = OffsetParsedHole.First();
-                            OffsetParsedHole.Remove(ParsedHole);
-                            OffsetParsedHole.DeepDispose();
+                            if (OffsetParsedHole.Count > 0)
+                            {
+                                ParsedHole = OffsetParsedHole.First();
+                                OffsetParsedHole.Remove(ParsedHole);
+                                OffsetParsedHole.DeepDispose();
+                            }
                         }
 
                         if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
