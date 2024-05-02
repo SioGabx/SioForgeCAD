@@ -14,8 +14,7 @@ namespace SioForgeCAD.Commun
             List<Polyline> CuttedPolyline = new List<Polyline>() { BasePolygon.Boundary };
 
             //Add existing hole to the substraction if not present
-            var SubstractionPolygons = SubstractionPolygonsArg.ToList();
-            SubstractionPolygons.AddRangeUnique(BasePolygon.Holes);
+            var SubstractionPolygons = SubstractionPolygonsArg.AddRangeUnique(BasePolygon.Holes);
 
             foreach (Curve SubstractionPolygonCurve in SubstractionPolygons.ToArray())
             {
@@ -38,6 +37,7 @@ namespace SioForgeCAD.Commun
                                 if (Cuts.Count > 0)
                                 {
                                     CuttedPolyline.Remove(NewBoundary);
+                                    NewBoundary.Dispose();
                                 }
                                 foreach (var CuttedNewBoundary in Cuts)
                                 {

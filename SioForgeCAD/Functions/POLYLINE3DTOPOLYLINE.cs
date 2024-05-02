@@ -65,7 +65,7 @@ namespace SioForgeCAD.Functions
                                 Polyline3d poly3d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline3d;
                                 using (Polyline pline = poly3d.ToPolyline())
                                 {
-                                    poly3d.CopyPropertiesTo(pline); 
+                                    poly3d.CopyPropertiesTo(pline);
                                     ConvertionResult.Add(pline.AddToDrawing());
                                     poly3d.Erase();
                                 }

@@ -227,44 +227,44 @@ namespace SioForgeCAD.Functions
         {
             return startPoint.SCG.Add(vector3d).ToPoints();
         }
-    }
 
-    internal class DrawCPTerrainInsertionTransientPoints : GetPointTransient
-    {
-        private readonly Func<Points, List<Entity>> UpdateFunction;
-        private readonly Polyline TerrainBasePolyline;
-        public DrawCPTerrainInsertionTransientPoints(Func<Points, List<Entity>> UpdateFunction, Polyline TerrainBasePolyline) : base(null, null)
+        internal class DrawCPTerrainInsertionTransientPoints : GetPointTransient
         {
-            this.UpdateFunction = UpdateFunction;
-            this.TerrainBasePolyline = TerrainBasePolyline;
-        }
-
-        private bool CheckIfRedrawIsNeeded(Point3d LastPoint, Point3d NewPoint)
-        {
-            if (LastPoint == NewPoint || NewPoint == Point3d.Origin)
+            private readonly Func<Points, List<Entity>> UpdateFunction;
+            private readonly Polyline TerrainBasePolyline;
+            public DrawCPTerrainInsertionTransientPoints(Func<Points, List<Entity>> UpdateFunction, Polyline TerrainBasePolyline) : base(null, null)
             {
-                //first draw
-                return true;
+                this.UpdateFunction = UpdateFunction;
+                this.TerrainBasePolyline = TerrainBasePolyline;
             }
-            //Redraw only if Inversed changed;
-            bool IsLastPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, LastPoint);
-            bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);
-            return IsLastPointInverted != IsNewPointInverted;
-        }
 
-        public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
-        {
-            if (CheckIfRedrawIsNeeded(moveToPt, curPt))
+            private bool CheckIfRedrawIsNeeded(Point3d LastPoint, Point3d NewPoint)
             {
-                DisposeEntities();
-                DisposeDrawable();
-                DisposeStaticEntities();
-                DisposeStaticDrawable();
-
-                SetEntities = UpdateFunction(moveToPt.ToPoints()).ToDBObjectCollection();
-                foreach (Autodesk.AutoCAD.GraphicsInterface.Drawable entity in Drawable)
+                if (LastPoint == NewPoint || NewPoint == Point3d.Origin)
                 {
-                    RedrawTransEntities(entity);
+                    //first draw
+                    return true;
+                }
+                //Redraw only if Inversed changed;
+                bool IsLastPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, LastPoint);
+                bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);
+                return IsLastPointInverted != IsNewPointInverted;
+            }
+
+            public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+            {
+                if (CheckIfRedrawIsNeeded(moveToPt, curPt))
+                {
+                    DisposeEntities();
+                    DisposeDrawable();
+                    DisposeStaticEntities();
+                    DisposeStaticDrawable();
+
+                    SetEntities = UpdateFunction(moveToPt.ToPoints()).ToDBObjectCollection();
+                    foreach (Autodesk.AutoCAD.GraphicsInterface.Drawable entity in Drawable)
+                    {
+                        RedrawTransEntities(entity);
+                    }
                 }
             }
         }

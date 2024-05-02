@@ -390,17 +390,15 @@ namespace SioForgeCAD.Functions
             byte Blue = (byte)r.Next(20, 220);
             return Color.FromRgb(Red, Green, Blue);
         }
-    }
 
-    public class GetVegBlocPointTransient : GetPointTransient
-    {
-        public GetVegBlocPointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction)
+        private class GetVegBlocPointTransient : GetPointTransient
         {
-        }
+            public GetVegBlocPointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
 
-        public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
-        {
-            return Drawable.Color;
+            public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+            {
+                return Drawable.Color;
+            }
         }
     }
 }

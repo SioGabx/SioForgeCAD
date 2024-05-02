@@ -21,28 +21,10 @@ namespace SioForgeCAD.Commun
                 return false;
             }
 
-            bool AllowMarginError = RequestAllowMarginError;
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
-            if (AllowMarginError)
-            {
-                foreach (var PolyHole in PolyHoleList)
-                {
-                    PolyHole.Boundary.Cleanup();
-                    if (PolyHole.Boundary.IsSelfIntersecting(out var Points))
-                    {
-                        Generic.WriteMessage("Self Intersecting detected. AllowMarginError is disabled");
-                        //Points.AddToDrawing();
-                        AllowMarginError = false;
-                    }
-                    if (!AllowMarginError)
-                    {
-                        //Break if AllowMarginError have been set to false
-                        break;
-                    }
-                }
-            }
+            bool AllowMarginError = RequestAllowMarginError && CheckAllowMarginError(PolyHoleList);
 
-            var Holes = UnionHoles(PolyHoleList, AllowMarginError);
+            List<Polyline> Holes = UnionHoles(PolyHoleList, AllowMarginError);
 
             Extents3d ExtendBeforeUnion = PolyHoleList.GetBoundaries().GetExtents();
 
@@ -60,13 +42,123 @@ namespace SioForgeCAD.Commun
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
 
-            //foreach (var curveItem in SplittedCurvesOrigin)
-            //{
-            //    curveItem.Splitted.AddToDrawing(5);
-            //}
-
             //Check if Cutted line IsInside -> if true remove
-            ConcurrentBag<Polyline> ConcurrentBagGlobalSplittedCurves = new ConcurrentBag<Polyline>();
+            List<Polyline> GlobalSplittedCurves = RemoveInsideCutLine(PolyHoleList, SplittedCurvesOrigin);
+            GlobalSplittedCurves.CleanupPolylines();
+            List<Polyline> FilteredSplittedCurves = RemoveOverlaping(GlobalSplittedCurves);
+
+            List<Polyline> PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
+            //Dispose unused
+            GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
+            if (AllowMarginError) {
+                PolyHoleList.GetBoundaries().DeepDispose();
+                FilteredSplittedCurves.DeepDispose();
+            }
+            else
+            {
+                FilteredSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
+            }
+
+            if (RequestAllowMarginError)
+            {
+                //Check if generated union with boundary may result in hole,
+                //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
+                CheckBoundaryUnionResultInHole(PossibleBoundary, Holes, AllowMarginError);
+            }
+
+            UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
+
+            if (AllowMarginError)
+            {
+                var UnionResultCopy = UnionResult.ToList();
+
+                if (UnionResultCopy.Count == 0)
+                {
+                    return false;
+                }
+
+                //Undo offset PolyHole boundary 
+                for (int i = 0; i < UnionResultCopy.Count; i++)
+                {
+                    PolyHole PolyHole = UnionResultCopy[i];
+                    UnionResult.Remove(PolyHole);
+                    var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
+                    if (UndoMargin.Count == 0)
+                    {
+                        return false;
+                    }
+                    UnionResult.AddRange(UndoMargin);
+                }
+            }
+
+            Extents3d ExtendAfterUnion = UnionResult.GetBoundaries().GetExtents();
+            var ExtendBeforeUnionSize = ExtendBeforeUnion.Size();
+            var ExtendAfterUnionSize = ExtendAfterUnion.Size();
+
+            //If size of the extend is different, that mean the union failled at some point
+            return Math.Abs(ExtendBeforeUnionSize.Width - ExtendAfterUnionSize.Width) < Generic.LowTolerance.EqualPoint
+                && Math.Abs(ExtendBeforeUnionSize.Height - ExtendAfterUnionSize.Height) < Generic.LowTolerance.EqualPoint;
+        }
+
+        private static void CheckBoundaryUnionResultInHole(List<Polyline> PossibleBoundary, List<Polyline> Holes, bool AllowMarginError)
+        {
+            foreach (var BoundaryA in PossibleBoundary.ToList())
+            {
+                foreach (var BoundaryB in PossibleBoundary.ToList())
+                {
+                    if (BoundaryA == BoundaryB) { continue; }
+
+                    if (BoundaryA.IsInside(BoundaryB))
+                    {
+                        PossibleBoundary.Remove(BoundaryA);
+                        if (AllowMarginError)
+                        {
+                            //Because a hole is generated, the inner hole is reduced, we need to expand it back
+                            var OffsetBoundaryA = BoundaryA.SmartOffset(Margin);
+                            BoundaryA.Dispose();
+                            var MergedOffsetBoundaryA = OffsetBoundaryA.JoinMerge().Cast<Polyline>();
+                            Holes.AddRange(MergedOffsetBoundaryA);
+                            OffsetBoundaryA.DeepDispose();
+                        }
+                        else
+                        {
+                            Holes.Add(BoundaryA);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static List<Polyline> RemoveOverlaping(List<Polyline> Curves)
+        {
+            object _lock = new object();
+            var NoOverlapingCurves = new List<Polyline>(Curves);
+            Parallel.ForEach(Curves, new ParallelOptions { MaxDegreeOfParallelism = Settings.MultithreadingMaxNumberOfThread }, SplittedCurveA =>
+            {
+                foreach (var SplittedCurveB in Curves.ToArray())
+                {
+                    if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
+                    {
+                        if (SplittedCurveA.IsSameAs(SplittedCurveB))
+                        {
+                            lock (_lock)
+                            {
+                                NoOverlapingCurves.Remove(SplittedCurveA);
+                            }
+                            break;
+                        }
+                    }
+                }
+            });
+
+            return NoOverlapingCurves;
+        }
+
+        private static List<Polyline> RemoveInsideCutLine(List<PolyHole> PolyHoleList, ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin)
+        {
+            ConcurrentBag<Polyline> GlobalSplittedCurves = new ConcurrentBag<Polyline>();
             ConcurrentDictionary<Polyline, Polyline> NoArcPolygonCache = new ConcurrentDictionary<Polyline, Polyline>();
             Parallel.ForEach(SplittedCurvesOrigin.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = Settings.MultithreadingMaxNumberOfThread }, SplittedCurveOrigin =>
             {
@@ -97,25 +189,13 @@ namespace SioForgeCAD.Commun
                         }
                         if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary)) // need to add a check if it overlaping an another, we sould remove it anyway
                         {
-                            //SplittedCurve.AddToDrawing(1, true);
-                            //var SplitObjId = SplittedCurve.AddToDrawing(1, true);
-                            //var NoArcPolyBaseObjId = NoArcPolyBase.AddToDrawing(2, true);
-                            //var PolyBaseBoundaryObjId = PolyBase.Boundary.AddToDrawing(3, true);
-                            //Groups.Create("Debug", "", new ObjectIdCollection() { SplitObjId, NoArcPolyBaseObjId, PolyBaseBoundaryObjId });
-
                             SplittedCurves.Remove(SplittedCurve);
                             SplittedCurve.Dispose();
                         }
-                        //NoArcPolyBase.AddToDrawing(1, true);
-                        //PolyBase.Boundary.AddToDrawing(5, true);
                     }
                 }
-                ConcurrentBagGlobalSplittedCurves.AddRange(SplittedCurves);
+                GlobalSplittedCurves.AddRange(SplittedCurves);
             });
-
-            List<Polyline> GlobalSplittedCurves = ConcurrentBagGlobalSplittedCurves.ToList();
-
-            //GlobalSplittedCurves.AddToDrawing(6, true);
 
             foreach (var item in NoArcPolygonCache)
             {
@@ -125,106 +205,21 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            //Cleanup for SplittedCurves
-            foreach (var Line in GlobalSplittedCurves)
-            {
-                Line.Cleanup();
-            }
+            return GlobalSplittedCurves.ToList();
+        }
 
-            //Groups.Create("hh", "", GlobalSplittedCurves.AddToDrawing(6, true).ToObjectIdCollection());
-            //Remove IsOverlaping line
-            object _lock = new object();
-            Parallel.ForEach(GlobalSplittedCurves.ToArray(), new ParallelOptions { MaxDegreeOfParallelism = Settings.MultithreadingMaxNumberOfThread }, SplittedCurveA =>
+        private static bool CheckAllowMarginError(List<PolyHole> PolyHoleList)
+        {
+            foreach (var PolyHole in PolyHoleList)
             {
-                foreach (var SplittedCurveB in GlobalSplittedCurves.ToArray())
+                PolyHole.Boundary.Cleanup();
+                if (PolyHole.Boundary.IsSelfIntersecting(out _))
                 {
-                    if (SplittedCurveB != null && SplittedCurveA != SplittedCurveB)
-                    {
-                        if (SplittedCurveA.IsSameAs(SplittedCurveB))
-                        {
-                            lock (_lock)
-                            {
-                                GlobalSplittedCurves.Remove(SplittedCurveA);
-                            }
-                            break;
-                        }
-                    }
-                }
-            });
-
-            ConcurrentBagGlobalSplittedCurves.RemoveCommun(GlobalSplittedCurves).DeepDispose();
-
-            //GlobalSplittedCurves.AddToDrawing(1, true);
-            var PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
-            GlobalSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
-            //PossibleBoundary.AddToDrawing(5, true);
-
-            //Check if generated union with boundary may result in hole,
-            //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
-            if (RequestAllowMarginError)
-            {
-                foreach (var BoundaryA in PossibleBoundary.ToList())
-                {
-                    foreach (var BoundaryB in PossibleBoundary.ToList())
-                    {
-                        if (BoundaryA == BoundaryB) { continue; }
-
-                        if (BoundaryA.IsInside(BoundaryB))
-                        {
-                            PossibleBoundary.Remove(BoundaryA);
-                            if (AllowMarginError)
-                            {
-                                //Because a hole is generated, the inner hole is reduced, we need to expand it back
-                                var OffsetBoundaryA = BoundaryA.SmartOffset(Margin);
-                                BoundaryA.Dispose();
-                                var MergedOffsetBoundaryA = OffsetBoundaryA.Cast<Polyline>().JoinMerge().Cast<Polyline>();
-                                Holes.AddRange(MergedOffsetBoundaryA);
-                                OffsetBoundaryA.DeepDispose();
-                            }
-                            else
-                            {
-                                Holes.Add(BoundaryA);
-                            }
-
-                            break;
-                        }
-                    }
-                }
-            }
-
-            //PossibleBoundary.AddToDrawing(1, true);
-            //Holes.AddToDrawing(1, true);
-            UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
-
-            if (AllowMarginError)
-            {
-                var UnionResultCopy = UnionResult.ToList();
-                //Offset the PolyHole boundary so you can merge a nearly touching polyline
-
-                if (UnionResultCopy.Count == 0)
-                {
+                    Generic.WriteMessage("Self Intersecting detected. AllowMarginError is disabled");
                     return false;
                 }
-                for (int i = 0; i < UnionResultCopy.Count; i++)
-                {
-                    PolyHole PolyHole = UnionResultCopy[i];
-                    UnionResult.Remove(PolyHole);
-                    var UndoMargin = OffsetPolyHole(ref PolyHole, -Margin);
-                    if (UndoMargin.Count == 0)
-                    {
-                        return false;
-                    }
-                    UnionResult.AddRange(UndoMargin);
-                }
             }
-
-            Extents3d ExtendAfterUnion = UnionResult.GetBoundaries().GetExtents();
-            var ExtendBeforeUnionSize = ExtendBeforeUnion.Size();
-            var ExtendAfterUnionSize = ExtendAfterUnion.Size();
-
-            //If size of the extend is different, that mean the union failled at some point
-            return Math.Abs(ExtendBeforeUnionSize.Width - ExtendAfterUnionSize.Width) < Generic.LowTolerance.EqualPoint
-                && Math.Abs(ExtendBeforeUnionSize.Height - ExtendAfterUnionSize.Height) < Generic.LowTolerance.EqualPoint;
+            return true;
         }
 
         private static List<Polyline> UnionHoles(List<PolyHole> PolyHoleList, bool RequestAllowMarginError = false)
@@ -313,7 +308,6 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            //HoleUnionResult.AddToDrawing(4, true);
             return HoleUnionResult;
         }
 
@@ -336,12 +330,10 @@ namespace SioForgeCAD.Commun
             }
             if (OffsetCurve.Count == 0)
             {
-                //(polyHole.Boundary.Clone() as Entity).AddToDrawing(6);
                 Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}. Un contour de la courbe à été dessinée");
                 return polyHoles;
                 throw new Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
-            //var MergedOffsetCurve = OffsetCurve.Cast<Polyline>().JoinMerge().Cast<Polyline>();
 
             polyHole.Boundary.Dispose();
 
@@ -393,7 +385,6 @@ namespace SioForgeCAD.Commun
 
                     var SplitDouble = PolyBase.GetSplitPoints(OnLineIntersectionPointsFounds);
                     var Splitted = PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet();
-                    //Splitted.AddToDrawing(color);
 
                     //Remove zero length line
                     foreach (var curv in Splitted.ToList())

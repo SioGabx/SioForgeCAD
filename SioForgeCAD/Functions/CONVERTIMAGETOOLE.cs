@@ -1,0 +1,144 @@
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Windows;
+using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
+using System;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Runtime;
+using MessageBox = System.Windows.Forms.MessageBox;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using MenuItem = Autodesk.AutoCAD.Windows.MenuItem;
+
+namespace SioForgeCAD.Functions
+{
+    public static class CONVERTIMAGETOOLE
+    {
+        public static class ContextMenu
+        {
+            private static ContextMenuExtension cme;
+
+            public static void Attach()
+            {
+                cme = new ContextMenuExtension();
+                MenuItem mi = new MenuItem("Convertir en OLE (embed)");
+                mi.Click += OnConvert;
+                cme.MenuItems.Add(mi);
+                RXClass rxc = Entity.GetClass(typeof(Image));
+                Application.AddObjectContextMenuExtension(rxc, cme);
+            }
+
+            public static void Detach()
+            {
+                RXClass rxc = Entity.GetClass(typeof(Image));
+                Application.RemoveObjectContextMenuExtension(rxc, cme);
+            }
+
+            private static void OnConvert(object o, EventArgs e)
+            {
+                Document doc = Generic.GetDocument();
+                doc.SendStringToExecute("SIOFORGECAD.CONVERTIMAGETOOLE ", true, false, false);
+            }
+        }
+
+        public static void RasterToOle()
+        {
+            Editor ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "Selectionnez une image",
+                SinglePickInSpace = false,
+                SingleOnly = false,
+                RejectObjectsOnLockedLayers = true
+            };
+            TypedValue[] filterList = new TypedValue[] {
+                    new TypedValue((int)DxfCode.Start, "IMAGE")
+                };
+            var ent = ed.GetSelection(selectionOptions, new SelectionFilter(filterList));
+            if (ent.Status != PromptStatus.OK) { return; }
+
+            foreach (ObjectId RasterObjectId in ent.Value.GetObjectIds())
+            {
+                using (var tr = db.TransactionManager.StartTransaction())
+                {
+                    if (RasterObjectId.GetDBObject() is RasterImage rasterImage)
+                    {
+                        System.Drawing.Image bitmap = System.Drawing.Image.FromFile(rasterImage.Path);
+                        bool ImageHasAlpha = bitmap.PixelFormat.HasFlag(PixelFormat.Alpha);
+                        const string HasAlphaWarningMessage = "la transparence de l'image sera supprimée et remplacée par la couleur de l'object raster";
+                        bool ImageIsRotated = rasterImage.Rotation > 0;
+                        const string IsRotatedWarningMessage = "les OLE ne supportent pas les rotations. Un fond sera appliqué de la couleur de l'object raster";
+                        if (ImageHasAlpha || ImageIsRotated)
+                        {
+                            string JoinedMessage = "Attention : ";
+                            if (ImageHasAlpha && ImageIsRotated)
+                            {
+                                JoinedMessage += $"\n - {HasAlphaWarningMessage}\n - {IsRotatedWarningMessage}";
+                            }
+                            else if (ImageHasAlpha)
+                            {
+                                JoinedMessage += HasAlphaWarningMessage;
+                            }
+                            else if (ImageIsRotated)
+                            {
+                                JoinedMessage += IsRotatedWarningMessage;
+                            }
+
+                            var AskContinue = MessageBox.Show(JoinedMessage, Generic.GetExtensionDLLName(), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                            if (AskContinue != DialogResult.OK)
+                            {
+                                return;
+                            }
+                        }
+
+                        using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImage.GetSystemDrawingColor()))
+                        {
+                            try
+                            {
+                                System.Windows.Clipboard.Clear();
+                                System.Windows.Clipboard.SetImage(RotatedImage.ToBitmapSource());
+                            }
+                            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                            {
+                                Generic.WriteMessage(ex.Message);
+                                continue;
+                            }
+                        }
+
+                        //Paste into the drawing because we cannot create a Ole2Frame in NET
+                        Generic.Command("_pasteclip", rasterImage.Position);
+
+                        //Get last created entity of type Ole2Frame
+                        var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
+                        Ole2Frame InsertedOLE = InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) as Ole2Frame;
+
+                        //Move OLE at the right position
+                        var rasterImageExtend = rasterImage.GetExtents();
+                        InsertedOLE.Position3d = rasterImageExtend.ToRectangle3d();
+                        //TransformToFitBoundingBox(InsertedOLE, rasterImageExtend);
+                        //InsertedOLE.TransformBy(Matrix3d.Displacement(InsertedOLE.GetExtents().MinPoint.GetVectorTo(rasterImageExtend.MinPoint)));
+                        rasterImage.CopyPropertiesTo(InsertedOLE);
+                        rasterImage.EraseObject();
+                    }
+                    tr.Commit();
+                }
+            }
+        }
+
+        public static void TransformToFitBoundingBox(Ole2Frame ent, Extents3d FitBoundingBox)
+        {
+            var FitBoundingBoxSize = FitBoundingBox.Size();
+            var EntExtendSize = ent.GetExtents().Size();
+            double HeightRatio = FitBoundingBoxSize.Height / EntExtendSize.Height;
+            double WidthRatio = FitBoundingBoxSize.Width / EntExtendSize.Width;
+            ent.LockAspect = Math.Abs(HeightRatio - WidthRatio) <= Generic.LowTolerance.EqualPoint;
+            ent.WcsHeight = FitBoundingBoxSize.Height;
+            ent.WcsWidth = FitBoundingBoxSize.Width;
+        }
+    }
+}

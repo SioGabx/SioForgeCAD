@@ -74,6 +74,14 @@ namespace SioForgeCAD.Commun.Extensions
             return poly.GetSplitCurves(DblCollection);
         }
 
+        public static void CleanupPolylines(this IEnumerable<Polyline> ListOfPolyline)
+        {
+            foreach (var Line in ListOfPolyline)
+            {
+                Line.Cleanup();
+            }
+        }
+
         public static void Cleanup(this Polyline polyline)
         {
             int InverseCount = 0;

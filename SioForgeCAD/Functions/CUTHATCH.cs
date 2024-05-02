@@ -281,6 +281,7 @@ namespace SioForgeCAD.Functions
                             }
                             else
                             {
+                                polyline.Dispose();
                                 Generic.WriteMessage("La polyligne ne coupe pas la hachure");
                                 continue;
                             }

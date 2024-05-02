@@ -86,40 +86,40 @@ namespace SioForgeCAD.Functions
                 {"PENTE", $"{Slope}%" },
             };
         }
-    }
 
-    internal class CCIInsertionTransientPoints : GetPointTransient
-    {
-        public CCIInsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
-
-        public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
+        internal class CCIInsertionTransientPoints : GetPointTransient
         {
-            foreach (var ent in Drawable)
+            public CCIInsertionTransientPoints(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
+
+            public override void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
             {
-                if (ent is Polyline polyline)
+                foreach (var ent in Drawable)
                 {
-                    polyline.SetPointAt(1, moveToPt.ToPoint2d());
+                    if (ent is Polyline polyline)
+                    {
+                        polyline.SetPointAt(1, moveToPt.ToPoint2d());
+                    }
                 }
+                base.UpdateTransGraphics(curPt, moveToPt);
             }
-            base.UpdateTransGraphics(curPt, moveToPt);
-        }
 
-        public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
-        {
-            if (Drawable is Polyline)
+            public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
             {
-                return Color.FromColorIndex(ColorMethod.ByColor, (short)Settings.TransientSecondaryColorIndex);
+                if (Drawable is Polyline)
+                {
+                    return Color.FromColorIndex(ColorMethod.ByColor, (short)Settings.TransientSecondaryColorIndex);
+                }
+                return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
             }
-            return base.GetTransGraphicsColor(Drawable, IsStaticDrawable);
-        }
 
-        public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
-        {
-            if (entity is Polyline)
+            public override void TransformEntities(Entity entity, Point3d currentPoint, Point3d destinationPoint)
             {
-                return;
+                if (entity is Polyline)
+                {
+                    return;
+                }
+                base.TransformEntities(entity, currentPoint, destinationPoint);
             }
-            base.TransformEntities(entity, currentPoint, destinationPoint);
         }
     }
 }

@@ -88,8 +88,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
@@ -112,7 +110,6 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
         }
 
-
         public static bool GetImpliedSelection(this Editor ed, out PromptSelectionResult SelectionResult)
         {
             //Try to get the selection if PickFirst / implied selection is defined if true, we clear it
@@ -126,7 +123,7 @@ namespace SioForgeCAD.Commun.Extensions
             if (ed.GetImpliedSelection(out var CurrentSelectionResult) && CurrentSelectionResult.Status == PromptStatus.OK)
             {
                 var CurrentSelectionSet = CurrentSelectionResult.Value.GetObjectIds().ToArray();
-                CurrentSelectionSet.Append(objectId);
+                _ = CurrentSelectionSet.Append(objectId);
                 ed.SetImpliedSelection(CurrentSelectionSet.ToArray());
             }
             else
@@ -150,7 +147,7 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     if (!ed.GetImpliedSelection(out polyResult))
                     {
-                        ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
+                        polyResult = ed.GetCurves(Message, true, RejectObjectsOnLockedLayers);
                     }
                 }
                 else

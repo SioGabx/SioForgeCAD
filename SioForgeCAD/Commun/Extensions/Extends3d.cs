@@ -180,6 +180,10 @@ namespace SioForgeCAD.Commun.Extensions
             outline.Closed = true;
             return outline;
         }
+        public static Rectangle3d ToRectangle3d(this Extents3d extents3D)
+        {
+            return new Rectangle3d(extents3D.TopLeft(), extents3D.TopRight(), extents3D.BottomLeft(), extents3D.BottomRight());
+        }
 
         // Lifted from
         // http://docs.autodesk.com/ACD/2010/ENU/AutoCAD%20.NET%20Developer%27s%20Guide/files/WS1a9193826455f5ff2566ffd511ff6f8c7ca-4363.htm

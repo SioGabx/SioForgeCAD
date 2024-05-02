@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -12,10 +13,11 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1102:Make class static")]
     public class Commands
     {
         [CommandMethod("SIOFORGECAD")]
-        public static void SIOFORGECAD()
+         public static void SIOFORGECAD()
         {
             var ed = Generic.GetEditor();
             PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une option")
@@ -177,12 +179,12 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]
-        public void TAREA()
+        public static void TAREA()
         {
             Functions.TAREA.Compute();
         }
 
-        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw )]
+        [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw)]
         public static void TLEN()
         {
             Functions.TLEN.Compute();
@@ -254,19 +256,10 @@ namespace SioForgeCAD
             Functions.SCALEFIT.ScaleFit();
         }
 
-        [CommandMethod("SIOFORGECAD", "INNERCENTROID", CommandFlags.UsePickSet)]
-        public static void INNERCENTROID()
+        [CommandMethod("SIOFORGECAD", "GETINNERCENTROID", CommandFlags.UsePickSet)]
+        public static void GETINNERCENTROID()
         {
-            Editor ed = Generic.GetEditor();
-            using (var poly = ed.GetPolyline("Select poly", false))
-            {
-                var polygon = poly.ToPolygon(10);
-                polygon.AddToDrawing();
-                var PtnsCollection = polygon.GetPoints().ToPoint3dCollection();
-                PtnsCollection.Add(PtnsCollection[0]);
-                var pnts = PolygonOperation.GetInnerCentroid(polygon, 5);
-                pnts.AddToDrawing();
-            }
+            Functions.GETINNERCENTROID.Get();
         }
 
         [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
@@ -281,23 +274,16 @@ namespace SioForgeCAD
             Functions.MERGEPOLYLIGNES.Merge();
         }
 
-        //[CommandMethod("MERGEPOLYLIGNESAU", CommandFlags.UsePickSet)]
-        //public static void MERGEPOLYLIGNESAU()
-        //{
-        //    Functions.MERGEPOLYLIGNES.MergeUsingRegion();
-        //}
-        [CommandMethod("SIOFORGECAD", "POLYLINEISCLOCKWISE", CommandFlags.UsePickSet)]
-        public static void ISCLOCKWISE()
+        [CommandMethod("SIOFORGECAD", "SUBSTRACTPOLYLIGNES", CommandFlags.UsePickSet)]
+        public static void SUBSTRACTPOLYLIGNES()
         {
-            var ed = Generic.GetEditor();
-            using (var result = ed.GetPolyline("Selectionnez une polyligne"))
-            {
-                if (result == null)
-                {
-                    return;
-                }
-                Generic.WriteMessage($"L'orientation de la polyline est {(result.IsClockwise() ? "CLOCKWISE" : "ANTICLOCKWISE")}");
-            }
+            Functions.SUBSTRACTPOLYLIGNES.Substract();
+        }
+
+        [CommandMethod("SIOFORGECAD", "POLYISCLOCKWISE", CommandFlags.UsePickSet)]
+        public static void POLYISCLOCKWISE()
+        {
+            Functions.POLYISCLOCKWISE.Check();
         }
 
         [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.Modal)]
@@ -324,10 +310,17 @@ namespace SioForgeCAD
             Functions.PICKSTYLETRAY.AddTray();
         }
 
-        [CommandMethod("SIOFORGECAD", "EMBEDIMAGEASOLE", CommandFlags.UsePickSet)]
-        public static void EMBEDIMAGEASOLE()
+        [CommandMethod("SIOFORGECAD", "CONVERTIMAGETOOLE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "EMBEDIMAGE", CommandFlags.UsePickSet)]
+        public static void CONVERTIMAGETOOLE()
         {
-            Functions.EMBEDIMAGEASOLE.EmbedToOle();
+            Functions.CONVERTIMAGETOOLE.RasterToOle();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CURVETOPOLYGON", CommandFlags.UsePickSet)]
+        public static void CURVETOPOLYGON()
+        {
+            Functions.CURVETOPOLYGON.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "CHANGESPACECOPY", CommandFlags.UsePickSet)]
@@ -343,32 +336,6 @@ namespace SioForgeCAD
         }
 
 
-
-        [CommandMethod("SIOFORGECAD", "CURVEPOLYTOPOLYGON", CommandFlags.UsePickSet)]
-        public static void CURVEPOLYTOPOLYGON()
-        {
-            Editor ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone: false))
-                {
-                    int NumberOfVerticesBefore = poly.NumberOfVertices;
-                    poly.UpgradeOpen();
-                    PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Number Of Segment per Arc")
-                    {
-                        DefaultValue = 3
-                    };
-                    var value = ed.GetDouble(promptDoubleOptions);
-                    if (value.Status != PromptStatus.OK) { return; }
-                    var Polygon = poly.ToPolygon((uint)value.Value);
-                    poly.CopyPropertiesTo(Polygon);
-                    Polygon.AddToDrawing(5);
-                    poly.EraseObject();
-                    tr.Commit();
-                }
-            }
-        }
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()

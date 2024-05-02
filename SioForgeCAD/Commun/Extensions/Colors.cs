@@ -4,7 +4,7 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class ColorsEntensions
     {
-        public static System.Drawing.Color GetSystemColor(this Entity ent)
+        public static System.Drawing.Color GetSystemDrawingColor(this Entity ent)
         {
             return ent.Color.ColorValue;
         }
