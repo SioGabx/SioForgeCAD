@@ -37,12 +37,30 @@ namespace SioForgeCAD.Functions
             }
         }
 
+        public static string GetPickStyleMessage(short Valeur)
+        {
+            switch (Valeur)
+            {
+                case 0:
+                    return "0 - No group selection or associative hatch selection";
+                case 1:
+                    return "1 - Group selection";
+                case 2:
+                    return "2 - Associative hatch selection";
+                case 3:
+                    return "3 - Group selection and associative hatch selection";
+            }
+
+            return "/ - Erreur";
+        }
+
+
         private static void AddTrayContextMenu()
         {
-            var PickStyle0 = new System.Windows.Forms.MenuItem("0 - No group selection or associative hatch selection");
-            var PickStyle1 = new System.Windows.Forms.MenuItem("1 - Group selection");
-            var PickStyle2 = new System.Windows.Forms.MenuItem("2 - Associative hatch selection");
-            var PickStyle3 = new System.Windows.Forms.MenuItem("3 - Group selection and associative hatch selection");
+            var PickStyle0 = new System.Windows.Forms.MenuItem(GetPickStyleMessage(0));
+            var PickStyle1 = new System.Windows.Forms.MenuItem(GetPickStyleMessage(1));
+            var PickStyle2 = new System.Windows.Forms.MenuItem(GetPickStyleMessage(2));
+            var PickStyle3 = new System.Windows.Forms.MenuItem(GetPickStyleMessage(3));
 
             PickStyle0.Tag = "0";
             PickStyle1.Tag = "1";
@@ -91,7 +109,7 @@ namespace SioForgeCAD.Functions
                     2 = Associative hatch selection
                     3 = Group selection and associative hatch selection
                 */
-                return Value >= 2;
+                return Value == 2 || Value == 3;
             }
             return false;
         }
@@ -99,7 +117,10 @@ namespace SioForgeCAD.Functions
         private static void SetPickStyle(short Value)
         {
             AcApp.SetSystemVariable("PICKSTYLE", Value);
-            Generic.WriteMessage($"PICKSTYLE is now set to {Value}");
+            if ((short)AcApp.GetSystemVariable("PICKSTYLE") == Value)
+            {
+                Generic.WriteMessage($"PICKSTYLE est désormais {GetPickStyleMessage(Value)}");
+            }
         }
 
         private static void SetPickStyle(bool Active)

@@ -329,10 +329,10 @@ namespace SioForgeCAD
             throw new NotImplementedException();
         }
 
-        [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
         public static void DELETESUBGROUP()
         {
-            throw new NotImplementedException();
+            Functions.DELETESUBGROUP.Delete();
         }
 
 

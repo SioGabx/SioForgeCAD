@@ -208,6 +208,7 @@
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CURVETOPOLYGON.cs" />
     <Compile Include="Functions\CUTHATCH.cs" />
+    <Compile Include="Functions\DELETESUBGROUP.cs" />
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />

@@ -124,7 +124,7 @@ namespace SioForgeCAD.Commun
                 {
                     return;
                 }
-                Entity ent = (Entity)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
+                DBObject ent = (DBObject)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
                 if (!ent.IsErased)
                 {
                     ent.Erase(true);
