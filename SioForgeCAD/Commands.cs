@@ -8,6 +8,8 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -17,7 +19,7 @@ namespace SioForgeCAD
     public class Commands
     {
         [CommandMethod("SIOFORGECAD")]
-         public static void SIOFORGECAD()
+        public static void SIOFORGECAD()
         {
             var ed = Generic.GetEditor();
             PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une option")
@@ -335,7 +337,145 @@ namespace SioForgeCAD
             Functions.DELETESUBGROUP.Delete();
         }
 
+        [CommandMethod("SIOFORGECAD", "EXECUTECOMMANDONEACHSELECTED", CommandFlags.UsePickSet)]
+        public static void EXECUTECOMMANDONEACHSELECTED()
+        {
+            Functions.EXECUTECOMMANDONEACHSELECTED.Execute();
+        }
 
+        [CommandMethod("SIOFORGECAD", "LIMITNUMBERINSELECTION", CommandFlags.Redraw)]
+        public static void LIMITNUMBERINSELECTION()
+        {
+            Functions.LIMITNUMBERINSELECTION.LimitToOne();
+        }
+        [CommandMethod("RotateBlockContent", CommandFlags.UsePickSet)]
+        public void RotateBlockContent()
+        {
+            // Récupérer le document actuel et la base de données
+            Document doc = Generic.GetDocument();
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Sélectionner un bloc
+            PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez un bloc :");
+            peo.SetRejectMessage("\nVeuillez sélectionner un bloc valide.");
+            peo.AddAllowedClass(typeof(BlockReference), true);
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return;
+
+            // Ouvrir le bloc sélectionné pour lecture
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockReference blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
+                if (blockRef != null)
+                {
+                    // Récupérer la matrice de transformation du bloc
+                    Matrix3d transform = blockRef.BlockTransform;
+
+                    // Créer une matrice de rotation de 90 degrés autour de l'axe X
+                    Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI / 2.0, Vector3d.XAxis, blockRef.Position);
+
+                    // Combiner les matrices de transformation du bloc et de rotation
+                    Matrix3d newTransform = transform.PreMultiplyBy(rotationMatrix);
+
+                    // Modifier la position et la rotation du bloc
+                    blockRef.UpgradeOpen();
+                    blockRef.BlockTransform = newTransform;
+
+                    // Valider la transaction
+                    tr.Commit();
+
+                    ed.WriteMessage("\nContenu du bloc tourné de 90 degrés autour de l'axe X avec succès.");
+                }
+                else
+                {
+                    ed.WriteMessage("\nL'entité sélectionnée n'est pas un bloc.");
+                }
+            }
+        }
+
+        [CommandMethod("RotateEntityOnZAxis", CommandFlags.UsePickSet)]
+        public void RotateEntityOnZAxis()
+        {
+            // Get the current document and database
+            Document doc = Generic.GetDocument();
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Select an entity to rotate
+            PromptEntityOptions peo = new PromptEntityOptions("\nSelect an entity to rotate:");
+            peo.SetRejectMessage("\nPlease select a valid entity.");
+            var per = ed.GetSelectionRedraw();
+            if (per.Status != PromptStatus.OK) return;
+
+
+            // Parse the clipboard content as a double
+            double defaultRotationAngle = 0.0;
+            if (double.TryParse(Clipboard.GetText(), out double clipboardValue))
+            {
+                defaultRotationAngle = clipboardValue;
+            }
+
+
+            // Get the rotation angle
+            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEnter rotation angle in degrees:");
+            pdo.AllowNegative = true;
+            pdo.AllowZero = false;
+            pdo.DefaultValue = defaultRotationAngle;
+            pdo.UseDefaultValue = true;
+            PromptDoubleResult pdr = ed.GetDouble(pdo);
+            if (pdr.Status != PromptStatus.OK) return;
+
+            double angleInDegrees = pdr.Value;
+
+            // Open the selected entity for write
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (var item in per.Value.GetObjectIds())
+                {
+                    Entity entity = tr.GetObject(item, OpenMode.ForWrite) as Entity;
+                    if (entity != null)
+                    {
+                        // Get the current bounding box
+                        Extents3d extents = entity.GeometricExtents;
+
+                        // Calculate the center of the bounding box
+                        Point3d center = new Point3d(
+                            (extents.MinPoint.X + extents.MaxPoint.X) / 2.0,
+                            (extents.MinPoint.Y + extents.MaxPoint.Y) / 2.0,
+                            (extents.MinPoint.Z + extents.MaxPoint.Z) / 2.0
+                        );
+
+                        // Get the current transformation matrix
+                        Matrix3d transform = Matrix3d.Identity;
+
+                        // Rotate the entity around the center of the bounding box
+                        Matrix3d rotationMatrix = Matrix3d.Rotation(
+                            angleInDegrees * (Math.PI / 180),  // Convert degrees to radians
+                            Vector3d.ZAxis,
+                            center
+                        );
+
+                        // Apply the rotation to the transformation matrix
+                        transform = transform.PreMultiplyBy(rotationMatrix);
+
+                        // Transform the entity
+                        entity.TransformBy(transform);
+
+                        // Commit the transaction
+                        tr.Commit();
+
+                        // Update the display
+                        doc.Editor.Regen();
+                        ed.WriteMessage($"\nEntity rotated by {angleInDegrees} degrees around the center of its bounding box.");
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\nThe selected entity is invalid.");
+                    }
+                }
+            }
+        }
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()

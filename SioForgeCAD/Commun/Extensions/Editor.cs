@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -136,6 +137,40 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone);
         }
+
+        public static PromptSelectionResult GetSelectionRedraw(this Editor ed)
+        {
+            PromptSelectionResult selectResult;
+            for (int index = 0; true; index++)
+            {
+                if (index == 0)
+                {
+                    if (!ed.GetImpliedSelection(out selectResult))
+                    {
+                        selectResult = ed.GetSelection();
+                    }
+                }
+                else
+                {
+                    selectResult = ed.GetSelection();
+                }
+
+                if (selectResult.Status == PromptStatus.Cancel)
+                {
+                    return selectResult;
+                }
+                else if (selectResult.Status == PromptStatus.OK)
+                {
+                    return selectResult;
+                }
+                else
+                {
+                    Generic.WriteMessage("Sélection invalide.");
+                }
+            }
+        }
+
+
 
         public static Polyline GetPolyline(this Editor ed, out ObjectId EntObjectId, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
         {

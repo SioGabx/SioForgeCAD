@@ -214,8 +214,10 @@
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
+    <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\GETINNERCENTROID.cs" />
+    <Compile Include="Functions\LIMITNUMBERINSELECTION.cs" />
     <Compile Include="Functions\MERGEHATCH.cs" />
     <Compile Include="Functions\MERGEPOLYLIGNES.cs" />
     <Compile Include="Functions\PICKSTYLETRAY.cs" />
