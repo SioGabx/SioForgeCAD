@@ -174,7 +174,7 @@ namespace SioForgeCAD
             Functions.BLKINSEDIT.MoveBasePoint();
         }
 
-        [CommandMethod("SIOFORGECAD", "RP2", CommandFlags.Transparent)]
+        [CommandMethod("SIOFORGECAD", "RP2", CommandFlags.NoPaperSpace | CommandFlags.Interruptible)]
         public static void RP2()
         {
             Functions.RP2.RotateUCS();
@@ -288,13 +288,13 @@ namespace SioForgeCAD
             Functions.POLYISCLOCKWISE.Check();
         }
 
-        [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.NoBlockEditor)]
         public static void VPLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(true);
         }
 
-        [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.NoBlockEditor)]
         public static void VPUNLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(false);
@@ -396,15 +396,17 @@ namespace SioForgeCAD
             }
 
             // Get the rotation angle
-            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :");
-            pdo.AllowNegative = true;
-            pdo.AllowZero = false;
-            pdo.DefaultValue = defaultRotationAngle;
-            pdo.UseDefaultValue = true;
+            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :")
+            {
+                AllowNegative = true,
+                AllowZero = false,
+                DefaultValue = defaultRotationAngle,
+                UseDefaultValue = true
+            };
             PromptDoubleResult pdr = ed.GetDouble(pdo);
             if (pdr.Status != PromptStatus.OK) return;
 
-            double angleInDegrees = pdr.Value * -1; //reverse for clockwise
+            double angleInDegrees = pdr.Value;
 
             // Open the selected entity for write
             using (Transaction tr = db.TransactionManager.StartTransaction())

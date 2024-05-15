@@ -13,6 +13,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
+                //TODO : Check if viewport is locked => abord
                 double viewSize = (double)Application.GetSystemVariable("VIEWSIZE");
                 Point3d viewCenter = (Point3d)Application.GetSystemVariable("VIEWCTR");
                 Generic.Command("_WORLDUCS");
