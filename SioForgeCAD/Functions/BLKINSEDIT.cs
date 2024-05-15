@@ -109,6 +109,7 @@ namespace SioForgeCAD.Functions
             else
             {
                 Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI, Vector3d.ZAxis, Point3d.Origin);
+
                 iter = ChangeBasePointStaticBlock(blockRefId, BlockReferenceTransformedPoint.TransformBy(rotationMatrix));
                 //Transform blockReferences to keep position
                 using (Transaction tr2 = db.TransactionManager.StartTransaction())
@@ -201,11 +202,13 @@ namespace SioForgeCAD.Functions
                     return new ObjectIdCollection();
                 }
                 var blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+                
+                var DisplacementVector = Matrix3d.Displacement(new Point3d(0, 0, BlockReferenceTransformedPoint.Z).GetVectorTo(BlockReferenceTransformedPoint.Flatten()));
 
                 foreach (ObjectId entId in blockDef)
                 {
                     Entity entity = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
-                    entity?.TransformBy(Matrix3d.Displacement(BlockReferenceTransformedPoint.GetAsVector()));
+                    entity?.TransformBy(DisplacementVector);
                 }
                 blockRef.DowngradeOpen();
 

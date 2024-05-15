@@ -348,54 +348,9 @@ namespace SioForgeCAD
         {
             Functions.LIMITNUMBERINSELECTION.LimitToOne();
         }
-        [CommandMethod("RotateBlockContent", CommandFlags.UsePickSet)]
-        public void RotateBlockContent()
-        {
-            // Récupérer le document actuel et la base de données
-            Document doc = Generic.GetDocument();
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-
-            // Sélectionner un bloc
-            PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez un bloc :");
-            peo.SetRejectMessage("\nVeuillez sélectionner un bloc valide.");
-            peo.AddAllowedClass(typeof(BlockReference), true);
-            PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
-
-            // Ouvrir le bloc sélectionné pour lecture
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                BlockReference blockRef = tr.GetObject(per.ObjectId, OpenMode.ForRead) as BlockReference;
-                if (blockRef != null)
-                {
-                    // Récupérer la matrice de transformation du bloc
-                    Matrix3d transform = blockRef.BlockTransform;
-
-                    // Créer une matrice de rotation de 90 degrés autour de l'axe X
-                    Matrix3d rotationMatrix = Matrix3d.Rotation(Math.PI / 2.0, Vector3d.XAxis, blockRef.Position);
-
-                    // Combiner les matrices de transformation du bloc et de rotation
-                    Matrix3d newTransform = transform.PreMultiplyBy(rotationMatrix);
-
-                    // Modifier la position et la rotation du bloc
-                    blockRef.UpgradeOpen();
-                    blockRef.BlockTransform = newTransform;
-
-                    // Valider la transaction
-                    tr.Commit();
-
-                    ed.WriteMessage("\nContenu du bloc tourné de 90 degrés autour de l'axe X avec succès.");
-                }
-                else
-                {
-                    ed.WriteMessage("\nL'entité sélectionnée n'est pas un bloc.");
-                }
-            }
-        }
-
-        [CommandMethod("RotateEntityOnZAxis", CommandFlags.UsePickSet)]
-        public void RotateEntityOnZAxis()
+       
+        [CommandMethod("RotateEntityOnAxis", CommandFlags.UsePickSet)]
+        public void RotateEntityOnAxis()
         {
             // Get the current document and database
             Document doc = Generic.GetDocument();
@@ -416,9 +371,32 @@ namespace SioForgeCAD
                 defaultRotationAngle = clipboardValue;
             }
 
+            PromptKeywordOptions kw = new PromptKeywordOptions("Sur quel axe de l'UCS souhaitez vous effectuer la rotation ?")
+            {
+                AllowArbitraryInput = false,
+                AllowNone = false
+            };
+            kw.Keywords.Add("XAxis");
+            kw.Keywords.Add("YAxis");
+            kw.Keywords.Add("ZAxis");
+            var ax = ed.GetKeywords(kw);
+            if (ax.Status != PromptStatus.OK) return;
+            Vector3d axe = Vector3d.ZAxis;
+            switch (ax.StringResult)
+            {
+                case "XAxis":
+                    axe = Vector3d.XAxis;
+                    break;
+                case "YAxis":
+                    axe = Vector3d.YAxis;
+                    break;
+                case "ZAxis":
+                    axe = Vector3d.ZAxis;
+                    break;
+            }
 
             // Get the rotation angle
-            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEnter rotation angle in degrees:");
+            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :");
             pdo.AllowNegative = true;
             pdo.AllowZero = false;
             pdo.DefaultValue = defaultRotationAngle;
@@ -426,7 +404,7 @@ namespace SioForgeCAD
             PromptDoubleResult pdr = ed.GetDouble(pdo);
             if (pdr.Status != PromptStatus.OK) return;
 
-            double angleInDegrees = pdr.Value;
+            double angleInDegrees = pdr.Value * -1; //reverse for clockwise
 
             // Open the selected entity for write
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -452,7 +430,7 @@ namespace SioForgeCAD
                         // Rotate the entity around the center of the bounding box
                         Matrix3d rotationMatrix = Matrix3d.Rotation(
                             angleInDegrees * (Math.PI / 180),  // Convert degrees to radians
-                            Vector3d.ZAxis,
+                            axe,
                             center
                         );
 
