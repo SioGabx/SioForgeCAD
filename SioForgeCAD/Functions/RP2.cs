@@ -1,7 +1,9 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
@@ -10,6 +12,11 @@ namespace SioForgeCAD.Functions
         public static void RotateUCS()
         {
             Document doc = Generic.GetDocument();
+            Editor ed = Generic.GetEditor();
+            if (ed.IsInLockedViewport()) {
+                Generic.WriteMessage("Cette commande n'est pas autorisée dans les espaces objets verouillés");
+                return;
+            }
 
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
@@ -22,5 +29,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
+
+       
     }
 }

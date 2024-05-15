@@ -241,34 +241,40 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
+        //Allow you to cut a hatch in half or more (cut with a polyline)
         public static void CUTHATCH()
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
 
+        [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
+        //Allow you to merge two hatch together
+        public static void MERGEHATCH()
+        {
+            Functions.MERGEHATCH.Merge();
+        }
+
         [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
+        //allows you to scale each of the selected objects relative to themselves
         public static void SCALEBY()
         {
             Functions.SCALEBY.ScaleBy();
         }
 
         [CommandMethod("SIOFORGECAD", "SCALEFIT", CommandFlags.UsePickSet)]
+        //allows you to scale each of the selected objects relative to themselves to fit a specified size
         public static void SCALEFIT()
         {
             Functions.SCALEFIT.ScaleFit();
         }
 
         [CommandMethod("SIOFORGECAD", "GETINNERCENTROID", CommandFlags.UsePickSet)]
+        //add a point to the within centroid of a polyline
         public static void GETINNERCENTROID()
         {
             Functions.GETINNERCENTROID.Get();
         }
 
-        [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
-        public static void MERGEHATCH()
-        {
-            Functions.MERGEHATCH.Merge();
-        }
 
         [CommandMethod("SIOFORGECAD", "MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void MERGEPOLYLIGNES()

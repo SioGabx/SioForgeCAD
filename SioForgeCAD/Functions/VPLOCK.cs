@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
                 {
                     foreach (ObjectId objectId in selectionSet.GetObjectIds())
                     {
-                        Viewport viewport = (Viewport)tr.GetObject(objectId, OpenMode.ForWrite);
+                        Viewport viewport = (Viewport)objectId.GetDBObject(OpenMode.ForWrite);
                         viewport.Locked = Lock;
                     }
                     tr.Commit();

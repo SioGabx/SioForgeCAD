@@ -306,5 +306,54 @@ namespace SioForgeCAD.Commun.Extensions
 
             return true;
         }
+
+        public static bool IsInLockedViewport(this Editor ed)
+        {
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                Viewport viewport = ed.ActiveViewportId.GetDBObject(OpenMode.ForRead) as Viewport;
+                tr.Commit();
+                return viewport?.Locked == true;
+            }
+        }
+        public static bool IsInPaperSpace(this Editor ed)
+        {
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                Viewport viewport = ed.ActiveViewportId.GetDBObject(OpenMode.ForRead) as Viewport;
+                tr.Commit();
+                return viewport?.Number == 1;
+            }
+        }
+
+        public static void ViewPlan(this Editor ed)
+        {
+            //From https://cadxp.com/topic/61249-net-c-%C3%A9quivalents-des-commandes-lisp-ucs-dview-plan/?do=findComment&comment=349377
+            var ucs = ed.CurrentUserCoordinateSystem.CoordinateSystem3d;
+            using (var view = ed.GetCurrentView())
+            {
+                var dcsToWcs =
+                    Matrix3d.Rotation(-view.ViewTwist, view.ViewDirection, view.Target) *
+                    Matrix3d.Displacement(view.Target.GetAsVector()) *
+                    Matrix3d.PlaneToWorld(view.ViewDirection);
+                var centerPoint =
+                    new Point3d(view.CenterPoint.X, view.CenterPoint.Y, 0.0)
+                    .TransformBy(dcsToWcs);
+                view.ViewDirection = ucs.Zaxis;
+                view.ViewTwist = ucs.Xaxis.GetAngleTo(Vector3d.XAxis, ucs.Zaxis);
+                var wcsToDcs =
+                    Matrix3d.WorldToPlane(view.ViewDirection) *
+                    Matrix3d.Displacement(view.Target.GetAsVector().Negate()) *
+                    Matrix3d.Rotation(view.ViewTwist, view.ViewDirection, view.Target);
+                centerPoint = centerPoint.TransformBy(wcsToDcs);
+                view.CenterPoint = new Point2d(centerPoint.X, centerPoint.Y);
+                ed.SetCurrentView(view);
+            }
+        }
+
     }
 }
