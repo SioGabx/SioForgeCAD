@@ -44,53 +44,62 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
+        //Compute a intermedian point between two points
         public static void CCI()
         {
             new Functions.CCI().Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
+        //Compute the slope value between two points
         public static void CCP()
         {
             new Functions.CCP().Compute();
         }
         [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
+        //Compute a new point from existing one using a slope value
         public static void CCD()
         {
             new Functions.CCD().Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
+        //Take a altitude point and add or substract a user defined value to it
         public static void CCA()
         {
             Functions.CCA.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
+        //Move a XREF point into the drawing
         public static void CCXREF()
         {
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
         }
 
         [CommandMethod("SIOFORGECAD", "RENBLK", CommandFlags.Redraw)]
+        //Allow user to rename a block
         public static void RENBLK()
         {
             Functions.RENBLK.RenameBloc();
         }
 
         [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUE", CommandFlags.Redraw)]
+        //Makes the block instance unique. If several of the selected blocks have the same name, they will then share a new common instance
         public static void BLKMAKEUNIQUE()
         {
             new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
         }
 
         [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
+        //Makes the block instance unique. If several of the selected blocks have the same name, they will NOT share a new common instance
         public static void BLKMAKEUNIQUEEACH()
         {
             new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
         }
 
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
+        //Convert all entity values in the block to DUBLOC
         public static void BLKSETTOBYBBLOCK()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock();
@@ -138,7 +147,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
-        //Force layer color to selected entities (change "BYLAYER" by the layer color)
+        //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void FORCELAYERCOLORTOENTITY()
         {
             Functions.FORCELAYERCOLORTOENTITY.Convert();
@@ -243,35 +252,35 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
-        //Allow you to cut a hatch in half or more (cut with a polyline)
+        //Cut a hatch in half or more (cut with a existing polyline)
         public static void CUTHATCH()
         {
             Functions.CUTHATCH.CutHoleHatch();
         }
 
         [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
-        //Allow you to merge two hatch together
+        //Merge two hatches together
         public static void MERGEHATCH()
         {
             Functions.MERGEHATCH.Merge();
         }
 
         [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
-        //allows you to scale each of the selected objects relative to themselves
+        //Scale each of the selected objects relative to themselves
         public static void SCALEBY()
         {
             Functions.SCALEBY.ScaleBy();
         }
 
         [CommandMethod("SIOFORGECAD", "SCALEFIT", CommandFlags.UsePickSet)]
-        //allows you to scale each of the selected objects relative to themselves to fit a specified size
+        //Scale each of the selected objects relative to themselves to fit a specified size
         public static void SCALEFIT()
         {
             Functions.SCALEFIT.ScaleFit();
         }
 
         [CommandMethod("SIOFORGECAD", "GETINNERCENTROID", CommandFlags.UsePickSet)]
-        //add a point to the within centroid of a polyline
+        //Add a point to the within centroid of a polyline
         public static void GETINNERCENTROID()
         {
             Functions.GETINNERCENTROID.Get();
@@ -398,8 +407,6 @@ namespace SioForgeCAD
         public static void TESTMERGE()
         {
             Editor ed = Generic.GetEditor();
-
-            // ed.TraceBoundary(new Autodesk.AutoCAD.Geometry.Point3d(0, 0, 0), false);
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
                 return;
