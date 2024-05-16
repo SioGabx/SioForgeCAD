@@ -94,6 +94,11 @@ namespace SioForgeCAD.Commun
             return GetDocument().Editor;
         }
 
+        public static void SendStringToExecute(string Command) {
+            Document doc = Generic.GetDocument();
+            doc.SendStringToExecute(Command, true, false, false);
+        }
+
         public static void Command(params object[] args)
         {
             short cmdecho = (short)Application.GetSystemVariable("CMDECHO");

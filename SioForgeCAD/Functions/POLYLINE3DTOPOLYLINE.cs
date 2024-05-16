@@ -35,8 +35,7 @@ namespace SioForgeCAD.Functions
 
             private static void OnConvert(object o, EventArgs e)
             {
-                Document doc = Generic.GetDocument();
-                doc.SendStringToExecute("_.POLYLINE3DTOPOLYLIGNE ", true, false, false);
+                Generic.SendStringToExecute("SIOFORGECAD.POLYLINE3DTOPOLYLIGNE");
             }
         }
 
