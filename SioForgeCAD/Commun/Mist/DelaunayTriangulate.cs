@@ -8,65 +8,8 @@ using System;
 
 namespace SioForgeCAD.Commun
 {
-    public static class Triangulate
+    public static class DelaunayTriangulate
     {
-        public static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
-        {
-            // Calculation of circumscribed circle coordinates and
-            // squared radius
-            const double eps = 1e-6;
-            bool result = true;
-            double m1, m2, mx1, mx2, my1, my2, dx, dy;
-            if ((Math.Abs(y1 - y2) < eps) && (Math.Abs(y2 - y3) < eps))
-            {
-                result = false;
-                xc = x1; yc = y1;
-            }
-            else
-            {
-                if (Math.Abs(y2 - y1) < eps)
-                {
-                    m2 = -(x3 - x2) / (y3 - y2);
-                    mx2 = (x2 + x3) / 2;
-                    my2 = (y2 + y3) / 2;
-                    xc = (x2 + x1) / 2;
-                    yc = (m2 * (xc - mx2)) + my2;
-                }
-                else if (Math.Abs(y3 - y2) < eps)
-                {
-                    m1 = -(x2 - x1) / (y2 - y1);
-                    mx1 = (x1 + x2) / 2;
-                    my1 = (y1 + y2) / 2;
-                    xc = (x3 + x2) / 2;
-                    yc = (m1 * (xc - mx1)) + my1;
-                }
-                else
-                {
-                    m1 = -(x2 - x1) / (y2 - y1);
-                    m2 = -(x3 - x2) / (y3 - y2);
-                    if (Math.Abs(m1 - m2) < eps)
-                    {
-                        result = false;
-                        xc = x1;
-                        yc = y1;
-                    }
-                    else
-                    {
-                        mx1 = (x1 + x2) / 2;
-                        mx2 = (x2 + x3) / 2;
-                        my1 = (y1 + y2) / 2;
-                        my2 = (y2 + y3) / 2;
-                        xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
-                        yc = (m1 * (xc - mx1)) + my1;
-                    }
-                }
-            }
-            dx = x2 - xc;
-            dy = y2 - yc;
-            r = (dx * dx) + (dy * dy);
-            return result;
-        }
-
         public static void TriangulateCommand()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -320,6 +263,63 @@ namespace SioForgeCAD.Commun
             }
 
             Application.UpdateScreen();
+        }
+
+        private static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
+        {
+            // Calculation of circumscribed circle coordinates and
+            // squared radius
+            const double eps = 1e-6;
+            bool result = true;
+            double m1, m2, mx1, mx2, my1, my2, dx, dy;
+            if ((Math.Abs(y1 - y2) < eps) && (Math.Abs(y2 - y3) < eps))
+            {
+                result = false;
+                xc = x1; yc = y1;
+            }
+            else
+            {
+                if (Math.Abs(y2 - y1) < eps)
+                {
+                    m2 = -(x3 - x2) / (y3 - y2);
+                    mx2 = (x2 + x3) / 2;
+                    my2 = (y2 + y3) / 2;
+                    xc = (x2 + x1) / 2;
+                    yc = (m2 * (xc - mx2)) + my2;
+                }
+                else if (Math.Abs(y3 - y2) < eps)
+                {
+                    m1 = -(x2 - x1) / (y2 - y1);
+                    mx1 = (x1 + x2) / 2;
+                    my1 = (y1 + y2) / 2;
+                    xc = (x3 + x2) / 2;
+                    yc = (m1 * (xc - mx1)) + my1;
+                }
+                else
+                {
+                    m1 = -(x2 - x1) / (y2 - y1);
+                    m2 = -(x3 - x2) / (y3 - y2);
+                    if (Math.Abs(m1 - m2) < eps)
+                    {
+                        result = false;
+                        xc = x1;
+                        yc = y1;
+                    }
+                    else
+                    {
+                        mx1 = (x1 + x2) / 2;
+                        mx2 = (x2 + x3) / 2;
+                        my1 = (y1 + y2) / 2;
+                        my2 = (y2 + y3) / 2;
+                        xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
+                        yc = (m1 * (xc - mx1)) + my1;
+                    }
+                }
+            }
+            dx = x2 - xc;
+            dy = y2 - yc;
+            r = (dx * dx) + (dy * dy);
+            return result;
         }
     }
 }

@@ -209,6 +209,7 @@
     <Compile Include="Functions\CURVETOPOLYGON.cs" />
     <Compile Include="Functions\CUTHATCH.cs" />
     <Compile Include="Functions\DELETESUBGROUP.cs" />
+    <Compile Include="Functions\DRAWBOUNDINGBOX.cs" />
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
@@ -228,6 +229,7 @@
     <Compile Include="Functions\PURGEALL.cs" />
     <Compile Include="Functions\RANDOMPAVEMENT.cs" />
     <Compile Include="Functions\RENBLK.cs" />
+    <Compile Include="Functions\ROTATEONSINGLEAXIS.cs" />
     <Compile Include="Functions\RP2.cs" />
     <Compile Include="Functions\RRR.cs" />
     <Compile Include="Functions\BLKSETTOBYBBLOCK.cs" />

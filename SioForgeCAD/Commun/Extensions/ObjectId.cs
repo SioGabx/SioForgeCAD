@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun
@@ -11,8 +12,11 @@ namespace SioForgeCAD.Commun
     {
         public static Entity GetEntity(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
         {
-            Entity ObjectEntity = (Entity)objectId.GetDBObject(openMode);
-            return ObjectEntity;
+            if (objectId.GetDBObject(openMode) is Entity ent)
+            {
+                return ent;
+            }
+            throw new System.InvalidCastException("Impossible de convertir l'entité, utilisez GetDBObject");
         }
 
         public static DBObject GetDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)

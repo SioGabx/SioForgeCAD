@@ -138,12 +138,14 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
+        //Force layer color to selected entities (change "BYLAYER" by the layer color)
         public static void FORCELAYERCOLORTOENTITY()
         {
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
+        //Select all entities on current layer
         public static void SSCL()
         {
             Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
@@ -294,12 +296,14 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.NoBlockEditor)]
+        //ViewPorts lock all
         public static void VPLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(true);
         }
 
         [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.NoBlockEditor)]
+        //ViewPorts unlock all
         public static void VPUNLOCK()
         {
             Functions.VPLOCK.DoLockUnlock(false);
@@ -354,111 +358,18 @@ namespace SioForgeCAD
             Functions.LIMITNUMBERINSELECTION.LimitToOne();
         }
        
-        [CommandMethod("RotateEntityOnAxis", CommandFlags.UsePickSet)]
-        public void RotateEntityOnAxis()
+        [CommandMethod("ROTATEONSINGLEAXIS", CommandFlags.UsePickSet)]
+        //Rotate selected entities along a single axis (X, Y, Z)
+        public void ROTATEONSINGLEAXIS()
         {
-            // Get the current document and database
-            Document doc = Generic.GetDocument();
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Functions.ROTATEONSINGLEAXIS.Rotate();
+        }
 
-            // Select an entity to rotate
-            PromptEntityOptions peo = new PromptEntityOptions("\nSelect an entity to rotate:");
-            peo.SetRejectMessage("\nPlease select a valid entity.");
-            var per = ed.GetSelectionRedraw();
-            if (per.Status != PromptStatus.OK) return;
-
-            // Parse the clipboard content as a double
-            double defaultRotationAngle = 0.0;
-            if (double.TryParse(Clipboard.GetText(), out double clipboardValue))
-            {
-                defaultRotationAngle = clipboardValue;
-            }
-
-            PromptKeywordOptions kw = new PromptKeywordOptions("Sur quel axe de l'UCS souhaitez vous effectuer la rotation ?")
-            {
-                AllowArbitraryInput = false,
-                AllowNone = false
-            };
-            kw.Keywords.Add("XAxis");
-            kw.Keywords.Add("YAxis");
-            kw.Keywords.Add("ZAxis");
-            var ax = ed.GetKeywords(kw);
-            if (ax.Status != PromptStatus.OK) return;
-            Vector3d axe = Vector3d.ZAxis;
-            switch (ax.StringResult)
-            {
-                case "XAxis":
-                    axe = Vector3d.XAxis;
-                    break;
-                case "YAxis":
-                    axe = Vector3d.YAxis;
-                    break;
-                case "ZAxis":
-                    axe = Vector3d.ZAxis;
-                    break;
-            }
-
-            // Get the rotation angle
-            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :")
-            {
-                AllowNegative = true,
-                AllowZero = false,
-                DefaultValue = defaultRotationAngle,
-                UseDefaultValue = true
-            };
-            PromptDoubleResult pdr = ed.GetDouble(pdo);
-            if (pdr.Status != PromptStatus.OK) return;
-
-            double angleInDegrees = pdr.Value;
-
-            // Open the selected entity for write
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                foreach (var item in per.Value.GetObjectIds())
-                {
-                    Entity entity = tr.GetObject(item, OpenMode.ForWrite) as Entity;
-                    if (entity != null)
-                    {
-                        // Get the current bounding box
-                        Extents3d extents = entity.GeometricExtents;
-
-                        // Calculate the center of the bounding box
-                        Point3d center = new Point3d(
-                            (extents.MinPoint.X + extents.MaxPoint.X) / 2.0,
-                            (extents.MinPoint.Y + extents.MaxPoint.Y) / 2.0,
-                            (extents.MinPoint.Z + extents.MaxPoint.Z) / 2.0
-                        );
-
-                        // Get the current transformation matrix
-                        Matrix3d transform = Matrix3d.Identity;
-
-                        // Rotate the entity around the center of the bounding box
-                        Matrix3d rotationMatrix = Matrix3d.Rotation(
-                            angleInDegrees * (Math.PI / 180),  // Convert degrees to radians
-                            axe,
-                            center
-                        );
-
-                        // Apply the rotation to the transformation matrix
-                        transform = transform.PreMultiplyBy(rotationMatrix);
-
-                        // Transform the entity
-                        entity.TransformBy(transform);
-
-                        // Commit the transaction
-                        tr.Commit();
-
-                        // Update the display
-                        doc.Editor.Regen();
-                        ed.WriteMessage($"\nEntity rotated by {angleInDegrees} degrees around the center of its bounding box.");
-                    }
-                    else
-                    {
-                        ed.WriteMessage("\nThe selected entity is invalid.");
-                    }
-                }
-            }
+        [CommandMethod("SIOFORGECAD", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
+        //Draw the bounding box of selected entities
+        public static void DRAWBOUNDINGBOX()
+        {
+            Functions.DRAWBOUNDINGBOX.Draw();
         }
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
@@ -512,25 +423,11 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("SIOFORGECAD", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
-        public static void GENERATEBOUNDINGBOX()
-        {
-            Editor ed = Generic.GetEditor();
-            var result = ed.GetEntity("select");
-            if (result.Status != PromptStatus.OK) { return; }
-            var db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                var ent = result.ObjectId.GetEntity();
-                ent.GetExtents().GetGeometry().AddToDrawingCurrentTransaction();
-                tr.Commit();
-            }
-        }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
         {
-            Triangulate.TriangulateCommand();
+            DelaunayTriangulate.TriangulateCommand();
         }
 
         [CommandMethod("DEBUG", "READXDATA", CommandFlags.UsePickSet)]

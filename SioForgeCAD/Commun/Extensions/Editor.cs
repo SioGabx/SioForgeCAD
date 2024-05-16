@@ -138,7 +138,26 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone);
         }
 
-        public static PromptSelectionResult GetSelectionRedraw(this Editor ed)
+        public static PromptSelectionResult GetSelectionRedraw(this Editor ed, string Message = null, bool RejectObjectsOnLockedLayers = true, bool SingleOnly = false)
+        {
+            if (Message is null)
+            {
+                Message = SingleOnly ? "Veuillez selectionner des entités" : "Veuillez selectionner une entité";
+            }
+
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = Message,
+                SingleOnly = SingleOnly,
+                SinglePickInSpace = SingleOnly,
+
+                RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers
+            };
+
+            return ed.GetSelectionRedraw(selectionOptions);
+        }
+
+        public static PromptSelectionResult GetSelectionRedraw(this Editor ed, PromptSelectionOptions selectionOptions)
         {
             PromptSelectionResult selectResult;
             for (int index = 0; true; index++)
@@ -147,12 +166,12 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     if (!ed.GetImpliedSelection(out selectResult))
                     {
-                        selectResult = ed.GetSelection();
+                        selectResult = ed.GetSelection(selectionOptions);
                     }
                 }
                 else
                 {
-                    selectResult = ed.GetSelection();
+                    selectResult = ed.GetSelection(selectionOptions);
                 }
 
                 if (selectResult.Status == PromptStatus.Cancel)
