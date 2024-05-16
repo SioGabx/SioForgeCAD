@@ -111,5 +111,35 @@ namespace SioForgeCAD.Commun
             await ed.CommandAsync(args);
             Application.SetSystemVariable("CMDECHO", cmdecho);
         }
+
+        public static void CommandInApplicationContext(params object[] args)
+        {
+            try
+            {
+                Application.DocumentManager.ExecuteInApplicationContext((_) => Command(args), null);
+            }
+            catch (System.Exception ex)
+            {
+
+                Generic.WriteMessage($"Exception: {ex.Message}");
+            }
+        }
+        
+        public static async Task CommandAsyncInCommandContext(params object[] args)
+        {
+            //Method from https://through-the-interface.typepad.com/through_the_interface/2015/03/autocad-2016-calling-commands-from-autocad-events-using-net.html
+            //Replace Document.SendStringToExecute()
+            try
+            {
+                // Ask AutoCAD to execute our command in the right context
+                await Application.DocumentManager.ExecuteInCommandContextAsync(async (_) => await CommandAsync(args), null);
+            }
+            catch (System.Exception ex)
+            {
+
+                Generic.WriteMessage($"Exception: {ex.Message}");
+            }
+        }
+
     }
 }
