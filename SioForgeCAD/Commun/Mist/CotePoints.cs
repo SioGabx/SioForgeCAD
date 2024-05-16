@@ -216,41 +216,42 @@ namespace SioForgeCAD.Commun
         public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint)
         {
             var ed = Generic.GetEditor();
-            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
-            List<ObjectId> XrefObjectId = XrefSelection.XrefObjectId.ToList();
-            if (XrefSelection.PromptStatus != PromptStatus.OK)
-            {
-                return CotePoints.Null;
-            }
-            if (XrefSelection.SelectedObjectId == ObjectId.Null)
-            {
-                return CotePoints.Null;
-            }
-
-            HightLighter.UnhighlightAll();
-            XrefSelection.SelectedObjectId.RegisterHighlight();
-            DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
             BlockReference blkRef = null;
-
-            if (XrefObject is AttributeReference blkChildAttribute)
+            List<ObjectId> XrefObjectId;
+            do
             {
-                var DbObj = blkChildAttribute.OwnerId.GetDBObject();
-                blkRef = DbObj as BlockReference;
-            }
-            else if (XrefObject is BlockReference)
-            {
-                blkRef = XrefObject as BlockReference;
-            }
-            else
-            {
-                foreach (ObjectId objId in XrefSelection.XrefObjectId)
+                (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
+                XrefObjectId = XrefSelection.XrefObjectId.ToList();
+                if (XrefSelection.PromptStatus != PromptStatus.OK)
                 {
-                    XrefObjectId.Remove(objId);
-                    XrefObject = objId.GetDBObject();
+                    return CotePoints.Null;
+                }
+                if (XrefSelection.SelectedObjectId == ObjectId.Null)
+                {
+                    return CotePoints.Null;
+                }
 
-                    if (XrefObject is BlockReference ParentBlkRef)
+                HightLighter.UnhighlightAll();
+                XrefSelection.SelectedObjectId.RegisterHighlight();
+                DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+
+                if (XrefObject is AttributeReference blkChildAttribute)
+                {
+                    var DbObj = blkChildAttribute.OwnerId.GetDBObject();
+                    blkRef = DbObj as BlockReference;
+                }
+                else if (XrefObject is BlockReference)
+                {
+                    blkRef = XrefObject as BlockReference;
+                }
+                else
+                {
+                    foreach (ObjectId objId in XrefSelection.XrefObjectId)
                     {
-                        if (!ParentBlkRef.IsXref())
+                        XrefObjectId.Remove(objId);
+                        XrefObject = objId.GetDBObject();
+
+                        if (XrefObject is BlockReference ParentBlkRef && !ParentBlkRef.IsXref())
                         {
                             blkRef = XrefObject as BlockReference;
                             break;
@@ -258,11 +259,8 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-            if (blkRef is null)
-            {
-                HightLighter.UnhighlightAll();
-                return CotePoints.Null;
-            }
+            while (blkRef is null);
+
             double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
             Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
 

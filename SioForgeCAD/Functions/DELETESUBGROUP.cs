@@ -77,7 +77,6 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-
                 //Delete groups that are not in the AllBiggestGroupIds list
                 var GroupsToDelete = AllGroupIdsInSelection.Select(obj => obj.Key).Where(key => !AllBiggestGroupIds.Contains(key));
                 if (GroupsToDelete.Any())
@@ -95,7 +94,6 @@ namespace SioForgeCAD.Functions
                 ed.SetImpliedSelection(AllGroupIdsInSelection.SelectMany(obj => obj.Value).Distinct().ToArray());
                 tr.Commit();
             }
-
         }
 
         private static void CancelPickStyleVariableChange(object sender, Autodesk.AutoCAD.ApplicationServices.SystemVariableChangedEventArgs e)

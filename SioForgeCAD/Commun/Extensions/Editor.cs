@@ -170,8 +170,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
         public static Polyline GetPolyline(this Editor ed, out ObjectId EntObjectId, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
         {
             EntObjectId = ObjectId.Null;
@@ -354,6 +352,5 @@ namespace SioForgeCAD.Commun.Extensions
                 ed.SetCurrentView(view);
             }
         }
-
     }
 }

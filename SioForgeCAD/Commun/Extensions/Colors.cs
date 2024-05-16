@@ -9,7 +9,5 @@ namespace SioForgeCAD.Commun.Extensions
             return ent.Color.ColorValue;
         }
 
-
-
     }
 }

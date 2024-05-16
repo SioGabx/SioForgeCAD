@@ -69,8 +69,6 @@ namespace SioForgeCAD.Commun.Extensions
             return new Point3dCollection(IEnumCollection.ToArray());
         }
 
-
-
         public static bool ContainsTolerance(this Point3dCollection collection, Point3d Point, Tolerance? CustomTolerance = null)
         {
             if (CustomTolerance is null)

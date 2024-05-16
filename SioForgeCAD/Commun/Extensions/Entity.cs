@@ -267,7 +267,5 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-
-
     }
 }

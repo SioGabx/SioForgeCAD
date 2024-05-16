@@ -275,7 +275,6 @@ namespace SioForgeCAD
             Functions.GETINNERCENTROID.Get();
         }
 
-
         [CommandMethod("SIOFORGECAD", "MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void MERGEPOLYLIGNES()
         {
@@ -368,7 +367,6 @@ namespace SioForgeCAD
             peo.SetRejectMessage("\nPlease select a valid entity.");
             var per = ed.GetSelectionRedraw();
             if (per.Status != PromptStatus.OK) return;
-
 
             // Parse the clipboard content as a double
             double defaultRotationAngle = 0.0;

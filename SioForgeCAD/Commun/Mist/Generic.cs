@@ -96,7 +96,7 @@ namespace SioForgeCAD.Commun
 
         public static void SendStringToExecute(string Command) {
             Document doc = Generic.GetDocument();
-            doc.SendStringToExecute(Command, true, false, false);
+            doc.SendStringToExecute(string.Concat(Command, ' '), true, false, true);
         }
 
         public static void Command(params object[] args)
@@ -125,11 +125,10 @@ namespace SioForgeCAD.Commun
             }
             catch (System.Exception ex)
             {
-
                 Generic.WriteMessage($"Exception: {ex.Message}");
             }
         }
-        
+
         public static async Task CommandAsyncInCommandContext(params object[] args)
         {
             //Method from https://through-the-interface.typepad.com/through_the_interface/2015/03/autocad-2016-calling-commands-from-autocad-events-using-net.html
@@ -141,10 +140,8 @@ namespace SioForgeCAD.Commun
             }
             catch (System.Exception ex)
             {
-
                 Generic.WriteMessage($"Exception: {ex.Message}");
             }
         }
-
     }
 }

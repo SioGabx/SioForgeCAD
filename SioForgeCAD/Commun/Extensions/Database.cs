@@ -67,12 +67,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
-
-
     }
 
 
-
-
 }
-

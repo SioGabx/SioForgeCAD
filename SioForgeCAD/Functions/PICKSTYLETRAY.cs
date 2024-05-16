@@ -54,7 +54,6 @@ namespace SioForgeCAD.Functions
             return "/ - Erreur";
         }
 
-
         private static void AddTrayContextMenu()
         {
             var PickStyle0 = new System.Windows.Forms.MenuItem(GetPickStyleMessage(0));
