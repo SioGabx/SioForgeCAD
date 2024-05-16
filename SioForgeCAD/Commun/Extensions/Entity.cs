@@ -266,6 +266,5 @@ namespace SioForgeCAD.Commun.Extensions
             ent.TransformBy(Matrix3d.Scaling(Math.Min(scaleX, scaleY), entExtent.MinPoint));
         }
 
-
     }
 }

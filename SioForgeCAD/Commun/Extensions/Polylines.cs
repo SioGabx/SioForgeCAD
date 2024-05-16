@@ -618,5 +618,13 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return false;
         }
+
+        public static double GetPassingThroughBulgeFrom(this Point3d Through, Point3d Start, Point3d End)
+        {
+            var MiddlePoint = Start.GetMiddlePoint(End);
+            var D1 = MiddlePoint.DistanceTo(Through);
+            var D2 = MiddlePoint.DistanceTo(Start);
+            return D1 / D2;
+        }
     }
 }

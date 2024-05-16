@@ -24,7 +24,6 @@ namespace SioForgeCAD.Functions
             var per = ed.GetSelectionRedraw("Selectionnez des entités");
             if (per.Status != PromptStatus.OK) return;
 
-
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :")
             {
                 AllowNegative = true,
@@ -53,7 +52,6 @@ namespace SioForgeCAD.Functions
 
                 tr.Commit();
             }
-
         }
 
         private static Vector3d? GetRotateAxis(Editor ed)

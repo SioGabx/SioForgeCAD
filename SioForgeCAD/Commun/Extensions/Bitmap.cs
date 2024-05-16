@@ -43,6 +43,5 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return rotatedImage;
         }
-
     }
 }

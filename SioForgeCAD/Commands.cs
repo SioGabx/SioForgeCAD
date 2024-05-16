@@ -366,10 +366,10 @@ namespace SioForgeCAD
         {
             Functions.LIMITNUMBERINSELECTION.LimitToOne();
         }
-       
+
         [CommandMethod("ROTATEONSINGLEAXIS", CommandFlags.UsePickSet)]
         //Rotate selected entities along a single axis (X, Y, Z)
-        public void ROTATEONSINGLEAXIS()
+        public static void ROTATEONSINGLEAXIS()
         {
             Functions.ROTATEONSINGLEAXIS.Rotate();
         }
@@ -429,7 +429,6 @@ namespace SioForgeCAD
                 tr.Commit();
             }
         }
-
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
