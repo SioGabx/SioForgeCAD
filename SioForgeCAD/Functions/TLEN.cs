@@ -1,9 +1,11 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Windows.Shapes;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD.Functions
@@ -35,6 +37,9 @@ namespace SioForgeCAD.Functions
                     if (Ent is Curve CurveEnt && !(CurveEnt is Ray || CurveEnt is Xline))
                     {
                         TotalLength += CurveEnt.GetDistanceAtParameter(CurveEnt.EndParam);
+                    }else if (Ent is Region Reg)
+                    {
+                        TotalLength += Reg.Perimeter;
                     }
                 }
                 short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
