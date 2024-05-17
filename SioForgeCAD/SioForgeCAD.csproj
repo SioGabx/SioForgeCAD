@@ -165,6 +165,7 @@
     <Compile Include="Commun\Mist\Layers.cs" />
     <Compile Include="Commun\Mist\Json\JSONParser.cs" />
     <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
+    <Compile Include="Commun\Mist\LongOperationProcess.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\InnerCentroid.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Intersection.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\PolyHole.cs" />
@@ -213,6 +214,7 @@
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
     <Compile Include="Functions\DROPCPOBJECTTOTERRAIN.cs" />
+    <Compile Include="Functions\DXFIMPORT.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />

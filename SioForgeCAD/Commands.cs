@@ -381,6 +381,13 @@ namespace SioForgeCAD
             Functions.DRAWBOUNDINGBOX.Draw();
         }
 
+        [CommandMethod("SIOFORGECAD", "DXFIMPORT", CommandFlags.UsePickSet)]
+        //Draw the bounding box of selected entities
+        public static void DXFIMPORT()
+        {
+            Functions.DXFIMPORT.Import();
+        }
+
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()
         {

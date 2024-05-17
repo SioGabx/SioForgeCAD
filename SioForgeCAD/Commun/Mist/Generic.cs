@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -19,6 +20,17 @@ namespace SioForgeCAD.Commun
             // Determine path
             byte[] ressource_bytes = Properties.Resources.ResourceManager.GetObject(name) as byte[];
             File.WriteAllBytes(ToFilePath, ressource_bytes);
+        }
+
+        public static string GetCurrentDocumentPath()
+        {
+            Document doc = GetDocument();
+            if (Path.GetDirectoryName(doc.Name).Equals(string.Empty)) { return ""; }
+                HostApplicationServices hs = HostApplicationServices.Current;
+            string FilePath = hs.FindFile(doc.Name, doc.Database, FindFileHint.Default);
+            string directory = new FileInfo(FilePath).Directory.FullName;
+            Debug.WriteLine(directory);
+            return directory;
         }
 
         public static void WriteMessage(object message)
@@ -94,7 +106,8 @@ namespace SioForgeCAD.Commun
             return GetDocument().Editor;
         }
 
-        public static void SendStringToExecute(string Command) {
+        public static void SendStringToExecute(string Command)
+        {
             Document doc = Generic.GetDocument();
             doc.SendStringToExecute(string.Concat(Command, ' '), true, false, true);
         }

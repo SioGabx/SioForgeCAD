@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -28,21 +29,30 @@ namespace SioForgeCAD.Commun.Extensions
         }
         public static void PurgeRasterImages(this Database db)
         {
-            using (var tr = db.TransactionManager.StartTransaction())
+            try
             {
-                var NOD = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
-                var imageDict = (DBDictionary)tr.GetObject(NOD.GetAt("ACAD_IMAGE_DICT"), OpenMode.ForRead);
-                var imageIds = new ObjectIdCollection();
-                foreach (var entry in imageDict)
+                using (var tr = db.TransactionManager.StartTransaction())
                 {
-                    imageIds.Add(entry.Value);
+                    var NOD = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                    var NODKey = NOD.GetAt("ACAD_IMAGE_DICT");
+                    var imageDict = (DBDictionary)NODKey.GetDBObject(OpenMode.ForRead);
+                    var imageIds = new ObjectIdCollection();
+                    foreach (var entry in imageDict)
+                    {
+                        imageIds.Add(entry.Value);
+                    }
+                    db.Purge(imageIds);
+                    foreach (ObjectId id in imageIds)
+                    {
+                        tr.GetObject(id, OpenMode.ForWrite).Erase();
+                    }
+                    tr.Commit();
                 }
-                db.Purge(imageIds);
-                foreach (ObjectId id in imageIds)
-                {
-                    tr.GetObject(id, OpenMode.ForWrite).Erase();
-                }
-                tr.Commit();
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                //Catch eKeyNotFound
+                Debug.WriteLine(ex.ToString());
             }
         }
 
