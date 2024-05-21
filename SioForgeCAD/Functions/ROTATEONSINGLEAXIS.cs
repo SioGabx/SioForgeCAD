@@ -88,6 +88,7 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
+            entity.UpgradeOpen();
             // Get the current bounding box
             Point3d GeometryCenter = entity.GetExtents().GetCenter();
 
