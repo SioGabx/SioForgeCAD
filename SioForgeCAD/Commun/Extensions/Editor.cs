@@ -133,9 +133,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
+        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true, bool AllowOtherCurveType = true)
         {
-            return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone);
+            return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone, AllowOtherCurveType);
         }
 
         public static PromptSelectionResult GetSelectionRedraw(this Editor ed, string Message = null, bool RejectObjectsOnLockedLayers = true, bool SingleOnly = false)
@@ -189,7 +189,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Polyline GetPolyline(this Editor ed, out ObjectId EntObjectId, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
+        public static Polyline GetPolyline(this Editor ed, out ObjectId EntObjectId, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true, bool AllowOtherCurveType = true)
         {
             EntObjectId = ObjectId.Null;
             for (int index = 0; true; index++)
@@ -228,26 +228,30 @@ namespace SioForgeCAD.Commun.Extensions
                         return ProjectionTargetPolyline;
                     }
                 }
-                else if (SelectedEntity is Line ProjectionTargetLine)
+                else if (AllowOtherCurveType)
                 {
-                    return ProjectionTargetLine.ToPolyline();
+                    if (SelectedEntity is Line ProjectionTargetLine)
+                    {
+                        return ProjectionTargetLine.ToPolyline();
+                    }
+                    else if (SelectedEntity is Ellipse ProjectionTargetEllipse)
+                    {
+                        return ProjectionTargetEllipse.ToPolyline();
+                    }
+                    else if (SelectedEntity is Circle ProjectionTargetCircle)
+                    {
+                        return ProjectionTargetCircle.ToPolyline();
+                    }
+                    else if (SelectedEntity is Arc ProjectionTargetArc)
+                    {
+                        return ProjectionTargetArc.ToPolyline();
+                    }
+                    else if (SelectedEntity is Spline ProjectionTargetSpline)
+                    {
+                        return (Polyline)ProjectionTargetSpline.ToPolyline();
+                    }
                 }
-                else if (SelectedEntity is Ellipse ProjectionTargetEllipse)
-                {
-                    return ProjectionTargetEllipse.ToPolyline();
-                }
-                else if (SelectedEntity is Circle ProjectionTargetCircle)
-                {
-                    return ProjectionTargetCircle.ToPolyline();
-                }
-                else if (SelectedEntity is Arc ProjectionTargetArc)
-                {
-                    return ProjectionTargetArc.ToPolyline();
-                }
-                else if (SelectedEntity is Spline ProjectionTargetSpline)
-                {
-                    return (Polyline)ProjectionTargetSpline.ToPolyline();
-                }
+
 
                 Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
             }
