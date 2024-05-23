@@ -19,7 +19,7 @@ namespace SioForgeCAD.Commun
             DBObjectCollection InsideCutLines = GetInsideCutLines(BasePolyline, BaseCutLine);
 
             //InsideCutLines.AddToDrawing(5, true);
-            List<Polyline> Polygon = new List<Polyline>() { BasePolyline };
+            List<Polyline> Polygon = new List<Polyline>() { BasePolyline.Clone() as Polyline };
             foreach (Polyline CutLine in InsideCutLines)
             {
                 if (CutLine == null)
