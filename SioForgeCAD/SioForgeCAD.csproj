@@ -196,6 +196,7 @@
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Functions\BATTLEMENTS.cs" />
+    <Compile Include="Functions\BLKADDENTITIES.cs" />
     <Compile Include="Functions\BLKINSEDIT.cs" />
     <Compile Include="Functions\BLKTOSTATICBLOCK.cs" />
     <Compile Include="Functions\CCA.cs" />

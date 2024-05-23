@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,8 +23,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 throw new Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
             }
-            BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
-            return blockDef;
+            return bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
         }
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
@@ -205,5 +205,27 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
         }
+
+
+        public static void RegenAllBlkDefinition(this BlockReference BlockRef)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockRef.GetBlockReferenceName());
+                BlockTableRecord BlockDef = BlockRef.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                iter.Join(BlockDef.GetBlockReferenceIds(true, false));
+
+                foreach (ObjectId entId in iter)
+                {
+                    if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
+                    {
+                        otherBlockRef.RecordGraphicsModified(true);
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
     }
 }

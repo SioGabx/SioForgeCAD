@@ -7,6 +7,7 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Autodesk.AutoCAD.ApplicationServices;
 
 namespace SioForgeCAD.Functions
 {
@@ -65,7 +66,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                if (!(tr.GetObject(blockRefId, OpenMode.ForWrite) is BlockReference blockRefOut))
+                if (!(blockRefId.GetDBObject(OpenMode.ForRead) is BlockReference blockRefOut))
                 {
                     return;
                 }
@@ -137,7 +138,7 @@ namespace SioForgeCAD.Functions
             Vector3d FakeOriginalBasePointMatrix = GetFakeOriginalBasePointInDynamicBlockMatrix(blockRefObjId, out Extents3d OriginalBounds, out Extents3d EditedBounds);
             if (OriginalBounds.Size() != EditedBounds.Size())
             {
-                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("Impossible de changer le point de base de ce bloc dynamique.");
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Impossible de changer le point de base de ce bloc dynamique.");
                 return new ObjectIdCollection();
             }
             ObjectIdCollection iter;
@@ -164,8 +165,7 @@ namespace SioForgeCAD.Functions
                 PromptSelectionResult selRes = ed.SelectAll(filter);
                 if (selRes.Status == PromptStatus.OK)
                 {
-                    var objId = selRes.Value.GetObjectIds();
-                    foreach (ObjectId objectId in objId)
+                    foreach (ObjectId objectId in selRes.Value.GetObjectIds())
                     {
                         objectId.EraseObject();
                     }

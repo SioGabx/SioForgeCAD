@@ -105,6 +105,26 @@ namespace SioForgeCAD
             Functions.BLKSETTOBYBBLOCK.ByBlock();
         }
 
+
+        [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
+        public static void BLKINSEDIT()
+        {
+            Functions.BLKINSEDIT.MoveBasePoint();
+        }
+
+        [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
+        public static void BLKTOSTATICBLOCK()
+        {
+            Functions.BLKTOSTATICBLOCK.Convert();
+        }
+
+        [CommandMethod("SIOFORGECAD", "BLKADDENTITIES", CommandFlags.UsePickSet)]
+        public static void BLKADDENTITIES()
+        {
+            Functions.BLKADDENTITIES.Add();
+        }
+
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
@@ -178,13 +198,6 @@ namespace SioForgeCAD
             Functions.RRR.Rotate();
         }
 
-        [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
-        [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
-        public static void BLKINSEDIT()
-        {
-            Functions.BLKINSEDIT.MoveBasePoint();
-        }
-
         [CommandMethod("SIOFORGECAD", "RP2", CommandFlags.NoPaperSpace | CommandFlags.Interruptible)]
         public static void RP2()
         {
@@ -225,12 +238,6 @@ namespace SioForgeCAD
         public static void VEGBLOCLEGEND()
         {
             Functions.VEGBLOCLEGEND.Add();
-        }
-
-        [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
-        public static void BLKTOSTATICBLOCK()
-        {
-            Functions.BLKTOSTATICBLOCK.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "BATTLEMENTS", CommandFlags.Modal)]
