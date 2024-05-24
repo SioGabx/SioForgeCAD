@@ -32,6 +32,7 @@ namespace SioForgeCAD.Functions
                 Matrix3d blockTransform = BlockRef.BlockTransform;
                 foreach (var SelectedEntObjId in Selection.Value.GetObjectIds())
                 {
+                    if (SelectedEntObjId == BlockRef.ObjectId) { continue; }
                     Entity SelectedEnt = SelectedEntObjId.GetDBObject(OpenMode.ForWrite) as Entity;
                     Entity SelectedEntClone = SelectedEnt.Clone() as Entity;
                     Matrix3d BlockTransform = BlockRef.BlockTransform.Inverse();

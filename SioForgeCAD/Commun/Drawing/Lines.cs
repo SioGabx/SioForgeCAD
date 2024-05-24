@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
 using System;
 
 namespace SioForgeCAD.Commun.Drawing
@@ -8,10 +9,7 @@ namespace SioForgeCAD.Commun.Drawing
     {
         public static double GetLength(Point3d PointA, Point3d PointB)
         {
-            using (var Line = new Line(PointA, PointB))
-            {
-                return Line.Length;
-            }
+            return PointA.Flatten().DistanceTo(PointB.Flatten());
         }
 
         public static double GetLength(Points PointA, Points PointB)
