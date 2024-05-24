@@ -22,15 +22,6 @@ namespace SioForgeCAD.Commun.Drawing
             Vector3d direction = line.EndPoint - line.StartPoint;
             return direction.GetNormal();
         }
-
-        //public static Polyline ToPolyline(this Line line)
-        //{
-        //    Polyline polyline = new Polyline();
-        //    polyline.AddVertexAt(0, line.StartPoint.ToPoint2d(), 0, 0, 0);
-        //    polyline.AddVertexAt(1, line.EndPoint.ToPoint2d(), 0, 0, 0);
-        //    return polyline;
-        //}
-
         public static bool IsLinePassesThroughPoint(this Line line, Point3d point)
         {
             // Comparer les coordonnées du point avec les extrémités de la ligne
