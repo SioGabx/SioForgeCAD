@@ -357,6 +357,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
+        //Delete groups inside of a larger groups
         public static void DELETESUBGROUP()
         {
             Functions.DELETESUBGROUP.Delete();
@@ -369,6 +370,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "LIMITNUMBERINSELECTION", CommandFlags.Redraw)]
+        //Limit the selection to one entity
         public static void LIMITNUMBERINSELECTION()
         {
             Functions.LIMITNUMBERINSELECTION.LimitToOne();
@@ -389,10 +391,17 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "DXFIMPORT", CommandFlags.UsePickSet)]
-        //Draw the bounding box of selected entities
+        //Allow user to import multiples DXF at once
         public static void DXFIMPORT()
         {
             Functions.DXFIMPORT.Import();
+        }
+
+        [CommandMethod("SIOFORGECAD", "RECREATEASSOCIATIVEHATCHBOUNDARY", CommandFlags.UsePickSet)]
+        //Recreate the polyline arround each selected hatch
+        public static void RECREATEASSOCIATIVEHATCHBOUNDARY()
+        {
+            Functions.RECREATEASSOCIATIVEHATCHBOUNDARY.Recreate();
         }
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
