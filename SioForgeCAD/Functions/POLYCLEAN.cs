@@ -11,25 +11,30 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
+
+            var PolySelection = ed.GetSelectionRedraw("Selectionnez une polyligne", true, false);
+            if (PolySelection.Status != PromptStatus.OK) { return; }
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
-            using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone: false, AllowOtherCurveType: false))
             {
-                if (poly == null)
+                foreach (var polyObjId in PolySelection.Value.GetObjectIds())
                 {
-                    return;
-                }
-                int NumberOfVerticesBefore = poly.NumberOfVertices;
-                poly.UpgradeOpen();
-                poly.Cleanup();
-                int NumberOfVerticesAfter = poly.NumberOfVertices;
-                var NumberOfVerticesDeleted = (NumberOfVerticesBefore - NumberOfVerticesAfter);
-                if (NumberOfVerticesDeleted > 0)
-                {
-                    Generic.WriteMessage($"La polyline à été simplifiée en supprimant {NumberOfVerticesDeleted} point{(NumberOfVerticesDeleted > 1 ? "s" : "")}");
-                }
-                else
-                {
-                    Generic.WriteMessage("La polyline est déja optimisée");
+                    if (polyObjId.GetDBObject() is Polyline poly)
+                    {
+                        int NumberOfVerticesBefore = poly.NumberOfVertices;
+                        poly.UpgradeOpen();
+                        poly.Cleanup();
+                        int NumberOfVerticesAfter = poly.NumberOfVertices;
+                        var NumberOfVerticesDeleted = (NumberOfVerticesBefore - NumberOfVerticesAfter);
+                        if (NumberOfVerticesDeleted > 0)
+                        {
+                            Generic.WriteMessage($"La polyline à été simplifiée en supprimant {NumberOfVerticesDeleted} point{(NumberOfVerticesDeleted > 1 ? "s" : "")}");
+                        }
+                        else
+                        {
+                            Generic.WriteMessage("La polyline est déja optimisée");
+                        }
+                    }
                 }
                 tr.Commit();
             }

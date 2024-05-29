@@ -226,16 +226,6 @@ namespace SioForgeCAD.Functions
         {
             //To do : allow multiple selection
             Editor editor = Generic.GetEditor();
-            TypedValue[] filterList = new TypedValue[] {
-                new TypedValue((int)DxfCode.Operator, "<or"),
-                new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
-                new TypedValue((int)DxfCode.Start, "LINE"),
-                new TypedValue((int)DxfCode.Start, "CIRCLE"),
-                new TypedValue((int)DxfCode.Start, "SPLINE"),
-                new TypedValue((int)DxfCode.Start, "ELLIPSE"),
-                new TypedValue((int)DxfCode.Start, "ARC"),
-                new TypedValue((int)DxfCode.Operator, "or>"),
-            };
 
             const string NewLineKeyWord = "Nouvelle";
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions()
@@ -253,7 +243,7 @@ namespace SioForgeCAD.Functions
             {
                 while (true)
                 {
-                    PromptSelectionResult promptResult = editor.GetSelection(selectionOptions, new SelectionFilter(filterList));
+                    PromptSelectionResult promptResult = editor.GetCurves(selectionOptions);
                     promptStatus = promptResult.Status;
                     if (promptResult.Status == PromptStatus.Cancel || promptResult.Status == PromptStatus.Keyword)
                     {
