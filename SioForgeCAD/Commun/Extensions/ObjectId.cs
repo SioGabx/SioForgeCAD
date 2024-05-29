@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun

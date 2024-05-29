@@ -26,7 +26,7 @@ namespace SioForgeCAD.Commun
         {
             Document doc = GetDocument();
             if (Path.GetDirectoryName(doc.Name).Equals(string.Empty)) { return ""; }
-                HostApplicationServices hs = HostApplicationServices.Current;
+            HostApplicationServices hs = HostApplicationServices.Current;
             string FilePath = hs.FindFile(doc.Name, doc.Database, FindFileHint.Default);
             string directory = new FileInfo(FilePath).Directory.FullName;
             Debug.WriteLine(directory);

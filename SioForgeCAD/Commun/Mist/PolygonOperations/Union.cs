@@ -50,7 +50,8 @@ namespace SioForgeCAD.Commun
             List<Polyline> PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
             //Dispose unused
             GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
-            if (AllowMarginError) {
+            if (AllowMarginError)
+            {
                 PolyHoleList.GetBoundaries().DeepDispose();
                 FilteredSplittedCurves.DeepDispose();
             }

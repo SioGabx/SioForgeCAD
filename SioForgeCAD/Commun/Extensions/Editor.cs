@@ -4,7 +4,6 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Linq;
 using System.Windows;
-using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Extensions

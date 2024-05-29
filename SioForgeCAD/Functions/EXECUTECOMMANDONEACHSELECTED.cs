@@ -2,18 +2,13 @@
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
     public static class EXECUTECOMMANDONEACHSELECTED
     {
-        public async static void Execute()
+        public static async void Execute()
         {
             Editor ed = Generic.GetEditor();
             PromptSelectionResult selectionResult;

@@ -13,7 +13,8 @@ namespace SioForgeCAD.Functions
         {
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
-            if (ed.IsInLockedViewport()) {
+            if (ed.IsInLockedViewport())
+            {
                 Generic.WriteMessage("Cette commande n'est pas autorisée dans les espaces objets verouillés");
                 return;
             }

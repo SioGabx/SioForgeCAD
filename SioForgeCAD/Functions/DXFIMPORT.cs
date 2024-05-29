@@ -1,16 +1,11 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using SioForgeCAD.Commun;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
-using Autodesk.AutoCAD.DatabaseServices.Filters;
+using System;
+using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {

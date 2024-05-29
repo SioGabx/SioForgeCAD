@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using Autodesk.AutoCAD.ApplicationServices;
 
 namespace SioForgeCAD.Functions
 {
@@ -202,7 +201,7 @@ namespace SioForgeCAD.Functions
                     return new ObjectIdCollection();
                 }
                 var blockDef = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
-                
+
                 var DisplacementVector = Matrix3d.Displacement(new Point3d(0, 0, BlockReferenceTransformedPoint.Z).GetVectorTo(BlockReferenceTransformedPoint.Flatten()));
 
                 foreach (ObjectId entId in blockDef)

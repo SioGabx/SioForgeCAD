@@ -209,8 +209,7 @@ namespace SioForgeCAD.Commun.Extensions
                 ResultBuffer rb = ent.GetXDataForApplication(AppName);
                 if (rb != null)
                 {
-                    TypedValue[] rvArr = rb.AsArray();
-                    foreach (TypedValue tv in rvArr)
+                    foreach (TypedValue tv in rb.AsArray())
                     {
                         switch ((DxfCode)tv.TypeCode)
                         {

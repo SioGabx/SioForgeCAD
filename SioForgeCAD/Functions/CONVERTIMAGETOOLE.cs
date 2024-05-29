@@ -1,17 +1,15 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.Runtime;
-using MessageBox = System.Windows.Forms.MessageBox;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 using MenuItem = Autodesk.AutoCAD.Windows.MenuItem;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace SioForgeCAD.Functions
 {
