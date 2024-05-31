@@ -1,11 +1,13 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Commun
 {
@@ -41,6 +43,7 @@ namespace SioForgeCAD.Commun
             }
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
+            //SplittedCurvesOrigin.ForEach(curve => curve.Splitted.AddToDrawing(5, true));
 
             //Check if Cutted line IsInside -> if true remove
             List<Polyline> GlobalSplittedCurves = RemoveInsideCutLine(PolyHoleList, SplittedCurvesOrigin);
@@ -146,7 +149,10 @@ namespace SioForgeCAD.Commun
                         {
                             lock (_lock)
                             {
-                                NoOverlapingCurves.Remove(SplittedCurveA);
+                                if (NoOverlapingCurves.Contains(SplittedCurveB))
+                                {
+                                    NoOverlapingCurves.Remove(SplittedCurveA);
+                                }
                             }
                             break;
                         }
@@ -188,7 +194,7 @@ namespace SioForgeCAD.Commun
                             NoArcPolyBase = PolyBase.Boundary.ToPolygon(15);
                             NoArcPolygonCache.TryAdd(PolyBase.Boundary, NoArcPolyBase);
                         }
-                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary)) // need to add a check if it overlaping an another, we sould remove it anyway
+                        if (SplittedCurve.IsInside(NoArcPolyBase, false) && !SplittedCurve.IsOverlaping(PolyBase.Boundary)) // need to add a check if it overlaping an another, we should remove it anyway
                         {
                             SplittedCurves.Remove(SplittedCurve);
                             SplittedCurve.Dispose();
