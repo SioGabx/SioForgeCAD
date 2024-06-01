@@ -23,6 +23,7 @@ namespace SioForgeCAD.Commun
 
         public void Dispose()
         {
+            Disposed = true;
             Application.RemoveMessageFilter(Filter);
             GC.SuppressFinalize(this);
         }

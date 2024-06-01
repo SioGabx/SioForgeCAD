@@ -55,6 +55,56 @@ namespace SioForgeCAD.Commun.Extensions
             return new Extents3d(minPoint, maxPoint);
         }
 
+        public static Viewport GetViewport(this Editor ed)
+        {
+            Database db = ed.Document.Database;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    while (true)
+                    {
+                        if (ed.IsInLayoutViewport())
+                        {
+                            return (Viewport)tr.GetObject(ed.CurrentViewportObjectId, OpenMode.ForWrite);
+                        }
+                        if (ed.IsInModel())
+                        {
+                            ed.SwitchToPaperSpace();
+                        }
+
+                        // Get the BlockTableRecord for the current layout
+                        BlockTableRecord btr = tr.GetObject(Generic.GetDatabase().CurrentSpaceId, OpenMode.ForRead) as BlockTableRecord;
+                        var Viewports = ed.GetAllViewportsInPaperSpace(btr);
+                        if (Viewports.Count == 1)
+                        {
+                            ed.SwitchToModelSpace();
+                            return (Viewport)tr.GetObject(Viewports.First(), OpenMode.ForWrite);
+                        }
+
+
+                        ed.SwitchToModelSpace();
+                        PromptPointOptions promptPointOptions = new PromptPointOptions("Activez la fenêtre CIBLE et appuyez sur ENTREE pour continuer.")
+                        {
+                            AllowNone = true,
+                            AllowArbitraryInput = true
+                        };
+                        var Validate = ed.GetPoint(promptPointOptions);
+                        if (!Validate.Status.HasFlag(PromptStatus.OK) && !Validate.Status.HasFlag(PromptStatus.None)) { ed.SwitchToPaperSpace(); return null; }
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
+                }
+
+            }
+
+
+        }
+
+
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             objectId = Array.Empty<ObjectId>();
@@ -87,6 +137,8 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
+
 
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {

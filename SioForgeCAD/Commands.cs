@@ -15,6 +15,7 @@ namespace SioForgeCAD
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1102:Make class static")]
     public class Commands
     {
+        //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
         {
@@ -347,10 +348,16 @@ namespace SioForgeCAD
             Functions.CURVETOPOLYGON.Convert();
         }
 
-        [CommandMethod("SIOFORGECAD", "CHANGESPACECOPY", CommandFlags.UsePickSet)]
-        public static void CHANGESPACECOPY()
+        [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor  | CommandFlags.NoPerspective)]
+        public static void COPYMODELTOPAPER()
         {
-            throw new NotImplementedException();
+            Functions.COPYMODELTOPAPER.ChangeSpace();
+        }
+        
+        [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        public static void VPO()
+        {
+            //https://adndevblog.typepad.com/autocad/2012/04/selecting-model-space-entities-from-paper-space-using-autocad-selection-sets-in-c.html
         }
 
         [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
