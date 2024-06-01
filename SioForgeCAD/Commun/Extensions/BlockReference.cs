@@ -30,20 +30,10 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (blockRef.IsDynamicBlock)
             {
-                try
+                // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
+                using (BlockTableRecord btr = blockRef.DynamicBlockTableRecord.GetDBObject(OpenMode.ForRead) as BlockTableRecord)
                 {
-                    // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
-                    DBObject openResult = blockRef.DynamicBlockTableRecord.GetDBObject(OpenMode.ForRead);
-
-                    if (openResult is BlockTableRecord btr)
-                    {
-                        return btr.Name;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                    return blockRef.Name;
+                    return btr.Name;
                 }
             }
             return blockRef.Name;
