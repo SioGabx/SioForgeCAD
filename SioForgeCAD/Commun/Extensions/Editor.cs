@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -55,6 +56,30 @@ namespace SioForgeCAD.Commun.Extensions
             return new Extents3d(minPoint, maxPoint);
         }
 
+        public static List<Layout> GetAllLayout(this Editor _)
+        {
+            Database db = Generic.GetDatabase();
+            List<Layout> AllLayout = new List<Layout>();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+                {
+                    BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                    if (btr.IsLayout && btr.Name != BlockTableRecord.ModelSpace)
+                    {
+                        Layout layout = tr.GetObject(btr.LayoutId, OpenMode.ForRead) as Layout;
+                        if (!layout.ModelType)
+                        {
+                            AllLayout.Add(layout);
+                        }
+                    }
+                }
+                tr.Commit();
+                return AllLayout;
+            }
+        }
+
         public static Viewport GetViewport(this Editor ed)
         {
             Database db = ed.Document.Database;
@@ -100,8 +125,6 @@ namespace SioForgeCAD.Commun.Extensions
                 }
 
             }
-
-
         }
 
 

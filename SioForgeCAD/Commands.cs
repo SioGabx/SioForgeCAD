@@ -309,18 +309,18 @@ namespace SioForgeCAD
             Functions.POLYISCLOCKWISE.Check();
         }
 
-        [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VIEWPORTLOCK", CommandFlags.NoBlockEditor)]
         //ViewPorts lock all
-        public static void VPLOCK()
+        public static void VIEWPORTLOCK()
         {
-            Functions.VPLOCK.DoLockUnlock(true);
+            Functions.VIEWPORTLOCK.DoLockUnlock(true);
         }
 
-        [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VIEWPORTUNLOCK", CommandFlags.NoBlockEditor)]
         //ViewPorts unlock all
-        public static void VPUNLOCK()
+        public static void VIEWPORTUNLOCK()
         {
-            Functions.VPLOCK.DoLockUnlock(false);
+            Functions.VIEWPORTLOCK.DoLockUnlock(false);
         }
 
         [CommandMethod("SIOFORGECAD", "POLYCLEAN", CommandFlags.UsePickSet)]
@@ -357,7 +357,18 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPO()
         {
-            //https://adndevblog.typepad.com/autocad/2012/04/selecting-model-space-entities-from-paper-space-using-autocad-selection-sets-in-c.html
+            Functions.VIEWPORTOUTLINE.OutlineSelected();
+        }
+
+        [CommandMethod("SIOFORGECAD", "VPOALL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        public static void VPOALL()
+        {
+            Functions.VIEWPORTOUTLINE.OutlineAll(false);
+        }
+        [CommandMethod("SIOFORGECAD", "VPOSELECTED", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        public static void VPOSELECTED()
+        {
+            Functions.VIEWPORTOUTLINE.OutlineAll(true);
         }
 
         [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]

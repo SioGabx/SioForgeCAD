@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using System.Collections.Generic;
 using Viewport = Autodesk.AutoCAD.DatabaseServices.Viewport;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -129,20 +130,62 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.IsInLayout() && !ed.IsInLayoutPaper();
         }
 
-        public static List<ObjectId> GetAllViewportsInPaperSpace(this Editor ed, BlockTableRecord btr)
+        public static List<ObjectId> GetAllViewportsInPaperSpace(this Editor _, BlockTableRecord btr)
         {
             Database db = Generic.GetDatabase();
 
             List<ObjectId> ListOfViewPorts = new List<ObjectId>();
+
             foreach (ObjectId objId in btr)
             {
                 Entity entity = objId.GetEntity();
-                if (entity != null && entity is Viewport && entity.ObjectId != db.PaperSpaceVportId)
+                if (entity != null && entity is Viewport && db.GetViewports(false).Contains(entity.ObjectId))
                 {
                     ListOfViewPorts.Add(entity.ObjectId);
                 }
             }
             return ListOfViewPorts;
         }
+
+        public static Polyline GetBoundary(this Viewport viewport)
+        {
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (viewport.NonRectClipEntityId != ObjectId.Null)
+                {
+                    // Get the non-rectangular clipping boundary
+                    Entity clipEntity = viewport.NonRectClipEntityId.GetEntity(OpenMode.ForRead);
+                    if (clipEntity is Curve clipEntCurve)
+                    {
+                        return clipEntCurve.ToPolyline();
+                    }
+                    return null;
+                }
+                else
+                {
+                    // Get the standard rectangular boundary
+                    Point3d center = viewport.CenterPoint;
+                    double width = viewport.Width;
+                    double height = viewport.Height;
+
+                    Point3d lowerLeft = new Point3d(center.X - width / 2, center.Y - height / 2, center.Z);
+                    Point3d lowerRight = new Point3d(center.X + width / 2, center.Y - height / 2, center.Z);
+                    Point3d upperRight = new Point3d(center.X + width / 2, center.Y + height / 2, center.Z);
+                    Point3d upperLeft = new Point3d(center.X - width / 2, center.Y + height / 2, center.Z);
+
+                    Polyline polyline = new Polyline();
+                    polyline.AddVertexAt(0, lowerLeft.ToPoint2d(), 0, 0, 0);
+                    polyline.AddVertexAt(1, lowerRight.ToPoint2d(), 0, 0, 0);
+                    polyline.AddVertexAt(2, upperRight.ToPoint2d(), 0, 0, 0);
+                    polyline.AddVertexAt(3, upperLeft.ToPoint2d(), 0, 0, 0);
+                    polyline.Closed = true;
+                    return polyline;
+                }
+            }
+        }
+
+
     }
 }

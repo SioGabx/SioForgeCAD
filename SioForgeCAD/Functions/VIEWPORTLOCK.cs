@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {
-    public static class VPLOCK
+    public static class VIEWPORTLOCK
     {
         public static void DoLockUnlock(bool Lock)
         {
