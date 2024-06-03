@@ -29,17 +29,19 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
-                    GetPointTransient insertionTransientPoints = new GetPointTransient(ents, null);
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
-                    Points Indermediaire = InsertionTransientPointsValues.Point;
-                    PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
-                    PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
-                    Line.EraseObject();
-                    tr.Commit();
-                    if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
+                    using (GetPointTransient insertionTransientPoints = new GetPointTransient(ents, null))
                     {
-                        Generic.WriteMessage($"Pente : {Values["PENTE"]}");
-                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), Values);
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
+                        Points Indermediaire = InsertionTransientPointsValues.Point;
+                        PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
+                        PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;
+                        Line.EraseObject();
+                        tr.Commit();
+                        if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
+                        {
+                            Generic.WriteMessage($"Pente : {Values["PENTE"]}");
+                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), Values);
+                        }
                     }
                 }
             }

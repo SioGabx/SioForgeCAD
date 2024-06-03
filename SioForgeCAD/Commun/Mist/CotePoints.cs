@@ -135,7 +135,7 @@ namespace SioForgeCAD.Commun
         {
             var db = Generic.GetDatabase();
             TransactionManager tr = db.TransactionManager;
-            
+
             foreach (ObjectId AttributeObjectId in blkRef.AttributeCollection)
             {
                 AttributeReference Attribute = (AttributeReference)tr.GetObject(AttributeObjectId, OpenMode.ForRead);
@@ -218,48 +218,50 @@ namespace SioForgeCAD.Commun
             var ed = Generic.GetEditor();
             BlockReference blkRef = null;
             List<ObjectId> XrefObjectId;
-            do
+
+            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
+            XrefObjectId = XrefSelection.XrefObjectId.ToList();
+            if (XrefSelection.PromptStatus != PromptStatus.OK)
             {
-                (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
-                XrefObjectId = XrefSelection.XrefObjectId.ToList();
-                if (XrefSelection.PromptStatus != PromptStatus.OK)
-                {
-                    return CotePoints.Null;
-                }
-                if (XrefSelection.SelectedObjectId == ObjectId.Null)
-                {
-                    return CotePoints.Null;
-                }
+                return CotePoints.Null;
+            }
+            if (XrefSelection.SelectedObjectId == ObjectId.Null)
+            {
+                return CotePoints.Null;
+            }
 
-                HightLighter.UnhighlightAll();
-                XrefSelection.SelectedObjectId.RegisterHighlight();
-                DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+            HightLighter.UnhighlightAll();
+            XrefSelection.SelectedObjectId.RegisterHighlight();
+            DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
 
-                if (XrefObject is AttributeReference blkChildAttribute)
+            if (XrefObject is AttributeReference blkChildAttribute)
+            {
+                var DbObj = blkChildAttribute.OwnerId.GetDBObject();
+                blkRef = DbObj as BlockReference;
+            }
+            else if (XrefObject is BlockReference)
+            {
+                blkRef = XrefObject as BlockReference;
+            }
+            else
+            {
+                foreach (ObjectId objId in XrefSelection.XrefObjectId)
                 {
-                    var DbObj = blkChildAttribute.OwnerId.GetDBObject();
-                    blkRef = DbObj as BlockReference;
-                }
-                else if (XrefObject is BlockReference)
-                {
-                    blkRef = XrefObject as BlockReference;
-                }
-                else
-                {
-                    foreach (ObjectId objId in XrefSelection.XrefObjectId)
+                    XrefObjectId.Remove(objId);
+                    XrefObject = objId.GetDBObject();
+
+                    if (XrefObject is BlockReference ParentBlkRef && !ParentBlkRef.IsXref())
                     {
-                        XrefObjectId.Remove(objId);
-                        XrefObject = objId.GetDBObject();
-
-                        if (XrefObject is BlockReference ParentBlkRef && !ParentBlkRef.IsXref())
-                        {
-                            blkRef = XrefObject as BlockReference;
-                            break;
-                        }
+                        blkRef = XrefObject as BlockReference;
+                        break;
                     }
                 }
             }
-            while (blkRef is null);
+
+            if (blkRef is null)
+            {
+                return CotePoints.Null;
+            }
 
             double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
             Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());

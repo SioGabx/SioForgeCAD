@@ -66,5 +66,21 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
         }
+
+        public static string RemoveNonNumeric(this string str)
+        {
+            if (str == null) { return null; }
+
+            StringBuilder result = new StringBuilder();
+
+            foreach (char c in str)
+            {
+                if (char.IsDigit(c))
+                {
+                    result.Append(c);
+                }
+            }
+            return result.ToString();
+        }
     }
 }

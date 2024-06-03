@@ -7,7 +7,7 @@ namespace SioForgeCAD.Functions
 {
     public static class BLKSETTOBYBBLOCK
     {
-        public static void ByBlock()
+        public static void ByBlock(bool IgnoreHatch)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -30,6 +30,7 @@ namespace SioForgeCAD.Functions
                     {
                         if (EntityInBlockDef.GetDBObject(OpenMode.ForWrite) is Entity ent)
                         {
+                            if (IgnoreHatch && ent is Hatch) { continue; }
                             ent.ColorIndex = 0; //ByBlock 
                             ent.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByBlock);
                             ent.Linetype = "BYBLOCK";

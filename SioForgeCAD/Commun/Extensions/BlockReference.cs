@@ -154,7 +154,7 @@ namespace SioForgeCAD.Commun.Extensions
             return Point3d.Origin;
         }
 
-        public static bool IsThereABlockReference(this Point3d position, string blockName, string attributeValue)
+        public static bool IsThereABlockReference(this Point3d position, string blockName, string attributeValue, out BlockReference blockReference)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -168,7 +168,7 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     if (objId.ObjectClass.DxfName == "INSERT")
                     {
-                        BlockReference blockReference = tr.GetObject(objId, OpenMode.ForRead) as BlockReference;
+                        blockReference = tr.GetObject(objId, OpenMode.ForRead) as BlockReference;
 
                         if (blockReference != null && blockReference.Name == blockName && blockReference.Position.IsEqualTo(position, Tolerance.Global))
                         {
@@ -192,6 +192,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                 // The block does not exist at the same position with the same attribute values
                 tr.Commit();
+                blockReference = null;
                 return false;
             }
         }

@@ -100,7 +100,13 @@ namespace SioForgeCAD
         //Convert all entity values in the block to DUBLOC
         public static void BLKSETTOBYBBLOCK()
         {
-            Functions.BLKSETTOBYBBLOCK.ByBlock();
+            Functions.BLKSETTOBYBBLOCK.ByBlock(false);
+        }
+          [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
+        //Convert all entity values in the block to DUBLOC
+        public static void BLKSETTOBYBBLOCKIGNOREHATCH()
+        {
+            Functions.BLKSETTOBYBBLOCK.ByBlock(true);
         }
 
 
@@ -169,6 +175,30 @@ namespace SioForgeCAD
         public static void FORCELAYERCOLORTOENTITY()
         {
             Functions.FORCELAYERCOLORTOENTITY.Convert();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SSL", CommandFlags.Redraw)]
+        public static void SSL()
+        {
+            Functions.SPECIALSSELECTIONS.AllOnSelectedEntitiesLayers();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SSC", CommandFlags.Redraw)]
+        public static void SSC()
+        {
+            Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesColors();
+        } 
+        
+        [CommandMethod("SIOFORGECAD", "SST", CommandFlags.Redraw)]
+        public static void SST()
+        {
+            Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTransparency();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SSE", CommandFlags.Redraw)]
+        public static void SSE()
+        {
+            Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTypes();
         }
 
         [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
