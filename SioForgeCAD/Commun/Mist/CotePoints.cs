@@ -124,18 +124,18 @@ namespace SioForgeCAD.Commun
             var db = Generic.GetDatabase();
             TransactionManager tr = db.TransactionManager;
             DBObject BlocObject = tr.GetObject(BlocObjectId, OpenMode.ForRead);
-            return GetAltitudeFromBloc(BlocObject);
+            if (BlocObject is BlockReference blkRef)
+            {
+                return GetAltitudeFromBloc(blkRef);
+            }
+            return null;
         }
 
-        public static double? GetAltitudeFromBloc(DBObject BlocObject)
+        public static double? GetAltitudeFromBloc(BlockReference blkRef)
         {
             var db = Generic.GetDatabase();
             TransactionManager tr = db.TransactionManager;
-            if (!(BlocObject is BlockReference blkRef))
-            {
-                return null;
-            }
-
+            
             foreach (ObjectId AttributeObjectId in blkRef.AttributeCollection)
             {
                 AttributeReference Attribute = (AttributeReference)tr.GetObject(AttributeObjectId, OpenMode.ForRead);

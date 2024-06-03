@@ -16,33 +16,38 @@ namespace SioForgeCAD.Functions
                 Editor ed = Generic.GetEditor();
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    const string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
-                    var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null);
-                    if (GetBlockInXref == null)
+                    try
+                    {
+                        const string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
+                        var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null);
+                        if (GetBlockInXref == null)
+                        {
+                            return;
+                        }
+                        Points BlockPosition = GetBlockInXref.Points;
+                        double Altimetrie = GetBlockInXref.Altitude;
+                        if (Altimetrie == 0)
+                        {
+                            continue;
+                        }
+                        double USCRotation = ed.GetUSCRotation(AngleUnit.Radians);
+                        string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
+
+                        Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
+                        if (BlockPosition.SCG.IsThereABlockReference(Settings.BlocNameAltimetrie, AltimetrieStr))
+                        {
+                            Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
+                        }
+                        else
+                        {
+                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
+                        }
+
+                    }
+                    finally
                     {
                         tr.Commit();
-                        return;
                     }
-                    Points BlockPosition = GetBlockInXref.Points;
-                    double Altimetrie = GetBlockInXref.Altitude;
-                    if (Altimetrie == 0)
-                    {
-                        continue;
-                    }
-                    double USCRotation = ed.GetUSCRotation(AngleUnit.Radians);
-                    string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
-
-                    Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                    if (BlockPosition.SCG.IsThereABlockReference(Settings.BlocNameAltimetrie, AltimetrieStr))
-                    {
-                        Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
-                    }
-                    else
-                    {
-                        Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
-                    }
-
-                    tr.Commit();
                 }
             }
         }
