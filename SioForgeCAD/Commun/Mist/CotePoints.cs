@@ -213,7 +213,7 @@ namespace SioForgeCAD.Commun
             return null;
         }
 
-        public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint)
+        public static CotePoints GetBlockInXref(string Message, Point3d? NonInterractivePickedPoint, out PromptStatus PromptStatus)
         {
             var ed = Generic.GetEditor();
             BlockReference blkRef = null;
@@ -221,6 +221,7 @@ namespace SioForgeCAD.Commun
 
             (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
             XrefObjectId = XrefSelection.XrefObjectId.ToList();
+            PromptStatus = XrefSelection.PromptStatus;
             if (XrefSelection.PromptStatus != PromptStatus.OK)
             {
                 return CotePoints.Null;
@@ -331,7 +332,7 @@ namespace SioForgeCAD.Commun
 
                     if (blockReference.IsXref())
                     {
-                        CotePoints CotePoint = GetBlockInXref(string.Empty, PromptBlocSelectionResult.PickedPoint);
+                        CotePoints CotePoint = GetBlockInXref(string.Empty, PromptBlocSelectionResult.PickedPoint, out PromptStatus _);
                         bool IsCotePointNotNull = CotePoint != CotePoints.Null;
                         bool IsAltimetrieDefined = (CotePoint?.Altitude ?? 0) != 0;
                         if (IsCotePointNotNull && IsAltimetrieDefined)

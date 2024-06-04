@@ -19,10 +19,11 @@ namespace SioForgeCAD.Functions
                     try
                     {
                         const string SelectMessage = "\nVeuillez selectionner une côte dans une XREF";
-                        var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null);
+                        var GetBlockInXref = CotePoints.GetBlockInXref(SelectMessage, null, out PromptStatus promptStatus);
+                        if (promptStatus != PromptStatus.OK) { return; }
                         if (GetBlockInXref == null)
                         {
-                            return;
+                            continue;
                         }
                         Points BlockPosition = GetBlockInXref.Points;
                         double Altimetrie = GetBlockInXref.Altitude;
@@ -40,6 +41,7 @@ namespace SioForgeCAD.Functions
                         }
                         else
                         {
+                            Generic.WriteMessage($"L'altimétrie {AltimetrieStr} à été ajoutée sur le calque {Layers.GetCurrentLayerName()}");
                             Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
                         }
 
