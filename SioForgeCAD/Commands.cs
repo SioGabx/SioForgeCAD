@@ -177,6 +177,13 @@ namespace SioForgeCAD
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
+        [CommandMethod("SIOFORGECAD", "CONVERTENTITYCOLORTOGRAYSCALE", CommandFlags.UsePickSet)]
+        //Force layer color to selected entities (changes "BYLAYER" to layer color)
+        public static void CONVERTENTITYCOLORTOGRAYSCALE()
+        {
+            Functions.CONVERTENTITYCOLORTOGRAYSCALE.Convert();
+        }
+
         [CommandMethod("SIOFORGECAD", "SSL", CommandFlags.Redraw)]
         public static void SSL()
         {

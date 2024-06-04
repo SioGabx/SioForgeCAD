@@ -16,36 +16,17 @@ namespace SioForgeCAD.Functions
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()
-            {
-                MessageForAdding = "Sélectionnez une polyligne",
-                SingleOnly = true,
-            };
-            PromptSelectionResult polyResult = ed.GetSelection(promptSelectionOptions);
-            if (polyResult.Status != PromptStatus.OK)
+            Polyline ProjectionTarget = ed.GetPolyline("Sélectionnez une polyligne", false, false, true);
+            if (ProjectionTarget is null)
             {
                 return;
             }
-            Entity SelectedEntity;
-
-            using (Transaction GlobalTrans = db.TransactionManager.StartTransaction())
-            {
-                SelectedEntity = polyResult.Value[0].ObjectId.GetEntity();
-            }
-            if (SelectedEntity is Line ProjectionTargetLine)
-            {
-                SelectedEntity = ProjectionTargetLine.ToPolyline();
-            }
-            if (!(SelectedEntity is Polyline ProjectionTarget))
-            {
-                Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne.");
-                return;
-            }
+          
             while (true)
             {
                 using (Transaction trans = db.TransactionManager.StartTransaction())
                 {
-                    PromptPointOptions pointOptions = new PromptPointOptions("Sélectionnez un point : \n");
+                    PromptPointOptions pointOptions = new PromptPointOptions("\nSélectionnez un point");
                     PromptPointResult pointResult = ed.GetPoint(pointOptions);
                     if (pointResult.Status != PromptStatus.OK)
                     {

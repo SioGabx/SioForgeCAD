@@ -34,9 +34,7 @@ namespace SioForgeCAD.Functions
                 ListOfPerpendicularLines = PerpendicularPoint.GetListOfPerpendicularLinesFromPoint(BasePoint, Terrain, true);
                 if (ListOfPerpendicularLines.Count > 0)
                 {
-                    Points ProjectedPoint = ListOfPerpendicularLines.FirstOrDefault().EndPoint.ToPoints();
-
-                    return ProjectedPoint;
+                    return ListOfPerpendicularLines.FirstOrDefault().EndPoint.ToPoints();
                 }
                 return null;
             }
@@ -51,7 +49,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
+            using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain", false))
             {
                 if (TerrainBasePolyline == null)
                 {

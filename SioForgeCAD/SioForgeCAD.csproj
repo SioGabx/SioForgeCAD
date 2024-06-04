@@ -162,6 +162,7 @@
     <Compile Include="Commun\Extensions\ObjectId.cs" />
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Mist\Generic.cs" />
+    <Compile Include="Commun\Mist\HSLColors.cs" />
     <Compile Include="Commun\Mist\Layers.cs" />
     <Compile Include="Commun\Mist\Json\JSONParser.cs" />
     <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
@@ -219,6 +220,7 @@
     <Compile Include="Functions\DXFIMPORT.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
+    <Compile Include="Functions\CONVERTENTITYCOLORTOGRAYSCALE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\GETINNERCENTROID.cs" />
