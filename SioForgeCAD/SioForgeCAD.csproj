@@ -118,12 +118,14 @@
     <Compile Include="Commun\Extensions\CircularArc.cs" />
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
+    <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
+    <Compile Include="Commun\Mist\Colors.cs" />
     <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
@@ -162,7 +164,6 @@
     <Compile Include="Commun\Extensions\ObjectId.cs" />
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Mist\Generic.cs" />
-    <Compile Include="Commun\Mist\HSLColors.cs" />
     <Compile Include="Commun\Mist\Layers.cs" />
     <Compile Include="Commun\Mist\Json\JSONParser.cs" />
     <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
@@ -220,7 +221,7 @@
     <Compile Include="Functions\DXFIMPORT.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
-    <Compile Include="Functions\CONVERTENTITYCOLORTOGRAYSCALE.cs" />
+    <Compile Include="Functions\SETSELECTEDENTITIESCOLORTOGRAYSCALE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
     <Compile Include="Functions\GETINNERCENTROID.cs" />
@@ -242,6 +243,8 @@
     <Compile Include="Functions\BLKSETTOBYBBLOCK.cs" />
     <Compile Include="Functions\SCALEBY.cs" />
     <Compile Include="Functions\SCALEFIT.cs" />
+    <Compile Include="Functions\SETSELECTEDENTITIESBRIGHTNESS.cs" />
+    <Compile Include="Functions\SETSELECTEDENTITIESCONTRAST.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
     <Compile Include="Functions\SUBSTRACTPOLYLIGNES.cs" />
     <Compile Include="Functions\TAREA.cs" />

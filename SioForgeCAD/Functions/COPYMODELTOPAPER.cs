@@ -3,11 +3,6 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -16,7 +11,7 @@ namespace SioForgeCAD.Functions
         public static void ChangeSpace()
         {
             Editor ed = Generic.GetEditor();
-           
+
 
             var CurrentViewport = ed.GetViewport();
             if (CurrentViewport == null) { return; }
@@ -31,11 +26,11 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                    // copy selected entites to model space
-                    var ids = new ObjectIdCollection(SelectedEnts.Value.GetObjectIds());
-                    var mapping = new IdMapping();
-                    var modelSpaceId = SymbolUtilityServices.GetBlockPaperSpaceId(db);
-                    db.DeepCloneObjects(ids, modelSpaceId, mapping, false);
+                // copy selected entites to model space
+                var ids = new ObjectIdCollection(SelectedEnts.Value.GetObjectIds());
+                var mapping = new IdMapping();
+                var modelSpaceId = SymbolUtilityServices.GetBlockPaperSpaceId(db);
+                db.DeepCloneObjects(ids, modelSpaceId, mapping, false);
 
                 foreach (IdPair pair in mapping)
                 {

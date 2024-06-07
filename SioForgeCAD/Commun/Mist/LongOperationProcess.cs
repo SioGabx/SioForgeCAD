@@ -5,7 +5,7 @@ namespace SioForgeCAD.Commun
 {
     public class LongOperationProcess : IDisposable
     {
-        private bool Disposed = false;
+        public bool IsDisposed { get; private set; }
         private LongOperationMessageFilter Filter;
         public bool IsCanceled
         {
@@ -15,7 +15,6 @@ namespace SioForgeCAD.Commun
             }
         }
 
-
         public LongOperationProcess()
         {
             Start();
@@ -23,7 +22,7 @@ namespace SioForgeCAD.Commun
 
         public void Dispose()
         {
-            Disposed = true;
+            IsDisposed = true;
             Application.RemoveMessageFilter(Filter);
             GC.SuppressFinalize(this);
         }

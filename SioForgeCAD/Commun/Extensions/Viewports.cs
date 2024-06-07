@@ -3,8 +3,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using System.Collections.Generic;
-using Viewport = Autodesk.AutoCAD.DatabaseServices.Viewport;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
+using Viewport = Autodesk.AutoCAD.DatabaseServices.Viewport;
 
 namespace SioForgeCAD.Commun.Extensions
 {

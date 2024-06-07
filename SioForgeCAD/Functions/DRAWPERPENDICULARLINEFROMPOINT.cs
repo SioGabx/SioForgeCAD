@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-          
+
             while (true)
             {
                 using (Transaction trans = db.TransactionManager.StartTransaction())

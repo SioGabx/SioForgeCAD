@@ -102,13 +102,12 @@ namespace SioForgeCAD
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock(false);
         }
-          [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
         //Convert all entity values in the block to DUBLOC
         public static void BLKSETTOBYBBLOCKIGNOREHATCH()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock(true);
         }
-
 
         [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
@@ -177,11 +176,25 @@ namespace SioForgeCAD
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
-        [CommandMethod("SIOFORGECAD", "CONVERTENTITYCOLORTOGRAYSCALE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCOLORTOGRAYSCALE", CommandFlags.UsePickSet)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
-        public static void CONVERTENTITYCOLORTOGRAYSCALE()
+        public static void SETSELECTEDENTITIESCOLORTOGRAYSCALE()
         {
-            Functions.CONVERTENTITYCOLORTOGRAYSCALE.Convert();
+            Functions.SETSELECTEDENTITIESCOLORTOGRAYSCALE.Convert();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESBRIGHTNESS", CommandFlags.UsePickSet)]
+        //Force layer color to selected entities (changes "BYLAYER" to layer color)
+        public static void SETSELECTEDENTITIESBRIGHTNESS()
+        {
+            Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCONTRAST", CommandFlags.UsePickSet)]
+        //Force layer color to selected entities (changes "BYLAYER" to layer color)
+        public static void SETSELECTEDENTITIESCONTRAST()
+        {
+            Functions.SETSELECTEDENTITIESCONTRAST.Set();
         }
 
         [CommandMethod("SIOFORGECAD", "SSL", CommandFlags.Redraw)]
@@ -194,8 +207,8 @@ namespace SioForgeCAD
         public static void SSC()
         {
             Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesColors();
-        } 
-        
+        }
+
         [CommandMethod("SIOFORGECAD", "SST", CommandFlags.Redraw)]
         public static void SST()
         {
@@ -385,12 +398,12 @@ namespace SioForgeCAD
             Functions.CURVETOPOLYGON.Convert();
         }
 
-        [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor  | CommandFlags.NoPerspective)]
+        [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYMODELTOPAPER()
         {
             Functions.COPYMODELTOPAPER.ChangeSpace();
         }
-        
+
         [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPO()
         {

@@ -87,7 +87,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                     return;
                 }
-                HashSet<ObjectId> SameColorEntsObjId = new HashSet<ObjectId>(); 
+                HashSet<ObjectId> SameColorEntsObjId = new HashSet<ObjectId>();
                 foreach (var SelItem in psr.Value.GetObjectIds())
                 {
                     var EntColor = SelItem.GetEntity().Color;
@@ -141,7 +141,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-         public static void AllWithSelectedEntitiesTransparency()
+        public static void AllWithSelectedEntitiesTransparency()
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -155,7 +155,7 @@ namespace SioForgeCAD.Functions
                 foreach (var SelItem in SelRedraw.Value.GetObjectIds())
                 {
                     var SelItemEnt = SelItem.GetEntity();
-                   
+
                     var EntTransparency = SelItemEnt.Transparency.ToString().RemoveNonNumeric();
                     if (!EntitiesTransparency.Contains(EntTransparency))
                     {
