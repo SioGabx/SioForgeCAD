@@ -53,6 +53,9 @@ namespace SioForgeCAD.Functions
                 // Trie par ordre alphabétique
                 blockNames.Sort();
 
+
+                //TODO : Create a table of block, hauteur entre = 1.25, faire groupe a chaque changement de types
+                //Title font : .35, position : .9 above block, 2.85 bellow previous
                 foreach (string name in blockNames)
                 {
                     using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -69,12 +72,14 @@ namespace SioForgeCAD.Functions
                             BlockReference.TransformBy(scaleMatrix);
 
                             Point3d textPosition = BlockReference.Position + new Vector3d(1.5, 0, 0);
+
+                            //TODO : set same color of block, search color for good color ratio
                             MText text = new MText
                             {
                                 Contents = name.Split('_').Last(),
                                 Location = textPosition,
-                                Height = 0.1,
-                                TextHeight = 0.1,
+                                Height = 0,
+                                TextHeight = 0.25,
                                 Attachment = AttachmentPoint.MiddleLeft,
                                 Normal = Vector3d.ZAxis,
                                 Rotation = 0
