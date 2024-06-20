@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -83,10 +85,68 @@ namespace SioForgeCAD.Commun
             LastSliceResult = CachePolygon;
         }
 
+
+
+
+
+
+
+
+
+
+
+        public static void TryDetectWrongCut(List<Polyline> Polylines, Polyline CutLine)
+        {
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{            
+            //List<Polyline> Cleanned = new List<Polyline>();
+                Polyline[] array = Polylines.ToArray();
+                for (int i = 0; i < array.Length; i++)
+                {
+                    Polyline item = array[i];
+                    Polylines.Remove(item);
+
+                    GetConnectingPolylineInList(item.StartPoint, ref item, ref CutLine, ref Polylines);
+                    GetConnectingPolylineInList(item.EndPoint, ref item, ref CutLine, ref Polylines);
+                //Cleanned.Add(item);
+                }
+                
+            //using (Transaction tr = Generic.GetDatabase().TransactionManager.StartTransaction())
+            //{
+            //    Cleanned.AddToDrawing(2, true);
+            //    tr.Commit();
+            //}
+
+            void GetConnectingPolylineInList(Point3d Origin, ref Polyline SubPoly, ref Polyline SubCutLine, ref List<Polyline> SubPolylines)
+            {
+                int itineration = 0;
+                while (itineration <= SubPolylines.Count && Origin.DistanceTo(SubCutLine) > Generic.MediumTolerance.EqualPoint)
+                {
+                    itineration++;
+                    foreach (var item1 in SubPolylines.ToArray())
+                    {
+                        if (item1.StartPoint.IsEqualTo(Origin) || item1.EndPoint.IsEqualTo(Origin))
+                        {
+                            //Index++;
+                            //poly.AddToDrawing(Index, true);
+                            //item1.AddToDrawing(Index, true);
+                            SubPoly.JoinEntity(item1);
+                            SubPolylines.Remove(item1);
+                        }
+                    }
+                }
+            }
+        }
+       
+
+
+
+
+
         public static List<Polyline> RecreateClosedPolyline(DBObjectCollection SplittedPolylines, Polyline CutLine)
         {
             DBObjectCollection SplittedPolylinesWithInsideCutLines = new DBObjectCollection() { CutLine }.AddRange(SplittedPolylines);
-
+            TryDetectWrongCut(SplittedPolylines.Cast<Polyline>().ToList(), CutLine);
             foreach (Polyline polyline in SplittedPolylines)
             {
                 if (polyline.IsCurveCanClose(CutLine))
@@ -258,6 +318,9 @@ namespace SioForgeCAD.Commun
             return DblCollection;
         }
 
+
+
+
         private static bool ContainsTolerance(DoubleCollection doubles, double Value)
         {
             foreach (var item in doubles)
@@ -295,7 +358,6 @@ namespace SioForgeCAD.Commun
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);
-
             IntersectionPointsFounds.Add(CutLine.StartPoint);
             IntersectionPointsFounds.Add(CutLine.EndPoint);
             DoubleCollection DblCollection = GetSplitPoints(polyline, IntersectionPointsFounds);

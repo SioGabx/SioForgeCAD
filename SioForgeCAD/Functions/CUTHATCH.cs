@@ -41,7 +41,7 @@ namespace SioForgeCAD.Functions
             Polyline CutLine = GetCutPolyline(HatchPolyHole.Boundary, out PromptStatus promptResult);
             if (promptResult == PromptStatus.Keyword)
             {
-                CutLine.Dispose();
+                CutLine?.Dispose();
                 CutLine = GetCutLine(HatchPolyHole.Boundary);
             }
             //CuttedPolyline.DeepDispose();

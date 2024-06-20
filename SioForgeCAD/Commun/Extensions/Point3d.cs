@@ -166,7 +166,12 @@ namespace SioForgeCAD.Commun.Extensions
                         ((pt3.X - pt1.X) * (pt2.Y - pt1.Y))) / 2.0;
         }
 
-        public static bool IsOnPolyline(this Point3d pt, Polyline pl)
+        public static double DistanceTo(this Point3d pt, Polyline pl)
+        {
+            return pl.GetClosestPointTo(pt, false).DistanceTo(pt);
+        }
+
+            public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
             bool isOn = false;
 

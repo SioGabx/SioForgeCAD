@@ -1,12 +1,14 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -468,6 +470,19 @@ namespace SioForgeCAD
         {
             Functions.RECREATEASSOCIATIVEHATCHBOUNDARY.Recreate();
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()
