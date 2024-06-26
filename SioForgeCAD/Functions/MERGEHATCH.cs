@@ -20,11 +20,12 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-
+                FirstHachure.RegisterHighlight();
                 bool Reselect = true;
                 Hatch SecondHachure = null;
                 while (Reselect)
                 {
+                    ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
                     Reselect = false;
                     if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
                     {
@@ -35,6 +36,7 @@ namespace SioForgeCAD.Functions
                         Reselect = true;
                     }
                 }
+                FirstHachure.RegisterUnhighlight();
 
                 Entity ExistingBoundaryStyle = FirstHachure;
                 if (FirstHachure.Associative)
