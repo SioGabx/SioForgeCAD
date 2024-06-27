@@ -361,6 +361,7 @@ namespace SioForgeCAD
             Functions.POLYISCLOCKWISE.Check();
         }
 
+        [CommandMethod("SIOFORGECAD", "VPLL", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTLOCK", CommandFlags.NoBlockEditor)]
         //ViewPorts lock all
         public static void VIEWPORTLOCK()
@@ -368,6 +369,7 @@ namespace SioForgeCAD
             Functions.VIEWPORTLOCK.DoLockUnlock(true);
         }
 
+        [CommandMethod("SIOFORGECAD", "VPLU", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTUNLOCK", CommandFlags.NoBlockEditor)]
         //ViewPorts unlock all
         public static void VIEWPORTUNLOCK()
