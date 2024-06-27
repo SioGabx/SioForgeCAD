@@ -11,6 +11,8 @@ namespace SioForgeCAD.Functions
             db.PurgeRasterImages();
             db.Purge();
             db.PurgeRegisteredApplication();
+
+            VIEWPORTLOCK.DoLockUnlock(true);
         }
     }
 }

@@ -361,22 +361,14 @@ namespace SioForgeCAD
             Functions.POLYISCLOCKWISE.Check();
         }
 
-        [CommandMethod("SIOFORGECAD", "VPLL", CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VPL", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTLOCK", CommandFlags.NoBlockEditor)]
-        //ViewPorts lock all
+        //ViewPorts lock / unlock all
         public static void VIEWPORTLOCK()
         {
-            Functions.VIEWPORTLOCK.DoLockUnlock(true);
-        }
-
-        [CommandMethod("SIOFORGECAD", "VPLU", CommandFlags.NoBlockEditor)]
-        [CommandMethod("SIOFORGECAD", "VIEWPORTUNLOCK", CommandFlags.NoBlockEditor)]
-        //ViewPorts unlock all
-        public static void VIEWPORTUNLOCK()
-        {
-            Functions.VIEWPORTLOCK.DoLockUnlock(false);
-        }
-
+            Functions.VIEWPORTLOCK.Menu();
+        } 
+        
         [CommandMethod("SIOFORGECAD", "POLYCLEAN", CommandFlags.UsePickSet)]
         public static void POLYCLEAN()
         {

@@ -8,6 +8,29 @@ namespace SioForgeCAD.Functions
 {
     public static class VIEWPORTLOCK
     {
+
+        public static void Menu()
+        {
+            Editor ed = Generic.GetEditor();
+            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une opération :")
+            {
+                AllowArbitraryInput = false,
+                AppendKeywordsToMessage = true
+            };
+            promptKeywordOptions.Keywords.Add("Lock All");
+            promptKeywordOptions.Keywords.Default = "Lock All";
+            promptKeywordOptions.Keywords.Add("Unlock All");
+
+            var KeyResult = ed.GetKeywords(promptKeywordOptions);
+            if (!KeyResult.Status.HasFlag(PromptStatus.OK) && !KeyResult.Status.HasFlag(PromptStatus.Keyword))
+            {
+                return;
+            }
+
+            DoLockUnlock(KeyResult.StringResult == "Lock");
+        }
+
+
         public static void DoLockUnlock(bool Lock)
         {
             Database db = Generic.GetDatabase();
