@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -115,28 +116,32 @@ namespace SioForgeCAD.Functions
                 List<string> EntityTypes = new List<string>();
                 foreach (var SelItem in SelRedraw.Value.GetObjectIds())
                 {
-                    var SelItemEnt = SelItem.GetEntity();
-                    var EntityType = RXObject.GetClass(SelItemEnt.GetType());
-                    var DxfName = EntityType.DxfName;
+                    RXClass rX = SelItem.ObjectClass;
+                    var DxfName = rX.Name;
                     if (!EntityTypes.Contains(DxfName))
                     {
                         EntityTypes.Add(DxfName);
                     }
                 }
 
-                List<TypedValue> typedValues = new List<TypedValue>
+                //Check each object, we can't use SelectionFilter because ACAD_PROXY_ENTITY is ""
+                PromptSelectionResult psr = ed.SelectAll();
+                if (psr.Status != PromptStatus.OK)
                 {
-                    new TypedValue((int)DxfCode.Operator, "<or")
-                };
-                foreach (var EntityType in EntityTypes)
-                {
-                    Generic.WriteMessage($"Selection du type \"{EntityType}\"");
-                    typedValues.Add(new TypedValue((int)DxfCode.Start, EntityType));
+                    tr.Commit();
+                    return;
                 }
-                typedValues.Add(new TypedValue((int)DxfCode.Operator, "or>"));
-                SelectionFilter sf = new SelectionFilter(typedValues.ToArray());
-                PromptSelectionResult psr = ed.SelectAll(sf);
-                ed.SetImpliedSelection(psr.Value);
+                HashSet<ObjectId> SameTypeEntsObjId = new HashSet<ObjectId>();
+                foreach (var SelItem in psr.Value.GetObjectIds())
+                {
+                    RXClass rX = SelItem.ObjectClass;
+                    if (rX != null && (EntityTypes.Contains(rX.Name)))
+                    {
+                        SameTypeEntsObjId.Add(SelItem);
+                    }
+                }
+
+                ed.SetImpliedSelection(SameTypeEntsObjId.ToArray());
                 tr.Commit();
             }
         }
