@@ -17,12 +17,7 @@ namespace SioForgeCAD.Functions
         public static void Flatten()
         {
             var ed = Generic.GetEditor();
-            PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
-            {
-                MessageForAdding = $"\nSelectionnez des entités",
-                RejectObjectsOnLockedLayers = false
-            };
-            var EntitiesSelection = ed.GetSelection(PromptBlocSelectionOptions);
+            var EntitiesSelection = ed.GetSelectionRedraw();
             if (EntitiesSelection.Status != PromptStatus.OK) { return; }
 
             Database db = Generic.GetDatabase();
@@ -40,6 +35,14 @@ namespace SioForgeCAD.Functions
                     {
                         polyline.Elevation = 0;
                     }
+                    //if (entity is Polyline2d polyline2d)
+                    //{
+                    //    polyline2d.Elevation = 0;
+                    //}
+                    //if (entity is Polyline3d polyline3d)
+                    //{
+                    //    polyline3d.ToPolyline();
+                    //}
                     if (entity is BlockReference blockreference)
                     {
                         blockreference.Position = blockreference.Position.Flatten();
@@ -52,41 +55,41 @@ namespace SioForgeCAD.Functions
                     {
                         hatch.Elevation = 0;
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.DBText dbtext)
+                    if (entity is DBText dbtext)
                     {
                         dbtext.Position = dbtext.Position.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.DBPoint dbpoint)
+                    if (entity is DBPoint dbpoint)
                     {
                         dbpoint.Position = dbpoint.Position.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.Leader leader)
+                    if (entity is Leader leader)
                     {
                         leader.StartPoint = leader.StartPoint.Flatten();
                         leader.EndPoint = leader.EndPoint.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.Line line)
+                    if (entity is Line line)
                     {
                         line.StartPoint = line.StartPoint.Flatten();
                         line.EndPoint = line.EndPoint.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.MText mtext)
+                    if (entity is MText mtext)
                     {
                         mtext.Location = mtext.Location.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.Ray ray)
+                    if (entity is Ray ray)
                     {
                         ray.BasePoint = ray.BasePoint.Flatten();
                         ray.EndPoint = ray.EndPoint.Flatten();
                         ray.StartPoint = ray.StartPoint.Flatten();
                     }
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.Spline spline)
+                    if (entity is Spline spline)
                     {
                         spline.EndPoint = spline.EndPoint.Flatten();
                         spline.StartPoint = spline.StartPoint.Flatten();
                     }
 
-                    if (entity is Autodesk.AutoCAD.DatabaseServices.Table table)
+                    if (entity is Table table)
                     {
                         table.Position = table.Position.Flatten();
                     }

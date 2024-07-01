@@ -389,6 +389,18 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Entity ToLWPolylineOrSpline(this Polyline3d poly3d)
+        {
+            if (poly3d.PolyType == Poly3dType.SimplePoly)
+            {
+                return poly3d.ToPolyline();
+            }
+            else
+            {
+                return poly3d.Spline;
+            }
+        }
+
         public static Polyline ToPolyline(this Polyline2d poly2d)
         {
             if (poly2d.PolyType == Poly2dType.QuadSplinePoly || poly2d.PolyType == Poly2dType.CubicSplinePoly)
@@ -398,6 +410,18 @@ namespace SioForgeCAD.Commun.Extensions
             Polyline poly = new Polyline();
             poly.ConvertFrom(poly2d, false);
             return poly;
+        }
+
+        public static Entity ToLWPolylineOrSpline(this Polyline2d poly2d)
+        {
+            if (poly2d.PolyType == Poly2dType.SimplePoly)
+            {
+                return poly2d.ToPolyline();
+            }
+            else
+            {
+                return poly2d.Spline;
+            }
         }
 
         public static IEnumerable<Polyline> SmartOffset(this Polyline ArgPoly, double ShrinkDistance)

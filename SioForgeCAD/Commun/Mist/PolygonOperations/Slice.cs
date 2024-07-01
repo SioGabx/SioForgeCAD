@@ -164,7 +164,7 @@ namespace SioForgeCAD.Commun
             int SameCountRedo = 3;
             while (NotClosedPolylines.Count > index)
             {
-                if (LastOperationNotClosedPolylinesCount != NotClosedPolylines.Count)
+                if (LastOperationNotClosedPolylinesCount == NotClosedPolylines.Count)
                 {
                     SameCountRedo--;
                     //If the number are the same, that mean we have not successfuly close any polyline

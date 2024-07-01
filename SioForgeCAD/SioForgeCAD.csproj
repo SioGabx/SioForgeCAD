@@ -245,6 +245,7 @@
     <Compile Include="Functions\SCALEFIT.cs" />
     <Compile Include="Functions\SETSELECTEDENTITIESBRIGHTNESS.cs" />
     <Compile Include="Functions\SETSELECTEDENTITIESCONTRAST.cs" />
+    <Compile Include="Functions\SMARTFLATTEN.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
     <Compile Include="Functions\SUBSTRACTPOLYLIGNES.cs" />
     <Compile Include="Functions\TAREA.cs" />

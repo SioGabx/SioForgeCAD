@@ -465,6 +465,14 @@ namespace SioForgeCAD
             Functions.RECREATEASSOCIATIVEHATCHBOUNDARY.Recreate();
         }
 
+        
+        [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
+        //Flatten Each Entity
+        public static void SMARTFLATTEN()
+        {
+            Functions.SMARTFLATTEN.Flatten();
+        }
+
 
 
 
