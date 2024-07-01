@@ -100,17 +100,17 @@ namespace SioForgeCAD.Commun
             //using (Transaction tr = db.TransactionManager.StartTransaction())
             //{            
             //List<Polyline> Cleanned = new List<Polyline>();
-                Polyline[] array = Polylines.ToArray();
-                for (int i = 0; i < array.Length; i++)
-                {
-                    Polyline item = array[i];
-                    Polylines.Remove(item);
+            Polyline[] array = Polylines.ToArray();
+            for (int i = 0; i < array.Length; i++)
+            {
+                Polyline item = array[i];
+                Polylines.Remove(item);
 
-                    GetConnectingPolylineInList(item.StartPoint, ref item, ref CutLine, ref Polylines);
-                    GetConnectingPolylineInList(item.EndPoint, ref item, ref CutLine, ref Polylines);
+                GetConnectingPolylineInList(item.StartPoint, ref item, ref CutLine, ref Polylines);
+                GetConnectingPolylineInList(item.EndPoint, ref item, ref CutLine, ref Polylines);
                 //Cleanned.Add(item);
-                }
-                
+            }
+
             //using (Transaction tr = Generic.GetDatabase().TransactionManager.StartTransaction())
             //{
             //    Cleanned.AddToDrawing(2, true);
@@ -137,7 +137,7 @@ namespace SioForgeCAD.Commun
                 }
             }
         }
-       
+
 
 
 
@@ -160,8 +160,24 @@ namespace SioForgeCAD.Commun
             List<DBObject> NotClosedPolylines = Polylines.Where((poly) => !(poly as Polyline).Closed).ToList();
 
             int index = 0;
+            int LastOperationNotClosedPolylinesCount = -1;
+            int SameCountRedo = 3;
             while (NotClosedPolylines.Count > index)
             {
+                if (LastOperationNotClosedPolylinesCount != NotClosedPolylines.Count)
+                {
+                    SameCountRedo--;
+                    //If the number are the same, that mean we have not successfuly close any polyline
+                    if (SameCountRedo == 0)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    SameCountRedo = 3;
+                }
+                LastOperationNotClosedPolylinesCount = NotClosedPolylines.Count;
                 if (!(NotClosedPolylines[Math.Max(index, 0)] is Polyline PolyligneA))
                 {
                     continue;
