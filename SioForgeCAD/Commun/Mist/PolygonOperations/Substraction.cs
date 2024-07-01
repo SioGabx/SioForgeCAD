@@ -37,7 +37,11 @@ namespace SioForgeCAD.Commun
                                 if (Cuts.Count > 0)
                                 {
                                     CuttedPolyline.Remove(NewBoundary);
-                                    NewBoundary.Dispose();
+                                    if (NewBoundary != BasePolygon.Boundary)
+                                    {
+                                        //dont dispose item that we don't own
+                                        NewBoundary.Dispose();
+                                    }
                                 }
                                 foreach (var CuttedNewBoundary in Cuts)
                                 {

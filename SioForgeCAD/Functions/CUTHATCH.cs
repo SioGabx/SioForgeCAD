@@ -144,7 +144,9 @@ namespace SioForgeCAD.Functions
                         Hatchs.ApplyHatchV2(HatchPolyHole.Boundary, Holes, Hachure);
                         Generic.WriteMessage("Un trou a été créé dans la hachure");
                         MergedHoles.DeepDispose();
+                        Holes.DeepDispose();
                         CutLineSubResult.DeepDispose();
+                        CuttedPolyline.DeepDispose();
                     }
 
                     foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
