@@ -405,7 +405,8 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (poly2d.PolyType == Poly2dType.QuadSplinePoly || poly2d.PolyType == Poly2dType.CubicSplinePoly)
             {
-                return poly2d.Spline.ToPolyline() as Polyline;
+                var Spline = poly2d.Spline;
+                return Spline.ToPolyline() as Polyline;
             }
             Polyline poly = new Polyline();
             poly.ConvertFrom(poly2d, false);

@@ -78,13 +78,17 @@ namespace SioForgeCAD.Commun.Drawing
             }
             ObjectIdCollection acObjIdColl2 = new ObjectIdCollection { newBlocRefenceId };
             IdMapping acIdMap2 = new IdMapping();
+            using (ActualDocument.LockDocument())
             using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRecNewDoc2 = Generic.GetCurrentSpaceBlockTableRecord(ActualTransaction);
+
                 ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
                 ActualTransaction.Commit();
-            }
+            } 
+        
+
             return acIdMap2[newBlocRefenceId].Value;
         }
 

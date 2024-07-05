@@ -36,7 +36,7 @@ namespace SioForgeCAD.Commun.Drawing
                 BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
                 // Check if the entity is already in the database
-                if (entity.IsErased)
+                if (entity?.IsErased != false)
                 {
                     acTrans.Abort();
                     return ObjectId.Null;
