@@ -32,7 +32,7 @@ namespace SioForgeCAD.Commun
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine, Intersect.OnBothOperands);
 
-                    //SplittedPolylines.AddToDrawing(1, true);
+                    //SplittedPolylines.AddToDrawing(5, true);
                     if (SplittedPolylines.Count > 1)
                     {
                         Polygon.Remove(Poly);

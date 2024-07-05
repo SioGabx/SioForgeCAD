@@ -172,11 +172,6 @@ namespace SioForgeCAD.Functions
 
         static bool CheckIfHole(Polyline Boundary, Polyline CutLine)
         {
-            if (!CutLine.Closed)
-            {
-                return false;
-            }
-
             foreach (var Point in CutLine.GetPoints())
             {
                 if (!Point.IsInsidePolyline(Boundary))
@@ -187,7 +182,22 @@ namespace SioForgeCAD.Functions
 
             var IntersectionFound = new Point3dCollection();
             CutLine.IntersectWith(Boundary, Intersect.OnBothOperands, IntersectionFound, IntPtr.Zero, IntPtr.Zero);
-            return IntersectionFound.Count <= 0;
+
+            bool IsHole = IntersectionFound.Count <= 0;
+
+            if (!CutLine.Closed)
+            {
+                if (IsHole)
+                {
+                    var NumberOfPoints = CutLine.GetPoints().Count();
+                    if (NumberOfPoints >= 3)
+                    {
+                        Generic.WriteMessage("Veuillez fermer la forme lorsque vous decoupez dans une hachure");
+                    }
+                }
+                return false;
+            }
+            return IsHole;
         }
 
         public static Polyline GetCutLine(Polyline Boundary)
@@ -218,8 +228,7 @@ namespace SioForgeCAD.Functions
                     if (getCutHatchLinePointResultTwo.PromptPointResult.Status == PromptStatus.OK)
                     {
                         Points EndPoint = Points.GetFromPromptPointResult(getCutHatchLinePointResultTwo.PromptPointResult).Flatten();
-                        Polyline CutLine = GetPolylineFromNearestPointOnBoundary(Boundary, Origin, EndPoint);
-                        return CutLine;
+                        return GetPolylineFromNearestPointOnBoundary(Boundary, Origin, EndPoint);
                     }
                 }
             }
