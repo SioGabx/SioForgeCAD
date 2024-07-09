@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -65,7 +66,13 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
-                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
+                try {
+                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, true);
+                }catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                    return ObjectId.Null;
+                }
                 BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(acBlkTblNewDoc[OldName], OpenMode.ForWrite);
                 btr.Name = NewName;
                 MemoryTransaction.Commit();
@@ -78,7 +85,8 @@ namespace SioForgeCAD.Commun.Drawing
             }
             ObjectIdCollection acObjIdColl2 = new ObjectIdCollection { newBlocRefenceId };
             IdMapping acIdMap2 = new IdMapping();
-            using (ActualDocument.LockDocument())
+
+            using (Generic.GetLock())
             using (Transaction ActualTransaction = ActualDatabase.TransactionManager.StartTransaction())
             {
                 BlockTable acBlkTblNewDoc2 = ActualTransaction.GetObject(ActualDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
@@ -86,7 +94,7 @@ namespace SioForgeCAD.Commun.Drawing
 
                 ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
                 ActualTransaction.Commit();
-            } 
+            }
         
 
             return acIdMap2[newBlocRefenceId].Value;

@@ -27,6 +27,7 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
             ObjectId[] selectedBlockIds;
+            using (Generic.GetLock())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var ActualSelection = ed.SelectImplied().Value;
@@ -75,12 +76,18 @@ namespace SioForgeCAD.Functions
                             {
                                 try
                                 {
-                                    ObjectId newBtrId = BlockReferences.RenameBlockAndInsert(selectedBlockId, oldName, newName);
-                                    selectedBlockId.EraseObject();
-                                    if (!newBtrId.IsNull)
+                                    int index = 0;
+                                    ObjectId newBtrId = ObjectId.Null;
+                                    do
                                     {
-                                        RenameblockNewObjectIds.Add(newBtrId);
-                                    }
+                                        index++;
+                                        newBtrId = BlockReferences.RenameBlockAndInsert(selectedBlockId, oldName, newName);
+                                        selectedBlockId.EraseObject();
+                                        if (!newBtrId.IsNull)
+                                        {
+                                            RenameblockNewObjectIds.Add(newBtrId);
+                                        }
+                                    } while (newBtrId.IsNull && index < 5);
                                 }
                                 //catch (Autodesk.AutoCAD.Runtime.Exception ex)
                                 catch (Autodesk.AutoCAD.BoundaryRepresentation.Exception ex)

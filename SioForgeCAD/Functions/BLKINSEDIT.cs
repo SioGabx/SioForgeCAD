@@ -240,13 +240,19 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, oldName, newName);
+                if (insertedCopyBtrId == ObjectId.Null)
+                {
+                    Generic.WriteMessage("Echec lors de l'opération");
+                    tr.Abort();
+                    EditedBounds = OriginalBounds;
+                    return Vector3d.ZAxis;
+                }
                 Generic.Command("_-BEDIT", newName);
                 SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "BASEPOINTPARAMETERENTITY") });
                 PromptSelectionResult selRes = ed.SelectAll(filter);
                 if (selRes.Status == PromptStatus.OK)
                 {
-                    var objId = selRes.Value.GetObjectIds();
-                    foreach (ObjectId objectId in objId)
+                    foreach (ObjectId objectId in selRes.Value.GetObjectIds())
                     {
                         objectId.GetDBObject();
                         objectId.EraseObject();

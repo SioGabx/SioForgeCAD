@@ -88,6 +88,19 @@ namespace SioForgeCAD.Commun
         {
             return Application.DocumentManager.MdiActiveDocument;
         }
+
+
+        public static DocumentLock GetLock()
+        {
+           var doc = Generic.GetDocument();
+            if (doc.LockMode() == DocumentLockMode.None)
+            {
+                return doc.LockDocument();
+            }
+            return null;
+        }
+
+
         public static Database GetDatabase()
         {
             return HostApplicationServices.WorkingDatabase;
