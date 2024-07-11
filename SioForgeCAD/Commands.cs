@@ -336,6 +336,13 @@ namespace SioForgeCAD
             Functions.SCALEFIT.ScaleFit();
         }
 
+        [CommandMethod("SIOFORGECAD", "SCALERANDOM", CommandFlags.UsePickSet)]
+        //Scale each of the selected objects relative to themselves to fit a random size between a range
+        public static void SCALERANDOM()
+        {
+            Functions.SCALERANDOM.Scale();
+        }
+
         [CommandMethod("SIOFORGECAD", "GETINNERCENTROID", CommandFlags.UsePickSet)]
         //Add a point to the within centroid of a polyline
         public static void GETINNERCENTROID()
@@ -359,6 +366,12 @@ namespace SioForgeCAD
         public static void POLYISCLOCKWISE()
         {
             Functions.POLYISCLOCKWISE.Check();
+        }
+
+        [CommandMethod("SIOFORGECAD", "LINESAVERAGE", CommandFlags.UsePickSet)]
+        public static void LINESAVERAGE()
+        {
+            Functions.LINESAVERAGE.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "VPL", CommandFlags.NoBlockEditor)]
