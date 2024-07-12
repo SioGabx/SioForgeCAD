@@ -27,12 +27,18 @@ namespace SioForgeCAD.Functions
                             if (LongOperation.IsCanceled) { return; }
                             Application.DoEvents();
                             string BlocName = System.IO.Path.GetFileNameWithoutExtension(FileName);
-
-                            Debug.WriteLine(FileName);
                             using (Database dxfDb = new Database(false, true))
                             {
-                                dxfDb.DxfIn(FileName, null);
-                                db.Insbase = new Point3d(0, 0, 0);
+                                if (System.IO.Path.GetExtension(FileName).Equals(".dwg", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    dxfDb.ReadDwgFile(FileName, FileOpenMode.OpenForReadAndAllShare, true, null);
+                                }
+                                else
+                                {
+                                    dxfDb.DxfIn(FileName, null);
+                                    db.Insbase = new Point3d(0, 0, 0);
+                                }
+
                                 db.Insert(BlocName, dxfDb, false);
                                 BlockReferences.InsertFromName(BlocName, Points.Empty, 0);
                             }
@@ -55,13 +61,13 @@ namespace SioForgeCAD.Functions
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "Fichiers DXF (*.dxf)|*.dxf",
+                Filter = "Fichiers DXF (*.dxf)|*.dxf|Fichiers DWG (*.dwg)|*.dwg",
                 Multiselect = true,
                 CheckFileExists = true,
                 CheckPathExists = true,
                 RestoreDirectory = true,
                 InitialDirectory = Generic.GetCurrentDocumentPath(),
-                Title = "Selectionnez des fichiers DXF à importer dans le dessin"
+                Title = "Selectionnez des fichiers DXF ou DWG à importer dans le dessin"
             };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
