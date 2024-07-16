@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
@@ -45,27 +46,22 @@ namespace SioForgeCAD.Functions
             {
                 BaseColor = Layers.GetLayerColor(LayerTableRecordObjId);
             }
-            SelectedEntity.Color = ConvertColorToGray(BaseColor);
+            SelectedEntity.Color = BaseColor.ConvertColorToGray();
 
             if (SelectedEntity is Hatch SelectedEntityHatch)
             {
                 if (SelectedEntityHatch.BackgroundColor.IsByLayer)
                 {
                     var LayerColor = Layers.GetLayerColor(LayerTableRecordObjId);
-                    SelectedEntityHatch.BackgroundColor = ConvertColorToGray(LayerColor);
+                    SelectedEntityHatch.BackgroundColor = LayerColor.ConvertColorToGray();
                 }
                 else
                 {
-                    SelectedEntityHatch.BackgroundColor = ConvertColorToGray(SelectedEntityHatch.BackgroundColor);
+                    SelectedEntityHatch.BackgroundColor = SelectedEntityHatch.BackgroundColor.ConvertColorToGray();
                 }
             }
         }
 
-        public static Color ConvertColorToGray(Color BaseColor)
-        {
-            var DrawingColor = BaseColor.ColorValue;
-            byte Gray = (byte)((0.2989 * DrawingColor.R) + (0.5870 * DrawingColor.G) + (0.1140 * DrawingColor.B));
-            return Color.FromRgb(Gray, Gray, Gray);
-        }
+       
     }
 }

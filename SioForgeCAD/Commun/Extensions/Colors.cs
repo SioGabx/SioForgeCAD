@@ -14,5 +14,12 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return ent.Color;
         }
+
+        public static Color ConvertColorToGray(this Color BaseColor)
+        {
+            var DrawingColor = BaseColor.ColorValue;
+            byte Gray = (byte)((0.2989 * DrawingColor.R) + (0.5870 * DrawingColor.G) + (0.1140 * DrawingColor.B));
+            return Color.FromRgb(Gray, Gray, Gray);
+        }
     }
 }

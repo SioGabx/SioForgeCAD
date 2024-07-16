@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
                     using (Database newDb = new Database(true, true))
                     {
                         db.Wblock(newDb, new ObjectIdCollection() { blockRefId }, Point3d.Origin, DuplicateRecordCloning.Replace);
-                        DocumentCollection.DefaultFormatForSave
+                       
                         newDb.SaveAs(dwgFileName, DwgVersion.Current);
                         ed.WriteMessage($"\nBlock saved as {dwgFileName}");
                     }

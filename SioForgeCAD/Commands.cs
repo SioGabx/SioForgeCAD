@@ -136,6 +136,13 @@ namespace SioForgeCAD
             Functions.BLKADDENTITIES.Add();
         }
 
+
+        [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
+        public static void OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE()
+        {
+            Functions.OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE.Convert();
+        }
+
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
