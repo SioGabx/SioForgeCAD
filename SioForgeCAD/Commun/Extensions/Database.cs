@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -54,6 +55,39 @@ namespace SioForgeCAD.Commun.Extensions
                 //Catch eKeyNotFound
                 Debug.WriteLine(ex.ToString());
             }
+        }
+
+        public static Dictionary<ObjectId, string> GetAllObjects(this Database db)
+        {
+            var dict = new Dictionary<ObjectId, string>();
+            for (long i = 0; i < db.Handseed.Value; i++)
+            {
+                if (db.TryGetObjectId(new Handle(i), out ObjectId id))
+                    dict.Add(id, id.ObjectClass.Name);
+            }
+            return dict;
+        }
+
+        public static Dictionary<ObjectId, string> GetAllEntities(this Database db)
+        {
+            var dict = new Dictionary<ObjectId, string>();
+            using (var tr = db.TransactionManager.StartOpenCloseTransaction())
+            {
+                var bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                foreach (var btrId in bt)
+                {
+                    var btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+                    if (btr.IsLayout)
+                    {
+                        foreach (var id in btr)
+                        {
+                            dict.Add(id, id.ObjectClass.Name);
+                        }
+                    }
+                }
+                tr.Commit();
+            }
+            return dict;
         }
 
         public static ObjectId EntLast(this Database db, Type type = null)

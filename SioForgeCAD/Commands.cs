@@ -321,6 +321,18 @@ namespace SioForgeCAD
             Functions.PURGEALL.Purge();
         }
 
+        [CommandMethod("SIOFORGECAD", "REMOVEENTITIESXDATA", CommandFlags.UsePickSet)]
+        public static void REMOVEENTITIESXDATA()
+        {
+            Functions.REMOVEENTITIESXDATA.Remove();
+        }
+
+        [CommandMethod("SIOFORGECAD", "REMOVEALLENTITIESXDATA", CommandFlags.Modal)]
+        public static void REMOVEALLENTITIESXDATA()
+        {
+            Functions.REMOVEENTITIESXDATA.RemoveAll();
+        }
+
         [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
         //Cut a hatch in half or more (cut with a existing polyline)
         public static void CUTHATCH()
