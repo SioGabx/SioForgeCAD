@@ -124,6 +124,12 @@ namespace SioForgeCAD
             Functions.BLKTOSTATICBLOCK.Convert();
         }
 
+        [CommandMethod("SIOFORGECAD", "BLKTOXREF", CommandFlags.UsePickSet)]
+        public static void BLKTOXREF()
+        {
+            Functions.BLKTOXREF.Convert();
+        }
+
         [CommandMethod("SIOFORGECAD", "BLKADDENTITIES", CommandFlags.UsePickSet)]
         public static void BLKADDENTITIES()
         {

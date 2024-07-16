@@ -89,10 +89,38 @@ namespace SioForgeCAD.Commun
             return Application.DocumentManager.MdiActiveDocument;
         }
 
+        public static DwgVersion GetSaveVersion()
+        {
+            //AC1015 = AutoCAD 2000 
+            //AC1018 = AutoCAD 2004 
+            //AC1021 = AutoCAD 2007 
+            //AC1024 = AutoCAD 2010 
+            //AC1027 = AutoCAD 2013 
+            //AC1032 = AutoCAD 2018 
+
+
+            //var ucm = Application.UserConfigurationManager;
+            //var profile = ucm.OpenCurrentProfile();
+            //var section = profile.OpenSubsection("General");
+            //var format = section.ReadProperty("DefaultFormatForSave", 0);
+
+            var db = Generic.GetDatabase();
+            return db.OriginalFileSavedByVersion;
+
+            // return Application.DocumentManager.DefaultFormatForSave;
+        }
+
+
 
         public static DocumentLock GetLock()
         {
-           var doc = Generic.GetDocument();
+            var doc = Generic.GetDocument();
+            return GetLock(doc);
+        }
+
+
+        public static DocumentLock GetLock(this Document doc)
+        {
             if (doc.LockMode() == DocumentLockMode.None)
             {
                 return doc.LockDocument();
