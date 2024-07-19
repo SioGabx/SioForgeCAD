@@ -236,6 +236,13 @@ namespace SioForgeCAD
             Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTypes();
         }
 
+        [CommandMethod("SIOFORGECAD", "SSBLK", CommandFlags.Redraw)]
+        //Select all block instance of selected blocks
+        public static void SSBLK()
+        {
+            Functions.SPECIALSSELECTIONS.AllBlockWithSelectedBlocksNames();
+        }
+
         [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
         //Select all entities on current layer
         public static void SSCL()

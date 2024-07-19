@@ -248,5 +248,58 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
+
+
+
+
+        public static void AllBlockWithSelectedBlocksNames()
+        {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+            var SelRedraw = ed.GetSelectionRedraw();
+            if (SelRedraw.Status != PromptStatus.OK) { return; }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<string> BlocksNames = new List<string>();
+                foreach (var SelItem in SelRedraw.Value.GetObjectIds())
+                {
+                    if (SelItem.GetDBObject(OpenMode.ForRead) is BlockReference SelBlkRef)
+                    {
+                        var BlkName = SelBlkRef.GetBlockReferenceName();
+                        if (!BlocksNames.Contains(BlkName))
+                        {
+                            BlocksNames.Add(BlkName);
+                        }
+                    }
+                }
+
+                PromptSelectionResult psr = ed.SelectAll();
+                if (psr.Status != PromptStatus.OK)
+                {
+                    tr.Commit();
+                    return;
+                }
+                HashSet<ObjectId> BlocksWithSameName = new HashSet<ObjectId>();
+                foreach (var SelItem in psr.Value.GetObjectIds())
+                {
+                    if (SelItem.GetDBObject(OpenMode.ForRead) is BlockReference SelBlkRef)
+                    {
+                        var BlkName = SelBlkRef.GetBlockReferenceName();
+                        if (BlocksNames.Contains(BlkName))
+                        {
+                            BlocksWithSameName.Add(SelItem);
+                        }
+                    }
+                }
+
+                ed.SetImpliedSelection(BlocksWithSameName.ToArray());
+                tr.Commit();
+            }
+        }
+
+
+
     }
 }
