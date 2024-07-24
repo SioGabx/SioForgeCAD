@@ -66,9 +66,11 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
-                try {
-                MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, true);
-                }catch (Exception ex)
+                try
+                {
+                    MemoryDatabase.WblockCloneObjects(acObjIdColl, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
+                }
+                catch (Exception ex)
                 {
                     Debug.WriteLine(ex);
                     return ObjectId.Null;
@@ -95,7 +97,7 @@ namespace SioForgeCAD.Commun.Drawing
                 ActualDatabase.WblockCloneObjects(acObjIdColl2, acBlkTblRecNewDoc2.ObjectId, acIdMap2, DuplicateRecordCloning.Replace, false);
                 ActualTransaction.Commit();
             }
-        
+
 
             return acIdMap2[newBlocRefenceId].Value;
         }
