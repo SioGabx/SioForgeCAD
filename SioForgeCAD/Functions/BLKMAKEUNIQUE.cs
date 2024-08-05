@@ -27,8 +27,9 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
             ObjectId[] selectedBlockIds;
+            
+            using (Transaction tr = db.TransactionManager.StartTransaction()) 
             using (Generic.GetLock())
-            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var ActualSelection = ed.SelectImplied().Value;
                 if (ActualSelection == null || ActualSelection.Count == 0)
@@ -89,7 +90,10 @@ namespace SioForgeCAD.Functions
                                         }
                                     } while (newBtrId.IsNull && index < 5);
                                 }
-                                //catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                                catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                                {
+                                    Debug.WriteLine(ex.Message);
+                                }
                                 catch (Autodesk.AutoCAD.BoundaryRepresentation.Exception ex)
                                 {
                                     Debug.WriteLine(ex.Message);
