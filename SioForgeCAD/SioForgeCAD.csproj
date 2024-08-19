@@ -225,6 +225,7 @@
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\REMOVEENTITIESXDATA.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
+    <Compile Include="Functions\SEARCHHATCHWITHOUTVALIDAREA.cs" />
     <Compile Include="Functions\SETSELECTEDENTITIESCOLORTOGRAYSCALE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />

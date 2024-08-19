@@ -540,6 +540,13 @@ namespace SioForgeCAD
 
 
 
+        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
+        //Flatten Each Entity
+        public static void SEARCHHATCHWITHOUTVALIDAREA()
+        {
+            Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
+        }
+
 
 
 
