@@ -126,9 +126,8 @@ namespace SioForgeCAD.Commun
 
         public static void CreateLayer(string Name, Color Color, LineWeight LineWeight, Transparency Transparence, bool IsPlottable)
         {
-            Document doc = Generic.GetDocument();
             Database db = Generic.GetDatabase();
-            using (Transaction acTrans = doc.TransactionManager.StartTransaction())
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
                 LayerTable acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
 
@@ -145,6 +144,11 @@ namespace SioForgeCAD.Commun
                         acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
                         acLyrTblRec.Transparency = Transparence;
                     }
+                }
+                else
+                {
+                    LayerTableRecord ltr = (LayerTableRecord)acTrans.GetObject(acLyrTbl[Name], OpenMode.ForWrite);
+                    ltr.Name = Name;
                 }
                 acTrans.Commit();
             }
@@ -195,35 +199,40 @@ namespace SioForgeCAD.Commun
                 BlockTable bt = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord btr = trans.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
                 LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
-                if (lt.Has(sourceLayerName) && lt.Has(targetLayerName))
+                //Has is IgnoreCase, so we need to check that we are not merging the same layer
+                if (!string.Equals(sourceLayerName, targetLayerName, System.StringComparison.InvariantCultureIgnoreCase))
                 {
-                    // Iterate through all entities in the drawing
-                    foreach (ObjectId objId in btr)
+                    if (lt.Has(sourceLayerName) && lt.Has(targetLayerName))
                     {
-                        Entity ent = objId.GetEntity(OpenMode.ForRead);
-                        if (ent.Layer == sourceLayerName)
+                        // Iterate through all entities in the drawing
+                        foreach (ObjectId objId in btr)
                         {
-                            ent.UpgradeOpen();
-                            ent.Layer = targetLayerName;
+                            Entity ent = objId.GetEntity(OpenMode.ForRead);
+                            if (ent.Layer == sourceLayerName)
+                            {
+                                ent.UpgradeOpen();
+                                ent.Layer = targetLayerName;
+                            }
                         }
                     }
-                }
-                try
-                {
-                    ObjectId sourceLayerId = lt[sourceLayerName];
-                    LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
-                    if (sourceLayerName != targetLayerName)
+                    try
                     {
-                        if (GetCurrentLayerName() == sourceLayerName)
+                        ObjectId sourceLayerId = lt[sourceLayerName];
+                        LayerTableRecord sourceLayer = (LayerTableRecord)trans.GetObject(sourceLayerId, OpenMode.ForWrite);
+                        if (sourceLayerName != targetLayerName)
                         {
-                            SetCurrentLayerName(targetLayerName);
+                            if (GetCurrentLayerName() == sourceLayerName)
+                            {
+                                SetCurrentLayerName(targetLayerName);
+                            }
+                            sourceLayer.Erase();
                         }
-                        sourceLayer.Erase();
                     }
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
+
+                    catch (System.Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
                 }
                 trans.Commit();
             }

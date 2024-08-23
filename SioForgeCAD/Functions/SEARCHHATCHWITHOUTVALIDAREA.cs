@@ -22,7 +22,7 @@ namespace SioForgeCAD.Functions
             {
                 AllSelectedObject = ed.GetSelection();
             }
-            ObjectId[] AllSearchObjectIds = new ObjectId[0];
+            ObjectId[] AllSearchObjectIds = Array.Empty<ObjectId>();
             if (AllSelectedObject.Status == PromptStatus.OK)
             {
                 AllSearchObjectIds = AllSelectedObject.Value.GetObjectIds();

@@ -145,16 +145,16 @@ namespace SioForgeCAD.Functions
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
 
                 //If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
-                if (OldBlockName != NewBlockName && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
+                if (!string.Equals(OldBlockName,NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
                 {
-                    ReplaceAllBlockReference(tr, OldBlockName, NewBlockName);
+                    ReplaceAllBlockReference(OldBlockName, NewBlockName);
                     OldBlockName = NewBlockName;
                 }
 
                 string OldBlockNewRenameName = OldBlockName;
 
                 //If user is only changing size, -> the name dont change but we need to replace old references
-                if (OldBlockName == NewBlockName)
+                if (string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase))
                 {
                     BlockTableRecord Renbtr = (BlockTableRecord)tr.GetObject(bt[OldBlockName], OpenMode.ForWrite);
                     OldBlockNewRenameName = SymbolUtilityServices.RepairSymbolName(OldBlockName + "_" + DateTime.Now.Ticks.ToString(), false);
@@ -172,36 +172,42 @@ namespace SioForgeCAD.Functions
                 BlkDef.UpgradeOpen();
                 BlkDef.Comments = BlockData;
 
-                ReplaceAllBlockReference(tr, OldBlockNewRenameName, NewBlockName);
+                ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName);
                 Layers.Merge(OldBlockName, NewBlockName);
                 tr.Commit();
             }
         }
 
-        public static void ReplaceAllBlockReference(Transaction tr, string OldBlockName, string NewBlockName)
+        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-            BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-            foreach (ObjectId objId in btr)
-            {
-                Entity ent = objId.GetEntity(OpenMode.ForWrite);
 
-                if (ent is BlockReference br)
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+             
+                foreach (ObjectId objId in btr)
                 {
-                    if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
+                    Entity ent = objId.GetEntity(OpenMode.ForWrite);
+
+                    if (ent is BlockReference br)
                     {
-                        BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
-                        if (!br.IsErased)
+                        if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
                         {
-                            br.Erase(true);
+                            BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
+                            if (!br.IsErased)
+                            {
+                                br.Erase(true);
+                            }
                         }
                     }
                 }
-            }
 
-            BlockReferences.Purge(OldBlockName);
+                BlockReferences.Purge(OldBlockName);
+                tr.Commit(); 
+            }
         }
     }
 }
