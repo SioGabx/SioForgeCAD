@@ -68,7 +68,7 @@
             this.TypeLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.TypeLabel.Name = "TypeLabel";
             this.TypeLabel.Size = new System.Drawing.Size(31, 13);
-            this.TypeLabel.TabIndex = 14;
+            this.TypeLabel.TabIndex = 7;
             this.TypeLabel.Text = "Type";
             // 
             // TypeInput
@@ -95,7 +95,7 @@
             this.TypeInput.Location = new System.Drawing.Point(11, 116);
             this.TypeInput.Name = "TypeInput";
             this.TypeInput.Size = new System.Drawing.Size(392, 21);
-            this.TypeInput.TabIndex = 12;
+            this.TypeInput.TabIndex = 8;
             // 
             // WidthInput
             // 
@@ -105,7 +105,7 @@
             this.WidthInput.Margin = new System.Windows.Forms.Padding(2);
             this.WidthInput.Name = "WidthInput";
             this.WidthInput.Size = new System.Drawing.Size(182, 20);
-            this.WidthInput.TabIndex = 11;
+            this.WidthInput.TabIndex = 6;
             // 
             // WidthLabel
             // 
@@ -114,7 +114,7 @@
             this.WidthLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.WidthLabel.Name = "WidthLabel";
             this.WidthLabel.Size = new System.Drawing.Size(92, 13);
-            this.WidthLabel.TabIndex = 10;
+            this.WidthLabel.TabIndex = 5;
             this.WidthLabel.Text = "Largeur (diamètre)";
             // 
             // HeightInput
@@ -125,7 +125,7 @@
             this.HeightInput.Margin = new System.Windows.Forms.Padding(2);
             this.HeightInput.Name = "HeightInput";
             this.HeightInput.Size = new System.Drawing.Size(182, 20);
-            this.HeightInput.TabIndex = 9;
+            this.HeightInput.TabIndex = 4;
             // 
             // HeightLabel
             // 
@@ -134,7 +134,7 @@
             this.HeightLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.HeightLabel.Name = "HeightLabel";
             this.HeightLabel.Size = new System.Drawing.Size(45, 13);
-            this.HeightLabel.TabIndex = 8;
+            this.HeightLabel.TabIndex = 3;
             this.HeightLabel.Text = "Hauteur";
             // 
             // NameInput
@@ -145,15 +145,16 @@
             this.NameInput.Margin = new System.Windows.Forms.Padding(2);
             this.NameInput.Name = "NameInput";
             this.NameInput.Size = new System.Drawing.Size(392, 20);
-            this.NameInput.TabIndex = 5;
+            this.NameInput.TabIndex = 2;
             // 
             // PromptAcceptButton
             // 
+            this.PromptAcceptButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.PromptAcceptButton.Location = new System.Drawing.Point(223, 152);
             this.PromptAcceptButton.Margin = new System.Windows.Forms.Padding(2);
             this.PromptAcceptButton.Name = "PromptAcceptButton";
             this.PromptAcceptButton.Size = new System.Drawing.Size(88, 27);
-            this.PromptAcceptButton.TabIndex = 6;
+            this.PromptAcceptButton.TabIndex = 9;
             this.PromptAcceptButton.Text = "&Ok";
             this.PromptAcceptButton.UseVisualStyleBackColor = true;
             this.PromptAcceptButton.Click += new System.EventHandler(this.PromptAcceptButton_Click);
@@ -165,7 +166,7 @@
             this.NameLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.NameLabel.Name = "NameLabel";
             this.NameLabel.Size = new System.Drawing.Size(93, 13);
-            this.NameLabel.TabIndex = 4;
+            this.NameLabel.TabIndex = 1;
             this.NameLabel.Text = "Nom latin \'Cultivar\'";
             // 
             // PromptCancelButton
@@ -175,7 +176,7 @@
             this.PromptCancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.PromptCancelButton.Name = "PromptCancelButton";
             this.PromptCancelButton.Size = new System.Drawing.Size(88, 27);
-            this.PromptCancelButton.TabIndex = 7;
+            this.PromptCancelButton.TabIndex = 10;
             this.PromptCancelButton.Text = "&Cancel";
             this.PromptCancelButton.UseVisualStyleBackColor = true;
             this.PromptCancelButton.Click += new System.EventHandler(this.PromptCancelButton_Click);
