@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            var Selection = ed.GetSelectionRedraw("Selectionnez des entités à inclure au block", true, false);
+            var Selection = ed.GetSelectionRedraw("Selectionnez des entités à inclure au bloc", true, false);
             if (Selection.Status != PromptStatus.OK)
             {
                 return;

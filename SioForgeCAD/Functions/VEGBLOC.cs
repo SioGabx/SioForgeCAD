@@ -106,7 +106,7 @@ namespace SioForgeCAD.Functions
                 BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
                
                 WasSuccessfullyCreated = true;
-            } 
+            }
             BlocEntities.DeepDispose();
             return BlocName;
         }
@@ -133,6 +133,7 @@ namespace SioForgeCAD.Functions
             ObjectId BlkObjectId = ObjectId.Null;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
                 var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
                 Points NewPointLocation = InsertionTransientPointsValues.Point;
@@ -144,6 +145,8 @@ namespace SioForgeCAD.Functions
                     return BlkObjectId;
                 }
                 BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
+
+               
                 tr.Commit();
             }
             return BlkObjectId;
@@ -400,6 +403,20 @@ namespace SioForgeCAD.Functions
             public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
             {
                 return Drawable.Color;
+            }
+
+            public override Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)
+            {
+                if (Drawable is BlockReference blkRef)
+                {
+                    var BlockName = blkRef.GetBlockReferenceName();
+                    if (Layers.CheckIfLayerExist(BlockName))
+                    {
+                       return Layers.GetTransparency(BlockName);
+                    }
+                }
+                
+                return base.GetTransGraphicsTransparency(Drawable, IsStaticDrawable);
             }
         }
     }

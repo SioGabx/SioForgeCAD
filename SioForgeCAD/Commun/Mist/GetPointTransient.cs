@@ -124,14 +124,14 @@ namespace SioForgeCAD.Commun
 
         public static void RedrawTransEntities(Drawable entity)
         {
-            TransientManager.CurrentTransientManager.UpdateTransient(entity, new IntegerCollection());
+            TransientManager.CurrentTransientManager.UpdateTransient(entity, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
         }
 
         public virtual void EraseTransients()
         {
             TransientManager.CurrentTransientManager.EraseTransients(
              TransientDrawingMode.DirectShortTerm,
-             128, new IntegerCollection()
+             128, TransientManager.CurrentTransientManager.GetViewPortsNumbers()
            );
         }
 

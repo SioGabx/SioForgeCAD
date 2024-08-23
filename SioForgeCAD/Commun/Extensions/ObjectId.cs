@@ -117,6 +117,16 @@ namespace SioForgeCAD.Commun
             }
             return list;
         }
+        
+        public static List<ObjectId> ToList(this ObjectIdCollection collection)
+        {
+            List<ObjectId> list = new List<ObjectId>();
+            foreach (ObjectId objid in collection)
+            {
+                list.Add(objid);
+            }
+            return list;
+        }
 
         public static void EraseObject(this ObjectId ObjectToErase)
         {

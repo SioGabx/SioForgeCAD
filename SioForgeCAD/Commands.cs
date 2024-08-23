@@ -354,6 +354,7 @@ namespace SioForgeCAD
         {
             Functions.MERGEHATCH.Merge();
         }
+       
 
         [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves
@@ -505,11 +506,20 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "RECREATEASSOCIATIVEHATCHBOUNDARY", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "HATCHRECREATEMISSINGBOUNDARIES", CommandFlags.UsePickSet)]
         //Recreate the polyline arround each selected hatch
-        public static void RECREATEASSOCIATIVEHATCHBOUNDARY()
+        public static void HATCHRECREATEMISSINGBOUNDARIES()
         {
-            Functions.RECREATEASSOCIATIVEHATCHBOUNDARY.Recreate();
+            Functions.HATCHRECREATEMISSINGBOUNDARIES.Recreate();
         }
+
+        [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHINVALIDAREA", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
+        public static void SEARCHHATCHWITHOUTVALIDAREA()
+        {
+            Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
+        }
+
 
 
         [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
@@ -540,13 +550,7 @@ namespace SioForgeCAD
 
 
 
-        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
-        //Flatten Each Entity
-        public static void SEARCHHATCHWITHOUTVALIDAREA()
-        {
-            Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
-        }
-
+      
 
 
 
