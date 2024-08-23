@@ -104,9 +104,10 @@ namespace SioForgeCAD.Functions
             if (!BlockReferences.IsBlockExist(BlocName))
             {
                 BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
-                BlocEntities.DeepDispose();
+               
                 WasSuccessfullyCreated = true;
-            }
+            } 
+            BlocEntities.DeepDispose();
             return BlocName;
         }
 
