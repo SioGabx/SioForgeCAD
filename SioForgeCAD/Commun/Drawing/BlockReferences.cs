@@ -183,7 +183,7 @@ namespace SioForgeCAD.Commun.Drawing
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;
                     Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");
-                    if (!string.IsNullOrEmpty(Layer))
+                    if (!string.IsNullOrEmpty(Layer) && Layers.CheckIfLayerExist(Layer))
                     {
                         blockRef.Layer = Layer;
                     }
@@ -290,7 +290,7 @@ namespace SioForgeCAD.Commun.Drawing
                 //The first block is added for initialising the process and then deleted. Be sure to add a value.
                 ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, Points.Empty, ed.GetUSCRotation(AngleUnit.Radians), InitAttributesValues);
                 DBObject dBObject = blockRef.GetDBObject();
-                if (Layer != null)
+                if (Layer != null && Layers.CheckIfLayerExist(Layer))
                 {
                     (dBObject as Entity).Layer = Layer;
                 }

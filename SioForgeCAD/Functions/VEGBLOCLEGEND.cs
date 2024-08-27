@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                             if (selObj.ObjectId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
                             {
                                 BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
-                                if (blkRef != null)
+                                if (blkRef?.IsXref() == false)
                                 {
                                     string blockName = blkRef.GetBlockReferenceName();
                                     // Ajouter le nom du bloc à la liste s'il n'y est pas déjà
