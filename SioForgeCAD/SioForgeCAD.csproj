@@ -223,6 +223,7 @@
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
+    <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\REMOVEENTITIESXDATA.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
     <Compile Include="Functions\SEARCHHATCHWITHOUTVALIDAREA.cs" />
