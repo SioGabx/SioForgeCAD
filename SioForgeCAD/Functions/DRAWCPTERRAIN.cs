@@ -100,6 +100,7 @@ namespace SioForgeCAD.Functions
         private List<TerrainPoint> GetTerrainPoints(ObjectId[] SelectedCotes)
         {
             List<TerrainPoint> terrainPoints = new List<TerrainPoint>();
+
             foreach (ObjectId id in SelectedCotes)
             {
                 var BlkRef = id.GetEntity() as BlockReference;
@@ -198,11 +199,13 @@ namespace SioForgeCAD.Functions
                 TerrainPointsToConnect.Add(terrainPoint.EndPoint);
                 TerrainEntity.Add(Lines.GetFromPoints(terrainPoint.StartPoint, terrainPoint.EndPoint));
 
+                if (TerrainPoints.Count > 2 && (i == 0 || i == TerrainPoints.Count - 1)) { continue; } //don't draw first and last cotation
+
                 double USCRotation = GetRotation(TerrainBaseLineVector, Vector3d.ZAxis);
                 string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
                 Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
 
-                var CotationBlockRefObjectId = Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
+                var CotationBlockRefObjectId = BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
                 TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
                 CotationBlockRefObjectId.EraseObject();
             }

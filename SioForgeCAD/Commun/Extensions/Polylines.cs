@@ -19,6 +19,27 @@ namespace SioForgeCAD.Commun.Extensions
             return NumberOfVertices;
         }
 
+        public static bool HasAngle(this Polyline TargetPolyline, double DegreesTolerance)
+        {
+            for (int i = 0; i < TargetPolyline.NumberOfVertices - 2; i++)
+            {
+                Point2d pt1 = TargetPolyline.GetPoint2dAt(i);
+                Point2d pt2 = TargetPolyline.GetPoint2dAt(i + 1);
+                Point2d pt3 = TargetPolyline.GetPoint2dAt(i + 2);
+
+                Vector2d v1 = pt2 - pt1;
+                Vector2d v2 = pt3 - pt2;
+
+                double angle = v1.GetAngleTo(v2) * (180.0 / Math.PI);
+
+                if (Math.Abs(angle - 180) > DegreesTolerance)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static (Point3d StartPoint, Point3d EndPoint, double Bulge) GetSegmentAt(this Polyline TargetPolyline, int Index)
         {
             int NumberOfVertices = TargetPolyline.NumberOfVertices;

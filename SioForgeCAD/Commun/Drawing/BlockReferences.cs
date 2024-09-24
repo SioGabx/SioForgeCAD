@@ -182,9 +182,10 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;
-                    Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");
+                    
                     if (!string.IsNullOrEmpty(Layer) && Layers.CheckIfLayerExist(Layer))
                     {
+                        //Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");
                         blockRef.Layer = Layer;
                     }
                     ms.AppendEntity(blockRef);
