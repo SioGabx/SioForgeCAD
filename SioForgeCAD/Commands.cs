@@ -105,13 +105,13 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
-        //Convert all entity values in the block to DUBLOC
+        //Convert all entity values in the block to BYBLOCK
         public static void BLKSETTOBYBBLOCK()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock(false);
         }
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
-        //Convert all entity values in the block to DUBLOC
+        //Convert all entity values in the block to BYBLOCK, ignoring HATCH
         public static void BLKSETTOBYBBLOCKIGNOREHATCH()
         {
             Functions.BLKSETTOBYBBLOCK.ByBlock(true);
@@ -119,18 +119,21 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
+        //Allow user to redefine the basepoint of a block instance without moving it
         public static void BLKINSEDIT()
         {
             Functions.BLKINSEDIT.MoveBasePoint();
         }
 
         [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
+        //Convert dynamic block to static block
         public static void BLKTOSTATICBLOCK()
         {
             Functions.BLKTOSTATICBLOCK.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "BLKTOXREF", CommandFlags.UsePickSet)]
+        //Convert a block to a XREF
         public static void BLKTOXREF()
         {
             Functions.BLKTOXREF.Convert();
