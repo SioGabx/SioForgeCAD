@@ -6,7 +6,6 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions

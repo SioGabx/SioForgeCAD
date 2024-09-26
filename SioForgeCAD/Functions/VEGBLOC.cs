@@ -104,7 +104,7 @@ namespace SioForgeCAD.Functions
             if (!BlockReferences.IsBlockExist(BlocName))
             {
                 BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
-               
+
                 WasSuccessfullyCreated = true;
             }
             BlocEntities.DeepDispose();
@@ -146,7 +146,7 @@ namespace SioForgeCAD.Functions
                 }
                 BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
 
-               
+
                 tr.Commit();
             }
             return BlkObjectId;
@@ -412,10 +412,10 @@ namespace SioForgeCAD.Functions
                     var BlockName = blkRef.GetBlockReferenceName();
                     if (Layers.CheckIfLayerExist(BlockName))
                     {
-                       return Layers.GetTransparency(BlockName);
+                        return Layers.GetTransparency(BlockName);
                     }
                 }
-                
+
                 return base.GetTransGraphicsTransparency(Drawable, IsStaticDrawable);
             }
         }

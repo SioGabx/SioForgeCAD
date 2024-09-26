@@ -37,7 +37,7 @@ namespace SioForgeCAD.Functions
                 Dictionary<string, string> ComputeValue(Points _)
                 {
                     return new Dictionary<string, string>() {
-                        { "ALTIMETRIE", Altitude.ToString("#.00") }
+                        { "ALTIMETRIE", CotePoints.FormatAltitude(Altitude) }
                     };
                 }
 

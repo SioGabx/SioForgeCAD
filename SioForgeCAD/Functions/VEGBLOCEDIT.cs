@@ -145,7 +145,7 @@ namespace SioForgeCAD.Functions
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
 
                 //If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
-                if (!string.Equals(OldBlockName,NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
+                if (!string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
                 {
                     ReplaceAllBlockReference(OldBlockName, NewBlockName);
                     OldBlockName = NewBlockName;
@@ -187,7 +187,7 @@ namespace SioForgeCAD.Functions
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-             
+
                 foreach (ObjectId objId in btr)
                 {
                     Entity ent = objId.GetEntity(OpenMode.ForWrite);
@@ -206,7 +206,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 BlockReferences.Purge(OldBlockName);
-                tr.Commit(); 
+                tr.Commit();
             }
         }
     }

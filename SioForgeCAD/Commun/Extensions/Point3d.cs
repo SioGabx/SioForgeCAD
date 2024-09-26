@@ -171,7 +171,7 @@ namespace SioForgeCAD.Commun.Extensions
             return pl.GetClosestPointTo(pt, false).DistanceTo(pt);
         }
 
-            public static bool IsOnPolyline(this Point3d pt, Polyline pl)
+        public static bool IsOnPolyline(this Point3d pt, Polyline pl)
         {
             bool isOn = false;
 

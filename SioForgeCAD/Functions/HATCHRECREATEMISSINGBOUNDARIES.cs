@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -32,7 +31,7 @@ namespace SioForgeCAD.Functions
                         {
                             foreach (ObjectId Item in hatch.GetAssociatedObjectIds())
                             {
-                               if (Item.IsNull ||!Item.IsValid ||!Item.IsWellBehaved || Item.IsErased || Item.IsEffectivelyErased)
+                                if (Item.IsNull || !Item.IsValid || !Item.IsWellBehaved || Item.IsErased || Item.IsEffectivelyErased)
                                 {
                                     HasBoundary = false;
                                 }

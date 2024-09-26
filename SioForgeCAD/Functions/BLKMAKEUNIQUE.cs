@@ -27,8 +27,8 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
             ObjectId[] selectedBlockIds;
-            
-            using (Transaction tr = db.TransactionManager.StartTransaction()) 
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             using (Generic.GetLock())
             {
                 var ActualSelection = ed.SelectImplied().Value;

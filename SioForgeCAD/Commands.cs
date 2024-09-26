@@ -2,14 +2,12 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -69,6 +67,13 @@ namespace SioForgeCAD
         public static void CCA()
         {
             Functions.CCA.Compute();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]
+        //Take a altitude from a text and add a block
+        public static void CCFROMTEXT()
+        {
+            Functions.CCFROMTEXT.CreateCotationBlocFromText();
         }
 
         [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
@@ -354,7 +359,7 @@ namespace SioForgeCAD
         {
             Functions.MERGEHATCH.Merge();
         }
-       
+
 
         [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves
@@ -448,18 +453,23 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
-        public static void VPO()
+        [CommandMethod("SIOFORGECAD", "VIEWPORTOUTLINE", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        //Outline (in model space) the selected viewport
+        public static void VIEWPORTOUTLINE()
         {
             Functions.VIEWPORTOUTLINE.OutlineSelected();
         }
 
         [CommandMethod("SIOFORGECAD", "VPOALL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
-        public static void VPOALL()
+        [CommandMethod("SIOFORGECAD", "VIEWPORTOUTLINEALL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        //Outline (in model space) all viewport in the drawing
+        public static void VIEWPORTOUTLINEALL()
         {
             Functions.VIEWPORTOUTLINE.OutlineAll(false);
         }
         [CommandMethod("SIOFORGECAD", "VPOSELECTED", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
-        public static void VPOSELECTED()
+        //Outline (in model space) all viewport  in current layout tab
+        public static void VIEWPORTOUTLINESELECTED()
         {
             Functions.VIEWPORTOUTLINE.OutlineAll(true);
         }
@@ -550,7 +560,7 @@ namespace SioForgeCAD
 
 
 
-      
+
 
 
 

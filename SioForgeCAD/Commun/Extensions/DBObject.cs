@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
-using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {

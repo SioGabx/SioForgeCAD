@@ -1,16 +1,10 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
@@ -62,7 +56,7 @@ namespace SioForgeCAD.Functions
                     using (Database newDb = new Database(true, true))
                     {
                         db.Wblock(newDb, new ObjectIdCollection() { blockRefId }, Point3d.Origin, DuplicateRecordCloning.Replace);
-                       
+
                         newDb.SaveAs(dwgFileName, DwgVersion.Current);
                         ed.WriteMessage($"\nBlock saved as {dwgFileName}");
                     }

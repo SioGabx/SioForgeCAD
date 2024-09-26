@@ -204,6 +204,7 @@
     <Compile Include="Functions\BLKTOXREF.cs" />
     <Compile Include="Functions\CCA.cs" />
     <Compile Include="Functions\CCD.cs" />
+    <Compile Include="Functions\CCFROMTEXT.cs" />
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />

@@ -40,8 +40,11 @@ namespace SioForgeCAD.Functions
 
                 foreach (var SelectionItemObjId in SelectionObjId)
                 {
-                    Viewport viewport = SelectionItemObjId.GetDBObject(OpenMode.ForRead) as Viewport;
-                    DrawOutline(viewport);
+                    if ((SelectionItemObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport))
+                    {
+                        DrawOutline(viewport);
+                    }
+
                 }
                 tr.Commit();
             }
@@ -59,8 +62,10 @@ namespace SioForgeCAD.Functions
                     var btr = layout.BlockTableRecordId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
                     foreach (ObjectId VpObjId in ed.GetAllViewportsInPaperSpace(btr))
                     {
-                        Viewport viewport = VpObjId.GetDBObject(OpenMode.ForRead) as Viewport;
-                        DrawOutline(viewport);
+                        if (VpObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport)
+                        {
+                            DrawOutline(viewport);
+                        }
                     }
 
                 }
@@ -75,6 +80,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var ViewportBoundary = viewport.GetBoundary();
+                if (ViewportBoundary == null) { return; }
                 ViewportBoundary.PaperToModel(viewport);
                 BlockTableRecord blockTableRecord = (BlockTableRecord)SymbolUtilityServices.GetBlockModelSpaceId(db).GetDBObject(OpenMode.ForWrite);
                 blockTableRecord.AppendEntity(ViewportBoundary);

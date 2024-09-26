@@ -1,15 +1,12 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Documents;
 
 namespace SioForgeCAD.Functions
 {
@@ -23,11 +20,16 @@ namespace SioForgeCAD.Functions
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var FirstPoly = ed.GetPolyline("Selectionnez une première polyline", false, false, true);
+                var FirstPoly = ed.GetPolyline("Selectionnez une première polyline", false, true, true);
                 if (FirstPoly is null) { return; }
-                var SecondPoly = ed.GetPolyline("Selectionnez une deuxième polyline", false, false, true);
+                var SecondPoly = ed.GetPolyline("Selectionnez une deuxième polyline", false, true, true);
                 if (SecondPoly is null) { return; }
 
+                if (FirstPoly.IsClockwise() != SecondPoly.IsClockwise())
+                {
+                    Debug.WriteLine("Reversed");
+                    SecondPoly.ReverseCurve();
+                }
                 List<double> ListOfDistances = new List<double>();
                 using (var LowFirstPoly = FirstPoly.ToPolygon(15))
                 using (var LowSecondPoly = SecondPoly.ToPolygon(15))
@@ -55,21 +57,39 @@ namespace SioForgeCAD.Functions
                     var UniquesListOfDistance = ListOfDistances.Distinct().OrderBy(x => x);
 
                     var newPoly = new Polyline();
+
                     foreach (var Distance in UniquesListOfDistance)
                     {
-                        Point3d pt1 = FirstPoly.GetPointAtDist(Distance);
-                        Point3d pt2 = SecondPoly.GetPointAtDist(Distance);
+                        try
+                        {
 
-                        Point3d avgPt = new Point3d(
-                            (pt1.X + pt2.X) / 2,
-                            (pt1.Y + pt2.Y) / 2,
-                            (pt1.Z + pt2.Z) / 2
-                        );
-                        newPoly.AddVertex(avgPt);
+                            var MinAvRoadDist = Distance * Math.Min(SecondPoly.Length, FirstPoly.Length) / Math.Max(SecondPoly.Length, FirstPoly.Length);
+                            var FirstPolyAvRoadDist = FirstPoly.Length >= SecondPoly.Length ? Distance : MinAvRoadDist;
+                            var SecondPolyAvRoadDist = SecondPoly.Length >= FirstPoly.Length ? Distance : MinAvRoadDist;
+
+
+
+                            Point3d pt1 = FirstPoly.GetPointAtDist(FirstPolyAvRoadDist);
+                            Point3d pt2 = SecondPoly.GetPointAtDist(SecondPolyAvRoadDist);
+
+                            Point3d avgPt = new Point3d(
+                                (pt1.X + pt2.X) / 2,
+                                (pt1.Y + pt2.Y) / 2,
+                                (pt1.Z + pt2.Z) / 2
+                            );
+                            newPoly.AddVertex(avgPt);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.Message);
+                            //Silent
+                        }
                     }
                     newPoly.AddToDrawing();
 
                 }
+                FirstPoly.Dispose();
+                SecondPoly.Dispose();
                 tr.Commit();
             }
         }

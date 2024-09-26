@@ -117,7 +117,7 @@ namespace SioForgeCAD.Commun
             }
             return list;
         }
-        
+
         public static List<ObjectId> ToList(this ObjectIdCollection collection)
         {
             List<ObjectId> list = new List<ObjectId>();

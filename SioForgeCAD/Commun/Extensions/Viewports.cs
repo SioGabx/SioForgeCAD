@@ -153,6 +153,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                if (viewport == null) { return null; }
                 if (viewport.NonRectClipEntityId != ObjectId.Null)
                 {
                     // Get the non-rectangular clipping boundary
@@ -170,10 +171,10 @@ namespace SioForgeCAD.Commun.Extensions
                     double width = viewport.Width;
                     double height = viewport.Height;
 
-                    Point3d lowerLeft = new Point3d(center.X - width / 2, center.Y - height / 2, center.Z);
-                    Point3d lowerRight = new Point3d(center.X + width / 2, center.Y - height / 2, center.Z);
-                    Point3d upperRight = new Point3d(center.X + width / 2, center.Y + height / 2, center.Z);
-                    Point3d upperLeft = new Point3d(center.X - width / 2, center.Y + height / 2, center.Z);
+                    Point3d lowerLeft = new Point3d(center.X - (width / 2), center.Y - (height / 2), center.Z);
+                    Point3d lowerRight = new Point3d(center.X + (width / 2), center.Y - (height / 2), center.Z);
+                    Point3d upperRight = new Point3d(center.X + (width / 2), center.Y + (height / 2), center.Z);
+                    Point3d upperLeft = new Point3d(center.X - (width / 2), center.Y + (height / 2), center.Z);
 
                     Polyline polyline = new Polyline();
                     polyline.AddVertexAt(0, lowerLeft.ToPoint2d(), 0, 0, 0);

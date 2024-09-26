@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
 
 namespace SioForgeCAD.Functions
 {
@@ -16,7 +15,10 @@ namespace SioForgeCAD.Functions
             var CurrentViewport = ed.GetViewport();
             if (CurrentViewport == null) { return; }
             if (CurrentViewport.PerspectiveOn)
-                throw new NotSupportedException("Perspective views not supported");
+            {
+                Generic.WriteMessage("Perspective views not supported");
+                return;
+            }
             var SelectedEnts = ed.GetSelectionRedraw();
             if (SelectedEnts.Status != PromptStatus.OK)
             {

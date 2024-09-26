@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -182,7 +181,7 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     blockRef.ColorIndex = 256;
                     blockRef.Rotation = Angle;
-                    
+
                     if (!string.IsNullOrEmpty(Layer) && Layers.CheckIfLayerExist(Layer))
                     {
                         //Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");

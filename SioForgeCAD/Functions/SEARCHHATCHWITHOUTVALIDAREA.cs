@@ -5,9 +5,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -20,7 +17,12 @@ namespace SioForgeCAD.Functions
 
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
-                AllSelectedObject = ed.GetSelection();
+                var Opts = new PromptSelectionOptions()
+                {
+                    MessageForAdding = "Selectionnez des hachures en particulier ou ignorer et rechercher dans tout le dessin",
+                    RejectObjectsOnLockedLayers = false,
+                };
+                AllSelectedObject = ed.GetSelection(Opts);
             }
             ObjectId[] AllSearchObjectIds = Array.Empty<ObjectId>();
             if (AllSelectedObject.Status == PromptStatus.OK)

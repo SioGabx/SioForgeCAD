@@ -4,7 +4,6 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using System;
-using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
