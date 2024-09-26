@@ -108,7 +108,6 @@ namespace SioForgeCAD.Commun.Extensions
                             return (Viewport)tr.GetObject(Viewports.First(), OpenMode.ForWrite);
                         }
 
-
                         ed.SwitchToModelSpace();
                         PromptPointOptions promptPointOptions = new PromptPointOptions("Activez la fenêtre CIBLE et appuyez sur ENTREE pour continuer.")
                         {
@@ -123,10 +122,8 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     tr.Commit();
                 }
-
             }
         }
-
 
         public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
@@ -160,8 +157,6 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
-
 
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
@@ -315,7 +310,6 @@ namespace SioForgeCAD.Commun.Extensions
                         return ConvertedCurveAsPoly;
                     }
                 }
-
 
                 Generic.WriteMessage("L'objet sélectionné n'est pas une polyligne. \n");
             }

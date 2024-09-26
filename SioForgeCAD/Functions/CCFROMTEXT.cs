@@ -41,7 +41,6 @@ namespace SioForgeCAD.Functions
                         {
                             Text = DBTextEnt.TextString;
                             Location = DBTextEnt.Position;
-
                         }
                         else if (Ent is AttributeDefinition AttributeDefinitionEnt)
                         {
@@ -75,7 +74,6 @@ namespace SioForgeCAD.Functions
                             return;
                         }
                         BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
-
                     }
                     finally
                     {
@@ -84,7 +82,6 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
 
         private static double GetDoubleInString(string Text)
         {

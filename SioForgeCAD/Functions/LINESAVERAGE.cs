@@ -34,7 +34,6 @@ namespace SioForgeCAD.Functions
                 using (var LowFirstPoly = FirstPoly.ToPolygon(15))
                 using (var LowSecondPoly = SecondPoly.ToPolygon(15))
                 {
-
                     void AddDistances(Polyline TargetPoly)
                     {
                         for (int VerticeIndex = 0; VerticeIndex < TargetPoly.GetReelNumberOfVertices(); VerticeIndex++)
@@ -53,7 +52,6 @@ namespace SioForgeCAD.Functions
                     AddDistances(LowFirstPoly);
                     AddDistances(LowSecondPoly);
 
-
                     var UniquesListOfDistance = ListOfDistances.Distinct().OrderBy(x => x);
 
                     var newPoly = new Polyline();
@@ -62,12 +60,9 @@ namespace SioForgeCAD.Functions
                     {
                         try
                         {
-
                             var MinAvRoadDist = Distance * Math.Min(SecondPoly.Length, FirstPoly.Length) / Math.Max(SecondPoly.Length, FirstPoly.Length);
                             var FirstPolyAvRoadDist = FirstPoly.Length >= SecondPoly.Length ? Distance : MinAvRoadDist;
                             var SecondPolyAvRoadDist = SecondPoly.Length >= FirstPoly.Length ? Distance : MinAvRoadDist;
-
-
 
                             Point3d pt1 = FirstPoly.GetPointAtDist(FirstPolyAvRoadDist);
                             Point3d pt2 = SecondPoly.GetPointAtDist(SecondPolyAvRoadDist);
@@ -86,7 +81,6 @@ namespace SioForgeCAD.Functions
                         }
                     }
                     newPoly.AddToDrawing();
-
                 }
                 FirstPoly.Dispose();
                 SecondPoly.Dispose();

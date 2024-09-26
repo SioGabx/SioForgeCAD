@@ -40,11 +40,10 @@ namespace SioForgeCAD.Functions
 
                 foreach (var SelectionItemObjId in SelectionObjId)
                 {
-                    if ((SelectionItemObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport))
+                    if (SelectionItemObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport)
                     {
                         DrawOutline(viewport);
                     }
-
                 }
                 tr.Commit();
             }
@@ -67,7 +66,6 @@ namespace SioForgeCAD.Functions
                             DrawOutline(viewport);
                         }
                     }
-
                 }
                 tr.Commit();
             }

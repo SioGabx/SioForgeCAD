@@ -11,7 +11,6 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
 
-
             var CurrentViewport = ed.GetViewport();
             if (CurrentViewport == null) { return; }
             if (CurrentViewport.PerspectiveOn)

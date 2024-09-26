@@ -8,3 +8,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Usage", "CA2211:Les champs non constants ne doivent pas être visibles", Justification = "<En attente>", Scope = "module")]
 [assembly: SuppressMessage("Performance", "CA1861:Éviter les tableaux constants en tant qu’arguments", Justification = "<En attente>", Scope = "module")]
 [assembly: SuppressMessage("Roslynator", "RCS1246:Use element access", Justification = "<En attente>", Scope = "module")]
+[assembly: SuppressMessage("Roslynator", "RCS1033:Remove redundant boolean literal", Justification = "<En attente>", Scope = "module")]

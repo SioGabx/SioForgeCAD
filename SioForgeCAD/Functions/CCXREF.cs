@@ -44,7 +44,6 @@ namespace SioForgeCAD.Functions
                             Generic.WriteMessage($"L'altimétrie {AltimetrieStr} à été ajoutée sur le calque {Layers.GetCurrentLayerName()}");
                             Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
                         }
-
                     }
                     finally
                     {

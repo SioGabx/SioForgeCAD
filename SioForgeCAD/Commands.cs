@@ -142,7 +142,6 @@ namespace SioForgeCAD
             Functions.BLKADDENTITIES.Add();
         }
 
-
         [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
         public static void OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE()
         {
@@ -360,7 +359,6 @@ namespace SioForgeCAD
             Functions.MERGEHATCH.Merge();
         }
 
-
         [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves
         public static void SCALEBY()
@@ -530,15 +528,12 @@ namespace SioForgeCAD
             Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
         }
 
-
-
         [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
         //Flatten Each Entity
         public static void SMARTFLATTEN()
         {
             Functions.SMARTFLATTEN.Flatten();
         }
-
 
         [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         //Flatten Each Entity
@@ -557,20 +552,6 @@ namespace SioForgeCAD
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
             Generic.Command("_-Audit", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
         public static void TESTSHRINKOFFSET()

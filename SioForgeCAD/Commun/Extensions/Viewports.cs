@@ -54,7 +54,6 @@ namespace SioForgeCAD.Commun.Extensions
             return ints.ToIntegerCollection();
         }
 
-
         public static Matrix3d GetModelToPaperTransform(this Viewport vport)
         {
             //https://www.theswamp.org/index.php?action=post;quote=477118;topic=42503.0;last_msg=596197
@@ -93,12 +92,9 @@ namespace SioForgeCAD.Commun.Extensions
                 ent.TransformBy(xform);
         }
 
-        public static bool IsInModel(this Editor ed)
+        public static bool IsInModel(this Editor _)
         {
-            if (Generic.GetDatabase().TileMode)
-                return true;
-            else
-                return false;
+            return Generic.GetDatabase().TileMode;
         }
 
         public static bool IsInLayout(this Editor ed)
@@ -110,18 +106,19 @@ namespace SioForgeCAD.Commun.Extensions
         {
             Database db = ed.Document.Database;
 
-            if (db.TileMode)
+            if (db.TileMode ||
+                db.PaperSpaceVportId == ObjectId.Null ||
+                ed.CurrentViewportObjectId == ObjectId.Null)
+            {
                 return false;
+            }
+            else if (ed.CurrentViewportObjectId == db.PaperSpaceVportId)
+            {
+                return true;
+            }
             else
             {
-                if (db.PaperSpaceVportId == ObjectId.Null)
-                    return false;
-                else if (ed.CurrentViewportObjectId == ObjectId.Null)
-                    return false;
-                else if (ed.CurrentViewportObjectId == db.PaperSpaceVportId)
-                    return true;
-                else
-                    return false;
+                return false;
             }
         }
 
@@ -186,7 +183,5 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
-
     }
 }

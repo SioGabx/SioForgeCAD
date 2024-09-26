@@ -38,9 +38,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
                 AllSearchObjectIds = AllObject.Value.GetObjectIds();
-
             }
-
 
             using (var tr = doc.TransactionManager.StartTransaction())
             {
@@ -64,10 +62,8 @@ namespace SioForgeCAD.Functions
                 }
                 else
                 {
-                    Generic.WriteMessage($"Aucune hachure sans aire ont été détéctés");
+                    Generic.WriteMessage("Aucune hachure sans aire ont été détéctés");
                 }
-
-
                 tr.Commit();
             }
         }
