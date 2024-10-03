@@ -30,14 +30,10 @@ namespace SioForgeCAD.Functions
                     {
                         polyline.Elevation = 0;
                     }
-                    //if (entity is Polyline2d polyline2d)
-                    //{
-                    //    polyline2d.Elevation = 0;
-                    //}
-                    //if (entity is Polyline3d polyline3d)
-                    //{
-                    //    polyline3d.ToPolyline();
-                    //}
+                    if (entity is Ellipse ellipse)
+                    {
+                        ellipse.Center = ellipse.Center.Flatten();
+                    }
                     if (entity is BlockReference blockreference)
                     {
                         blockreference.Position = blockreference.Position.Flatten();
@@ -75,13 +71,25 @@ namespace SioForgeCAD.Functions
                     if (entity is Ray ray)
                     {
                         ray.BasePoint = ray.BasePoint.Flatten();
-                        ray.EndPoint = ray.EndPoint.Flatten();
-                        ray.StartPoint = ray.StartPoint.Flatten();
+                        ray.SecondPoint = ray.SecondPoint.Flatten();
+                    }
+                    if (entity is Xline xline)
+                    {
+                        xline.BasePoint = xline.BasePoint.Flatten();
+                        xline.SecondPoint = xline.SecondPoint.Flatten();
+                    }
+                    if (entity is Helix helix)
+                    {
+                        helix.StartPoint = helix.StartPoint.Flatten();
+                        helix.SetAxisPoint(helix.GetAxisPoint().Flatten(), true) ;
                     }
                     if (entity is Spline spline)
                     {
-                        spline.EndPoint = spline.EndPoint.Flatten();
-                        spline.StartPoint = spline.StartPoint.Flatten();
+                        for (int i = 0; i < spline.NumControlPoints; i++)
+                        {
+                            var point = spline.GetControlPointAt(i);
+                            spline.SetControlPointAt(i, point.Flatten());
+                        }
                     }
 
                     if (entity is Table table)
