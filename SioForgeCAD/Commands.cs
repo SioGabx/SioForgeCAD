@@ -553,7 +553,8 @@ namespace SioForgeCAD
             Application.SetSystemVariable("XREFNOTIFY", 2); //Controls the notification for updated or missing xrefs. https://help.autodesk.com/view/ACDLT/2022/ENU/?guid=GUID-D97BECAD-2380-4CA3-896C-A6896BE112F7
             Application.SetSystemVariable("HPLAYER", "."); //Specifies a default layer for new hatches and fills in the current drawing.  https://help.autodesk.com/view/ACDLT/2023/ENU/?guid=GUID-8B64F625-7DD2-4264-8E59-3936F0992070
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
-            Generic.Command("_-Audit", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
+            Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
+            Functions.PURGEALL.Purge();
         }
 
         [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
