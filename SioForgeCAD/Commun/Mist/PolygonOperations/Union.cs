@@ -244,7 +244,7 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                using (Polyline PolyHoleBoundary = RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).First() : polyHole.Boundary.Clone() as Polyline)
+                using (Polyline PolyHoleBoundary = (Polyline)(RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).DefaultIfEmpty(polyHole.Boundary.Clone()).FirstOrDefault() : polyHole.Boundary.Clone() as Polyline))
                 {
                     List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
                     for (int i = 0; i < HoleUnionResultList.Count; i++)
@@ -338,7 +338,7 @@ namespace SioForgeCAD.Commun
             }
             if (OffsetCurve.Count == 0)
             {
-                Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}. Un contour de la courbe à été dessinée");
+                Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}.");
                 return polyHoles;
                 throw new Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
