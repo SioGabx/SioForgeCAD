@@ -11,6 +11,10 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static int GetReelNumberOfVertices(this Polyline TargetPolyline)
         {
+            if (TargetPolyline?.IsDisposed == true)
+            {
+                return 0;
+            }
             int NumberOfVertices = (TargetPolyline.NumberOfVertices - 1);
             if (TargetPolyline.Closed)
             {
@@ -649,6 +653,10 @@ namespace SioForgeCAD.Commun.Extensions
         public static bool IsSegmentIntersecting(this Polyline polyline, Polyline CutLine, out Point3dCollection IntersectionPointsFounds, Intersect intersect)
         {
             IntersectionPointsFounds = new Point3dCollection();
+            if (polyline?.IsDisposed != false || CutLine?.IsDisposed != false)
+            {
+                return false;
+            }
             polyline.IntersectWith(CutLine, intersect, IntersectionPointsFounds, IntPtr.Zero, IntPtr.Zero);
             return IntersectionPointsFounds.Count > 0;
         }

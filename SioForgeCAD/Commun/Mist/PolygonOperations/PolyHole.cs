@@ -34,7 +34,7 @@ namespace SioForgeCAD.Commun
                 {
                     foreach (Polyline Hole in PossibleHole)
                     {
-                        if (Hole.IsInside(poly, false))
+                        if (Hole?.IsDisposed != true && Hole.IsInside(poly, false))
                         {
                             holes.Add(Hole);
                         }

@@ -260,7 +260,10 @@ namespace SioForgeCAD.Commun
                                 OffsetParsedHole.DeepDispose();
                             }
                         }
-
+                        if (PolyHoleBoundary.IsDisposed || ParsedHole.IsDisposed)
+                        {
+                            continue;
+                        }
                         if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
                         {
                             HoleUnionResult.Remove(HoleUnionResultList[i]);
@@ -285,6 +288,10 @@ namespace SioForgeCAD.Commun
                 int MaxNumberOfContainPolygon = 2;
                 foreach (var polyHole in PolyHoleList.GetBoundaries())
                 {
+                    if (Hole is null || Hole.IsDisposed)
+                    {
+                        continue;
+                    }
                     if (Hole.GetInnerCentroid().IsInsidePolyline(polyHole))
                     {
                         MaxNumberOfContainPolygon--;
