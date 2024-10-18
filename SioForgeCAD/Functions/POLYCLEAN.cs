@@ -21,6 +21,7 @@ namespace SioForgeCAD.Functions
                 {
                     if (polyObjId.GetDBObject() is Polyline poly)
                     {
+                        if (poly.IsEntityOnLockedLayer()) { continue; }
                         int NumberOfVerticesBefore = poly.NumberOfVertices;
                         poly.UpgradeOpen();
                         poly.Cleanup();
