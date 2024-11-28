@@ -159,6 +159,7 @@
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
     <Compile Include="Commun\Mist\CsvReader.cs" />
+    <Compile Include="Commun\Mist\Files.cs" />
     <Compile Include="Commun\Mist\GetPointTransient.cs" />
     <Compile Include="Commun\Mist\HightLighter.cs" />
     <Compile Include="Commun\Extensions\ObjectId.cs" />
@@ -227,6 +228,7 @@
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\REMOVEENTITIESXDATA.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
+    <Compile Include="Functions\SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY.cs" />
     <Compile Include="Functions\SEARCHHATCHWITHOUTVALIDAREA.cs" />
     <Compile Include="Functions\SETSELECTEDENTITIESCOLORTOGRAYSCALE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />

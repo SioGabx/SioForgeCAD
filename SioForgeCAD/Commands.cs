@@ -531,6 +531,14 @@ namespace SioForgeCAD
             Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
         }
 
+
+        [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
+        public static void SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY()
+        {
+            Functions.SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY.Search();
+        }
+
         [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
         //Flatten Each Entity
         public static void SMARTFLATTEN()

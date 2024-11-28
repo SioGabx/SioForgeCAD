@@ -4,7 +4,10 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
@@ -61,6 +64,14 @@ namespace SioForgeCAD.Functions
                         ed.WriteMessage($"\nBlock saved as {dwgFileName}");
                     }
 
+                    const int MaxWaitMs = 5000;
+                    int CurrentWaitMs = 0;
+                    while (!System.IO.File.Exists(dwgFileName) && CurrentWaitMs < MaxWaitMs && Files.IsFileLockedOrReadOnly(new FileInfo(dwgFileName)))
+                    {
+                        const int WaitTimeIncrement = 100;
+                        CurrentWaitMs += WaitTimeIncrement;
+                        Thread.Sleep(WaitTimeIncrement);
+                    }
                     //TODO : Check name if in drawing
                     ObjectId xg = db.AttachXref(dwgFileName, Path.GetFileNameWithoutExtension(dwgFileName));
                     if (xg == ObjectId.Null)
