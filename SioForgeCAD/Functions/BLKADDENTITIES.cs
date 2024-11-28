@@ -33,7 +33,8 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockReference BlockRef = ObjectIds.First().GetDBObject(OpenMode.ForWrite) as BlockReference;
+                ObjectId BlockRefObjId = ObjectIds.First();
+                BlockReference BlockRef = BlockRefObjId.GetDBObject(OpenMode.ForWrite) as BlockReference;
                 if (BlockRef.IsXref())
                 {
                     var XrefBtr = (BlockRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
@@ -53,6 +54,7 @@ namespace SioForgeCAD.Functions
                         //https://www.keanw.com/2015/01/modifying-the-contents-of-an-autocad-xref-using-net.html
                         //RestoreOriginalXrefSymbols(Xref);
                         var SelectedIds = Selection.Value.GetObjectIds().ToObjectIdCollection();
+                        SelectedIds.Remove(BlockRefObjId);
                         using (var xf = XrefFileLock.LockFile(Xref.XrefBlockId))
                         {
                             Matrix3d inverseTransform = BlockRef.BlockTransform.Inverse();
@@ -88,7 +90,7 @@ namespace SioForgeCAD.Functions
                 {
                     // Modifier le bloc dans le dessin courant
                     BlockTableRecord blockDef = BlockRef.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
-                    AddEntitiesToBlock(blockDef, BlockRef.BlockTransform, Selection.Value.GetObjectIds(), tr);
+                    AddEntitiesToBlock(blockDef, BlockRef, Selection.Value.GetObjectIds(), tr);
                     tr.Commit();
                 }
                
@@ -96,12 +98,14 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void AddEntitiesToBlock(BlockTableRecord BlockDef, Matrix3d blockTransform, ObjectId[] selectedIds, Transaction tr)
+        private static void AddEntitiesToBlock(BlockTableRecord BlockDef, BlockReference BlockRef, ObjectId[] selectedIds, Transaction tr)
         {
+            Matrix3d blockTransform = BlockRef.BlockTransform;
             Matrix3d inverseTransform = blockTransform.Inverse();
 
             foreach (ObjectId entId in selectedIds)
             {
+                if (entId == BlockRef.ObjectId) { continue; }
                 Entity SelectedEnt = entId.GetDBObject(OpenMode.ForWrite) as Entity;
                 if (SelectedEnt == null) continue;
 
