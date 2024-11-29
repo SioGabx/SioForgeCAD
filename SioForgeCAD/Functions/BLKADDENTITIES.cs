@@ -47,7 +47,7 @@ namespace SioForgeCAD.Functions
 
                     if (Files.IsFileLockedOrReadOnly(new FileInfo(Xref.Filename)))
                     {
-                        Generic.WriteMessage("\nUnable to modify the external reference. It may be open in the editor or read-only.");
+                        Generic.WriteMessage("Impossible de modifier la XREF. Elle est peut-être ouverte dans l'éditeur ou en lecture seule.");
                     }
                     else
                     {
@@ -74,13 +74,12 @@ namespace SioForgeCAD.Functions
 
 
                                 Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
+                                xrefTr.Commit();
                                 
                                 foreach (ObjectId entId in SelectedIds)
                                 {
                                     entId.EraseObject();
                                 }
-                                
-                                xrefTr.Commit();
                                 tr.Commit();
                             }
                         }
