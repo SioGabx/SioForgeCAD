@@ -81,7 +81,7 @@ namespace SioForgeCAD.Functions
                     if (entity is Helix helix)
                     {
                         helix.StartPoint = helix.StartPoint.Flatten();
-                        helix.SetAxisPoint(helix.GetAxisPoint().Flatten(), true) ;
+                        helix.SetAxisPoint(helix.GetAxisPoint().Flatten(), true);
                     }
                     if (entity is Spline spline)
                     {

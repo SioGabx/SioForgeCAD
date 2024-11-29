@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
@@ -66,17 +65,18 @@ namespace SioForgeCAD.Functions
 
                     const int MaxWaitMs = 5000;
                     int CurrentWaitMs = 0;
-                    while (!System.IO.File.Exists(dwgFileName) && CurrentWaitMs < MaxWaitMs && Files.IsFileLockedOrReadOnly(new FileInfo(dwgFileName)))
+                    while (!File.Exists(dwgFileName) && CurrentWaitMs < MaxWaitMs && Files.IsFileLockedOrReadOnly(new FileInfo(dwgFileName)))
                     {
                         const int WaitTimeIncrement = 100;
                         CurrentWaitMs += WaitTimeIncrement;
                         Thread.Sleep(WaitTimeIncrement);
                     }
                     //TODO : Check name if in drawing
+                   
                     ObjectId xg = db.AttachXref(dwgFileName, Path.GetFileNameWithoutExtension(dwgFileName));
                     if (xg == ObjectId.Null)
                     {
-                        ed.WriteMessage("\nFailed to attach Xref.");
+                        Generic.WriteMessage("\nFailed to attach Xref.");
                         return;
                     }
                     var bref = new BlockReference(Point3d.Origin, xg);

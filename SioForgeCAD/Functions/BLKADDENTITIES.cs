@@ -2,15 +2,11 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
-using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows.Controls;
 
 namespace SioForgeCAD.Functions
 {
@@ -39,7 +35,7 @@ namespace SioForgeCAD.Functions
                 {
                     var XrefBtr = (BlockRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
                     var Xref = XrefBtr.GetXrefDatabase(false);
-                    
+
                     if (Xref is null || string.IsNullOrEmpty(Xref.Filename))
                     {
                         return;
@@ -67,7 +63,7 @@ namespace SioForgeCAD.Functions
                             }
                             using (Transaction xrefTr = Xref.TransactionManager.StartTransaction())
                             {
-                                
+
                                 BlockTable blockTable = xrefTr.GetObject(Xref.BlockTableId, OpenMode.ForRead) as BlockTable;
                                 BlockTableRecord xrefBlockDef = xrefTr.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
                                 IdMapping acIdMap = new IdMapping();
@@ -75,7 +71,7 @@ namespace SioForgeCAD.Functions
 
                                 Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
                                 xrefTr.Commit();
-                                
+
                                 foreach (ObjectId entId in SelectedIds)
                                 {
                                     entId.EraseObject();
@@ -92,7 +88,7 @@ namespace SioForgeCAD.Functions
                     AddEntitiesToBlock(blockDef, BlockRef, Selection.Value.GetObjectIds(), tr);
                     tr.Commit();
                 }
-               
+
                 BlockRef.RegenAllBlkDefinition();
             }
         }
