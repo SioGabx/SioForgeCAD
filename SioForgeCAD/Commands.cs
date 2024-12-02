@@ -545,12 +545,24 @@ namespace SioForgeCAD
         {
             Functions.SMARTFLATTEN.Flatten();
         }
+        [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
+        //
+        public static void STRIPTEXTFORMATING()
+        {
+            Functions.STRIPTEXTFORMATING.Strip();
+        }
 
         [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         //Flatten Each Entity
         public static void FIXDRAWING()
         {
             Application.SetSystemVariable("UCSFOLLOW", 0); //Generates a plan view whenever you change from one UCS to another.  
+            Application.SetSystemVariable("UCSDETECT", 0);
+            Application.SetSystemVariable("ROLLOVERTIPS", 0);
+            Application.SetSystemVariable("QPMODE", -1);
+            Application.SetSystemVariable("LINESMOOTHING", 1);
+            Application.SetSystemVariable("LINEFADING", 1);
+            Application.SetSystemVariable("PICKAUTO", 5);
             Application.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
             Application.SetSystemVariable("LTSCALE", 1); //Sets the global linetype scale factor. Use LTSCALE to change the scale factor of linetypes for all objects in a drawing
             Application.SetSystemVariable("CELTSCALE", 1); //Sets the current object linetype scaling factor. - Sets the linetype scaling for new objects relative to the LTSCALE command setting
@@ -560,6 +572,7 @@ namespace SioForgeCAD
             Application.SetSystemVariable("VISRETAIN", 1); //Controls the properties of xref-dependent layers.  https://help.autodesk.com/view/ACDLT/2022/ENU/?guid=GUID-897B1672-4E09-42E0-B857-A9D1F96ED671
             Application.SetSystemVariable("XREFNOTIFY", 2); //Controls the notification for updated or missing xrefs. https://help.autodesk.com/view/ACDLT/2022/ENU/?guid=GUID-D97BECAD-2380-4CA3-896C-A6896BE112F7
             Application.SetSystemVariable("HPLAYER", "."); //Specifies a default layer for new hatches and fills in the current drawing.  https://help.autodesk.com/view/ACDLT/2023/ENU/?guid=GUID-8B64F625-7DD2-4264-8E59-3936F0992070
+            Application.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
             Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
             Functions.PURGEALL.Purge();

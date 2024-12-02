@@ -72,7 +72,7 @@ namespace SioForgeCAD.Functions
                         Thread.Sleep(WaitTimeIncrement);
                     }
                     //TODO : Check name if in drawing
-                   
+
                     ObjectId xg = db.AttachXref(dwgFileName, Path.GetFileNameWithoutExtension(dwgFileName));
                     if (xg == ObjectId.Null)
                     {

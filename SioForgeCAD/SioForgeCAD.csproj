@@ -257,6 +257,7 @@
     <Compile Include="Functions\OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE.cs" />
     <Compile Include="Functions\SMARTFLATTEN.cs" />
     <Compile Include="Functions\SPECIALSSELECTIONS.cs" />
+    <Compile Include="Functions\STRIPTEXTFORMATING.cs" />
     <Compile Include="Functions\SUBSTRACTPOLYLIGNES.cs" />
     <Compile Include="Functions\TAREA.cs" />
     <Compile Include="Functions\TLEN.cs" />
