@@ -36,8 +36,11 @@ namespace SioForgeCAD.Commun
         public static bool IsEntityOnLockedLayer(this Entity entity)
         {
             ObjectId layerId = entity.LayerId;
-            LayerTableRecord layerRecord = layerId.GetObject(OpenMode.ForRead) as LayerTableRecord;
-            return layerRecord?.IsLocked == true;
+            if (layerId.GetNoTransactionDBObject(OpenMode.ForRead) is LayerTableRecord layerRecord)
+            {
+                return layerRecord?.IsLocked == true;
+            }
+            return true;
         }
         public static bool IsLayerLocked(string Name)
         {

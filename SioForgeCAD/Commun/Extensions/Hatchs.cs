@@ -50,6 +50,11 @@ namespace SioForgeCAD.Commun.Extensions
             if (objectIdCollection.Count >= 1)
             {
                 Boundary = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Curve;
+                //If boundary is on a locked layer, we cannot give it back
+                if (Boundary.IsEntityOnLockedLayer())
+                {
+                    return 0;
+                }
             }
             return objectIdCollection.Count;
         }

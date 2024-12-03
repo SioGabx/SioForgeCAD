@@ -26,8 +26,10 @@ namespace SioForgeCAD.Functions
             Entity ExistingBoundaryStyle = Hachure;
             if (Hachure.Associative)
             {
-                Hachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
-                ExistingBoundaryStyle = AssociatedBoundary;
+                if (Hachure.GetAssociatedBoundary(out Curve AssociatedBoundary) > 0)
+                {
+                    ExistingBoundaryStyle = AssociatedBoundary;
+                }
             }
 
             if (!Hachure.GetPolyHole(out var HatchPolyHole))
@@ -150,11 +152,12 @@ namespace SioForgeCAD.Functions
                         CutLineSubResult.DeepDispose();
                         CuttedPolyline.DeepDispose();
                     }
-
+                    
                     foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
                     {
                         item.EraseObject();
                     }
+                    
                     Hachure.ObjectId.EraseObject();
                     tr.Commit();
                 }

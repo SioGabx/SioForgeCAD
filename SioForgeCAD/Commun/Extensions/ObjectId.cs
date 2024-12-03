@@ -137,12 +137,22 @@ namespace SioForgeCAD.Commun
                 {
                     return;
                 }
-                DBObject ent = (DBObject)tr.GetObject(ObjectToErase, OpenMode.ForWrite);
-                if (!ent.IsErased)
+                DBObject ent = tr.GetObject(ObjectToErase, OpenMode.ForRead);
+                //Can only errase if entity is not on a locked layer
+                if (ent is Entity enty && enty.IsEntityOnLockedLayer())
                 {
-                    ent.Erase(true);
+                    tr.Commit();
+                    return;
                 }
-                tr.Commit();
+                else
+                {
+                    ent.UpgradeOpen();
+                    if (!ent.IsErased)
+                    {
+                        ent.Erase(true);
+                    }
+                    tr.Commit();
+                }
             }
         }
 
