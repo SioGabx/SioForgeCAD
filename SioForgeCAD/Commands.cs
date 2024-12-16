@@ -415,6 +415,8 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "VPL", CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTLOCK", CommandFlags.NoBlockEditor)]
         //ViewPorts lock / unlock all
         public static void VIEWPORTLOCK()
@@ -544,6 +546,13 @@ namespace SioForgeCAD
         public static void SMARTFLATTEN()
         {
             Functions.SMARTFLATTEN.Flatten();
+        }  
+        
+        [CommandMethod("SIOFORGECAD", "SMARTFLATTENEVERYTHINGS", CommandFlags.UsePickSet)]
+        //Flatten Each Entity
+        public static void SMARTFLATTENEVERYTHINGS()
+        {
+            Functions.SMARTFLATTEN.FlattenAll();
         }
         [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
         //
@@ -551,6 +560,34 @@ namespace SioForgeCAD
         {
             Functions.STRIPTEXTFORMATING.Strip();
         }
+
+        [CommandMethod("SIOFORGECAD", "PREVIEWPRINT", CommandFlags.Modal)]
+        public static void PREVIEWPRINT()
+        {
+            var ed = Generic.GetEditor();
+            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une option")
+            {
+                AppendKeywordsToMessage = true
+            };
+
+            const string ACTIVE = "Activé";
+            const string DESACTIVE = "Désactiver";
+            promptKeywordOptions.Keywords.Add(ACTIVE);
+            promptKeywordOptions.Keywords.Add(DESACTIVE);
+            var result = ed.GetKeywords(promptKeywordOptions);
+            switch (result.StringResult)
+            {
+                case ACTIVE:
+                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Application.SetSystemVariable("XDWGFADECTL", 0);
+                    break;
+                case DESACTIVE:
+                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Application.SetSystemVariable("XDWGFADECTL", 50);
+                    break;
+            }
+        }
+
 
         [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         //Flatten Each Entity
