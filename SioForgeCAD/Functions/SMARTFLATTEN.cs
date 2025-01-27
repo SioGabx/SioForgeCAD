@@ -1,6 +1,7 @@
 ﻿
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
@@ -25,7 +26,7 @@ namespace SioForgeCAD.Functions
 
                     if (btr.IsLayout) continue;
 
-                    Debug.WriteLine($"\nInspecting block: {btr.Name}");
+                    Debug.WriteLine($"Inspecting block: {btr.Name}");
 
                     foreach (ObjectId objId in btr)
                     {
@@ -66,64 +67,73 @@ namespace SioForgeCAD.Functions
                         DbObjEnt.DowngradeOpen();
                         continue;
                     }
-                    if (entity is Polyline polyline)
+                    
+                    if (entity is Polyline2d polyline2d)
+                    {
+                        polyline2d.Elevation = 0;
+                    }
+                    else if (entity is Polyline polyline)
                     {
                         polyline.Elevation = 0;
                     }
-                    if (entity is Ellipse ellipse)
+                    else if (entity is Ellipse ellipse)
                     {
                         ellipse.Center = ellipse.Center.Flatten();
                     }
-                    if (entity is BlockReference blockreference)
+                    else if (entity is BlockReference blockreference)
                     {
                         blockreference.Position = blockreference.Position.Flatten();
                     }
-                    if (entity is Circle circle)
+                    else if (entity is Circle circle)
                     {
                         circle.Center = circle.Center.Flatten();
                     }
-                    if (entity is Hatch hatch)
+                    else if (entity is Hatch hatch)
                     {
                         hatch.Elevation = 0;
                     }
-                    if (entity is DBText dbtext)
+                    else if (entity is DBText dbtext)
                     {
                         dbtext.Position = dbtext.Position.Flatten();
                     }
-                    if (entity is DBPoint dbpoint)
+                    else if (entity is DBPoint dbpoint)
                     {
                         dbpoint.Position = dbpoint.Position.Flatten();
                     }
-                    if (entity is Leader leader)
+                    else if (entity is Leader leader)
                     {
                         leader.StartPoint = leader.StartPoint.Flatten();
                         leader.EndPoint = leader.EndPoint.Flatten();
                     }
-                    if (entity is Line line)
+                    else if (entity is Line line)
                     {
                         line.StartPoint = line.StartPoint.Flatten();
                         line.EndPoint = line.EndPoint.Flatten();
                     }
-                    if (entity is MText mtext)
+                    else if (entity is MText mtext)
                     {
                         mtext.Location = mtext.Location.Flatten();
                     }
-                    if (entity is Ray ray)
+                    else if (entity is Ray ray)
                     {
                         ray.BasePoint = ray.BasePoint.Flatten();
                         ray.SecondPoint = ray.SecondPoint.Flatten();
                     }
-                    if (entity is Xline xline)
+                    else if (entity is Xline xline)
                     {
                         xline.BasePoint = xline.BasePoint.Flatten();
                         xline.SecondPoint = xline.SecondPoint.Flatten();
                     }
-                    if (entity is Helix helix)
+                    else if (entity is Helix helix)
                     {
                         helix.StartPoint = helix.StartPoint.Flatten();
                         helix.SetAxisPoint(helix.GetAxisPoint().Flatten(), true);
                     }
-                    if (entity is Spline spline)
+                    else if (entity is Arc arc)
+                    {
+                        arc.Center = arc.Center.Flatten();
+                    }
+                    else if (entity is Spline spline)
                     {
                         for (int i = 0; i < spline.NumControlPoints; i++)
                         {
@@ -131,10 +141,63 @@ namespace SioForgeCAD.Functions
                             spline.SetControlPointAt(i, point.Flatten());
                         }
                     }
-
-                    if (entity is Table table)
+                    else if (entity is Table table)
                     {
                         table.Position = table.Position.Flatten();
+                    }
+                    else if (entity is Wipeout wipeout)
+                    {
+                        var orient = wipeout.Orientation;
+                        wipeout.Orientation = new CoordinateSystem3d(orient.Origin.Flatten(), orient.Xaxis, orient.Yaxis);
+                    }
+                    else if (entity is RasterImage rasterimage)
+                    {
+                        var orient = rasterimage.Orientation;
+                        rasterimage.Orientation = new CoordinateSystem3d(orient.Origin.Flatten(), orient.Xaxis, orient.Yaxis);
+                    }
+                    else if (entity is RotatedDimension rotatedDimension)
+                    {
+                        rotatedDimension.TextPosition = rotatedDimension.TextPosition.Flatten();
+                        rotatedDimension.DimLinePoint = rotatedDimension.DimLinePoint.Flatten();
+                        rotatedDimension.XLine1Point = rotatedDimension.XLine1Point.Flatten();
+                        rotatedDimension.XLine2Point = rotatedDimension.XLine1Point.Flatten();
+                    }
+                    else if (entity is AlignedDimension alignedDimension)
+                    {
+                        alignedDimension.TextPosition = alignedDimension.TextPosition.Flatten();
+                        alignedDimension.DimLinePoint = alignedDimension.DimLinePoint.Flatten();
+                        alignedDimension.XLine1Point = alignedDimension.XLine1Point.Flatten();
+                        alignedDimension.XLine2Point = alignedDimension.XLine1Point.Flatten();
+                    }
+                    else if (entity is MLeader mLeader)
+                    {
+                        //IN PROGRESS DOES NOT WORK ???
+                        
+                        mLeader.TextLocation = mLeader.TextLocation.Flatten();
+                        for (int LeaderLineCount = 0; LeaderLineCount < mLeader.LeaderLineCount; LeaderLineCount++)
+                        {
+                            mLeader.SetFirstVertex(LeaderLineCount, mLeader.GetFirstVertex(LeaderLineCount).Flatten());
+                            mLeader.SetLastVertex(LeaderLineCount, mLeader.GetLastVertex(LeaderLineCount).Flatten());
+                            for (int LeaderVerticesCount = 0; LeaderVerticesCount < mLeader.VerticesCount(LeaderLineCount); LeaderVerticesCount++)
+                            {
+                                Point3d Point = mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount);
+                                mLeader.SetVertex(LeaderLineCount, LeaderVerticesCount, Point.Flatten());
+
+                                Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}" );
+                            }
+                        }
+                    }
+                    else if (entity is Solid solid)
+                    {
+                        //Not supported yet
+                    }
+                    else if (entity is Solid3d solid3d)
+                    {
+                        //Not supported yet
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Entité non traitée : \"{entity.GetType()}\"");
                     }
                 }
                 tr.Commit();

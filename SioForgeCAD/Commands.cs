@@ -599,6 +599,7 @@ namespace SioForgeCAD
             Application.SetSystemVariable("QPMODE", -1);
             Application.SetSystemVariable("LINESMOOTHING", 1);
             Application.SetSystemVariable("LINEFADING", 1);
+            Application.SetSystemVariable("INSUNITS", 6);//Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing.  https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
             Application.SetSystemVariable("PICKAUTO", 5);
             Application.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
             Application.SetSystemVariable("LTSCALE", 1); //Sets the global linetype scale factor. Use LTSCALE to change the scale factor of linetypes for all objects in a drawing
@@ -612,6 +613,8 @@ namespace SioForgeCAD
             Application.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
             Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
+            Generic.Command("_SNAP", "_OFF"); 
+            Generic.Command("_-UNITS", 2, 4, 1,4,0,"_NO"); 
             Functions.PURGEALL.Purge();
         }
 
