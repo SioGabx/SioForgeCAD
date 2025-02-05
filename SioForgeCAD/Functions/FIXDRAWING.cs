@@ -17,6 +17,7 @@ namespace SioForgeCAD.Functions
             Application.SetSystemVariable("UCSDETECT", 0);
             Application.SetSystemVariable("ROLLOVERTIPS", 0);
             Application.SetSystemVariable("QPMODE", -1);
+            Application.SetSystemVariable("XCOMPAREENABLE", 0);
             Application.SetSystemVariable("LINESMOOTHING", 1);
             Application.SetSystemVariable("LINEFADING", 1);
             Application.SetSystemVariable("INSUNITS", 6);//Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing.  https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
