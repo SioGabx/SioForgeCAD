@@ -27,7 +27,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
         {
-            if (blockRef.IsDynamicBlock)
+            if (blockRef?.IsDynamicBlock == true)
             {
                 // If it's a dynamic block, get the true name from the DynamicBlockTableRecord
                 using (BlockTableRecord btr = blockRef.DynamicBlockTableRecord.GetDBObject(OpenMode.ForRead) as BlockTableRecord)
@@ -35,7 +35,7 @@ namespace SioForgeCAD.Commun.Extensions
                     return btr.Name;
                 }
             }
-            return blockRef.Name;
+            return blockRef?.Name;
         }
 
         public static string GetDescription(this BlockReference blkRef)

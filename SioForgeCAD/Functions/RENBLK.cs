@@ -30,7 +30,10 @@ namespace SioForgeCAD.Functions
                 {
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
-                        BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
+                        if (!(SelectedBlocObjectId.GetEntity() is BlockReference OriginalBlk))
+                        {
+                            continue;
+                        }
                         string blockname = OriginalBlk.GetBlockReferenceName();
                         if (!ListOfUniqueBlockName.Contains(blockname))
                         {
@@ -67,7 +70,10 @@ namespace SioForgeCAD.Functions
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    BlockReference OriginalBlk = SelectedBlocObjectId.GetEntity() as BlockReference;
+                    if (!(SelectedBlocObjectId.GetEntity() is BlockReference OriginalBlk))
+                    {
+                        continue;
+                    }
                     string OldName = OriginalBlk.GetBlockReferenceName();
                     if (ArealdyRenamedBlock.Contains(OldName))
                     {

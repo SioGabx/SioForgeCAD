@@ -52,7 +52,6 @@ namespace SioForgeCAD.Forms
 
         private void UserInputBox_Validated(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
         }
     }
 }
