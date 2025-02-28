@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -68,14 +69,15 @@ namespace SioForgeCAD.Functions
                                 BlockTableRecord xrefBlockDef = xrefTr.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
                                 IdMapping acIdMap = new IdMapping();
 
-
+                                //LayerTable layerTable = xrefTr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
                                 Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
                                 xrefTr.Commit();
-
+                                
                                 foreach (ObjectId entId in SelectedIds)
                                 {
                                     entId.EraseObject();
                                 }
+
                                 tr.Commit();
                             }
                         }

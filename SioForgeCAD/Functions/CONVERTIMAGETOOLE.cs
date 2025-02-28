@@ -65,6 +65,7 @@ namespace SioForgeCAD.Functions
                 {
                     if (RasterObjectId.GetDBObject() is RasterImage rasterImage)
                     {
+                        var rasterImageColor = rasterImage.GetSystemDrawingColor();
                         System.Drawing.Image bitmap = System.Drawing.Image.FromFile(rasterImage.Path);
                         bool ImageHasAlpha = bitmap.PixelFormat.HasFlag(PixelFormat.Alpha);
                         const string HasAlphaWarningMessage = "la transparence de l'image sera supprimée et remplacée par la couleur de l'object raster";
@@ -85,15 +86,17 @@ namespace SioForgeCAD.Functions
                             {
                                 JoinedMessage += IsRotatedWarningMessage;
                             }
-
-                            var AskContinue = MessageBox.Show(JoinedMessage, Generic.GetExtensionDLLName(), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-                            if (AskContinue != DialogResult.OK)
+                            JoinedMessage += $"\nVoullez-vous utiliser un fond de la couleur de l'object raster ? ({rasterImageColor.R},{rasterImageColor.G},{rasterImageColor.B}). Un fond blanc sera appliqué dans le cas contraire";
+                            var AskContinue = MessageBox.Show(JoinedMessage, Generic.GetExtensionDLLName(), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                            if (AskContinue != DialogResult.Cancel)
                             {
                                 return;
                             }
+                            else if (AskContinue != DialogResult.No) { rasterImageColor = System.Drawing.Color.White; }
+
                         }
 
-                        using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImage.GetSystemDrawingColor()))
+                        using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImageColor))
                         {
                             try
                             {
