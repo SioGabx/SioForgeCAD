@@ -196,7 +196,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
         public static void RegenAllBlkDefinition(this BlockReference BlockRef)
         {
             Database db = Generic.GetDatabase();
@@ -216,6 +215,5 @@ namespace SioForgeCAD.Commun.Extensions
                 tr.Commit();
             }
         }
-
     }
 }

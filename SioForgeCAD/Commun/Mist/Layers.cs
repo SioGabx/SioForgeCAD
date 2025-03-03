@@ -241,6 +241,45 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static void Merge(Transaction tr, Database db, ObjectId sourceLayerId, ObjectId targetLayerId)
+        {
+            LayerTableRecord sourceLayer = tr.GetObject(sourceLayerId, OpenMode.ForRead) as LayerTableRecord;
+            LayerTableRecord targetLayer = tr.GetObject(targetLayerId, OpenMode.ForRead) as LayerTableRecord;
+
+            if (sourceLayer == null || targetLayer == null)
+                return;
+
+            string sourceLayerName = sourceLayer.Name;
+
+
+            // Move every entities
+            foreach (ObjectId blockId in tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable)
+            {
+                foreach (ObjectId entId in tr.GetObject(blockId, OpenMode.ForWrite) as BlockTableRecord)
+                {
+                    Entity ent = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
+                    if (ent != null && ent.LayerId == sourceLayerId)
+                    {
+                        ent.LayerId = targetLayerId;
+                    }
+                }
+            }
+
+            try
+            {
+                if (!sourceLayer.IsErased && !sourceLayer.IsDependent)
+                {
+                    sourceLayer.UpgradeOpen();
+                    sourceLayer.Erase(true);
+                }
+            }
+            catch (Autodesk.AutoCAD.Runtime.Exception ex)
+            {
+                Generic.WriteMessage($"Impossible de supprimer le calque {sourceLayerName}: {ex.Message}");
+            }
+        }
+
+
         public static Color GetLayerColor(string LayerName)
         {
             ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(LayerName);

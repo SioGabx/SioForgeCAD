@@ -97,7 +97,6 @@ namespace SioForgeCAD.Commun.Drawing
                 ActualTransaction.Commit();
             }
 
-
             return acIdMap2[newBlocRefenceId].Value;
         }
 
