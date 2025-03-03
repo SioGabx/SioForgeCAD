@@ -179,7 +179,7 @@ namespace SioForgeCAD.Commun.Drawing
                 //Create new BlockReference, and link it to our block definition
                 using (BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
                 {
-                    blockRef.ColorIndex = 256;
+                    blockRef.Color = db.Cecolor;
                     blockRef.Rotation = Angle;
 
                     if (!string.IsNullOrEmpty(Layer) && Layers.CheckIfLayerExist(Layer))
