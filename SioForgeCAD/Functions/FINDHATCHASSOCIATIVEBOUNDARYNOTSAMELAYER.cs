@@ -1,14 +1,11 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.LayerManager;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -18,7 +15,6 @@ namespace SioForgeCAD.Functions
         {
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
-
 
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
@@ -87,7 +83,7 @@ namespace SioForgeCAD.Functions
                     options.Keywords.Add("Non");
                     options.Keywords.Default = "Oui";
                     options.AllowNone = false;
-                  
+
                     PromptResult result = ed.GetKeywords(options);
 
                     if (result.Status == PromptStatus.OK && result.StringResult == "Oui")
@@ -122,7 +118,5 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
-
     }
 }

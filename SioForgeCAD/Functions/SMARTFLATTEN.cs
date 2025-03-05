@@ -14,15 +14,14 @@ namespace SioForgeCAD.Functions
     {
         public static void FlattenAll()
         {
-            var doc = Generic.GetDocument();
             var db = Generic.GetDatabase();
             List<ObjectId> ids = new List<ObjectId>();
-            using (Transaction trans = db.TransactionManager.StartTransaction())
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var BlkTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                var BlkTable = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 foreach (ObjectId btrId in BlkTable)
                 {
-                    BlockTableRecord btr = trans.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
+                    BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
 
                     if (btr.IsLayout) continue;
 
@@ -34,14 +33,13 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-                BlockTableRecord modelSpace = trans.GetObject(BlkTable[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+                BlockTableRecord modelSpace = tr.GetObject(BlkTable[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
                 foreach (ObjectId objId in modelSpace)
                 {
                     ids.Add(objId);
                 }
                 FlatObjects(ids.ToArray());
-                trans.Commit();
-
+                tr.Commit();
             }
         }
 
@@ -67,7 +65,7 @@ namespace SioForgeCAD.Functions
                         DbObjEnt.DowngradeOpen();
                         continue;
                     }
-                    
+
                     if (entity is Polyline2d polyline2d)
                     {
                         polyline2d.Elevation = 0;
@@ -100,7 +98,7 @@ namespace SioForgeCAD.Functions
                     {
                         dbpoint.Position = dbpoint.Position.Flatten();
                     }
-                    else if (entity is Leader leader)
+                    else if (entity is Leader)
                     {
                         //not implemented
                     }
@@ -171,7 +169,6 @@ namespace SioForgeCAD.Functions
                     else if (entity is MLeader mLeader)
                     {
                         //IN PROGRESS DOES NOT WORK ???
-                        
                         mLeader.TextLocation = mLeader.TextLocation.Flatten();
                         for (int LeaderLineCount = 0; LeaderLineCount < mLeader.LeaderLineCount; LeaderLineCount++)
                         {
@@ -182,15 +179,15 @@ namespace SioForgeCAD.Functions
                                 Point3d Point = mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount);
                                 mLeader.SetVertex(LeaderLineCount, LeaderVerticesCount, Point.Flatten());
 
-                                Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}" );
+                                Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}");
                             }
                         }
                     }
-                    else if (entity is Solid solid)
+                    else if (entity is Solid)
                     {
                         //Not supported yet
                     }
-                    else if (entity is Solid3d solid3d)
+                    else if (entity is Solid3d)
                     {
                         //Not supported yet
                     }
@@ -202,6 +199,5 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
     }
 }

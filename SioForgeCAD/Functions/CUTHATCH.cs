@@ -152,12 +152,12 @@ namespace SioForgeCAD.Functions
                         CutLineSubResult.DeepDispose();
                         CuttedPolyline.DeepDispose();
                     }
-                    
+
                     foreach (ObjectId item in Hachure.GetAssociatedObjectIds())
                     {
                         item.EraseObject();
                     }
-                    
+
                     Hachure.ObjectId.EraseObject();
                     tr.Commit();
                 }

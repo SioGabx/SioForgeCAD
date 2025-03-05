@@ -94,7 +94,6 @@ namespace SioForgeCAD.Functions
                                 return;
                             }
                             else if (AskContinue != DialogResult.No) { rasterImageColor = System.Drawing.Color.White; }
-
                         }
 
                         var ClipBackup = System.Windows.Clipboard.GetDataObject();

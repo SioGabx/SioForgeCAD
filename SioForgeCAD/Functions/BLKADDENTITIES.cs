@@ -2,12 +2,10 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -60,8 +58,7 @@ namespace SioForgeCAD.Functions
             foreach (ObjectId entId in selectedIds)
             {
                 if (entId == BlockRef.ObjectId) { continue; }
-                Entity SelectedEnt = entId.GetDBObject(OpenMode.ForWrite) as Entity;
-                if (SelectedEnt == null) continue;
+                if (!(entId.GetDBObject(OpenMode.ForWrite) is Entity SelectedEnt)) { continue; }
 
                 Entity SelectedEntClone = SelectedEnt.Clone() as Entity;
                 SelectedEntClone.TransformBy(inverseTransform);
@@ -95,8 +92,10 @@ namespace SioForgeCAD.Functions
                     Matrix3d inverseTransform = XrefRef.BlockTransform.Inverse();
                     foreach (ObjectId entId in SelectedIds)
                     {
-                        Entity SelectedEnt = entId.GetDBObject(OpenMode.ForWrite) as Entity;
-                        if (SelectedEnt == null) continue;
+                        if (!(entId.GetDBObject(OpenMode.ForWrite) is Entity SelectedEnt))
+                        {
+                            continue;
+                        }
 
                         SelectedEnt.TransformBy(inverseTransform);
                     }

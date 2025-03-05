@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System.Collections.Generic;
 using System;
 using System.Linq;
 
