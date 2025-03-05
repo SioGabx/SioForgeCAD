@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -96,6 +97,7 @@ namespace SioForgeCAD.Functions
 
                         }
 
+                        var ClipBackup = System.Windows.Clipboard.GetDataObject();
                         using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImageColor))
                         {
                             try
@@ -112,7 +114,14 @@ namespace SioForgeCAD.Functions
 
                         //Paste into the drawing because we cannot create a Ole2Frame in NET
                         Generic.Command("_pasteclip", rasterImage.Position);
-
+                        try
+                        {
+                            System.Windows.Clipboard.SetDataObject(ClipBackup);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
                         //Get last created entity of type Ole2Frame
                         var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
                         Ole2Frame InsertedOLE = InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) as Ole2Frame;
