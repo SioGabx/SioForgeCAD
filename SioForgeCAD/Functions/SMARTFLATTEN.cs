@@ -102,8 +102,7 @@ namespace SioForgeCAD.Functions
                     }
                     else if (entity is Leader leader)
                     {
-                        leader.StartPoint = leader.StartPoint.Flatten();
-                        leader.EndPoint = leader.EndPoint.Flatten();
+                        //not implemented
                     }
                     else if (entity is Line line)
                     {
