@@ -494,7 +494,7 @@ namespace SioForgeCAD
         //Limit the selection to one entity
         public static void LIMITNUMBERINSELECTION()
         {
-            Functions.LIMITNUMBERINSELECTION.LimitToOne();
+            Functions.LIMITNUMBERINSELECTION.Limit();
         }
 
         [CommandMethod("ROTATEONSINGLEAXIS", CommandFlags.UsePickSet)]
@@ -527,18 +527,25 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHINVALIDAREA", CommandFlags.Redraw)]
-        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
-        public static void SEARCHHATCHWITHOUTVALIDAREA()
+        [CommandMethod("SIOFORGECAD", "FINDHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
+        public static void FINDHATCHWITHOUTVALIDAREA()
         {
-            Functions.SEARCHHATCHWITHOUTVALIDAREA.Search();
+            Functions.FINDHATCHWITHOUTVALIDAREA.Search();
         }
 
 
         [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
-        [CommandMethod("SIOFORGECAD", "SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
-        public static void SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY()
+        [CommandMethod("SIOFORGECAD", "FINDHATCHWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
+        public static void FINDHATCHWITHOUTASSOCIATIVEBOUNDARY()
         {
-            Functions.SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY.Search();
+            Functions.FINDHATCHWITHOUTASSOCIATIVEBOUNDARY.Search();
+        }
+
+        [CommandMethod("SIOFORGECAD", "HATCHSELECTASSOCIATIVEBOUNDARYNOTSAMELAYER", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER", CommandFlags.Redraw)]
+        public static void FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER()
+        {
+            Functions.FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.Search();
         }
 
         [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]

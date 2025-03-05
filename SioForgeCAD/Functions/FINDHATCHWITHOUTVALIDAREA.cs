@@ -8,13 +8,12 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
-    public static class SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY
+    public static class FINDHATCHWITHOUTVALIDAREA
     {
         public static void Search()
         {
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
-
 
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
@@ -49,19 +48,8 @@ namespace SioForgeCAD.Functions
                     var DBObject = ObjId.GetDBObject();
                     if (DBObject is Hatch HatchEnt)
                     {
-
-                        var HasBoundary = HatchEnt.GetAssociatedObjectIds().Count > 0;
-                        if (HasBoundary)
-                        {
-                            foreach (ObjectId Item in HatchEnt.GetAssociatedObjectIds())
-                            {
-                                if (Item.IsNull || !Item.IsValid || !Item.IsWellBehaved || Item.IsErased || Item.IsEffectivelyErased)
-                                {
-                                    HasBoundary = false;
-                                }
-                            }
-                        }
-                        if (!HatchEnt.Associative || !HasBoundary)
+                        var ObjectArea = HatchEnt.TryGetArea();
+                        if (ObjectArea <= 0)
                         {
                             NoAreaObjects.Add(ObjId);
                         }
@@ -69,12 +57,12 @@ namespace SioForgeCAD.Functions
                 }
                 if (NoAreaObjects.Count > 0)
                 {
-                    Generic.WriteMessage($"{NoAreaObjects.Count} hachure(s) sans contours ont été selectionnés");
+                    Generic.WriteMessage($"{NoAreaObjects.Count} hachure(s) sans aire ont été selectionnés");
                     ed.SetImpliedSelection(NoAreaObjects.ToArray());
                 }
                 else
                 {
-                    Generic.WriteMessage("Aucune hachure sans contours ont été détéctés");
+                    Generic.WriteMessage("Aucune hachure sans aire ont été détéctés");
                 }
                 tr.Commit();
             }

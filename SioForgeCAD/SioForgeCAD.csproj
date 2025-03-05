@@ -224,13 +224,14 @@
     <Compile Include="Functions\DXFIMPORT.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
+    <Compile Include="Functions\FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.cs" />
     <Compile Include="Functions\FIXDRAWING.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\REMOVEENTITIESXDATA.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
-    <Compile Include="Functions\SEARCHHATCHWITHOUTASSOCIATIVEBOUNDARY.cs" />
-    <Compile Include="Functions\SEARCHHATCHWITHOUTVALIDAREA.cs" />
+    <Compile Include="Functions\FINDHATCHWITHOUTASSOCIATIVEBOUNDARY.cs" />
+    <Compile Include="Functions\FINDHATCHWITHOUTVALIDAREA.cs" />
     <Compile Include="Functions\SETSELECTEDENTITIESCOLORTOGRAYSCALE.cs" />
     <Compile Include="Functions\EXECUTECOMMANDONEACHSELECTED.cs" />
     <Compile Include="Functions\FORCELAYERCOLORTOENTITY.cs" />
