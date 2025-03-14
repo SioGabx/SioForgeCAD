@@ -133,7 +133,6 @@ namespace SioForgeCAD.Functions
             ObjectId BlkObjectId = ObjectId.Null;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
                 GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
                 var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
                 Points NewPointLocation = InsertionTransientPointsValues.Point;
@@ -145,7 +144,6 @@ namespace SioForgeCAD.Functions
                     return BlkObjectId;
                 }
                 BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
-
 
                 tr.Commit();
             }

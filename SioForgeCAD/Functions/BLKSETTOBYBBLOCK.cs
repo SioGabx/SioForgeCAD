@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
@@ -7,7 +8,8 @@ namespace SioForgeCAD.Functions
 {
     public static class BLKSETTOBYBBLOCK
     {
-        public static void ByBlock(bool IgnoreHatch)
+        public enum HatchSupport { Ignore, Include, SetToWhite }
+        public static void ByBlock(HatchSupport IgnoreHatch)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -30,12 +32,27 @@ namespace SioForgeCAD.Functions
                     {
                         if (EntityInBlockDef.GetDBObject(OpenMode.ForWrite) is Entity ent)
                         {
-                            if (IgnoreHatch && ent is Hatch) { continue; }
-                            ent.ColorIndex = 0; //ByBlock 
-                            ent.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByBlock);
-                            ent.Linetype = "BYBLOCK";
-                            ent.LineWeight = LineWeight.ByBlock;
-                            ent.Layer = "0";
+                            if (ent is Hatch hatchEnt)
+                            {
+                                switch (IgnoreHatch)
+                                {
+                                    case HatchSupport.Ignore:
+                                        continue;
+                                    case HatchSupport.Include:
+                                        SetEntityToByBloc(hatchEnt);
+                                        hatchEnt.BackgroundColor = Color.FromColorIndex(ColorMethod.ByBlock, 0);
+                                        break;
+                                    case HatchSupport.SetToWhite:
+                                        SetEntityToByBloc(hatchEnt);
+                                        hatchEnt.Color = Color.FromRgb(255, 255, 255);
+                                        hatchEnt.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                SetEntityToByBloc(ent);
+                            }
                         }
                     }
                     foreach (ObjectId BlkRefInDrawing in blockDef.GetBlockReferenceIds(true, false))
@@ -45,6 +62,15 @@ namespace SioForgeCAD.Functions
                 }
                 tr.Commit();
             }
+        }
+
+        private static void SetEntityToByBloc(Entity entity)
+        {
+            entity.ColorIndex = 0; //ByBlock 
+            entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByBlock);
+            entity.Linetype = "BYBLOCK";
+            entity.LineWeight = LineWeight.ByBlock;
+            entity.Layer = "0";
         }
     }
 }

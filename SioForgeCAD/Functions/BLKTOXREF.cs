@@ -38,7 +38,6 @@ namespace SioForgeCAD.Functions
                         return;
                     }
 
-
                     SaveFileDialog saveFileDialog = new SaveFileDialog()
                     {
                         AddExtension = true,
@@ -53,7 +52,6 @@ namespace SioForgeCAD.Functions
                         return;
                     }
                     string dwgFileName = Path.GetFullPath(saveFileDialog.FileName);
-
 
                     using (Database newDb = new Database(true, true))
                     {
@@ -81,8 +79,6 @@ namespace SioForgeCAD.Functions
                     }
                     var bref = new BlockReference(Point3d.Origin, xg);
                     bref.AddToDrawing();
-
-
                     blockRef.EraseObject();
                     tr.Commit();
                 }

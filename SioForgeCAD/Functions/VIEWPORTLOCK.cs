@@ -8,7 +8,6 @@ namespace SioForgeCAD.Functions
 {
     public static class VIEWPORTLOCK
     {
-
         public static void Menu()
         {
             Editor ed = Generic.GetEditor();
@@ -29,7 +28,6 @@ namespace SioForgeCAD.Functions
 
             DoLockUnlock(KeyResult.StringResult == "Lock");
         }
-
 
         public static void DoLockUnlock(bool Lock)
         {

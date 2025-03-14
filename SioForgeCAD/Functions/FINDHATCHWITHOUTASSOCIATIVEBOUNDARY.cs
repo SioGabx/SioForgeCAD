@@ -15,7 +15,6 @@ namespace SioForgeCAD.Functions
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
 
-
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
                 var Opts = new PromptSelectionOptions()
@@ -48,7 +47,6 @@ namespace SioForgeCAD.Functions
                 {
                     if (ObjId.GetDBObject() is Hatch HatchEnt)
                     {
-
                         var HasBoundary = HatchEnt.GetAssociatedObjectIds().Count > 0;
                         if (HasBoundary)
                         {

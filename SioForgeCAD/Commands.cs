@@ -108,13 +108,21 @@ namespace SioForgeCAD
         //Convert all entity values in the block to BYBLOCK
         public static void BLKSETTOBYBBLOCK()
         {
-            Functions.BLKSETTOBYBBLOCK.ByBlock(false);
+            Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Include);
         }
+
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
         //Convert all entity values in the block to BYBLOCK, ignoring HATCH
         public static void BLKSETTOBYBBLOCKIGNOREHATCH()
         {
-            Functions.BLKSETTOBYBBLOCK.ByBlock(true);
+            Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Ignore);
+        }
+
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKHATCHSETTOWHITE", CommandFlags.Redraw)]
+        //Convert all entity values in the block to BYBLOCK, HATCH to white (rgb 255,255,255)
+        public static void BLKSETTOBYBBLOCKHATCHSETTOWHITE()
+        {
+            Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.SetToWhite);
         }
 
         [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
@@ -598,28 +606,6 @@ namespace SioForgeCAD
                     Application.SetSystemVariable("ROLLOVERTIPS", 0);
                     Application.SetSystemVariable("XDWGFADECTL", 50);
                     break;
-            }
-        }
-
-        [CommandMethod("DEBUG", "TESTSHRINKOFFSET", CommandFlags.UsePickSet)]
-        public static void TESTSHRINKOFFSET()
-        {
-            Editor ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            using (var poly = ed.GetPolyline("Selectionnez une polyligne"))
-            {
-                int NumberOfVerticesBefore = poly.NumberOfVertices;
-                poly.UpgradeOpen();
-                PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Distance")
-                {
-                    DefaultValue = -0.01
-                };
-                var value = ed.GetDouble(promptDoubleOptions);
-                if (value.Status != PromptStatus.OK) { return; }
-                var curve = poly.SmartOffset(value.Value);
-                curve.AddToDrawing(5);
-                tr.Commit();
             }
         }
 

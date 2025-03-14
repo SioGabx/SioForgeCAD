@@ -5,7 +5,6 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
-
         public static bool IsFileLockedOrReadOnly(FileInfo fi)
         {
             FileStream fs = null;
@@ -23,7 +22,7 @@ namespace SioForgeCAD.Commun.Mist
             }
             finally
             {
-                if (fs != null) { fs.Close(); }
+                fs?.Close();
             }
             return false;
         }

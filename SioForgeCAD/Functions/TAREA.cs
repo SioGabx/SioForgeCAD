@@ -44,7 +44,7 @@ namespace SioForgeCAD.Functions
                     }
                 }
                 short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
-                string NoValidAreaObjectMessage = "\n\nAttention : Certain(s) objet(s) sélectionné(s) n'ont pas d'aire valide. Ils ont été exclus de la sélection";
+                const string NoValidAreaObjectMessage = "\n\nAttention : Certain(s) objet(s) sélectionné(s) n'ont pas d'aire valide. Ils ont été exclus de la sélection";
                 var Message = $"L'aire totale des objets est égale à {Math.Round(TotalArea, DisplayPrecision)}{((NoAreaObjects.Count > 0) ? NoValidAreaObjectMessage : "")}";
 
                 Generic.WriteMessage(Message);

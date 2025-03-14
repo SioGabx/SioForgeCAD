@@ -97,8 +97,6 @@ namespace SioForgeCAD.Commun
             //AC1024 = AutoCAD 2010 
             //AC1027 = AutoCAD 2013 
             //AC1032 = AutoCAD 2018 
-
-
             //var ucm = Application.UserConfigurationManager;
             //var profile = ucm.OpenCurrentProfile();
             //var section = profile.OpenSubsection("General");
@@ -109,15 +107,11 @@ namespace SioForgeCAD.Commun
 
             // return Application.DocumentManager.DefaultFormatForSave;
         }
-
-
-
         public static DocumentLock GetLock()
         {
             var doc = Generic.GetDocument();
             return GetLock(doc);
         }
-
 
         public static DocumentLock GetLock(this Document doc)
         {
@@ -127,7 +121,6 @@ namespace SioForgeCAD.Commun
             }
             return null;
         }
-
 
         public static Database GetDatabase()
         {

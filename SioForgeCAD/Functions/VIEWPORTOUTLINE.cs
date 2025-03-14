@@ -71,7 +71,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         private static void DrawOutline(Viewport viewport)
         {
             Database db = Generic.GetDatabase();

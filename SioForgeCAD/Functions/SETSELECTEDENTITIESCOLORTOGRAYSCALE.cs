@@ -61,7 +61,5 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
-
-
     }
 }

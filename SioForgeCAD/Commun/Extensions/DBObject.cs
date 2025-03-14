@@ -6,15 +6,10 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class DBObjectExtensions
     {
-
         public static void RemoveAllXdata(this DBObject dbObj)
         {
             if (dbObj == null)
-                throw new ArgumentNullException("dbObj");
-
-            Transaction tr = dbObj.Database.TransactionManager.TopTransaction;
-            if (tr == null)
-                throw new Autodesk.AutoCAD.Runtime.Exception(ErrorStatus.NoActiveTransactions);
+                throw new ArgumentNullException(nameof(dbObj));
 
             if (!dbObj.IsWriteEnabled)
                 throw new Autodesk.AutoCAD.Runtime.Exception(ErrorStatus.NotOpenForWrite);
@@ -29,6 +24,5 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
     }
 }

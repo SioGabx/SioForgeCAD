@@ -12,15 +12,12 @@ namespace SioForgeCAD.Functions
     {
         public static void Remove()
         {
-
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-
 
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
                 AllSelectedObject = ed.GetSelectionRedraw("Selectionnez des entités pour lequels vous souhaitez supprimer les XDATAs", true, false);
-
             }
 
             using (var tr = db.TransactionManager.StartTransaction())
@@ -42,7 +39,6 @@ namespace SioForgeCAD.Functions
 
         public static void RemoveAll()
         {
-            Document doc = Generic.GetDocument();
             Database db = Generic.GetDatabase();
 
             using (var tr = db.TransactionManager.StartTransaction())
@@ -57,18 +53,9 @@ namespace SioForgeCAD.Functions
                     {
                         Debug.WriteLine(ex.ToString());
                     }
-
                 }
-
                 tr.Commit();
             }
-
-
         }
-
-
-
-
-
     }
 }

@@ -53,7 +53,6 @@ namespace SioForgeCAD.Functions
                 // Trie par ordre alphabétique
                 blockNames.Sort();
 
-
                 //TODO : Create a table of block, hauteur entre = 1.25, faire groupe a chaque changement de types
                 //Title font : .35, position : .9 above block, 2.85 bellow previous
                 foreach (string name in blockNames)

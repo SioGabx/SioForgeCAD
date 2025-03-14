@@ -264,6 +264,5 @@ namespace SioForgeCAD.Commun.Extensions
             double scaleY = entExtentSize.Height / FitBoundingBoxSize.Height;
             ent.TransformBy(Matrix3d.Scaling(Math.Min(scaleX, scaleY), entExtent.MinPoint));
         }
-
     }
 }

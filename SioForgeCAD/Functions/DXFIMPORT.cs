@@ -17,14 +17,16 @@ namespace SioForgeCAD.Functions
 
             using (LongOperationProcess LongOperation = new LongOperationProcess())
             {
-                foreach (var FileName in GetFiles())
+                var ListOfFiles = GetFiles();
+                for (int FileIndex = 0; FileIndex < ListOfFiles.Length; FileIndex++)
                 {
+                    string FileName = ListOfFiles[FileIndex];
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         try
                         {
                             if (LongOperation.IsCanceled) { return; }
-                            Application.DoEvents();
+                            //Application.DoEvents();
                             string BlocName = System.IO.Path.GetFileNameWithoutExtension(FileName);
                             using (Database dxfDb = new Database(false, true))
                             {
@@ -40,6 +42,9 @@ namespace SioForgeCAD.Functions
 
                                 db.Insert(BlocName, dxfDb, false);
                                 BlockReferences.InsertFromName(BlocName, Points.Empty, 0);
+
+                                Generic.WriteMessage($"Chargement de {FileName}... {FileIndex + 1}/{ListOfFiles.Length}");
+                                Application.DoEvents();
                             }
                         }
                         catch (Autodesk.AutoCAD.Runtime.Exception ex)

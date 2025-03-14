@@ -83,16 +83,6 @@ namespace SioForgeCAD.Commun
             LastSliceResult = CachePolygon;
         }
 
-
-
-
-
-
-
-
-
-
-
         public static void TryDetectWrongCut(List<Polyline> Polylines, Polyline CutLine)
         {
             //using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -135,11 +125,6 @@ namespace SioForgeCAD.Commun
                 }
             }
         }
-
-
-
-
-
 
         public static List<Polyline> RecreateClosedPolyline(DBObjectCollection SplittedPolylines, Polyline CutLine)
         {
@@ -331,9 +316,6 @@ namespace SioForgeCAD.Commun
             }
             return DblCollection;
         }
-
-
-
 
         private static bool ContainsTolerance(DoubleCollection doubles, double Value)
         {

@@ -37,7 +37,6 @@ namespace SioForgeCAD.Functions
                     }
                     tr.Commit();
                 }
-
             }
         }
 
@@ -91,8 +90,5 @@ namespace SioForgeCAD.Functions
                 ent.TransformBy(scaleMatrix);
             }
         }
-
-
-
     }
 }

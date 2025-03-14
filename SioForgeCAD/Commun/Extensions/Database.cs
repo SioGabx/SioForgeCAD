@@ -109,7 +109,5 @@ namespace SioForgeCAD.Commun.Extensions
                 return EntLastObjectId;
             }
         }
-
     }
-
 }

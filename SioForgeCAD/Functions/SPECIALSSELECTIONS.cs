@@ -248,9 +248,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
-
-
         public static void AllBlockWithSelectedBlocksNames()
         {
             Database db = Generic.GetDatabase();
@@ -297,8 +294,5 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-
-
     }
 }

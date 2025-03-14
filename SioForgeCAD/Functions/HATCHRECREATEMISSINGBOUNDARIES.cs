@@ -23,7 +23,6 @@ namespace SioForgeCAD.Functions
                 var CurrentLayer = Layers.GetCurrentLayerName();
                 foreach (var item in SelectionResult.Value.GetObjectIds())
                 {
-
                     if (item.GetDBObject() is Hatch hatch)
                     {
                         var HasBoundary = hatch.GetAssociatedObjectIds().Count > 0;

@@ -57,11 +57,6 @@ namespace SioForgeCAD.Functions
 
                 db.ReloadXrefs(XrefToReload);
             }
-
-
         }
-
-
-
     }
 }

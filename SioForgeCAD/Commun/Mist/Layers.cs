@@ -231,7 +231,6 @@ namespace SioForgeCAD.Commun
                             sourceLayer.Erase();
                         }
                     }
-
                     catch (System.Exception ex)
                     {
                         Debug.WriteLine(ex.Message);
@@ -250,7 +249,6 @@ namespace SioForgeCAD.Commun
                 return;
 
             string sourceLayerName = sourceLayer.Name;
-
 
             // Move every entities
             foreach (ObjectId blockId in tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable)
@@ -278,7 +276,6 @@ namespace SioForgeCAD.Commun
                 Generic.WriteMessage($"Impossible de supprimer le calque {sourceLayerName}: {ex.Message}");
             }
         }
-
 
         public static Color GetLayerColor(string LayerName)
         {
