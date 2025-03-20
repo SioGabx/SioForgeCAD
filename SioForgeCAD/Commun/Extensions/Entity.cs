@@ -55,6 +55,7 @@ namespace SioForgeCAD.Commun.Extensions
                         TargetHatch.GradientOneColorMode = OriginHatch.GradientOneColorMode;
                         TargetHatch.GradientShift = OriginHatch.GradientShift;
                         TargetHatch.GradientAngle = OriginHatch.GradientAngle;
+                        TargetHatch.SetGradientColors(OriginHatch.GetGradientColors());
                     }
                     if (OriginHatch.IsHatch)
                     {

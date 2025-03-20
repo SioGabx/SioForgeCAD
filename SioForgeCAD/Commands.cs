@@ -568,6 +568,7 @@ namespace SioForgeCAD
         {
             Functions.SMARTFLATTEN.FlattenAll();
         }
+
         [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
         //
         public static void STRIPTEXTFORMATING()
@@ -609,7 +610,12 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
+        [CommandMethod("DEBUG", "WIPEOUT", CommandFlags.UsePickSet)]
+        public static void WIPEOUT()
+        { 
+        Functions.WIPEOUT.ModifyWipeout();
+        }
+            [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {
             Editor ed = Generic.GetEditor();

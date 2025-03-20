@@ -217,6 +217,7 @@
     <Compile Include="Functions\CURVETOPOLYGON.cs" />
     <Compile Include="Functions\CUTHATCH.cs" />
     <Compile Include="Functions\DELETESUBGROUP.cs" />
+    <Compile Include="Functions\DIMDISASSOCIATE.cs" />
     <Compile Include="Functions\DRAWBOUNDINGBOX.cs" />
     <Compile Include="Functions\DRAWCPTERRAIN.cs" />
     <Compile Include="Functions\DRAWPERPENDICULARLINEFROMPOINT.cs" />
@@ -269,6 +270,7 @@
     <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VIEWPORTLOCK.cs" />
     <Compile Include="Functions\VIEWPORTOUTLINE.cs" />
+    <Compile Include="Functions\WIPEOUT.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

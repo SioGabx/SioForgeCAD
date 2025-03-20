@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
@@ -109,5 +110,56 @@ namespace SioForgeCAD.Commun.Extensions
                 return EntLastObjectId;
             }
         }
+
+
+
+
+        public static void SetAnnotativeScale(this Database db, string Name, double PaperUnits, double DrawingUnits)
+        {
+            Editor ed = Generic.GetEditor();
+            if (db.Cannoscale.Name != Name)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    ObjectContextManager ocm = db.ObjectContextManager;
+                    ObjectContextCollection occ = ocm.GetContextCollection("ACDB_ANNOTATIONSCALES");
+
+                    if (occ != null)
+                    {
+                        AnnotationScale scale = null;
+                        foreach (ObjectContext obj in occ)
+                        {
+                            if (obj is AnnotationScale annoScale && annoScale.Name == Name)
+                            {
+                                scale = annoScale;
+                                break;
+                            }
+                        }
+
+                        if (scale == null)
+                        {
+                            scale = new AnnotationScale
+                            {
+                                Name = Name,
+                                PaperUnits = PaperUnits,
+                                DrawingUnits = DrawingUnits
+                            };
+                            occ.AddContext(scale);
+                        }
+
+                        db.Cannoscale = scale;
+                        Generic.WriteMessage($"Échelle annotative définie sur {Name}.");
+                    }
+                    else
+                    {
+                        Generic.WriteMessage("Impossible d'accéder aux échelles annotatives.");
+                    }
+                    ed.Regen();
+                    tr.Commit();
+                }
+            }
+        }
+
+
     }
 }

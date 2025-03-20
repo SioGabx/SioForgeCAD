@@ -30,6 +30,7 @@ namespace SioForgeCAD
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.CONVERTIMAGETOOLE.ContextMenu.Attach();
+            Functions.DIMDISASSOCIATE.ContextMenu.Attach();
 
             Functions.PICKSTYLETRAY.AddTray();
         }

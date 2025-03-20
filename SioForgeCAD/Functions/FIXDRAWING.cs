@@ -1,6 +1,9 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices.Core;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
@@ -8,6 +11,8 @@ namespace SioForgeCAD.Functions
     {
         public static void Fix()
         {
+            Database db = Generic.GetDatabase();
+
             Application.SetSystemVariable("UCSFOLLOW", 0); //Generates a plan view whenever you change from one UCS to another.  
             Application.SetSystemVariable("UCSDETECT", 0);
             Application.SetSystemVariable("ROLLOVERTIPS", 0);
@@ -15,6 +20,8 @@ namespace SioForgeCAD.Functions
             Application.SetSystemVariable("XCOMPAREENABLE", 0);
             Application.SetSystemVariable("LINESMOOTHING", 1);
             Application.SetSystemVariable("LINEFADING", 1);
+            Application.SetSystemVariable("MEASUREMENT", 1);//Controls whether the current drawing uses imperial or metric hatch pattern and linetype files. 0 (imperial) or 1 (metric)
+            Application.SetSystemVariable("MEASUREINIT", 1); //Controls whether a drawing you start from scratch uses imperial or metric default settings.  0 (imperial) or 1 (metric)
             Application.SetSystemVariable("INSUNITS", 6);//Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing.  https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
             Application.SetSystemVariable("PICKAUTO", 5);
             Application.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
@@ -33,6 +40,7 @@ namespace SioForgeCAD.Functions
             Generic.Command("_INSUNITS", 6); //6 == Meters //Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
             Generic.Command("_-UNITS", 2, 4, 1, 4, 0, "_NO");
             Functions.PURGEALL.Purge();
+            db.SetAnnotativeScale("1:1", 1, 1);
         }
     }
 }
