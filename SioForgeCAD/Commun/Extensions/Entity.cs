@@ -29,7 +29,17 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     return;
                 }
-                ObjectToErase.UpgradeOpen();
+                try
+                {
+                    if (!ObjectToErase.IsWriteEnabled)
+                    {
+                        ObjectToErase.UpgradeOpen();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
                 if (!ObjectToErase.IsErased)
                 {
                     ObjectToErase.Erase(true);
@@ -148,6 +158,25 @@ namespace SioForgeCAD.Commun.Extensions
 
         }
 
+        public static void CopyDrawOrderTo(this Entity Origin, Entity Target)
+        {
+            var db = Generic.GetDatabase();
+            Transaction tr = db.TransactionManager.TopTransaction;
+            BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
+            DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
+
+            ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();
+            DrawOrderCollection.Insert(0, Target.ObjectId);
+            try
+            {
+                orderTable.MoveBelow(DrawOrderCollection, Origin.ObjectId);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
+
+        }
         public static double TryGetArea(this Entity ent)
         {
             if (ent?.IsDisposed != false)

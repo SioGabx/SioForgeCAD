@@ -317,7 +317,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public static void VEGBLOCCOPYGRIP()
         {
-            Functions.VEGBLOCCOPYGRIP.AddGrip();
+            Functions.VEGBLOCCOPYGRIP.ToggleGrip();
         }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOCLEGEND", CommandFlags.UsePickSet)]
@@ -610,10 +610,10 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("DEBUG", "WIPEOUT", CommandFlags.UsePickSet)]
-        public static void WIPEOUT()
+        [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]
+        public static void WIPEOUTGRIP()
         { 
-        Functions.WIPEOUT.ModifyWipeout();
+        Functions.WIPEOUT.ToggleGrip();
         }
             [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()

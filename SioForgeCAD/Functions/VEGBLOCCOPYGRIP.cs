@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static void AddGrip()
+        public static void ToggleGrip()
         {
             if (!Instance.IsEnabled)
             {

@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -80,6 +81,21 @@ namespace SioForgeCAD.Commun.Extensions
                 if (CollectionPoint.IsEqualTo(Point, (Tolerance)CustomTolerance))
                 {
                     return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool HasDuplicatePoints(this Point3dCollection points, Tolerance tolerance)
+        {
+            for (int i = 0; i < points.Count; i++)
+            {
+                for (int j = i + 1; j < points.Count; j++)
+                {
+                    if (points[i].IsEqualTo(points[j], new Tolerance(1e-5, 1e-5)))
+                    {
+                        return true;
+                    }
                 }
             }
             return false;

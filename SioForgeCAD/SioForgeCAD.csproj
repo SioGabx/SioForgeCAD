@@ -180,6 +180,9 @@
     <Compile Include="Commun\Mist\PluginRegister.cs" />
     <Compile Include="Commun\Mist\SelectInXref.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Slice.cs" />
+    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineGrip.cs" />
+    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineGripOverrule.cs" />
+    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineJig.cs" />
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>

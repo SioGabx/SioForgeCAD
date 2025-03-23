@@ -6,12 +6,12 @@ using System;
 
 namespace SioForgeCAD.Commun.Overrules
 {
-    internal class CopyGrip : GripData
+    internal class PolyGrip : GripData
     {
-        public CopyGrip()
+        public PolyGrip()
         {
             ForcedPickOn = false;
-            GizmosEnabled = false;
+            GizmosEnabled = true;
             DrawAtDragImageGripPoint = false;
             IsPerViewport = false;
             ModeKeywordsDisabled = true;
@@ -21,7 +21,8 @@ namespace SioForgeCAD.Commun.Overrules
         }
 
         public ObjectId EntityId { get; set; } = ObjectId.Null;
-        public Action<ObjectId> OnHotGripAction { get; set; } = (_) => Generic.WriteMessage("GRIPPED");
+        public Action<ObjectId, Point3d> OnHotGripAction { get; set; } = (objectid, GripPoint) => Generic.WriteMessage("GRIPPED");
+        public Vector2d DrawVector { get; set; } = new Vector2d();
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
@@ -29,9 +30,7 @@ namespace SioForgeCAD.Commun.Overrules
             var gripHeight = 2.5 * gripSizeInPixels / unit.X;
             var x = GripPoint.X;
             var y = GripPoint.Y;
-            var offset = gripHeight / 2.0;
-
-            double WidthCross = (gripHeight / 3 / 2) * 0.8;
+            var offset = gripHeight / 2.5;
 
             Point3d Origin = new Point3d(x, y, 0.0);
 
@@ -39,46 +38,28 @@ namespace SioForgeCAD.Commun.Overrules
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
             Vector3d XVector = ucs.CoordinateSystem3d.Xaxis;
 
-            Point3d OriginTop = Origin.Displacement(YVector, offset);
-            Point3d OriginBottom = Origin.Displacement(-YVector, offset);
             Point3d OriginLeft = Origin.Displacement(-XVector, offset);
             Point3d OriginRight = Origin.Displacement(XVector, offset);
 
             Point3d Transform(Point3d point, Vector3d Vector)
             {
-                return point.Displacement(Vector, WidthCross);
+                return point.Displacement(Vector, offset);
             }
 
+
             /*
-                  A++++++B
-                  +      +
-                  +      +
-            K+++++L      C+++++D
-            +                  +
-            +                  +
-            J+++++I      F+++++E
-                  +      +
-                  +      +
-                  H++++++G
+            K++++++D
+            +      +
+            +      +
+            J++++++E
             */
 
             var points = new Point3dCollection
             {
-                Transform(OriginTop, -XVector), //A
-                Transform(OriginTop, XVector), //B
-                Transform(Transform(Origin, XVector), YVector), //C
-
                 Transform(OriginRight, YVector), //D
                 Transform(OriginRight, -YVector), //E
-                Transform(Transform(Origin, XVector), -YVector), //F
-
-                Transform(OriginBottom, XVector), //G
-                Transform(OriginBottom, -XVector), //H
-                Transform(Transform(Origin, -XVector), -YVector), //I
-
                 Transform(OriginLeft, -YVector), //J
                 Transform(OriginLeft, YVector), //K
-                Transform(Transform(Origin, -XVector), YVector), //L
             };
 
             worldDraw.SubEntityTraits.FillType = FillType.FillAlways;
@@ -114,10 +95,9 @@ namespace SioForgeCAD.Commun.Overrules
             var doc = Generic.GetDocument();
             using (doc.LockDocument())
             {
-                OnHotGripAction(entityId);
+                OnHotGripAction(entityId, GripPoint);
             }
-
-            return ReturnValue.Ok;
+            return ReturnValue.GetNewGripPoints;
         }
     }
 }
