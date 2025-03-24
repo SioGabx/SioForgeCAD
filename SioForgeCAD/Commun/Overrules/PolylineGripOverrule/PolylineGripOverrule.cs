@@ -17,9 +17,9 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
         private readonly Type _targetType;
         private readonly bool _hideOriginals;
         private readonly Func<Entity, bool> _filterFunction;
-        private readonly Action<ObjectId, Point3d> _onHotGripAction;
+        private readonly Action<ObjectId, GripData> _onHotGripAction;
 
-        public PolyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, Action<ObjectId, Point3d> OnHotGripAction, bool HideOriginals = true)
+        public PolyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, Action<ObjectId, GripData> OnHotGripAction, bool HideOriginals = true)
         {
             this._targetType = TargetType;
             this._filterFunction = FilterFunction;
@@ -116,19 +116,20 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 GripDataCollection DefaultGrips = new GripDataCollection();
                 base.GetGripPoints(entity, DefaultGrips, curViewUnitSize, gripSize, curViewDir, bitFlags);
 
-                foreach (var DefaultGrip in DefaultGrips)
+                int index = 0;
+                foreach (GripData DefaultGrip in DefaultGrips)
                 {
                     var grip = new PolyGrip()
                     {
+                        Index = index,
                         GripPoint = DefaultGrip.GripPoint,
                         EntityId = entity.ObjectId,
                         OnHotGripAction = _onHotGripAction
                     };
                     grips.Add(grip);
+                    index++;
                 }
-
-
-
+               
 
                 if (!_hideOriginals)
                 {

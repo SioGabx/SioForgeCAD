@@ -69,6 +69,20 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return new Point3dCollection(IEnumCollection.ToArray());
         }
+        public static Point2dCollection ToPoint2dCollection(this IEnumerable<Point2d> IEnumCollection)
+        {
+            return new Point2dCollection(IEnumCollection.ToArray());
+        }
+
+        public static Point2dCollection ToPoint2dCollection(this Point3dCollection collection)
+        {
+            Point2dCollection point2dCollection = new Point2dCollection();
+            foreach (Point3d point in collection)
+            {
+                point2dCollection.Add(point.ToPoint2d());
+            }
+            return point2dCollection;
+        }
 
         public static bool ContainsTolerance(this Point3dCollection collection, Point3d Point, Tolerance? CustomTolerance = null)
         {
@@ -99,6 +113,18 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             return false;
+        }
+        public static Point3dCollection RemoveDuplicatePoints(this Point3dCollection points, Tolerance tolerance)
+        {
+            Point3dCollection NoDuplicateCollection = new Point3dCollection();
+            foreach (Point3d point in points)
+            {
+                if (!NoDuplicateCollection.ContainsTolerance(point, tolerance))
+                {
+                    NoDuplicateCollection.Add(point);
+                }
+            }
+            return NoDuplicateCollection;
         }
     }
 }

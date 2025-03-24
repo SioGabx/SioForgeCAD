@@ -23,8 +23,9 @@ namespace SioForgeCAD.Commun.Overrules
             GripModes = new GripModeCollection();
         }
 
+        public int Index { get; set; }
         public ObjectId EntityId { get; set; } = ObjectId.Null;
-        public Action<ObjectId, Point3d> OnHotGripAction { get; set; } = (objectid, GripPoint) => Generic.WriteMessage("GRIPPED");
+        public Action<ObjectId, GripData> OnHotGripAction { get; set; } = (objectid, GripData) => Generic.WriteMessage("GRIPPED");
         public Vector2d DrawVector { get; set; } = new Vector2d();
         public GripModeCollection GripModes { get; }
         public virtual GripMode.ModeIdentifier CurrentModeId { get; set; } = GripMode.ModeIdentifier.CustomStart;
@@ -100,8 +101,7 @@ namespace SioForgeCAD.Commun.Overrules
             var doc = Generic.GetDocument();
             using (doc.LockDocument())
             {
-                Generic.WriteMessage("Selected => " + CurrentModeId);
-                OnHotGripAction(entityId, GripPoint);
+                OnHotGripAction(entityId, this);
             }
             return ReturnValue.GetNewGripPoints;
         }
@@ -112,7 +112,7 @@ namespace SioForgeCAD.Commun.Overrules
             modes.Add(new GripMode()
             {
                 ModeId = 1,
-                DisplayString = $"Etirer",
+                DisplayString = $"Etirer le sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = $"Hello"
             }); 
@@ -120,7 +120,14 @@ namespace SioForgeCAD.Commun.Overrules
             modes.Add(new GripMode()
             {
                 ModeId = 2,
-                DisplayString = $"Ajouter",
+                DisplayString = $"Ajouter sommet",
+                Action = GripMode.ActionType.DragOn,
+                ToolTip = $"Hello"
+            });
+            modes.Add(new GripMode()
+            {
+                ModeId = 3,
+                DisplayString = $"Supprimer sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = $"Hello"
             });

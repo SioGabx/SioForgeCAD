@@ -48,7 +48,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             {
                 _ed.PointMonitor += Editor_PointMonitor;
 
-                var opt = new PromptPointOptions("\nSelect line's extended end point:");
+                var opt = new PromptPointOptions("\nSpécifiez un nouveau point de sommet");
                 opt.AllowNone = false;
                 opt.UseBasePoint = true;
                 opt.BasePoint = _basePoint;
@@ -83,16 +83,12 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
         {
             try
             {
-                _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline()
+                _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
+                
+                for (int i = _polyline.GetReelNumberOfVertices() - 1; i >= 0; i--)
                 {
-
-                };
-                bool HasFound = false;
-                for (int i = 0; i<_polyline.GetReelNumberOfVertices(); i++)
-                {
-                    if (!HasFound && _polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
+                    if ( _polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
                     {
-                        HasFound = true;
                         _tspolyline.AddVertex(mousePoint);
                     }
                     else
