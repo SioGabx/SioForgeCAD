@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 
@@ -112,19 +113,23 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
                 GripDataCollection DefaultGrips = new GripDataCollection();
                 base.GetGripPoints(entity, DefaultGrips, curViewUnitSize, gripSize, curViewDir, bitFlags);
-
+                Point3dCollection AlreadyAddedPoints = new Point3dCollection();
                 int index = 0;
                 foreach (GripData DefaultGrip in DefaultGrips)
                 {
-                    var grip = new PolyGrip()
+                    if (!AlreadyAddedPoints.ContainsTolerance(DefaultGrip.GripPoint, Generic.MediumTolerance))
                     {
-                        Index = index,
-                        GripPoint = DefaultGrip.GripPoint,
-                        EntityId = entity.ObjectId,
-                        OnHotGripAction = _onHotGripAction
-                    };
-                    grips.Add(grip);
-                    index++;
+                        var grip = new PolyGrip()
+                        {
+                            Index = index,
+                            GripPoint = DefaultGrip.GripPoint,
+                            EntityId = entity.ObjectId,
+                            OnHotGripAction = _onHotGripAction
+                        };
+                        AlreadyAddedPoints.Add(DefaultGrip.GripPoint);
+                        grips.Add(grip);
+                        index++;
+                    }
                 }
 
 
