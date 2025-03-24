@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
@@ -24,8 +25,54 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             this._filterFunction = FilterFunction;
             this._hideOriginals = HideOriginals;
             this._onHotGripAction = OnHotGripAction;
+
+
+            var overruled = new OverruledBlock();
+            Overrule.GetClass(typeof(Wipeout)).AddX(GetClass(typeof(OverruledBlock)), overruled);
         }
-        
+
+        private class OverruledBlock : MultiModesGripPE
+        {
+            public override GripMode CurrentMode(Entity entity, GripData gripData)
+            {
+                var grip = gripData as PolyGrip;
+                if (grip == null) return null;
+                var index = (int)grip.CurrentModeId - (int)GripMode.ModeIdentifier.CustomStart;
+                return grip.GripModes[index];
+            }
+
+            public override uint CurrentModeId(Entity entity, GripData gripData)
+            {
+                var grip = gripData as PolyGrip;
+                if (grip != null) return (uint)grip.CurrentModeId;
+                return 0;
+            }
+
+            public override bool GetGripModes(
+                Entity entity, GripData gripData, GripModeCollection modes, ref uint curMode)
+            {
+                if (!(gripData is PolyGrip)) return false;
+                return ((PolyGrip)gripData).GetGripModes(ref modes, ref curMode);
+            }
+
+            public override GripType GetGripType(Entity entity, GripData gripData)
+            {
+                return (gripData is PolyGrip) ? GripType.Secondary : GripType.Primary;
+            }
+
+            public override bool SetCurrentMode(Entity entity, GripData gripData, uint curMode)
+            {
+                if (!(gripData is PolyGrip)) return false;
+                ((PolyGrip)gripData).CurrentModeId = (GripMode.ModeIdentifier)curMode;
+                return true;
+            }
+
+            public override void Reset(Entity entity)
+            {
+                base.Reset(entity);
+            }
+        }
+
         public void EnableOverrule(bool enable)
         {
             if (enable)
@@ -102,4 +149,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             base.MoveGripPointsAt(entity, grips, offset, bitFlags);
         }
     }
+
+
 }

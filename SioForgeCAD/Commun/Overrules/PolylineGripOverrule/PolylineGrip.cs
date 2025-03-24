@@ -18,11 +18,16 @@ namespace SioForgeCAD.Commun.Overrules
             RubberBandLineDisabled = false;
             TriggerGrip = true;
             HotGripInvokesRightClick = false;
+
+
+            GripModes = new GripModeCollection();
         }
 
         public ObjectId EntityId { get; set; } = ObjectId.Null;
         public Action<ObjectId, Point3d> OnHotGripAction { get; set; } = (objectid, GripPoint) => Generic.WriteMessage("GRIPPED");
         public Vector2d DrawVector { get; set; } = new Vector2d();
+        public GripModeCollection GripModes { get; }
+        public virtual GripMode.ModeIdentifier CurrentModeId { get; set; } = GripMode.ModeIdentifier.CustomStart;
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
@@ -95,9 +100,33 @@ namespace SioForgeCAD.Commun.Overrules
             var doc = Generic.GetDocument();
             using (doc.LockDocument())
             {
+                Generic.WriteMessage("Selected => " + CurrentModeId);
                 OnHotGripAction(entityId, GripPoint);
             }
             return ReturnValue.GetNewGripPoints;
         }
+
+        public bool GetGripModes(ref GripModeCollection modes, ref uint curMode)
+        {
+            //return false; //disable grip menu
+            modes.Add(new GripMode()
+            {
+                ModeId = 1,
+                DisplayString = $"Etirer",
+                Action = GripMode.ActionType.DragOn,
+                ToolTip = $"Hello"
+            }); 
+            
+            modes.Add(new GripMode()
+            {
+                ModeId = 2,
+                DisplayString = $"Ajouter",
+                Action = GripMode.ActionType.DragOn,
+                ToolTip = $"Hello"
+            });
+
+            return true;
+        }
+
     }
 }

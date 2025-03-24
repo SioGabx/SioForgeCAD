@@ -68,8 +68,9 @@ namespace SioForgeCAD.Functions
 
                     using (Polyline WipeoutPoly = new Polyline())
                     {
-                        foreach (Point3d WipeoutEntVertice in WipeoutEntVertices)
+                        for (int i = 0; i < WipeoutEntVertices.Count - 1; i++)
                         {
+                            Point3d WipeoutEntVertice = (Point3d)WipeoutEntVertices[i];
                             WipeoutPoly.AddVertex(WipeoutEntVertice);
                         }
                         WipeoutPoly.Closed = true;
@@ -78,12 +79,10 @@ namespace SioForgeCAD.Functions
                         if (JigResult.Status == PromptStatus.OK)
                         {
                             Point2dCollection pts = new Point2dCollection();
-                            bool HasFound = false;
                             foreach (Point3d WipeoutEntVertice in WipeoutEntVertices)
                             {
-                                if (!HasFound && WipeoutEntVertice.IsEqualTo(GripPoint, Generic.MediumTolerance))
+                                if (WipeoutEntVertice.IsEqualTo(GripPoint, Generic.MediumTolerance))
                                 {
-                                    HasFound = true;
                                     pts.Add(JigResult.Value.ToPoint2d());
                                 }
                                 else
@@ -91,13 +90,8 @@ namespace SioForgeCAD.Functions
                                     pts.Add(WipeoutEntVertice.ToPoint2d());
                                 }
                             }
-                            //Wipeout wo = new Wipeout();
                             WipeoutEnt.SetFrom(pts, Vector3d.ZAxis);
                             WipeoutEnt.RecordGraphicsModified(true);
-                            //var DrawWoObjId = wo.AddToDrawing();
-                            // WipeoutEnt.CopyPropertiesTo(wo);
-                            // WipeoutEnt.CopyDrawOrderTo(wo);
-                            // WipeoutEnt.EraseObject();
                         }
                     }
                 }
