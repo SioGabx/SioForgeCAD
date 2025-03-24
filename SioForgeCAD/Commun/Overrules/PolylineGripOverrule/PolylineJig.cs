@@ -3,13 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
 {
@@ -25,7 +19,6 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
         private Autodesk.AutoCAD.DatabaseServices.Polyline _tspolyline;
 
         private Point3d _basePoint;
-        private Point3d _finalPoint;
 
         public PolylineJig(Autodesk.AutoCAD.DatabaseServices.Polyline polyline, Point3d initPoint)
         {
@@ -67,14 +60,13 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             ClearGhosts();
             var pt = e.Context.ComputedPoint;
             DrawGhosts(pt);
-            _finalPoint = pt;
         }
 
         private void ClearGhosts()
         {
             if (_tspolyline != null)
             {
-                _tsManager.EraseTransient(_tspolyline, new IntegerCollection());
+                _tsManager.EraseTransient(_tspolyline, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
                 _tspolyline.Dispose();
             }
         }
@@ -84,10 +76,10 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             try
             {
                 _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
-                
+
                 for (int i = _polyline.GetReelNumberOfVertices() - 1; i >= 0; i--)
                 {
-                    if ( _polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
+                    if (_polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
                     {
                         _tspolyline.AddVertex(mousePoint);
                     }
@@ -97,7 +89,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
                     }
                 }
                 _tspolyline.Closed = _polyline.Closed;
-                _tsManager.AddTransient(_tspolyline, TransientDrawingMode.Highlight, 126, new IntegerCollection());
+                _tsManager.AddTransient(_tspolyline, TransientDrawingMode.Highlight, 126, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
             }
             catch { }
         }

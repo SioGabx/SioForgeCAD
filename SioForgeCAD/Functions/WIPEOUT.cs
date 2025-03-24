@@ -1,20 +1,12 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Overrules;
 using SioForgeCAD.Commun.Overrules.PolyGripOverrule;
 using SioForgeCAD.Commun.Overrules.PolylineGripOverrule;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace SioForgeCAD.Functions
 {
@@ -136,6 +128,7 @@ namespace SioForgeCAD.Functions
                         }
                     }
                 }
+                Generic.Regen();
                 tr.Commit();
             }
         }

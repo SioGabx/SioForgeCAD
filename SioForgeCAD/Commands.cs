@@ -612,10 +612,10 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]
         public static void WIPEOUTGRIP()
-        { 
-        Functions.WIPEOUT.ToggleGrip();
+        {
+            Functions.WIPEOUT.ToggleGrip();
         }
-            [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
+        [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {
             Editor ed = Generic.GetEditor();

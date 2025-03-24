@@ -140,10 +140,10 @@ namespace SioForgeCAD.Commun
             return GetDocument().Editor;
         }
 
-        public static void SendStringToExecute(string Command)
+        public static void SendStringToExecute(string Command, bool Echo = true)
         {
             Document doc = Generic.GetDocument();
-            doc.SendStringToExecute(string.Concat(Command, ' '), true, false, true);
+            doc.SendStringToExecute(string.Concat(Command, ' '), true, false, Echo);
         }
 
         public static void Command(params object[] args)
@@ -153,6 +153,11 @@ namespace SioForgeCAD.Commun
             Editor ed = GetEditor();
             ed.Command(args);
             Application.SetSystemVariable("CMDECHO", cmdecho);
+        }
+
+        public static void Regen()
+        {
+            SendStringToExecute("_.REGEN", false);
         }
 
         public static async Task CommandAsync(params object[] args)

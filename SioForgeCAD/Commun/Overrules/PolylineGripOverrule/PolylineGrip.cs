@@ -14,11 +14,11 @@ namespace SioForgeCAD.Commun.Overrules
             GizmosEnabled = true;
             DrawAtDragImageGripPoint = false;
             IsPerViewport = false;
-            ModeKeywordsDisabled = true;
+            ModeKeywordsDisabled = false;
             RubberBandLineDisabled = false;
             TriggerGrip = true;
             HotGripInvokesRightClick = false;
-
+            SkipWhenShared = true;
 
             GripModes = new GripModeCollection();
         }
@@ -114,22 +114,22 @@ namespace SioForgeCAD.Commun.Overrules
                 ModeId = 1,
                 DisplayString = $"Etirer le sommet",
                 Action = GripMode.ActionType.DragOn,
-                ToolTip = $"Hello"
-            }); 
-            
+                ToolTip = ""
+            });
+
             modes.Add(new GripMode()
             {
                 ModeId = 2,
                 DisplayString = $"Ajouter sommet",
                 Action = GripMode.ActionType.DragOn,
-                ToolTip = $"Hello"
+                ToolTip = ""
             });
             modes.Add(new GripMode()
             {
                 ModeId = 3,
                 DisplayString = $"Supprimer sommet",
                 Action = GripMode.ActionType.DragOn,
-                ToolTip = $"Hello"
+                ToolTip = ""
             });
 
             return true;

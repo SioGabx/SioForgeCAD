@@ -1,10 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Diagnostics;
-using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 {
@@ -27,11 +24,9 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             this._onHotGripAction = OnHotGripAction;
 
 
-            var overruled = new OverruledBlock();
-            Overrule.GetClass(typeof(Wipeout)).AddX(GetClass(typeof(OverruledBlock)), overruled);
         }
 
-        private class OverruledBlock : MultiModesGripPE
+        private class PolyGripMenu : MultiModesGripPE
         {
             public override GripMode CurrentMode(Entity entity, GripData gripData)
             {
@@ -69,7 +64,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 
             public override void Reset(Entity entity)
             {
-                base.Reset(entity);
             }
         }
 
@@ -81,6 +75,8 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 _originalOverruling = Overrule.Overruling;
                 AddOverrule(RXClass.GetClass(_targetType), this, false);
                 SetCustomFilter();
+                var overruled = new PolyGripMenu();
+                Overrule.GetClass(_targetType).AddX(GetClass(typeof(PolyGripMenu)), overruled);
                 Overrule.Overruling = true;
                 _enabled = true;
             }
@@ -129,7 +125,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                     grips.Add(grip);
                     index++;
                 }
-               
+
 
                 if (!_hideOriginals)
                 {
@@ -143,7 +139,8 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 
         public override void MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
         {
-            if (grips.Count > 1) {
+            if (grips.Count > 1)
+            {
                 Generic.WriteMessage("Impossible de déplacer un point superposé");
                 return;
             }

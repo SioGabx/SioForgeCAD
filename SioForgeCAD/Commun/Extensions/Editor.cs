@@ -21,8 +21,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return ucs_rotAngle;
             }
-            double ucs_angle_degres = ucs_rotAngle * 180 / Math.PI;
-            return ucs_angle_degres;
+            return ucs_rotAngle * 180 / Math.PI; //in egrees
         }
 
         public static Size GetCurrentViewSize(this Editor _)
