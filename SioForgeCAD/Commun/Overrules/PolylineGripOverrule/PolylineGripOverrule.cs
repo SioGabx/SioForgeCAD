@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using System;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 {
@@ -139,6 +140,12 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 
         public override void MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
         {
+            //Debug.WriteLine(bitFlags);
+            //Debug.WriteLine(offset);
+            //if ((uint)bitFlags <= 16)
+            //{
+            //    Debug.WriteLine("Selected");
+            //}
             if (grips.Count > 1)
             {
                 Generic.WriteMessage("Impossible de déplacer un point superposé");

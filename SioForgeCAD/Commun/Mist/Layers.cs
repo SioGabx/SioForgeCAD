@@ -255,10 +255,16 @@ namespace SioForgeCAD.Commun
             {
                 foreach (ObjectId entId in tr.GetObject(blockId, OpenMode.ForWrite) as BlockTableRecord)
                 {
-                    Entity ent = tr.GetObject(entId, OpenMode.ForWrite) as Entity;
+                    Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
                     if (ent != null && ent.LayerId == sourceLayerId)
                     {
+                        if (ent.IsEntityOnLockedLayer())
+                        {
+                            Layers.SetLock(ent.Layer, false);
+                        }
+                        ent.UpgradeOpen();
                         ent.LayerId = targetLayerId;
+
                     }
                 }
             }
