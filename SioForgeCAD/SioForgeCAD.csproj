@@ -185,9 +185,8 @@
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGrip.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripMenu.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
-    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGripJig.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripJig.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGrip.cs" />
-    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGripJig.cs" />
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>

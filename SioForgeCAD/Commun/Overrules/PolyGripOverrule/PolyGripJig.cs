@@ -4,10 +4,11 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using SioForgeCAD.Commun.Extensions;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
 {
-    public class PolyMiddleGripJig
+    public class PolyGripJig
     {
         private readonly Editor _ed;
         private readonly Autodesk.AutoCAD.DatabaseServices.Polyline _polyline;
@@ -15,13 +16,15 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
         private TransientManager _tsManager = TransientManager.CurrentTransientManager;
         private Autodesk.AutoCAD.DatabaseServices.Polyline _tspolyline;
 
-        private Point3d _basePoint;
+        private readonly Point3dCollection _points;
+        private readonly Point3d _basePoint;
 
-        public PolyMiddleGripJig(Autodesk.AutoCAD.DatabaseServices.Polyline polyline, Point3d initPoint)
+        public PolyGripJig(Autodesk.AutoCAD.DatabaseServices.Polyline Polyline, Point3d InitPoint, Point3dCollection Points)
         {
             _ed = Generic.GetEditor();
-            _polyline = polyline;
-            _basePoint = initPoint;
+            _polyline = Polyline;
+            _basePoint = InitPoint;
+            _points = Points;
         }
 
 
@@ -39,7 +42,9 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
                     UseDashedLine = false
                 };
 
-                return _ed.GetPoint(opt);
+                var Result = _ed.GetPoint(opt);
+
+                return Result;
             }
             finally
             {
@@ -69,12 +74,13 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             try
             {
                 _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
-
+                Vector3d TransformVector = _basePoint.GetVectorTo(mousePoint);
+               var TransformMatrix = Matrix3d.Displacement(TransformVector);
                 for (int i = 0; i < _polyline.GetReelNumberOfVertices(); i++)
                 {
-                    if (_polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
+                    if (_points.ContainsTolerance(_polyline.GetPoint3dAt(i), Generic.MediumTolerance))
                     {
-                        _tspolyline.AddVertex(mousePoint);
+                        _tspolyline.AddVertex(_polyline.GetPoint3dAt(i).TransformBy(TransformMatrix));
                     }
                     else
                     {

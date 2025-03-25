@@ -37,7 +37,7 @@ namespace SioForgeCAD.Commun.Overrules
             var offset = gripHeight / 2.5;
 
             Point3d Origin = new Point3d(GripPoint.X, GripPoint.Y, 0.0);
-
+            if (Generic.GetDocument() == null) { return false; }
             Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
             Vector3d XVector = ucs.CoordinateSystem3d.Xaxis;

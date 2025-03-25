@@ -159,6 +159,11 @@ namespace SioForgeCAD.Commun
         {
             SendStringToExecute("_.REGEN", false);
         }
+        public static void UpdateScreen()
+        {
+            Generic.GetEditor().UpdateScreen();
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
+        }
 
         public static async Task CommandAsync(params object[] args)
         {

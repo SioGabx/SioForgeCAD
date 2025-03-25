@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 {
@@ -95,7 +96,10 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                             OnHotGripAction = _CornerOnHotGripAction
                         };
                         AlreadyAddedPoints.Add(DefaultGrip.GripPoint);
-                        grips.Add(grip);
+                        if (!grips.Contains(grip))
+                        {
+                            grips.Add(grip);
+                        }
                         index++;
                     }
                 }
@@ -119,7 +123,10 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                             OnHotGripAction = _MiddleOnHotGripAction,
                         };
                         AlreadyAddedPoints.Add(MiddlePoint);
-                        grips.Add(grip);
+                        if (!grips.Contains(grip))
+                        {
+                            grips.Add(grip);
+                        }
                     }
                 }
 
@@ -143,7 +150,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 Generic.WriteMessage("Impossible de déplacer un point superposé");
                 return;
             }
-            base.MoveGripPointsAt(entity, grips, offset, bitFlags);
+            //base.MoveGripPointsAt(entity, grips, offset, bitFlags);
         }
     }
 }
