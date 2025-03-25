@@ -3,12 +3,19 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Diagnostics;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 {
     public class PolyGripOverrule : GripOverrule
     {
+        public enum ModeIdAction
+        {
+            Default = 100,
+            Stretch = 101,
+            Add = 102,
+            Remove = 103
+        }
+
         private bool _enabled = false;
         public bool IsEnabled => _enabled;
         private bool _originalOverruling = false;
@@ -16,57 +23,16 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
         private readonly Type _targetType;
         private readonly bool _hideOriginals;
         private readonly Func<Entity, bool> _filterFunction;
-        private readonly Action<ObjectId, GripData> _onHotGripAction;
+        private readonly Action<ObjectId, GripData> _CornerOnHotGripAction;
+        private readonly Action<ObjectId, GripData> _MiddleOnHotGripAction;
 
-        public PolyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, Action<ObjectId, GripData> OnHotGripAction, bool HideOriginals = true)
+        public PolyGripOverrule(Type TargetType, Func<Entity, bool> FilterFunction, Action<ObjectId, GripData> CornerOnHotGripAction, Action<ObjectId, GripData> MiddleOnHotGripAction, bool HideOriginals = true)
         {
             this._targetType = TargetType;
             this._filterFunction = FilterFunction;
             this._hideOriginals = HideOriginals;
-            this._onHotGripAction = OnHotGripAction;
-
-
-        }
-
-        private class PolyGripMenu : MultiModesGripPE
-        {
-            public override GripMode CurrentMode(Entity entity, GripData gripData)
-            {
-                var grip = gripData as PolyGrip;
-                if (grip == null) return null;
-                var index = (int)grip.CurrentModeId - (int)GripMode.ModeIdentifier.CustomStart;
-                return grip.GripModes[index];
-            }
-
-            public override uint CurrentModeId(Entity entity, GripData gripData)
-            {
-                var grip = gripData as PolyGrip;
-                if (grip != null) return (uint)grip.CurrentModeId;
-                return 0;
-            }
-
-            public override bool GetGripModes(
-                Entity entity, GripData gripData, GripModeCollection modes, ref uint curMode)
-            {
-                if (!(gripData is PolyGrip)) return false;
-                return ((PolyGrip)gripData).GetGripModes(ref modes, ref curMode);
-            }
-
-            public override GripType GetGripType(Entity entity, GripData gripData)
-            {
-                return (gripData is PolyGrip) ? GripType.Secondary : GripType.Primary;
-            }
-
-            public override bool SetCurrentMode(Entity entity, GripData gripData, uint curMode)
-            {
-                if (!(gripData is PolyGrip)) return false;
-                ((PolyGrip)gripData).CurrentModeId = (GripMode.ModeIdentifier)curMode;
-                return true;
-            }
-
-            public override void Reset(Entity entity)
-            {
-            }
+            this._CornerOnHotGripAction = CornerOnHotGripAction;
+            this._MiddleOnHotGripAction = MiddleOnHotGripAction;
         }
 
         public void EnableOverrule(bool enable)
@@ -113,18 +79,20 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
                 GripDataCollection DefaultGrips = new GripDataCollection();
                 base.GetGripPoints(entity, DefaultGrips, curViewUnitSize, gripSize, curViewDir, bitFlags);
+                GripData[] DefaultGripsArray = DefaultGrips.ToArray();
+
                 Point3dCollection AlreadyAddedPoints = new Point3dCollection();
                 int index = 0;
-                foreach (GripData DefaultGrip in DefaultGrips)
+                foreach (GripData DefaultGrip in DefaultGripsArray)
                 {
                     if (!AlreadyAddedPoints.ContainsTolerance(DefaultGrip.GripPoint, Generic.MediumTolerance))
                     {
-                        var grip = new PolyGrip()
+                        var grip = new PolyCornerGrip()
                         {
                             Index = index,
                             GripPoint = DefaultGrip.GripPoint,
                             EntityId = entity.ObjectId,
-                            OnHotGripAction = _onHotGripAction
+                            OnHotGripAction = _CornerOnHotGripAction
                         };
                         AlreadyAddedPoints.Add(DefaultGrip.GripPoint);
                         grips.Add(grip);
@@ -132,6 +100,31 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                     }
                 }
 
+                for (int i = 0; i < DefaultGripsArray.Length; i++)
+                {
+                    GripData DefaultGrip = DefaultGripsArray[i];
+                    GripData DefaultGripN = DefaultGripsArray[i < (DefaultGripsArray.Length - 1) ? i + 1 : 0];
+                    Point3d MiddlePoint = DefaultGrip.GripPoint.GetMiddlePoint(DefaultGripN.GripPoint);
+
+                    if (!AlreadyAddedPoints.ContainsTolerance(MiddlePoint, Generic.MediumTolerance))
+                    {
+                        var grip = new PolyMiddleGrip()
+                        {
+                            Index = i,
+                            GripPoint = MiddlePoint,
+                            EntityId = entity.ObjectId,
+                            DrawVector = DefaultGrip.GripPoint.GetVectorTo(DefaultGripN.GripPoint),
+                            PreviousPoint = DefaultGrip.GripPoint,
+                            NextPoint = DefaultGripN.GripPoint,
+                            OnHotGripAction = _MiddleOnHotGripAction,
+                        };
+                        AlreadyAddedPoints.Add(MiddlePoint);
+                        grips.Add(grip);
+                    }
+                }
+
+
+                //TODO : Add middle line grip
 
                 if (!_hideOriginals)
                 {
@@ -145,12 +138,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 
         public override void MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
         {
-            //Debug.WriteLine(bitFlags);
-            //Debug.WriteLine(offset);
-            //if ((uint)bitFlags <= 16)
-            //{
-            //    Debug.WriteLine("Selected");
-            //}
             if (grips.Count > 1)
             {
                 Generic.WriteMessage("Impossible de déplacer un point superposé");
@@ -159,6 +146,4 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             base.MoveGripPointsAt(entity, grips, offset, bitFlags);
         }
     }
-
-
 }

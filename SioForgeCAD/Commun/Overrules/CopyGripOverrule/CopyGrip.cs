@@ -25,15 +25,11 @@ namespace SioForgeCAD.Commun.Overrules
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
-            var unit = worldDraw.Viewport.GetNumPixelsInUnitSquare(GripPoint);
-            var gripHeight = 2.5 * gripSizeInPixels / unit.X;
-            var x = GripPoint.X;
-            var y = GripPoint.Y;
+            var gripHeight = worldDraw.GetGripHeight(GripPoint, gripSizeInPixels);
             var offset = gripHeight / 2.0;
+            double Width = (gripHeight * 0.8) / 6;
 
-            double WidthCross = (gripHeight / 3 / 2) * 0.8;
-
-            Point3d Origin = new Point3d(x, y, 0.0);
+            Point3d Origin = new Point3d(GripPoint.X, GripPoint.Y, 0.0);
 
             Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
@@ -46,7 +42,7 @@ namespace SioForgeCAD.Commun.Overrules
 
             Point3d Transform(Point3d point, Vector3d Vector)
             {
-                return point.Displacement(Vector, WidthCross);
+                return point.Displacement(Vector, Width);
             }
 
             /*
@@ -81,32 +77,7 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(Transform(Origin, -XVector), YVector), //L
             };
 
-            worldDraw.SubEntityTraits.FillType = FillType.FillAlways;
-            if (type == DrawType.HoverGrip)
-            {
-                //GRIPHOVER (System Variable) -> Obsolete
-                worldDraw.SubEntityTraits.Color = 11;
-            }
-            else if (type == DrawType.HotGrip)
-            {
-                //GRIPHOT (System Variable)
-                worldDraw.SubEntityTraits.Color = 12;
-            }
-            else
-            {
-                //GRIPCONTOUR
-                worldDraw.SubEntityTraits.Color = 150;
-            }
-            worldDraw.Geometry.Polygon(points);
-
-            if (type == DrawType.WarmGrip)
-            {
-                worldDraw.SubEntityTraits.FillType = FillType.FillNever;
-                worldDraw.SubEntityTraits.Color = 251;
-                worldDraw.Geometry.Polygon(points);
-            }
-
-            return true;
+            return worldDraw.DrawGrip(points, type);
         }
 
         public override ReturnValue OnHotGrip(ObjectId entityId, Context contextFlags)

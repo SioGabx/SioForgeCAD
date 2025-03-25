@@ -120,9 +120,11 @@
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
     <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
+    <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
+    <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
     <Compile Include="Commun\Mist\Colors.cs" />
@@ -180,9 +182,12 @@
     <Compile Include="Commun\Mist\PluginRegister.cs" />
     <Compile Include="Commun\Mist\SelectInXref.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Slice.cs" />
-    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineGrip.cs" />
-    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineGripOverrule.cs" />
-    <Compile Include="Commun\Overrules\PolylineGripOverrule\PolylineJig.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGrip.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripMenu.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGripJig.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGrip.cs" />
+    <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGripJig.cs" />
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>

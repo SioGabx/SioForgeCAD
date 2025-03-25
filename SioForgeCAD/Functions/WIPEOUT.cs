@@ -6,7 +6,9 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Overrules;
 using SioForgeCAD.Commun.Overrules.PolyGripOverrule;
 using SioForgeCAD.Commun.Overrules.PolylineGripOverrule;
+using System.Diagnostics;
 using System.Windows.Controls;
+using static SioForgeCAD.Commun.Overrules.PolyCornerGrip;
 
 namespace SioForgeCAD.Functions
 {
@@ -21,7 +23,7 @@ namespace SioForgeCAD.Functions
             {
                 if (_instance == null)
                 {
-                    _instance = new PolyGripOverrule(typeof(Wipeout), FilterFunction, OnHotGripAction, true);
+                    _instance = new PolyGripOverrule(typeof(Wipeout), FilterFunction, CornerOnHotGripAction, MiddleOnHotGripAction, true);
                 }
                 return _instance;
             }
@@ -43,90 +45,48 @@ namespace SioForgeCAD.Functions
 
         public static bool FilterFunction(Entity Entity)
         {
-            if (Entity is Wipeout wipeout)
-            {
-                return true;
-            }
-            return false;
+            return Entity is Wipeout;
         }
 
-        public static void OnHotGripAction(ObjectId objectid, GripData GripData)
+        public static void MiddleOnHotGripAction(ObjectId objectid, GripData GripData)
         {
-            var ed = Generic.GetEditor();
             using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
             {
-                if (objectid.GetDBObject(OpenMode.ForWrite) is Wipeout WipeoutEnt && GripData is PolyGrip polyGrip)
+                if (objectid.GetDBObject(OpenMode.ForWrite) is Wipeout WipeoutEnt && GripData is PolyMiddleGrip polyGrip)
                 {
-                    Point3dCollection WipeoutEntVertices = new Point3dCollection();
-                    foreach (Point3d WipeoutEntVertice in WipeoutEnt.GetVertices())
+                    if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Add)
                     {
-                        if (WipeoutEntVertice.IsEqualTo(GripData.GripPoint, Generic.MediumTolerance))
-                        {
-                            if (((int)polyGrip.CurrentModeId) != 3)
-                            {
-                                WipeoutEntVertices.Add(WipeoutEntVertice);
-                            }
-                            if (((int)polyGrip.CurrentModeId) == 2)
-                            {
-                                GripData.GripPoint = GripData.GripPoint.Displacement(Vector3d.XAxis, 1);
-                                WipeoutEntVertices.Add(GripData.GripPoint);
-                            }
-                        }
-                        else
-                        {
-                            WipeoutEntVertices.Add(WipeoutEntVertice);
-                        }
+                        var pts = AddStretchPoint(WipeoutEnt, polyGrip.PreviousPoint, PolyGripOverrule.ModeIdAction.Add);
+                        RecreateWipeout(WipeoutEnt, pts);
+                    }
+                }
+                tr.Commit();
+            }
+        }
 
 
-                    }
-                    if (((int)polyGrip.CurrentModeId) == 3 && WipeoutEntVertices.RemoveDuplicatePoints(Generic.MediumTolerance).Count <= 2)
+        public static void CornerOnHotGripAction(ObjectId objectid, GripData GripData)
+        {
+            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+            {
+                if (objectid.GetDBObject(OpenMode.ForWrite) is Wipeout WipeoutEnt && GripData is PolyCornerGrip polyGrip)
+                {
+                    Debug.WriteLine($"Grip CurrentModeId : {((int)polyGrip.CurrentModeId)}");
+                    Point2dCollection pts = null;
+                    if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Default ||
+                    ((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Stretch)
                     {
-                        Generic.WriteMessage("Impossible de supprimer ce point, cela entraînerait une géométrie invalide.");
-                        tr.Abort();
-                        return;
+                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
                     }
-                    if (WipeoutEntVertices[0] != WipeoutEntVertices[WipeoutEntVertices.Count - 1])
+                    else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Add)
                     {
-                        WipeoutEntVertices.Add(WipeoutEntVertices[0]);
+                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Add);
                     }
-                    if (((int)polyGrip.CurrentModeId) == 3)
+                    else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Remove)
                     {
-                        WipeoutEnt.SetFrom(WipeoutEntVertices.ToPoint2dCollection(), Vector3d.ZAxis);
-                        WipeoutEnt.RecordGraphicsModified(true);
+                        pts = RemovePoint(WipeoutEnt, GripData.GripPoint);
                     }
-                    else
-                    {
-                        using (Polyline WipeoutPoly = new Polyline())
-                        {
-                            for (int i = 0; i < WipeoutEntVertices.Count - 1; i++)
-                            {
-                                Point3d WipeoutEntVertice = WipeoutEntVertices[i];
-                                WipeoutPoly.AddVertex(WipeoutEntVertice);
-
-                            }
-                            WipeoutPoly.Closed = true;
-                            var jig = new PolylineJig(WipeoutPoly, GripData.GripPoint);
-                            var JigResult = jig.Drag();
-                            if (JigResult.Status == PromptStatus.OK)
-                            {
-                                Point2dCollection pts = new Point2dCollection();
-                                foreach (Point3d WipeoutEntVertice in WipeoutEntVertices)
-                                {
-                                    if (WipeoutEntVertice.IsEqualTo(GripData.GripPoint, Generic.MediumTolerance))
-                                    {
-                                        pts.Add(JigResult.Value.ToPoint2d());
-                                    }
-                                    else
-                                    {
-                                        pts.Add(WipeoutEntVertice.ToPoint2d());
-                                    }
-                                }
-
-                                WipeoutEnt.SetFrom(pts, Vector3d.ZAxis);
-                                WipeoutEnt.RecordGraphicsModified(true);
-                            }
-                        }
-                    }
+                    RecreateWipeout(WipeoutEnt, pts);
                 }
                 Generic.Regen();
                 tr.Commit();
@@ -134,6 +94,85 @@ namespace SioForgeCAD.Functions
         }
 
         #endregion
+
+        private static void RecreateWipeout(Wipeout WipeoutEnt, Point2dCollection pts)
+        {
+            if (pts == null) { return; }
+            WipeoutEnt.SetFrom(pts, Vector3d.ZAxis);
+            WipeoutEnt.RecordGraphicsModified(true);
+        }
+
+        private static Point2dCollection AddStretchPoint(Wipeout WipeoutEnt, Point3d Point, PolyGripOverrule.ModeIdAction Action)
+        {
+            Point3dCollection WipeoutEntVertices = new Point3dCollection();
+            foreach (Point3d WipeoutEntVertice in WipeoutEnt.GetVertices())
+            {
+                WipeoutEntVertices.Add(WipeoutEntVertice);
+                if (Action == PolyGripOverrule.ModeIdAction.Add && WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
+                {
+                    Point = Point.Displacement(Vector3d.XAxis, 100);
+                    WipeoutEntVertices.Add(Point);
+                }
+            }
+
+            using (Polyline WipeoutPoly = new Polyline())
+            {
+                for (int i = 0; i < WipeoutEntVertices.Count - 1; i++)
+                {
+                    Point3d WipeoutEntVertice = WipeoutEntVertices[i];
+                    WipeoutPoly.AddVertex(WipeoutEntVertice);
+                }
+
+                WipeoutPoly.Closed = true;
+                var jig = new PolyCornerGripJig(WipeoutPoly, Point);
+                var JigResult = jig.Drag();
+                if (JigResult.Status == PromptStatus.OK)
+                {
+                    Point2dCollection pts = new Point2dCollection();
+                    foreach (Point3d WipeoutEntVertice in WipeoutEntVertices)
+                    {
+                        if (WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
+                        {
+                            pts.Add(JigResult.Value.ToPoint2d());
+                        }
+                        else
+                        {
+                            pts.Add(WipeoutEntVertice.ToPoint2d());
+                        }
+                    }
+                    return pts;
+                }
+                return null;
+            }
+        }
+
+        private static Point2dCollection RemovePoint(Wipeout WipeoutEnt, Point3d Point)
+        {
+            Point3dCollection WipeoutEntVertices = new Point3dCollection();
+            bool HasAlreadyDeletedOnePoint = false;
+            foreach (Point3d WipeoutEntVertice in WipeoutEnt.GetVertices())
+            {
+                if (HasAlreadyDeletedOnePoint || !WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
+                {
+                    WipeoutEntVertices.Add(WipeoutEntVertice);
+                }
+                else
+                {
+                    HasAlreadyDeletedOnePoint = true;
+                }
+            }
+
+            if (WipeoutEntVertices.RemoveDuplicatePoints(Generic.MediumTolerance).Count <= 2)
+            {
+                Generic.WriteMessage("Impossible de supprimer ce point, cela entraînerait une géométrie invalide.");
+                return null;
+            }
+            if (WipeoutEntVertices[0] != WipeoutEntVertices[WipeoutEntVertices.Count - 1])
+            {
+                WipeoutEntVertices.Add(WipeoutEntVertices[0]);
+            }
+            return WipeoutEntVertices.ToPoint2dCollection();
+        }
 
     }
 }

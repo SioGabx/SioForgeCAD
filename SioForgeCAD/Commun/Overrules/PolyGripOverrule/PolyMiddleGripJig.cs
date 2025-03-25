@@ -7,31 +7,21 @@ using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
 {
-    public class PolylineJig
+    public class PolyMiddleGripJig
     {
-        private readonly Document _doc;
-        private readonly Database _db;
         private readonly Editor _ed;
         private readonly Autodesk.AutoCAD.DatabaseServices.Polyline _polyline;
-
 
         private TransientManager _tsManager = TransientManager.CurrentTransientManager;
         private Autodesk.AutoCAD.DatabaseServices.Polyline _tspolyline;
 
         private Point3d _basePoint;
 
-        public PolylineJig(Autodesk.AutoCAD.DatabaseServices.Polyline polyline, Point3d initPoint)
+        public PolyMiddleGripJig(Autodesk.AutoCAD.DatabaseServices.Polyline polyline, Point3d initPoint)
         {
-            _doc = Generic.GetDocument();
-            _db = _doc.Database;
-            _ed = _doc.Editor;
+            _ed = Generic.GetEditor();
             _polyline = polyline;
             _basePoint = initPoint;
-            using (var tran = _db.TransactionManager.StartOpenCloseTransaction())
-            {
-
-                tran.Commit();
-            }
         }
 
 
@@ -41,11 +31,13 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             {
                 _ed.PointMonitor += Editor_PointMonitor;
 
-                var opt = new PromptPointOptions("\nSpécifiez un nouveau point de sommet");
-                opt.AllowNone = false;
-                opt.UseBasePoint = true;
-                opt.BasePoint = _basePoint;
-                opt.UseDashedLine = false;
+                var opt = new PromptPointOptions("\nSpécifiez un nouveau point de sommet")
+                {
+                    AllowNone = false,
+                    UseBasePoint = true,
+                    BasePoint = _basePoint,
+                    UseDashedLine = false
+                };
 
                 return _ed.GetPoint(opt);
             }
@@ -55,6 +47,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
                 _ed.PointMonitor -= Editor_PointMonitor;
             }
         }
+
         private void Editor_PointMonitor(object sender, PointMonitorEventArgs e)
         {
             ClearGhosts();
@@ -77,7 +70,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             {
                 _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
 
-                for (int i = _polyline.GetReelNumberOfVertices() - 1; i >= 0; i--)
+                for (int i = 0; i < _polyline.GetReelNumberOfVertices(); i++)
                 {
                     if (_polyline.GetPoint3dAt(i).IsEqualTo(_basePoint, Generic.MediumTolerance))
                     {
@@ -93,8 +86,5 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             }
             catch { }
         }
-
-
-
     }
 }

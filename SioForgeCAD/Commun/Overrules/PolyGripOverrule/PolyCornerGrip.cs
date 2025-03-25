@@ -6,9 +6,11 @@ using System;
 
 namespace SioForgeCAD.Commun.Overrules
 {
-    internal class PolyGrip : GripData
+    internal class PolyCornerGrip : GripData
     {
-        public PolyGrip()
+       
+
+        public PolyCornerGrip()
         {
             ForcedPickOn = false;
             GizmosEnabled = true;
@@ -26,19 +28,15 @@ namespace SioForgeCAD.Commun.Overrules
         public int Index { get; set; }
         public ObjectId EntityId { get; set; } = ObjectId.Null;
         public Action<ObjectId, GripData> OnHotGripAction { get; set; } = (objectid, GripData) => Generic.WriteMessage("GRIPPED");
-        public Vector2d DrawVector { get; set; } = new Vector2d();
         public GripModeCollection GripModes { get; }
         public virtual GripMode.ModeIdentifier CurrentModeId { get; set; } = GripMode.ModeIdentifier.CustomStart;
 
         public override bool ViewportDraw(ViewportDraw worldDraw, ObjectId entityId, DrawType type, Point3d? imageGripPoint, int gripSizeInPixels)
         {
-            var unit = worldDraw.Viewport.GetNumPixelsInUnitSquare(GripPoint);
-            var gripHeight = 2.5 * gripSizeInPixels / unit.X;
-            var x = GripPoint.X;
-            var y = GripPoint.Y;
+            var gripHeight = worldDraw.GetGripHeight(GripPoint, gripSizeInPixels);
             var offset = gripHeight / 2.5;
 
-            Point3d Origin = new Point3d(x, y, 0.0);
+            Point3d Origin = new Point3d(GripPoint.X, GripPoint.Y, 0.0);
 
             Matrix3d ucs = Generic.GetEditor().CurrentUserCoordinateSystem;
             Vector3d YVector = ucs.CoordinateSystem3d.Yaxis;
@@ -51,7 +49,6 @@ namespace SioForgeCAD.Commun.Overrules
             {
                 return point.Displacement(Vector, offset);
             }
-
 
             /*
             K++++++D
@@ -67,33 +64,7 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(OriginLeft, -YVector), //J
                 Transform(OriginLeft, YVector), //K
             };
-
-            worldDraw.SubEntityTraits.FillType = FillType.FillAlways;
-            if (type == DrawType.HoverGrip)
-            {
-                //GRIPHOVER (System Variable) -> Obsolete
-                worldDraw.SubEntityTraits.Color = 11;
-            }
-            else if (type == DrawType.HotGrip)
-            {
-                //GRIPHOT (System Variable)
-                worldDraw.SubEntityTraits.Color = 12;
-            }
-            else
-            {
-                //GRIPCONTOUR
-                worldDraw.SubEntityTraits.Color = 150;
-            }
-            worldDraw.Geometry.Polygon(points);
-
-            if (type == DrawType.WarmGrip)
-            {
-                worldDraw.SubEntityTraits.FillType = FillType.FillNever;
-                worldDraw.SubEntityTraits.Color = 251;
-                worldDraw.Geometry.Polygon(points);
-            }
-
-            return true;
+            return worldDraw.DrawGrip(points, type);
         }
 
         public override ReturnValue OnHotGrip(ObjectId entityId, Context contextFlags)
@@ -111,23 +82,23 @@ namespace SioForgeCAD.Commun.Overrules
             //return false; //disable grip menu
             modes.Add(new GripMode()
             {
-                ModeId = 1,
-                DisplayString = $"Etirer le sommet",
+                ModeId = (int)PolyGripOverrule.PolyGripOverrule.ModeIdAction.Stretch,
+                DisplayString = "Etirer le sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = ""
             });
 
             modes.Add(new GripMode()
             {
-                ModeId = 2,
-                DisplayString = $"Ajouter sommet",
+                ModeId = (int)PolyGripOverrule.PolyGripOverrule.ModeIdAction.Add,
+                DisplayString = "Ajouter sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = ""
             });
             modes.Add(new GripMode()
             {
-                ModeId = 3,
-                DisplayString = $"Supprimer sommet",
+                ModeId = (int)PolyGripOverrule.PolyGripOverrule.ModeIdAction.Remove,
+                DisplayString = "Supprimer sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = ""
             });
