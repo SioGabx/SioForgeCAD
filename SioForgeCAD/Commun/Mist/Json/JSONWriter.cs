@@ -95,9 +95,12 @@ namespace SioForgeCAD.JSONParser
             {
                 Type keyType = type.GetGenericArguments()[0];
 
-                //Refuse to output dictionary keys that aren't of type string
-                if (keyType != typeof(string))
+                if (keyType.IsEnum)
                 {
+                    //continue
+                }else if (keyType != typeof(string))
+                {
+                    //Refuse to output dictionary keys that aren't of type string
                     stringBuilder.Append("{}");
                     return;
                 }
@@ -117,7 +120,7 @@ namespace SioForgeCAD.JSONParser
                     }
 
                     stringBuilder.Append('\"');
-                    stringBuilder.Append((string)key);
+                    stringBuilder.Append(key.ToString());
                     stringBuilder.Append("\":");
                     AppendValue(stringBuilder, dict[key]);
                 }

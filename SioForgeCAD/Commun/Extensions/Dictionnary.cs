@@ -4,7 +4,7 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class DictionnaryExtensions
     {
-        public static string TryGetValueString(this Dictionary<string, string> dictionary, string key)
+        public static string TryGetValueString<T>(this Dictionary<T, string> dictionary, T key)
         {
             if (dictionary == null)
             {

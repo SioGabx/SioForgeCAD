@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -12,7 +13,7 @@ namespace SioForgeCAD.Functions
 {
     public static class VEGBLOCLEGEND
     {
-        public static void Add()
+        public static void AddOld()
         {
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
@@ -88,6 +89,102 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                     }
                 }
+            }
+        }
+
+
+
+        public static void Add()
+        {
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+
+            Dictionary<string, List<string>> categorizedBlocks = new Dictionary<string, List<string>>();
+
+            PromptSelectionResult selResult = ed.GetSelection();
+            if (selResult.Status == PromptStatus.OK)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    foreach (SelectedObject selObj in selResult.Value)
+                    {
+                        if (selObj != null && selObj.ObjectId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
+                        {
+                            BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
+                            if (blkRef?.IsXref() == false)
+                            {
+                                string blockName = blkRef.GetBlockReferenceName();
+                                var Infos = VEGBLOC.GetDataStore(blkRef);
+                                string Type = Infos[VEGBLOC.DataStore.Type];
+
+                                if (!categorizedBlocks.TryGetValue(Type, out List<string> value))
+                                {
+                                    value = new List<string>();
+                                    categorizedBlocks[Type] = value;
+                                }
+                                if (!value.Contains(blockName))
+                                {
+                                    value.Add(blockName);
+                                }
+                            }
+                        }
+                    }
+                    tr.Commit();
+                }
+
+                double yPosition = 0.0;
+                double rowSpacing = 1;
+                double titleSpacing = 2.85;
+                DBObjectCollection Legende = new DBObjectCollection();
+
+                string CartoucheName = SymbolUtilityServices.RepairSymbolName($"{Settings.VegblocLayerPrefix}_CARTOUCHE", false);
+                Layers.CreateLayer(CartoucheName, Color.FromColorIndex(ColorMethod.ByAci, 1), LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(0), true);
+
+                foreach (var category in categorizedBlocks.OrderBy(c => c.Key))
+                {
+                    yPosition -= titleSpacing;
+                    MText CategoryName = new MText
+                    {
+                        Contents = category.Key.UcFirst(),
+                        Location = new Point3d(0, yPosition, 0),
+                        Height = 0.35,
+                        Attachment = AttachmentPoint.MiddleLeft,
+                        Normal = Vector3d.ZAxis,
+                        Layer = CartoucheName
+                    };
+                    Legende.Add(CategoryName);
+                    yPosition -= rowSpacing;
+                    foreach (var blockName in category.Value.OrderBy(n => n))
+                    {
+                        MText LatinName = new MText
+                        {
+                            Contents = blockName.Split('_').Last(),
+                            Location = new Point3d(1, yPosition, 0),
+                            Height = 0.25,
+                            Attachment = AttachmentPoint.MiddleLeft,
+                            Normal = Vector3d.ZAxis,
+                            Layer = blockName,
+                            ColorIndex = 256
+                        };
+
+                        Legende.Add(LatinName);
+
+                        var BlockReference = BlockReferences.GetBlockReference(blockName, new Point3d(0, yPosition, 0));
+                        var Extend = BlockReference.GetExtents();
+                        double scale = 1.0 / Extend.Size().Width;
+
+                        // Créer une matrice de transformation d'échelle
+                        Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
+                        BlockReference.TransformBy(scaleMatrix);
+                        BlockReference.Layer = blockName;
+                        BlockReference.ColorIndex = 256;
+                        Legende.Add(BlockReference);
+                        yPosition -= rowSpacing;
+                    }
+                }
+
+                Legende.GetExtents().GetGeometry().AddToDrawing();
+                Legende.AddToDrawing();
             }
         }
     }

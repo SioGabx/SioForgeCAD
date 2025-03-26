@@ -45,41 +45,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static Dictionary<string, string> GetBlocData(BlockReference BlkRef)
-        {
-            string BlocDescription = BlkRef.GetDescription();
-            if (string.IsNullOrWhiteSpace(BlocDescription))
-            {
-                return null;
-            }
-            Dictionary<string, string> BlocDataFromJson = BlocDescription.FromJson<Dictionary<string, string>>();
-            if (BlocDataFromJson != null)
-            {
-                return BlocDataFromJson;
-            }
-
-            //LEGACY 
-            var OldVeg = BlocDescription.Split('\n');
-            if (OldVeg.Length == 3)
-            {
-                try
-                {
-                    return new Dictionary<string, string>() {
-                        {"BlocName", BlkRef.GetBlockReferenceName()},
-                        {"CompleteName", OldVeg[0]},
-                        {"Width",OldVeg[1].Split(':')[1]},
-                        {"Height",OldVeg[2].Split(':')[1]},
-                        {"Type", BlkRef.GetBlockReferenceName().Replace(Settings.VegblocLayerPrefix, "").Replace(OldVeg[0], "").Replace("_","") },
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                }
-            }
-
-            return null;
-        }
 
         public static void Edit()
         {
@@ -96,15 +61,15 @@ namespace SioForgeCAD.Functions
                 BlockReference BlkRef = EditObject.GetDBObject() as BlockReference;
 
                 VegblocEditDialog EditDialog = new VegblocEditDialog();
-                var BlocData = GetBlocData(BlkRef);
+                var BlocData = VEGBLOC.GetDataStore(BlkRef);
                 if (BlocData != null)
                 {
-                    if (BlocData.TryGetValueString("BlocName") == BlkRef.GetBlockReferenceName())
+                    if (BlocData.TryGetValueString(VEGBLOC.DataStore.BlocName) == BlkRef.GetBlockReferenceName())
                     {
-                        EditDialog.NameInput.Text = BlocData.TryGetValueString("CompleteName");
-                        EditDialog.HeightInput.Text = BlocData.TryGetValueString("Height");
-                        EditDialog.WidthInput.Text = BlocData.TryGetValueString("Width");
-                        EditDialog.TypeInput.Text = BlocData.TryGetValueString("Type");
+                        EditDialog.NameInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
+                        EditDialog.HeightInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Height);
+                        EditDialog.WidthInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Width);
+                        EditDialog.TypeInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Type);
                     }
                 }
 

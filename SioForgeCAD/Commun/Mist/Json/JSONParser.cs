@@ -259,9 +259,12 @@ namespace SioForgeCAD.JSONParser
                     valueType = args[1];
                 }
 
-                //Refuse to parse dictionary keys that aren't of type string
-                if (keyType != typeof(string))
+
+                // Vérifier si la clé est une string ou une énumération
+                bool isEnumKey = keyType.IsEnum;
+                if (!isEnumKey && keyType != typeof(string))
                 {
+                    //Refuse to parse dictionary keys that aren't of type string
                     return null;
                 }
                 //Must be a valid dictionary element
@@ -289,9 +292,27 @@ namespace SioForgeCAD.JSONParser
                         continue;
                     }
 
+                    //string keyValue = elems[i].Substring(1, elems[i].Length - 2);
                     string keyValue = elems[i].Substring(1, elems[i].Length - 2);
+                    object key;
+
+                    if (isEnumKey)
+                    {
+                        try
+                        {
+                            key = Enum.Parse(keyType, keyValue, true); // Conversion string -> Enum
+                        }
+                        catch
+                        {
+                            return null; // Clé invalide pour un Enum
+                        }
+                    }
+                    else
+                    {
+                        key = keyValue; // La clé est déjà une string
+                    }
                     object val = ParseValue(valueType, elems[i + 1]);
-                    dictionary.Add(keyValue, val);
+                    dictionary.Add(key, val);
                 }
                 return dictionary;
             }

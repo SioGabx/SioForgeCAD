@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -160,7 +161,7 @@ namespace SioForgeCAD.Commun.Drawing
             return new ObjectIdCollection();
         }
 
-        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
+        public static BlockReference GetBlockReference(string BlocName, Point3d PositionSCG)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -171,12 +172,21 @@ namespace SioForgeCAD.Commun.Drawing
                     throw new Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
                 }
                 BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
-                //Also open modelspace - we'll be adding our BlockReference to it
-                //BlockTableRecord ms = bt[BlockTableRecord.ModelSpace].GetObject(OpenMode.ForWrite) as BlockTableRecord;
+                tr.Commit();
+                return new BlockReference(PositionSCG, blockDef.ObjectId);
+            }
+        }
 
+        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
+                BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
                 BlockTableRecord ms = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 //Create new BlockReference, and link it to our block definition
-                using (BlockReference blockRef = new BlockReference(BlocLocation.SCG, blockDef.ObjectId))
+                using (BlockReference blockRef = GetBlockReference(BlocName, BlocLocation.SCG))
                 {
                     blockRef.Color = db.Cecolor;
                     blockRef.Rotation = Angle;

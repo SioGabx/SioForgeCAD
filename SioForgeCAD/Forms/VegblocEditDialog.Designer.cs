@@ -86,10 +86,10 @@
             this.TypeInput.FormattingEnabled = true;
             this.TypeInput.Items.AddRange(new object[] {
             "ARBRES",
-            "CEPEES",
+            "CEPÉES",
             "ARBUSTES",
             "GRIMPANTES",
-            "GRAMINEES",
+            "GRAMINÉES",
             "VIVACES",
             "BULBEUSES"});
             this.TypeInput.Location = new System.Drawing.Point(11, 116);

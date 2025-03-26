@@ -613,7 +613,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]
         public static void WIPEOUTGRIP()
         {
-            Functions.WIPEOUT.ToggleGrip();
+            Functions.WIPEOUTGRIP.ToggleGrip();
         }
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()

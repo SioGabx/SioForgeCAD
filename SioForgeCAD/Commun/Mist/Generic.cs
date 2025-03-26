@@ -146,6 +146,16 @@ namespace SioForgeCAD.Commun
             doc.SendStringToExecute(string.Concat(Command, ' '), true, false, Echo);
         }
 
+        public static void SetSystemVariable(string Name, object Value, bool EchoChanges = true)
+        {
+            var OldValue = Application.TryGetSystemVariable(Name);
+            if (OldValue.ToString() != Value.ToString())
+            {
+                if (EchoChanges) { Generic.WriteMessage($"Changement de la variable {Name} de {OldValue} à {Value}."); }
+                Application.SetSystemVariable(Name, Value);
+            }
+        }
+
         public static void Command(params object[] args)
         {
             short cmdecho = (short)Application.GetSystemVariable("CMDECHO");

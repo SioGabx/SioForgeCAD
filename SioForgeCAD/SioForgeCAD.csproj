@@ -277,7 +277,7 @@
     <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VIEWPORTLOCK.cs" />
     <Compile Include="Functions\VIEWPORTOUTLINE.cs" />
-    <Compile Include="Functions\WIPEOUT.cs" />
+    <Compile Include="Functions\WIPEOUTGRIP.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

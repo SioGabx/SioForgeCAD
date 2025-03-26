@@ -14,7 +14,7 @@ using static SioForgeCAD.Commun.Overrules.PolyCornerGrip;
 
 namespace SioForgeCAD.Functions
 {
-    public static class WIPEOUT
+    public static class WIPEOUTGRIP
     {
 
         #region PolyGripOverrule
@@ -35,13 +35,21 @@ namespace SioForgeCAD.Functions
         {
             if (!Instance.IsEnabled)
             {
-                Instance.EnableOverrule(true);
+                EnableOverrule(true);
                 Generic.WriteMessage("Grip activé.");
             }
             else
             {
-                Instance.EnableOverrule(false);
+                EnableOverrule(false);
                 Generic.WriteMessage("Grip désactivé.");
+            }
+        }
+
+        public static void EnableOverrule(bool enable)
+        {
+            if (!Instance.IsEnabled)
+            {
+                Instance.EnableOverrule(enable);
             }
         }
 
@@ -107,7 +115,7 @@ namespace SioForgeCAD.Functions
             if (pts == null) { return; }
             WipeoutEnt.SetFrom(pts, Vector3d.ZAxis);
             WipeoutEnt.RecordGraphicsModified(true);
-            Generic.Regen();
+            //Generic.Regen();
         }
 
         private static Point2dCollection StretchDoublePoints(Wipeout WipeoutEnt, Point3d BasePoint, Point3d PreviousPoint, Point3d NextPoint)
@@ -141,19 +149,22 @@ namespace SioForgeCAD.Functions
                         Point3d PreviousWipeoutEntVertices = (Point3d)WipeoutEntVertices[i > 0 ? i - 1 : WipeoutEntVertices.Count - 2];
                         Point3d ActualWipeoutEntVertices = (Point3d)WipeoutEntVertices[i];
                         Point3d NextWipeoutEntVertices = (Point3d)WipeoutEntVertices[i < (WipeoutEntVertices.Count - 1) ? i + 1 : 1];
-                        
+
                         bool Check(Point3d Point)
                         {
                             return (ActualWipeoutEntVertices.IsEqualTo(Point, Generic.MediumTolerance) &&
-                                ( PreviousPoint.IsEqualTo(PreviousWipeoutEntVertices, Generic.MediumTolerance) ||
+                                (PreviousPoint.IsEqualTo(PreviousWipeoutEntVertices, Generic.MediumTolerance) ||
                                 PreviousPoint.IsEqualTo(NextWipeoutEntVertices, Generic.MediumTolerance) ||
                                 NextPoint.IsEqualTo(PreviousWipeoutEntVertices, Generic.MediumTolerance) ||
                                 NextPoint.IsEqualTo(NextWipeoutEntVertices, Generic.MediumTolerance)));
                         }
-                        if (Check(NextPoint)) {
+                        if (Check(NextPoint))
+                        {
                             pts.Add(NextPoint.TransformBy(TransformMatrix).ToPoint2d());
-                        }else 
-                        if (Check(PreviousPoint)) {
+                        }
+                        else
+                        if (Check(PreviousPoint))
+                        {
                             pts.Add(PreviousPoint.TransformBy(TransformMatrix).ToPoint2d());
                         }
                         else

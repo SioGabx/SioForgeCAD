@@ -18,6 +18,10 @@ namespace SioForgeCAD.Functions
 {
     public static class VEGBLOC
     {
+        public enum DataStore
+        {
+            BlocName, CompleteName, Height, Width, Type, VegblocVersion
+        }
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
@@ -99,7 +103,7 @@ namespace SioForgeCAD.Functions
             //If the layer arealdy exist; we need to get the real color
             BlocColor = Layers.GetLayerColor(BlocName);
             var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
-            string Description = GetDataStore(BlocName, CompleteName, Height, Width, Type);
+            string Description = GenerateDataStore(BlocName, CompleteName, Height, Width, Type);
             BlockData = Description;
             if (!BlockReferences.IsBlockExist(BlocName))
             {
@@ -111,18 +115,54 @@ namespace SioForgeCAD.Functions
             return BlocName;
         }
 
-        public static string GetDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
+        public static string GenerateDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
         {
-            Dictionary<string, string> data = new Dictionary<string, string>
+            Dictionary<DataStore, string> data = new Dictionary<DataStore, string>
             {
-                { "BlocName", BlocName },
-                { "CompleteName", CompleteName },
-                { "Height", Height.ToString() },
-                { "Width", Width.ToString() },
-                { "Type", Type },
-                { "VegblocVersion", "3" },
+                { DataStore.BlocName, BlocName },
+                { DataStore.CompleteName, CompleteName },
+                { DataStore.Height, Height.ToString() },
+                { DataStore.Width, Width.ToString() },
+                { DataStore.Type, Type },
+                { DataStore.VegblocVersion, "3" },
             };
             return data.ToJson();
+        }
+
+        public static Dictionary<DataStore, string> GetDataStore(BlockReference BlkRef)
+        {
+            string BlocDescription = BlkRef.GetDescription();
+            if (string.IsNullOrWhiteSpace(BlocDescription))
+            {
+                return null;
+            }
+            Dictionary<DataStore, string> BlocDataFromJson = BlocDescription.FromJson<Dictionary<DataStore, string>>();
+            if (BlocDataFromJson != null)
+            {
+                return BlocDataFromJson;
+            }
+
+            //LEGACY 
+            var OldVeg = BlocDescription.Split('\n');
+            if (OldVeg.Length == 3)
+            {
+                try
+                {
+                    return new Dictionary<DataStore, string>() {
+                        {DataStore.BlocName, BlkRef.GetBlockReferenceName()},
+                        {DataStore.CompleteName, OldVeg[0]},
+                        {DataStore.Width,OldVeg[1].Split(':')[1]},
+                        {DataStore.Height,OldVeg[2].Split(':')[1]},
+                        {DataStore.Type, BlkRef.GetBlockReferenceName().Replace(Settings.VegblocLayerPrefix, "").Replace(OldVeg[0], "").Replace("_","") },
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+
+            return null;
         }
 
         public static ObjectId AskInsertVegBloc(string BlocName, string Layer = null, Points Origin = Points.Null)
@@ -396,7 +436,46 @@ namespace SioForgeCAD.Functions
 
         private class GetVegBlocPointTransient : GetPointTransient
         {
-            public GetVegBlocPointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction) { }
+            public GetVegBlocPointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(PrepareEntsForTransient(Entities), UpdateFunction) { }
+
+            private static DBObjectCollection PrepareEntsForTransient(DBObjectCollection BaseEnts)
+            {
+                DBObjectCollection TransientByLayerEnts = new DBObjectCollection();
+                foreach (DBObject BaseEnt in BaseEnts)
+                {
+                    if (BaseEnt is Entity ent)
+                    {
+                        DBObjectCollection ExplodedEnts = new DBObjectCollection();
+                        ent.Explode(ExplodedEnts);
+                        foreach (var ExplodedEnt in ExplodedEnts)
+                        {
+                            if (ExplodedEnt is Entity ByBlocEnt)
+                            {
+                                SetEntityToByLayerIfByBloc(ByBlocEnt, ent.Layer);
+                            }
+                            TransientByLayerEnts.Add(ExplodedEnt as DBObject);
+                        }
+                    }
+                    else
+                    {
+                        TransientByLayerEnts.Add(BaseEnt);
+                    }
+                }
+                return TransientByLayerEnts;
+            }
+
+
+            private static void SetEntityToByLayerIfByBloc(Entity entity, string LayerName)
+            {
+                if (entity.ColorIndex == 0) { entity.ColorIndex = 256; }
+                if (entity.Layer == "0" && Layers.CheckIfLayerExist(LayerName))
+                {
+                    entity.Layer = LayerName;
+                }
+                if (entity.Transparency.IsByBlock) { entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByLayer); }
+                if (entity.Linetype == "BYBLOCK") { entity.Linetype = "BYLAYER"; }
+                if (entity.LineWeight == LineWeight.ByBlock) { entity.LineWeight = LineWeight.ByLayer; }
+            }
 
             public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
             {

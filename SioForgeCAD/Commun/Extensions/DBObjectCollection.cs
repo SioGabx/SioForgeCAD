@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -26,6 +27,16 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             collection.Dispose();
+        }
+
+        public static DBObject[] ToArray(this DBObjectCollection collection)
+        {
+            DBObject[] list = new DBObject[collection.Count];
+            for (int i = 0; i < collection.Count; i++)
+            {
+                list.SetValue(collection[i], i);
+            }
+            return list;
         }
     }
 }

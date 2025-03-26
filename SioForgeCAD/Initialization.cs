@@ -33,6 +33,8 @@ namespace SioForgeCAD
             Functions.DIMDISASSOCIATE.ContextMenu.Attach();
 
             Functions.PICKSTYLETRAY.AddTray();
+
+            Functions.WIPEOUTGRIP.EnableOverrule(true);
         }
 
         public void Terminate() { }
