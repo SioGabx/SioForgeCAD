@@ -4,15 +4,16 @@
     {
         public static int MultithreadingMaxNumberOfThread = 1; // -1 to disable limits
 
-        public static string BlocNameAltimetrie = "_APUd_COTATIONS_Altimetries";
-        public static string BlocNameAltimetrieCoupes = "_APUd_CP_Altimetries";
-        public static string BlocNamePente = "_APUd_COTATIONS_Pentes";
+        public static string CADLayerPrefix = "_APUd_";
+        public static string VegblocLayerPrefix = CADLayerPrefix + "VEG_";
+        public static string InfoLayerPrefix = CADLayerPrefix + "INFO_";
+        public static string BlocNameAltimetrie = CADLayerPrefix + "COTATIONS_Altimetries";
+        public static string BlocNameAltimetrieCoupes = CADLayerPrefix + "CP_Altimetries";
+        public static string BlocNamePente = CADLayerPrefix + "COTATIONS_Pentes";
 
         public static int TransientPrimaryColorIndex = 252;
         public static int TransientSecondaryColorIndex = 255;
-
-        public static string VegblocLayerHeightName = "-APUd_VEG_HAUTEURS";
-        public static string VegblocLayerPrefix = "_APUd_VEG_";
+        public static string VegblocLayerHeightName = InfoLayerPrefix + "Hauteurs_végétaux";
         public static bool VegblocCopyGripDeselectAfterCopy = true;
         public static bool VegblocGeneratePeripheryCircles = false;
     }

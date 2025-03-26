@@ -75,10 +75,10 @@
             // 
             this.TypeInput.AutoCompleteCustomSource.AddRange(new string[] {
             "ARBRES",
-            "CEPEES",
+            "CÉPÉES",
             "ARBUSTES",
             "GRIMPANTES",
-            "GRAMINEES",
+            "GRAMINÉES",
             "VIVACES",
             "BULBEUSES"});
             this.TypeInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;

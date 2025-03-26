@@ -23,6 +23,37 @@ namespace SioForgeCAD.Commun.Extensions
             return NumberOfVertices;
         }
 
+
+        public static bool FixNormals(this Polyline polyline)
+        {
+            //Fix normals : should be 0,0,1 and its 0,0,-1. This happen when the polyline was drawn with the bottom up
+            if (polyline.Normal == Vector3d.ZAxis.MultiplyBy(-1))
+            {
+                Debug.WriteLine("Correction de la normal d'une polyline");
+                for (int i = 0; i < polyline.NumberOfVertices; i++)
+                {
+                    //var acPlArc = acPlLwObj.GetArcSegmentAt(i);
+                    var acPl3DPoint = polyline.GetPoint3dAt(i);
+                    var acPl2DPointNew = new Point2d(acPl3DPoint.X, acPl3DPoint.Y);
+                    polyline.SetPointAt(i, acPl2DPointNew);
+                    polyline.SetBulgeAt(i, -polyline.GetBulgeAt(i));
+                }
+
+                polyline.Normal = Vector3d.ZAxis;
+                return true;
+            }
+            return false;
+        }
+        public static void Flatten(this Polyline polyline)
+        {
+            for (int i = 0; i < polyline.NumberOfVertices; i++)
+            {
+                var acPl3DPoint = polyline.GetPoint3dAt(i);
+                var acPl2DPointNew = new Point2d(acPl3DPoint.X, acPl3DPoint.Y);
+                polyline.SetPointAt(i, acPl2DPointNew);
+            }
+        }
+
         public static bool HasAngle(this Polyline TargetPolyline, double DegreesTolerance)
         {
             for (int i = 0; i < TargetPolyline.NumberOfVertices - 2; i++)

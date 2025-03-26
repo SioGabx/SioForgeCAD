@@ -6,7 +6,7 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class Entities
     {
-        public static List<ObjectId> AddToDrawing(this IEnumerable<Entity> entities, int ColorIndex = 7, bool Clone = false)
+        public static List<ObjectId> AddToDrawing(this IEnumerable<Entity> entities, int? ColorIndex = null, bool Clone = false)
         {
             List<ObjectId> objs = new List<ObjectId>();
             foreach (var entity in entities)
@@ -16,13 +16,16 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     ent = (Entity)ent.Clone();
                 }
-                ent.ColorIndex = ColorIndex;
+                if (ColorIndex != null)
+                {
+                    ent.ColorIndex = (int)ColorIndex;
+                }
                 objs.Add(ent.AddToDrawing());
             }
             return objs;
         }
 
-        public static List<ObjectId> AddToDrawing(this DBObjectCollection entities, int ColorIndex = 7, bool Clone = false)
+        public static List<ObjectId> AddToDrawing(this DBObjectCollection entities, int? ColorIndex = null, bool Clone = false)
         {
             return entities.Cast<Entity>().AddToDrawing(ColorIndex, Clone);
         }

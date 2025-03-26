@@ -38,9 +38,13 @@ namespace SioForgeCAD.Functions
             {
                 PromptSelectionResult viewportSelection = ed.SelectAll(new SelectionFilter(viewportFilter));
                 SelectionSet selectionSet = viewportSelection.Value;
+                if (selectionSet is null)
+                {
+                    return;
+                }
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    foreach (ObjectId objectId in selectionSet.GetObjectIds())
+                    foreach (ObjectId objectId in selectionSet?.GetObjectIds())
                     {
                         Viewport viewport = (Viewport)objectId.GetDBObject(OpenMode.ForWrite);
                         viewport.Locked = Lock;

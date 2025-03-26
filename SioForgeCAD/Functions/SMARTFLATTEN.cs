@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -69,10 +70,27 @@ namespace SioForgeCAD.Functions
                     if (entity is Polyline2d polyline2d)
                     {
                         polyline2d.Elevation = 0;
+                        using (Polyline pline = polyline2d.ToPolyline())
+                        {
+                            polyline2d.CopyPropertiesTo(pline);
+                            pline.AddToDrawing();
+                            polyline2d.Erase();
+                        }
+                    }
+                    if (entity is Polyline3d polyline3d)
+                    {
+                        using (Polyline pline = polyline3d.ToPolyline())
+                        {
+                            polyline3d.CopyPropertiesTo(pline);
+                            pline.AddToDrawing();
+                            polyline3d.Erase();
+                        }
                     }
                     else if (entity is Polyline polyline)
                     {
                         polyline.Elevation = 0;
+                        polyline.FixNormals();
+                        polyline.Flatten();
                     }
                     else if (entity is Ellipse ellipse)
                     {
@@ -199,5 +217,17 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

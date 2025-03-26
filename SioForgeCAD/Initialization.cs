@@ -10,17 +10,17 @@ namespace SioForgeCAD
         public void Initialize()
         {
             AcAp.Idle += OnIdle;
-            InitPlugin();
         }
 
         private void OnIdle(object sender, EventArgs e)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
+            var doc = Generic.GetDocument();
             if (doc != null)
             {
                 AcAp.Idle -= OnIdle;
                 doc.Editor.WriteMessage($"\n{Generic.GetExtensionDLLName()} - Copyright © HOFFMANN François / SioGabx - {DateTime.Now.Year}.\n");
             }
+            InitPlugin();
         }
 
         public static void InitPlugin()

@@ -141,7 +141,7 @@
             this.TYPE.HeaderText = "Type";
             this.TYPE.Items.AddRange(new object[] {
             "ARBRES",
-            "CEPÉES",
+            "CÉPÉES",
             "ARBUSTES",
             "GRIMPANTES",
             "GRAMINÉES",

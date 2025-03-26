@@ -24,6 +24,7 @@ namespace SioForgeCAD.Functions
                         if (poly.IsEntityOnLockedLayer()) { continue; }
                         int NumberOfVerticesBefore = poly.NumberOfVertices;
                         poly.UpgradeOpen();
+                        bool WasNormalFixed = poly.FixNormals();
                         poly.Cleanup();
                         int NumberOfVerticesAfter = poly.NumberOfVertices;
                         var NumberOfVerticesDeleted = (NumberOfVerticesBefore - NumberOfVerticesAfter);
@@ -31,9 +32,13 @@ namespace SioForgeCAD.Functions
                         {
                             Generic.WriteMessage($"La polyline à été simplifiée en supprimant {NumberOfVerticesDeleted} point{(NumberOfVerticesDeleted > 1 ? "s" : "")}");
                         }
-                        else
+                        else if (NumberOfVerticesDeleted <= 0 && !WasNormalFixed)
                         {
                             Generic.WriteMessage("La polyline est déja optimisée");
+                        }
+                        if (WasNormalFixed)
+                        {
+                            Generic.WriteMessage($"La normal de la polyline à été réparée");
                         }
                     }
                 }

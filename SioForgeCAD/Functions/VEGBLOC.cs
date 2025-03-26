@@ -434,7 +434,7 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(Red, Green, Blue);
         }
 
-        private class GetVegBlocPointTransient : GetPointTransient
+        public class GetVegBlocPointTransient : GetPointTransient
         {
             public GetVegBlocPointTransient(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(PrepareEntsForTransient(Entities), UpdateFunction) { }
 
@@ -445,15 +445,23 @@ namespace SioForgeCAD.Functions
                 {
                     if (BaseEnt is Entity ent)
                     {
-                        DBObjectCollection ExplodedEnts = new DBObjectCollection();
-                        ent.Explode(ExplodedEnts);
-                        foreach (var ExplodedEnt in ExplodedEnts)
+                        if (!(ent is BlockReference))
                         {
-                            if (ExplodedEnt is Entity ByBlocEnt)
+                            TransientByLayerEnts.Add(ent);
+                            continue;
+                        }
+                        else
+                        {
+                            DBObjectCollection ExplodedEnts = new DBObjectCollection();
+                            ent.Explode(ExplodedEnts);
+                            foreach (var ExplodedEnt in ExplodedEnts)
                             {
-                                SetEntityToByLayerIfByBloc(ByBlocEnt, ent.Layer);
+                                if (ExplodedEnt is Entity ByBlocEnt)
+                                {
+                                    SetEntityToByLayerIfByBloc(ByBlocEnt, ent.Layer);
+                                }
+                                TransientByLayerEnts.Add(ExplodedEnt as DBObject);
                             }
-                            TransientByLayerEnts.Add(ExplodedEnt as DBObject);
                         }
                     }
                     else

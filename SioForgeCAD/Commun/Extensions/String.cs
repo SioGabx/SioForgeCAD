@@ -43,7 +43,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string UcFirst(this string input)
         {
-            return input.CapitalizeFirstLetters(1);
+            return input.ToLowerInvariant().CapitalizeFirstLetters(1);
         }
 
         public static string RemoveDiacritics(this string str)
