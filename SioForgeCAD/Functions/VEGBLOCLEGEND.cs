@@ -18,10 +18,8 @@ namespace SioForgeCAD.Functions
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
 
-            // Liste pour stocker les noms de blocs uniques
             List<string> blockNames = new List<string>();
 
-            // Demander à l'utilisateur de sélectionner des blocs
             PromptSelectionResult selResult = ed.GetSelection();
             if (selResult.Status == PromptStatus.OK)
             {
@@ -32,14 +30,12 @@ namespace SioForgeCAD.Functions
                     {
                         if (selObj != null)
                         {
-                            // Vérifier si l'objet sélectionné est un bloc
                             if (selObj.ObjectId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
                             {
                                 BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
                                 if (blkRef?.IsXref() == false)
                                 {
                                     string blockName = blkRef.GetBlockReferenceName();
-                                    // Ajouter le nom du bloc à la liste s'il n'y est pas déjà
                                     if (!blockNames.Contains(blockName))
                                     {
                                         blockNames.Add(blockName);
@@ -51,11 +47,8 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                 }
 
-                // Trie par ordre alphabétique
                 blockNames.Sort();
 
-                //TODO : Create a table of block, hauteur entre = 1.25, faire groupe a chaque changement de types
-                //Title font : .35, position : .9 above block, 2.85 bellow previous
                 foreach (string name in blockNames)
                 {
                     using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -67,13 +60,11 @@ namespace SioForgeCAD.Functions
                             var Extend = BlockReference.GetExtents();
                             double scale = 1.0 / Extend.Size().Width;
 
-                            // Créer une matrice de transformation d'échelle
                             Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
                             BlockReference.TransformBy(scaleMatrix);
 
                             Point3d textPosition = BlockReference.Position + new Vector3d(1.5, 0, 0);
 
-                            //TODO : set same color of block, search color for good color ratio
                             MText text = new MText
                             {
                                 Contents = name.Split('_').Last(),
@@ -131,9 +122,9 @@ namespace SioForgeCAD.Functions
                     }
 
 
-                    double rowSpacing = 1;
-                    double titleSpacing = rowSpacing;
-                    double blockSizeInMetters = 0.8;
+                    const double rowSpacing = 1;
+                    const double titleSpacing = rowSpacing;
+                    const double blockSizeInMetters = 0.8;
 
                     double yPosition = Point3d.Origin.Y + titleSpacing;
                     double xPosition = Point3d.Origin.X + (blockSizeInMetters / 2);
@@ -186,7 +177,6 @@ namespace SioForgeCAD.Functions
                             var Extend = BlockReference.GetExtents();
                             double scale = blockSizeInMetters / Extend.Size().Width;
 
-                            // Créer une matrice de transformation d'échelle
                             Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
                             BlockReference.TransformBy(scaleMatrix);
                             BlockReference.Layer = blockName;
