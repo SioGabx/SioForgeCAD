@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.MacroRecorder;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
@@ -123,6 +124,12 @@ namespace SioForgeCAD.Commun.Extensions
                 Debug.WriteLine(ex.Message);
                 return false;
             }
+        }
+
+        public static Matrix3d GetDisplacementMatrixTo(this Point3d Origin, Point3d Destination)
+        {
+            Vector3d DisplacementVector = Origin.GetVectorTo(Destination);
+            return Matrix3d.Displacement(DisplacementVector);
         }
 
         public static Point3dCollection OrderByDistanceOnLine(this Point3dCollection collection, Polyline poly)

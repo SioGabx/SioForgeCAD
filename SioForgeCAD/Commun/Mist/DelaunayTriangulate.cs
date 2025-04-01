@@ -265,13 +265,14 @@ namespace SioForgeCAD.Commun
             Application.UpdateScreen();
         }
 
-        private static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
+        public static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
         {
             // Calculation of circumscribed circle coordinates and
             // squared radius
             const double eps = 1e-6;
             bool result = true;
             double m1, m2, mx1, mx2, my1, my2, dx, dy;
+
             if ((Math.Abs(y1 - y2) < eps) && (Math.Abs(y2 - y3) < eps))
             {
                 result = false;

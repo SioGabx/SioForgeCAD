@@ -16,5 +16,13 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return string.Empty;
         }
+        public static void TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                return;
+            }
+            dictionary.Add(key, value);
+        }
     }
 }

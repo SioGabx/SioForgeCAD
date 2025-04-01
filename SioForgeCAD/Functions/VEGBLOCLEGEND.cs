@@ -106,7 +106,7 @@ namespace SioForgeCAD.Functions
                             {
                                 string blockName = blkRef.GetBlockReferenceName();
                                 var Infos = VEGBLOC.GetDataStore(blkRef);
-                                string Type = Infos[VEGBLOC.DataStore.Type];
+                                string Type = Infos[VEGBLOC.DataStore.Type].UcFirst();
 
                                 if (!VegTypes.TryGetValue(Type, out List<string> value))
                                 {
@@ -135,7 +135,7 @@ namespace SioForgeCAD.Functions
                     {
                         var LegendPart = new DBObjectCollection();
                         yPosition -= titleSpacing;
-                        var CategoryName = Type.Key.UcFirst();
+                        var CategoryName = Type.Key;
 
                         var CategoryNameMText = new MText
                         {
@@ -185,7 +185,7 @@ namespace SioForgeCAD.Functions
                             yPosition -= rowSpacing;
                         }
 
-                        LegendeByCategories.Add(CategoryName, LegendPart);
+                        LegendeByCategories.TryAdd(CategoryName, LegendPart);
                     }
 
                     DBObjectCollection EntsForTransients = new DBObjectCollection();
@@ -205,8 +205,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
 
-                    Vector3d DisplacementVector = Point3d.Origin.GetVectorTo(NewPointLocation.SCG);
-                    Matrix3d DisplacementMatrix = Matrix3d.Displacement(DisplacementVector);
+                    Matrix3d DisplacementMatrix = Point3d.Origin.GetDisplacementMatrixTo(NewPointLocation.SCG);
                     foreach (var LegendPart in LegendeByCategories)
                     {
                         ObjectIdCollection CategoryObjIdCollection = new ObjectIdCollection();
