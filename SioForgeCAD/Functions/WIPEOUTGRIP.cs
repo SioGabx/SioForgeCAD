@@ -6,17 +6,12 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Overrules;
 using SioForgeCAD.Commun.Overrules.PolyGripOverrule;
 using SioForgeCAD.Commun.Overrules.PolylineGripOverrule;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows.Controls;
-using static SioForgeCAD.Commun.Overrules.PolyCornerGrip;
 
 namespace SioForgeCAD.Functions
 {
     public static class WIPEOUTGRIP
     {
-
         #region PolyGripOverrule
         private static PolyGripOverrule _instance = null;
         public static PolyGripOverrule Instance
@@ -80,14 +75,13 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         public static void CornerOnHotGripAction(ObjectId objectid, GripData GripData)
         {
             using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
             {
                 if (objectid.GetDBObject(OpenMode.ForWrite) is Wipeout WipeoutEnt && GripData is PolyCornerGrip polyGrip)
                 {
-                    Debug.WriteLine($"Grip CurrentModeId : {((int)polyGrip.CurrentModeId)}");
+                    Debug.WriteLine($"Grip CurrentModeId : {(int)polyGrip.CurrentModeId}");
                     Point2dCollection pts = null;
                     if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Default ||
                     ((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Stretch)
@@ -152,11 +146,11 @@ namespace SioForgeCAD.Functions
 
                         bool Check(Point3d Point)
                         {
-                            return (ActualWipeoutEntVertices.IsEqualTo(Point, Generic.MediumTolerance) &&
+                            return ActualWipeoutEntVertices.IsEqualTo(Point, Generic.MediumTolerance) &&
                                 (PreviousPoint.IsEqualTo(PreviousWipeoutEntVertices, Generic.MediumTolerance) ||
                                 PreviousPoint.IsEqualTo(NextWipeoutEntVertices, Generic.MediumTolerance) ||
                                 NextPoint.IsEqualTo(PreviousWipeoutEntVertices, Generic.MediumTolerance) ||
-                                NextPoint.IsEqualTo(NextWipeoutEntVertices, Generic.MediumTolerance)));
+                                NextPoint.IsEqualTo(NextWipeoutEntVertices, Generic.MediumTolerance));
                         }
                         if (Check(NextPoint))
                         {
@@ -178,7 +172,6 @@ namespace SioForgeCAD.Functions
                 return null;
             }
         }
-
 
         private static Point2dCollection AddStretchPoint(Wipeout WipeoutEnt, Point3d Point, PolyGripOverrule.ModeIdAction Action)
         {
@@ -251,6 +244,5 @@ namespace SioForgeCAD.Functions
             }
             return WipeoutEntVertices.ToPoint2dCollection();
         }
-
     }
 }

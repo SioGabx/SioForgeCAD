@@ -1,11 +1,4 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using static Autodesk.AutoCAD.DatabaseServices.MultiModesGripPE;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
 {

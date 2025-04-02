@@ -25,6 +25,7 @@ namespace SioForgeCAD
 
         public static void InitPlugin()
         {
+            //ContextMenu
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
             Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
@@ -32,8 +33,10 @@ namespace SioForgeCAD
             Functions.CONVERTIMAGETOOLE.ContextMenu.Attach();
             Functions.DIMDISASSOCIATE.ContextMenu.Attach();
 
+            //Tray
             Functions.PICKSTYLETRAY.AddTray();
 
+            //Overrule
             Functions.WIPEOUTGRIP.EnableOverrule(true);
         }
 

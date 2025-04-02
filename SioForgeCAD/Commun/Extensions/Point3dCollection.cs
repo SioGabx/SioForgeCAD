@@ -105,7 +105,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 for (int j = i + 1; j < points.Count; j++)
                 {
-                    if (points[i].IsEqualTo(points[j], new Tolerance(1e-5, 1e-5)))
+                    if (points[i].IsEqualTo(points[j], tolerance))
                     {
                         return true;
                     }

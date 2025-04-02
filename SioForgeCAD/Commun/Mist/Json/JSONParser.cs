@@ -259,7 +259,6 @@ namespace SioForgeCAD.JSONParser
                     valueType = args[1];
                 }
 
-
                 // Vérifier si la clé est une string ou une énumération
                 bool isEnumKey = keyType.IsEnum;
                 if (!isEnumKey && keyType != typeof(string))

@@ -1,17 +1,11 @@
-﻿using Autodesk.AutoCAD.Colors;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun;
-using System;
+using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Xml.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -46,7 +40,7 @@ namespace SioForgeCAD.Functions
                     foreach (SelectedObject selObj in selResult.Value)
                     {
                         var EntObjId = selObj.ObjectId;
-                        if (selObj != null && EntObjId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
+                        if (selObj != null && EntObjId.IsDerivedFrom(typeof(BlockReference)))
                         {
                             BlockReference blkRef = tr.GetObject(EntObjId, OpenMode.ForRead) as BlockReference;
                             if (blkRef?.IsXref() == false)
@@ -58,7 +52,7 @@ namespace SioForgeCAD.Functions
                                 string Name = Infos[VEGBLOC.DataStore.CompleteName];
                                 string Type = Infos[VEGBLOC.DataStore.Type]?.ToUpper();
 
-                                VegInstance Instance = VegInstanceList.Where(inst => (inst.CompleteName == Name && inst.Type == Type))?.FirstOrDefault();
+                                VegInstance Instance = VegInstanceList.Where(inst => inst.CompleteName == Name && inst.Type == Type)?.FirstOrDefault();
                                 if (Instance is null)
                                 {
                                     VegInstanceList.Add(new VegInstance(Name, Type));
@@ -73,9 +67,9 @@ namespace SioForgeCAD.Functions
                     StringBuilder ClipboardString = new StringBuilder();
                     foreach (var Extract in VegInstanceList.OrderByDescending(v => v.Type).ThenByDescending(v => v.CompleteName).Reverse())
                     {
-                        var Name = Extract.CompleteName;
-                        var Type = Extract.Type;
-                        var Count = Extract.Count;
+                        string Name = Extract.CompleteName;
+                        string Type = Extract.Type;
+                        int Count = Extract.Count;
 
                         ClipboardString.AppendLine($"\"{Type}\"\t\"{Name}\"\t{Count}");
                     }

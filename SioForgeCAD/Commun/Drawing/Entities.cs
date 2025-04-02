@@ -35,7 +35,6 @@ namespace SioForgeCAD.Commun.Drawing
             var db = Generic.GetDatabase();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
-                //BlockTable acBlkTbl = acTrans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord acBlkTblRec = Generic.GetCurrentSpaceBlockTableRecord(acTrans);
 
                 // Check if the entity is already in the database

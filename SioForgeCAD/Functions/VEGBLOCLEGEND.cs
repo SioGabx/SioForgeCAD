@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
@@ -27,10 +26,10 @@ namespace SioForgeCAD.Functions
                 {
                     foreach (SelectedObject selObj in selResult.Value)
                     {
-                        if (selObj != null && selObj.ObjectId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
+                        if (selObj?.ObjectId.IsDerivedFrom(typeof(BlockReference)) == true)
                         {
                             BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
-                            if (blkRef?.IsXref() == false)
+                            if (!blkRef.IsXref())
                             {
                                 string blockName = blkRef.GetBlockReferenceName();
                                 var Infos = VEGBLOC.GetDataStore(blkRef);

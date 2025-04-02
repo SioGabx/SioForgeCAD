@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
                         }
                         if (WasNormalFixed)
                         {
-                            Generic.WriteMessage($"La normal de la polyline à été réparée");
+                            Generic.WriteMessage("La normal de la polyline à été réparée");
                         }
                     }
                 }

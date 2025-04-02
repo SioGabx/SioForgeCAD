@@ -288,7 +288,7 @@ namespace SioForgeCAD.Commun
                 int MaxNumberOfContainPolygon = 2;
                 foreach (var polyHole in PolyHoleList.GetBoundaries())
                 {
-                    if (Hole is null || Hole.IsDisposed)
+                    if (Hole?.IsDisposed != false)
                     {
                         continue;
                     }

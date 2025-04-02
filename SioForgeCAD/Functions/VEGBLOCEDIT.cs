@@ -4,10 +4,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
-using SioForgeCAD.JSONParser;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 

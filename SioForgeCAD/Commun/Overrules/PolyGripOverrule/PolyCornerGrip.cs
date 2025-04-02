@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun.Overrules
 {
     internal class PolyCornerGrip : GripData
     {
-       
+
 
         public PolyCornerGrip()
         {

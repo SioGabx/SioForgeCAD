@@ -217,17 +217,5 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

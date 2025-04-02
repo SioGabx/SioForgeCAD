@@ -83,6 +83,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 GripData[] DefaultGripsArray = DefaultGrips.ToArray();
 
                 Point3dCollection AlreadyAddedPoints = new Point3dCollection();
+                //Corner grip
                 int index = 0;
                 foreach (GripData DefaultGrip in DefaultGripsArray)
                 {
@@ -104,6 +105,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                     }
                 }
 
+                //Middle grip
                 for (int i = 0; i < DefaultGripsArray.Length; i++)
                 {
                     GripData DefaultGrip = DefaultGripsArray[i];
@@ -129,10 +131,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                         }
                     }
                 }
-
-
-                //TODO : Add middle line grip
-
                 if (!_hideOriginals)
                 {
                     base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);

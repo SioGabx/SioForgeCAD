@@ -111,9 +111,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-
-
         public static void SetAnnotativeScale(this Database db, string Name, double PaperUnits, double DrawingUnits)
         {
             Editor ed = Generic.GetEditor();
@@ -159,7 +156,5 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
-
-
     }
 }

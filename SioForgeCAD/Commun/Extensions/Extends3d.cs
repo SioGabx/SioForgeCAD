@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -86,11 +85,12 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (entities.Any())
             {
-                var extent = (entities.Where(obj => obj is Entity).First() as Entity).GeometricExtents;
+                var extent = (entities.First(obj => obj is Entity) as Entity).GeometricExtents;
                 foreach (var dbobj in entities)
                 {
-                    if (dbobj is Entity ent) { 
-                        extent.AddExtents(ent.GetExtents()); 
+                    if (dbobj is Entity ent)
+                    {
+                        extent.AddExtents(ent.GetExtents());
                     }
                 }
                 return extent;
@@ -104,7 +104,6 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return GetExtents(entities.ToArray());
         }
-
 
         public static Extents3d GetExtents(this IEnumerable<ObjectId> entities)
         {

@@ -264,7 +264,6 @@ namespace SioForgeCAD.Commun
                         }
                         ent.UpgradeOpen();
                         ent.LayerId = targetLayerId;
-
                     }
                 }
             }

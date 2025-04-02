@@ -1,10 +1,5 @@
 ﻿using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static Autodesk.AutoCAD.DatabaseServices.GripData;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -45,5 +40,5 @@ namespace SioForgeCAD.Commun.Extensions
             var unit = worldDraw.Viewport.GetNumPixelsInUnitSquare(point);
             return 2.5 * gripSizeInPixels / unit.X;
         }
-        }
+    }
 }

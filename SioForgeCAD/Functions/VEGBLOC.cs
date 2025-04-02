@@ -136,16 +136,17 @@ namespace SioForgeCAD.Functions
             {
                 return null;
             }
-            try { 
-            Dictionary<DataStore, string> BlocDataFromJson = BlocDescription.FromJson<Dictionary<DataStore, string>>();
-            if (BlocDataFromJson != null)
+            try
             {
-                return BlocDataFromJson;
-            }
+                Dictionary<DataStore, string> BlocDataFromJson = BlocDescription.FromJson<Dictionary<DataStore, string>>();
+                if (BlocDataFromJson != null)
+                {
+                    return BlocDataFromJson;
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex); 
+                Debug.WriteLine(ex);
                 return null;
             }
 
@@ -478,7 +479,6 @@ namespace SioForgeCAD.Functions
                 }
                 return TransientByLayerEnts;
             }
-
 
             private static void SetEntityToByLayerIfByBloc(Entity entity, string LayerName)
             {

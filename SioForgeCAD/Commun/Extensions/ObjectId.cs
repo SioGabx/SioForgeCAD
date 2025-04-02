@@ -2,6 +2,8 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -191,6 +193,12 @@ namespace SioForgeCAD.Commun
             acHatch.AppendLoop(HatchLoopTypes.Outermost, acObjIdColl);
             acHatch.EvaluateHatch(true);
             return acHatch;
+        }
+
+        public static bool IsDerivedFrom(this ObjectId objId, Type type)
+        {
+            if (objId == ObjectId.Null) { return false; }
+            return objId.ObjectClass.IsDerivedFrom(RXObject.GetClass(type));
         }
     }
 }

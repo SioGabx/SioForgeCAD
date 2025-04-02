@@ -1,10 +1,7 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using SioForgeCAD.Commun.Extensions;
-using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
 {
@@ -75,7 +72,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             {
                 _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
                 Vector3d TransformVector = _basePoint.GetVectorTo(mousePoint);
-               var TransformMatrix = Matrix3d.Displacement(TransformVector);
+                var TransformMatrix = Matrix3d.Displacement(TransformVector);
                 for (int i = 0; i < _polyline.GetReelNumberOfVertices(); i++)
                 {
                     if (_points.ContainsTolerance(_polyline.GetPoint3dAt(i), Generic.MediumTolerance))

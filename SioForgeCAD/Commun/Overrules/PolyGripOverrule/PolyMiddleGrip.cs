@@ -65,7 +65,7 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(OriginLeft, YVector), //K
             };
 
-        
+
             return worldDraw.DrawGrip(points, type); ;
         }
 

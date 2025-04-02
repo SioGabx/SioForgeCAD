@@ -15,7 +15,10 @@ namespace SioForgeCAD.Commun.Extensions
             List<T> NewList = new List<T>();
             foreach (var item in list)
             {
-                NewList.Add((T)(item as Entity).Clone());
+                if (item is Entity)
+                {
+                    NewList.Add((T)(item as Entity).Clone());
+                }
             }
             return NewList;
         }
@@ -175,7 +178,6 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 Debug.WriteLine(ex.ToString());
             }
-
         }
         public static double TryGetArea(this Entity ent)
         {

@@ -1,5 +1,4 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun.Extensions
 {

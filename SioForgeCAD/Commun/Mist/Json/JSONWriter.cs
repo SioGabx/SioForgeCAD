@@ -98,7 +98,8 @@ namespace SioForgeCAD.JSONParser
                 if (keyType.IsEnum)
                 {
                     //continue
-                }else if (keyType != typeof(string))
+                }
+                else if (keyType != typeof(string))
                 {
                     //Refuse to output dictionary keys that aren't of type string
                     stringBuilder.Append("{}");
