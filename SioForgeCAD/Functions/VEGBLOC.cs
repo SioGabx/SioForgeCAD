@@ -136,10 +136,17 @@ namespace SioForgeCAD.Functions
             {
                 return null;
             }
+            try { 
             Dictionary<DataStore, string> BlocDataFromJson = BlocDescription.FromJson<Dictionary<DataStore, string>>();
             if (BlocDataFromJson != null)
             {
                 return BlocDataFromJson;
+            }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex); 
+                return null;
             }
 
             //LEGACY 

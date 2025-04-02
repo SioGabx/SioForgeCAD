@@ -326,6 +326,12 @@ namespace SioForgeCAD
             Functions.VEGBLOCLEGEND.Add();
         }
 
+        [CommandMethod("SIOFORGECAD", "VEGBLOCEXTRACT", CommandFlags.Redraw)]
+        public static void VEGBLOCEXTRACT()
+        {
+            Functions.VEGBLOCEXTRACT.Extract();
+        }
+
         [CommandMethod("SIOFORGECAD", "BATTLEMENTS", CommandFlags.Modal)]
         public static void BATTLEMENTS()
         {

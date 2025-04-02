@@ -274,6 +274,7 @@
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />
+    <Compile Include="Functions\VEGBLOCEXTRACT.cs" />
     <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VIEWPORTLOCK.cs" />
     <Compile Include="Functions\VIEWPORTOUTLINE.cs" />

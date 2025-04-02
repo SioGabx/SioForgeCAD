@@ -13,78 +13,6 @@ namespace SioForgeCAD.Functions
 {
     public static class VEGBLOCLEGEND
     {
-        public static void AddOld()
-        {
-            var ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-
-            List<string> blockNames = new List<string>();
-
-            PromptSelectionResult selResult = ed.GetSelection();
-            if (selResult.Status == PromptStatus.OK)
-            {
-                using (Transaction tr = db.TransactionManager.StartTransaction())
-                {
-                    SelectionSet selSet = selResult.Value;
-                    foreach (SelectedObject selObj in selSet)
-                    {
-                        if (selObj != null)
-                        {
-                            if (selObj.ObjectId.ObjectClass.IsDerivedFrom(RXObject.GetClass(typeof(BlockReference))))
-                            {
-                                BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
-                                if (blkRef?.IsXref() == false)
-                                {
-                                    string blockName = blkRef.GetBlockReferenceName();
-                                    if (!blockNames.Contains(blockName))
-                                    {
-                                        blockNames.Add(blockName);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    tr.Commit();
-                }
-
-                blockNames.Sort();
-
-                foreach (string name in blockNames)
-                {
-                    using (Transaction tr = db.TransactionManager.StartTransaction())
-                    {
-                        var Object = VEGBLOC.AskInsertVegBloc(name);
-                        if (Object != ObjectId.Null)
-                        {
-                            var BlockReference = Object.GetDBObject(OpenMode.ForWrite) as BlockReference;
-                            var Extend = BlockReference.GetExtents();
-                            double scale = 1.0 / Extend.Size().Width;
-
-                            Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
-                            BlockReference.TransformBy(scaleMatrix);
-
-                            Point3d textPosition = BlockReference.Position + new Vector3d(1.5, 0, 0);
-
-                            MText text = new MText
-                            {
-                                Contents = name.Split('_').Last(),
-                                Location = textPosition,
-                                Height = 0,
-                                TextHeight = 0.25,
-                                Attachment = AttachmentPoint.MiddleLeft,
-                                Normal = Vector3d.ZAxis,
-                                Rotation = 0
-                            };
-                            text.AddToDrawingCurrentTransaction();
-                        }
-                        tr.Commit();
-                    }
-                }
-            }
-        }
-
-
-
         public static void Add()
         {
             var ed = Generic.GetEditor();
@@ -106,6 +34,7 @@ namespace SioForgeCAD.Functions
                             {
                                 string blockName = blkRef.GetBlockReferenceName();
                                 var Infos = VEGBLOC.GetDataStore(blkRef);
+                                if (Infos is null) { continue; }
                                 string Type = Infos[VEGBLOC.DataStore.Type].UcFirst();
 
                                 if (!VegTypes.TryGetValue(Type, out List<string> value))
@@ -120,7 +49,12 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
-
+                    if (VegTypes.Count == 0)
+                    {
+                        Generic.WriteMessage("Aucun bloc compatible sélectionné.");
+                        tr.Commit();
+                        return;
+                    }
 
                     const double rowSpacing = 1;
                     const double titleSpacing = rowSpacing;
