@@ -126,42 +126,14 @@ namespace SioForgeCAD.Functions
             Matrix3d resetRotationMatrix = Matrix3d.Rotation(-ent.Rotation, Vector3d.ZAxis, ent.Position);
             ent.TransformBy(resetRotationMatrix);
             ent.Rotation = 0;
-            Polyline corners = ent.GetExtents().GetGeometry();
+            Vector3d BaseOrientVector = Vector3d.ZAxis.GetPerpendicularVector();
 
-            var ClosestPoint = corners.GetClosestPointTo(basePoint, false);
-
-            //Get closest line of the extend to get the base allignement vector
-            double minDistance = double.MaxValue;
-            int closestIndex = 0;
-            for (int i = 0; i < corners.NumberOfVertices; i++)
-            {
-                Point3d p1 = corners.GetPoint3dAt(i);
-                Point3d p2 = corners.GetPoint3dAt((i + 1) % corners.NumberOfVertices);
-
-                using (LineSegment3d ln = new LineSegment3d(p1, p2))
-                {
-                   if (ln.IsOn(ClosestPoint))
-                    {
-                        double distance = basePoint.DistanceTo(p1.GetMiddlePoint(p2));
-                        if (distance < minDistance)
-                        {
-                            minDistance = distance;
-                            closestIndex = i;
-                        }
-                    }
-                }
-            }
-
-            Point3d closestP1 = corners.GetPoint3dAt(closestIndex);
-            Point3d closestP2 = corners.GetPoint3dAt((closestIndex + 1) % corners.NumberOfVertices);
-            Vector3d closestEdgeVector = (closestP2 - closestP1).GetNormal();
-
-            //Always face up
-            if (!segmentVector.IsVectorOnRightSide(perpendicularVector))
+            //Always face up, ignore segmentVector direction
+            if (segmentVector.IsVectorOnRightSide(perpendicularVector))
             {
                 segmentVector = segmentVector.Inverse();
             }
-            double rotationAngle = closestEdgeVector.GetAngleTo(segmentVector, Vector3d.ZAxis);
+            double rotationAngle = BaseOrientVector.GetAngleTo(segmentVector, Vector3d.ZAxis);
             Matrix3d finalRotation = Matrix3d.Rotation(rotationAngle, Vector3d.ZAxis, basePoint);
             ent.TransformBy(finalRotation);
         }
