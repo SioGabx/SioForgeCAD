@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -19,7 +20,7 @@ namespace SioForgeCAD.Functions
 
             public VegInstance(string completeName, string type)
             {
-                Count = 1;
+                Count = 0;
                 CompleteName = completeName;
                 Type = type;
             }
@@ -29,56 +30,61 @@ namespace SioForgeCAD.Functions
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
 
-            List<VegInstance> VegInstanceList = new List<VegInstance>();
+            SelectionFilter BlkSelectionFilter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "INSERT") });
+            PromptSelectionResult SelectionBlkPSR = ed.GetSelectionRedraw(null, false, false, BlkSelectionFilter);
+            PromptSelectionResult AllBlkBSR = ed.SelectAll(BlkSelectionFilter);
 
-            PromptSelectionResult selResult = ed.GetSelectionRedraw(null, false, false);
-            List<ObjectId> ExtractedBloc = new List<ObjectId>();
-            if (selResult.Status == PromptStatus.OK)
+            if (SelectionBlkPSR.Status != PromptStatus.OK || AllBlkBSR.Status != PromptStatus.OK) { return; }
+            Generic.WriteMessage("Extraction en cours... Veuillez patienter...");
+
+            List <VegInstance> VegInstanceList = new List<VegInstance>();
+            HashSet<ObjectId> ExtractedBlocObjIds = new HashSet<ObjectId>();
+
+            ObjectId[] SelectedBlocObjIds = SelectionBlkPSR.Value.GetObjectIds();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                using (Transaction tr = db.TransactionManager.StartTransaction())
+                foreach (SelectedObject allBloc in AllBlkBSR.Value)
                 {
-                    foreach (SelectedObject selObj in selResult.Value)
+                    if (allBloc?.ObjectId == null || !allBloc.ObjectId.IsDerivedFrom(typeof(BlockReference)))
                     {
-                        var EntObjId = selObj.ObjectId;
-                        if (selObj != null && EntObjId.IsDerivedFrom(typeof(BlockReference)))
-                        {
-                            BlockReference blkRef = tr.GetObject(EntObjId, OpenMode.ForRead) as BlockReference;
-                            if (blkRef?.IsXref() == false)
-                            {
-                                string blockName = blkRef.GetBlockReferenceName();
-                                var Infos = VEGBLOC.GetDataStore(blkRef);
-                                if (Infos is null) { continue; }
-                                ExtractedBloc.Add(EntObjId);
-                                string Name = Infos[VEGBLOC.DataStore.CompleteName];
-                                string Type = Infos[VEGBLOC.DataStore.Type]?.ToUpper();
-
-                                VegInstance Instance = VegInstanceList.Where(inst => inst.CompleteName == Name && inst.Type == Type)?.FirstOrDefault();
-                                if (Instance is null)
-                                {
-                                    VegInstanceList.Add(new VegInstance(Name, Type));
-                                }
-                                else
-                                {
-                                    Instance.Count++;
-                                }
-                            }
-                        }
+                        continue;
                     }
-                    StringBuilder ClipboardString = new StringBuilder();
-                    foreach (var Extract in VegInstanceList.OrderByDescending(v => v.Type).ThenByDescending(v => v.CompleteName).Reverse())
+
+                    BlockReference allBlocBlkRef = (BlockReference)tr.GetObject(allBloc.ObjectId, OpenMode.ForRead);
+                    if (allBlocBlkRef?.IsXref() == true) { continue; }
+                    string blockName = allBlocBlkRef.GetBlockReferenceName();
+
+                    var infos = VEGBLOC.GetDataStore(allBlocBlkRef);
+                    if (infos == null) { continue; }
+
+                    string name = infos[VEGBLOC.DataStore.CompleteName];
+                    string type = infos[VEGBLOC.DataStore.Type]?.ToUpper() ?? "UNKNOWN";
+
+                    var instance = VegInstanceList.FirstOrDefault(inst => inst.CompleteName == name && inst.Type == type);
+                    if (instance == null)
                     {
-                        string Name = Extract.CompleteName;
-                        string Type = Extract.Type;
-                        int Count = Extract.Count;
-
-                        ClipboardString.AppendLine($"\"{Type}\"\t\"{Name}\"\t{Count}");
+                        instance = new VegInstance(name, type);
+                        VegInstanceList.Add(instance);
                     }
-                    Generic.WriteMessage($"Les métrés des blocs sélectionnés ont été copiés dans le presse-papiers.\nNombre d'espèces : {VegInstanceList.Count}");
-                    Clipboard.SetText(ClipboardString.ToString());
-                    ed.SetImpliedSelection(ExtractedBloc.ToArray());
 
-                    tr.Commit();
+                    if (SelectedBlocObjIds.Contains(allBloc.ObjectId))
+                    {
+                        ExtractedBlocObjIds.Add(allBloc.ObjectId);
+                        instance.Count++;
+                    }
                 }
+
+                var clipboardText = string.Join("\n", VegInstanceList
+                    .OrderBy(v => v.Type)
+                    .ThenBy(v => v.CompleteName)
+                    .Select(v => $"\"{v.Type}\"\t\"{v.CompleteName}\"\t{v.Count}")
+                );
+
+                Generic.WriteMessage($"Les métrés des blocs sélectionnés ont été copiés dans le presse-papiers.\nNombre d'espèces : {VegInstanceList.Count(inst => inst.Count > 0)} / {VegInstanceList.Count}");
+                Clipboard.SetText(clipboardText);
+                ed.SetImpliedSelection(ExtractedBlocObjIds.ToArray());
+                tr.Commit();
             }
         }
     }
