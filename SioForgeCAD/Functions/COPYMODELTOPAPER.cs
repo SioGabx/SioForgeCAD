@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage("Perspective views not supported");
                 return;
             }
-            var SelectedEnts = ed.GetSelectionRedraw();
+            var SelectedEnts = ed.GetSelectionRedraw(RejectObjectsOnLockedLayers:true);
             if (SelectedEnts.Status != PromptStatus.OK)
             {
                 return;
@@ -27,8 +27,17 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                var ids = new ObjectIdCollection();
+                foreach (ObjectId id in SelectedEnts.Value.GetObjectIds())
+                {
+                    //Filter entity on locked layer
+                    if (id.GetDBObject() is Entity ent && !ent.IsEntityOnLockedLayer())
+                    {
+                        ids.Add(id);
+                    }
+                }
+
                 // copy selected entites to model space
-                var ids = new ObjectIdCollection(SelectedEnts.Value.GetObjectIds());
                 var mapping = new IdMapping();
                 var modelSpaceId = SymbolUtilityServices.GetBlockPaperSpaceId(db);
                 db.DeepCloneObjects(ids, modelSpaceId, mapping, false);

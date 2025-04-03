@@ -10,7 +10,7 @@ namespace SioForgeCAD.Functions
         public static void Fix()
         {
             Database db = Generic.GetDatabase();
-
+            Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
             Generic.SetSystemVariable("UCSFOLLOW", 0); //Generates a plan view whenever you change from one UCS to another.  
             Generic.SetSystemVariable("UCSDETECT", 0);
             Generic.SetSystemVariable("ROLLOVERTIPS", 0);
@@ -40,7 +40,6 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
 
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
-            Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
             Generic.Command("_SNAP", "_OFF");
             Generic.Command("_INSUNITS", 6); //6 == Meters //Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
             Generic.Command("_-UNITS", 2, 4, 1, 4, 0, "_NO");

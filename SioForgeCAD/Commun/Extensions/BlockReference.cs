@@ -15,6 +15,26 @@ namespace SioForgeCAD.Commun.Extensions
             return (blockRef?.BlockTableRecord.GetDBObject() as BlockTableRecord)?.IsFromExternalReference ?? false;
         }
 
+        public static Handle GetDynamicBlockHandleFromAnonymousBlock(this BlockTableRecord btr)
+        {
+            if (!btr.IsAnonymous)
+                return ObjectId.Null.Handle;
+            Handle btrHand = btr.ObjectId.Handle;
+            ResultBuffer rb = btr.GetXDataForApplication("AcDbBlockRepBTag");
+            if (rb == null)
+                return ObjectId.Null.Handle;
+            foreach (TypedValue tv in rb)
+            {
+                if (tv.TypeCode == 1005 && tv.Value is string strValue)
+                {
+                    long nHandle = Convert.ToInt64(strValue, 16);
+                    return new Handle(nHandle);
+                }
+            }
+            return ObjectId.Null.Handle;
+        }
+
+
         public static BlockTableRecord GetBlocDefinition(this Database db, string BlocName)
         {
             BlockTable bt = db.BlockTableId.GetDBObject() as BlockTable;

@@ -622,6 +622,12 @@ namespace SioForgeCAD
             Functions.WIPEOUTGRIP.ToggleGrip();
         }
 
+        [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
+        public static void TEST()
+        {
+            
+        }
+
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
         {

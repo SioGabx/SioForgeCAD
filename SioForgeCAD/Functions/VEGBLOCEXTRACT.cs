@@ -73,6 +73,7 @@ namespace SioForgeCAD.Functions
 
                         ClipboardString.AppendLine($"\"{Type}\"\t\"{Name}\"\t{Count}");
                     }
+                    Generic.WriteMessage($"Les métrés des blocs sélectionnés ont été copiés dans le presse-papiers.\nNombre d'espèces : {VegInstanceList.Count}");
                     Clipboard.SetText(ClipboardString.ToString());
                     ed.SetImpliedSelection(ExtractedBloc.ToArray());
 
