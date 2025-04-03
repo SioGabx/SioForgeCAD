@@ -24,7 +24,7 @@ namespace SioForgeCAD.Functions
             {
                 cme = new ContextMenuExtension();
                 MenuItem mi = new MenuItem("Convertir en OLE (embed)");
-                mi.Click += OnConvert;
+                mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = Entity.GetClass(typeof(Ole2Frame));
                 Application.AddObjectContextMenuExtension(rxc, cme);
@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
-            private static void OnConvert(object o, EventArgs e)
+            private static void OnExecute(object o, EventArgs e)
             {
                 Generic.SendStringToExecute("SIOFORGECAD.CONVERTIMAGETOOLE");
             }

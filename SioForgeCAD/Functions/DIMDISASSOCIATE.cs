@@ -17,7 +17,7 @@ namespace SioForgeCAD.Functions
             {
                 cme = new ContextMenuExtension();
                 MenuItem mi = new MenuItem("Dissocier les cotes");
-                mi.Click += OnConvert;
+                mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = Entity.GetClass(typeof(Dimension));
                 Application.AddObjectContextMenuExtension(rxc, cme);
@@ -29,7 +29,7 @@ namespace SioForgeCAD.Functions
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
-            private static void OnConvert(object o, EventArgs e)
+            private static void OnExecute(object o, EventArgs e)
             {
                 Generic.SendStringToExecute("_DIMDISASSOCIATE");
             }
