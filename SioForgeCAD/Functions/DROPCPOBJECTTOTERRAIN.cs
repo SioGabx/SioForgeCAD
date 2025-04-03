@@ -17,108 +17,104 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
 
-            using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
+            using (Polyline terrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
             {
-                if (TerrainBasePolyline == null)
+                if (terrainBasePolyline == null) return;
+
+                var promptOptions = new PromptSelectionOptions
                 {
-                    return;
-                }
-                var PromptSelectEntitiesOptions = new PromptSelectionOptions()
-                {
-                    MessageForAdding = "Selectionnez les entités à projeter sur le terrain via le UCS courrant"
+                    MessageForAdding = "Sélectionnez les entités à projeter sur le terrain via l'UCS courant"
                 };
 
-                var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
+                var selectedObjects = ed.GetSelection(promptOptions);
+                if (selectedObjects.Status != PromptStatus.OK) { return; }
 
-                if (AllSelectedObject.Status != PromptStatus.OK)
+                ObjectId[] objectIds = selectedObjects.Value.GetObjectIds();
+                TransformAlign(objectIds, terrainBasePolyline, false);
+
+                var alignChoice = ed.GetOptions("Voulez-vous aligner les entités ?", "Oui", "Non");
+                if (alignChoice.Status == PromptStatus.OK && alignChoice.StringResult == "Oui")
                 {
-                    return;
-                }
-                var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
-                TransformAlign(AllSelectedObjectIds, TerrainBasePolyline, false);
-                var Align = ed.GetOptions("Voullez vous alligner les entités", "Oui", "Non");
-                if (Align.Status == PromptStatus.OK && Align.StringResult == "Oui")
-                {
-                    TransformAlign(AllSelectedObjectIds, TerrainBasePolyline, true);
+                    TransformAlign(objectIds, terrainBasePolyline, true);
                 }
             }
         }
-
-        private static void TransformAlign(ObjectId[] ObjectIds, Polyline Terrain, bool Align)
+ 
+        private static void TransformAlign(ObjectId[] objectIds, Polyline terrain, bool align)
         {
             Database db = Generic.GetDatabase();
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (ObjectId ObjId in ObjectIds)
+                foreach (ObjectId objId in objectIds)
                 {
-                    if (Layers.IsEntityOnLockedLayer(ObjId))
-                    {
-                        continue;
-                    }
+                    if (Layers.IsEntityOnLockedLayer(objId)) { continue; };
 
-                    //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
-                    //if ent is block, then we move the point, else if entity, first get extend and then move it
-                    using (Entity SelectedEntity = ObjId.GetEntity(OpenMode.ForWrite))
+                    Entity entity = objId.GetEntity(OpenMode.ForWrite);
+                    if (entity is BlockReference blockRef)
                     {
-                        if (SelectedEntity is BlockReference blkRef)
-                        {
-                            Terrain.DropBlockReference(blkRef, Align);
-                        }
+                        terrain.DropBlockReference(blockRef, align);
                     }
                 }
-                acTrans.Commit();
+                tr.Commit();
             }
         }
 
-        private static Vector3d GetUCSPerpendicularVector(Polyline TerrainBasePolyline)
+        private static Vector3d GetUCSPerpendicularVector(Polyline terrainBasePolyline)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-            Matrix3d ucsMatrix = ed.CurrentUserCoordinateSystem;
-            return ucsMatrix.CoordinateSystem3d.Yaxis.MultiplyBy(-TerrainBasePolyline.Length);
+            Matrix3d ucsMatrix = Generic.GetEditor().CurrentUserCoordinateSystem;
+            return ucsMatrix.CoordinateSystem3d.Yaxis.MultiplyBy(-terrainBasePolyline.Length);
         }
 
-        private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef, bool AlignToSegment)
+        private static void DropBlockReference(this Polyline terrain, BlockReference blkRef, bool alignToSegment)
         {
-            List<(Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector)> ListOfPossibleIntersections = new List<(Point3d, Vector3d, Vector3d)>();
-            for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < TerrainBasePolyline.GetReelNumberOfVertices(); PolylineSegmentIndex++)
+            List<(Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector)> intersections = new List<(Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector)>();
+
+            for (int i = 0; i < terrain.GetReelNumberOfVertices(); i++)
             {
-                var PolylineSegment = TerrainBasePolyline.GetSegmentAt(PolylineSegmentIndex);
-                Vector3d PerpendicularVector = GetUCSPerpendicularVector(TerrainBasePolyline);
-                Vector3d PerpendicularVectorIntersection = PerpendicularVector.MultiplyBy(Lines.GetLength(PolylineSegment.StartPoint, blkRef.Position));
-                using (Line SegmentLine = new Line(PolylineSegment.StartPoint.Flatten(), PolylineSegment.EndPoint.Flatten()))
-                using (Line PerpendicularLine = new Line(blkRef.Position.Add(-PerpendicularVectorIntersection).Flatten(), blkRef.Position.Add(PerpendicularVectorIntersection).Flatten()))
+                var segment = terrain.GetSegmentAt(i);
+                Vector3d perpendicularVector = GetUCSPerpendicularVector(terrain);
+                Vector3d offsetVector = perpendicularVector.MultiplyBy(Lines.GetLength(segment.StartPoint, blkRef.Position));
+
+                using (Line segmentLine = new Line(segment.StartPoint.Flatten(), segment.EndPoint.Flatten()))
+                using (Line perpendicularLine = new Line(blkRef.Position.Add(-offsetVector).Flatten(), blkRef.Position.Add(offsetVector).Flatten()))
                 {
-                    if (!Lines.AreLinesCutting(SegmentLine, PerpendicularLine, out Point3dCollection IntersectionPointsFounds))
+                    if (Lines.AreLinesCutting(segmentLine, perpendicularLine, out Point3dCollection intersectionPoints))
                     {
-                        continue;
+                        intersections.Add((intersectionPoints[0], segment.StartPoint.GetVectorTo(segment.EndPoint), offsetVector));
                     }
-                    ListOfPossibleIntersections.Add((IntersectionPointsFounds[0], PolylineSegment.StartPoint.GetVectorTo(PolylineSegment.EndPoint), PerpendicularVectorIntersection));
                 }
             }
-            if (ListOfPossibleIntersections.Count == 0)
-            {
-                return;
-            }
-            (Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector) FinalIntersection = (Point3d.Origin, Vector3d.ZAxis, Vector3d.ZAxis);
-            double MinimalDistance = double.MaxValue;
-            foreach (var Intersection in ListOfPossibleIntersections)
-            {
-                double NewPointDistance = Lines.GetLength(Intersection.Point, blkRef.Position);
-                if (NewPointDistance < MinimalDistance)
-                {
-                    MinimalDistance = NewPointDistance;
-                    FinalIntersection = Intersection;
-                }
-            }
-            Vector3d translationVector = FinalIntersection.Point - blkRef.Position;
+
+            if (intersections.Count == 0) { return; }
+
+            var closestIntersection = FindClosestIntersection(intersections, blkRef.Position);
+            Vector3d translationVector = closestIntersection.Point - blkRef.Position;
             blkRef.TransformBy(Matrix3d.Displacement(translationVector));
-            if (AlignToSegment)
+
+            if (alignToSegment)
             {
-                AlignEntityToSegment(blkRef, blkRef.Position, FinalIntersection.SegmentVector, FinalIntersection.PerpendicularVector);
+                AlignEntityToSegment(blkRef, blkRef.Position, closestIntersection.SegmentVector, closestIntersection.PerpendicularVector);
+            }
+        }
+
+        private static (Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector) FindClosestIntersection(List<(Point3d Point, Vector3d, Vector3d)> intersections, Point3d referencePoint)
+        {
+            double minDistance = double.MaxValue;
+            (Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector) closestIntersection = (Point3d.Origin, Vector3d.ZAxis, Vector3d.ZAxis);
+
+            foreach (var intersection in intersections)
+            {
+                double distance = Lines.GetLength(intersection.Point, referencePoint);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestIntersection = intersection;
+                }
             }
 
+            return closestIntersection;
         }
+
         private static void AlignEntityToSegment(BlockReference ent, Point3d basePoint, Vector3d segmentVector, Vector3d perpendicularVector)
         {
             if (ent == null) return;
