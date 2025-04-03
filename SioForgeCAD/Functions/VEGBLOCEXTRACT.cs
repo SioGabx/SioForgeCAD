@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
 
             if (SelectionBlkPSR.Status != PromptStatus.OK || AllBlkBSR.Status != PromptStatus.OK) { return; }
             Generic.WriteMessage("Extraction en cours... Veuillez patienter...");
-
+            System.Windows.Forms.Application.DoEvents();
             List <VegInstance> VegInstanceList = new List<VegInstance>();
             HashSet<ObjectId> ExtractedBlocObjIds = new HashSet<ObjectId>();
 

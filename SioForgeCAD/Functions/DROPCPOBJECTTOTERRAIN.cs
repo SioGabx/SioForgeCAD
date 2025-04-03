@@ -6,6 +6,8 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -13,7 +15,6 @@ namespace SioForgeCAD.Functions
     {
         public static void Project()
         {
-            Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
             using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
@@ -34,28 +35,38 @@ namespace SioForgeCAD.Functions
                     return;
                 }
                 var AllSelectedObjectIds = AllSelectedObject.Value.GetObjectIds();
-
-                using (Transaction acTrans = db.TransactionManager.StartTransaction())
+                TransformAlign(AllSelectedObjectIds, TerrainBasePolyline, false);
+                var Align = ed.GetOptions("Voullez vous alligner les entités", "Oui", "Non");
+                if (Align.Status == PromptStatus.OK && Align.StringResult == "Oui")
                 {
-                    foreach (ObjectId SelectedObjectId in AllSelectedObjectIds)
-                    {
-                        if (Layers.IsEntityOnLockedLayer(SelectedObjectId))
-                        {
-                            continue;
-                        }
+                    TransformAlign(AllSelectedObjectIds, TerrainBasePolyline, true);
+                }
+            }
+        }
 
-                        //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
-                        //if ent is block, then we move the point, else if entity, first get extend and then move it
-                        using (Entity SelectedEntity = SelectedObjectId.GetEntity(OpenMode.ForWrite))
+        private static void TransformAlign(ObjectId[] ObjectIds, Polyline Terrain, bool Align)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId ObjId in ObjectIds)
+                {
+                    if (Layers.IsEntityOnLockedLayer(ObjId))
+                    {
+                        continue;
+                    }
+
+                    //check if ent is on a group : then move the group ? https://adndevblog.typepad.com/autocad/2012/04/how-to-detect-whether-entity-is-belong-to-any-group-or-not.html
+                    //if ent is block, then we move the point, else if entity, first get extend and then move it
+                    using (Entity SelectedEntity = ObjId.GetEntity(OpenMode.ForWrite))
+                    {
+                        if (SelectedEntity is BlockReference blkRef)
                         {
-                            if (SelectedEntity is BlockReference blkRef)
-                            {
-                                TerrainBasePolyline.DropBlockReference(blkRef);
-                            }
+                            Terrain.DropBlockReference(blkRef, Align);
                         }
                     }
-                    acTrans.Commit();
                 }
+                acTrans.Commit();
             }
         }
 
@@ -67,9 +78,9 @@ namespace SioForgeCAD.Functions
             return ucsMatrix.CoordinateSystem3d.Yaxis.MultiplyBy(-TerrainBasePolyline.Length);
         }
 
-        private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef)
+        private static void DropBlockReference(this Polyline TerrainBasePolyline, BlockReference blkRef, bool AlignToSegment)
         {
-            List<Point3d> ListOfPossibleIntersections = new List<Point3d>();
+            List<(Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector)> ListOfPossibleIntersections = new List<(Point3d, Vector3d, Vector3d)>();
             for (int PolylineSegmentIndex = 0; PolylineSegmentIndex < TerrainBasePolyline.GetReelNumberOfVertices(); PolylineSegmentIndex++)
             {
                 var PolylineSegment = TerrainBasePolyline.GetSegmentAt(PolylineSegmentIndex);
@@ -82,26 +93,77 @@ namespace SioForgeCAD.Functions
                     {
                         continue;
                     }
-                    ListOfPossibleIntersections.Add(IntersectionPointsFounds[0]);
+                    ListOfPossibleIntersections.Add((IntersectionPointsFounds[0], PolylineSegment.StartPoint.GetVectorTo(PolylineSegment.EndPoint), PerpendicularVectorIntersection));
                 }
             }
             if (ListOfPossibleIntersections.Count == 0)
             {
                 return;
             }
-            Point3d FinalPoint = Point3d.Origin;
+            (Point3d Point, Vector3d SegmentVector, Vector3d PerpendicularVector) FinalIntersection = (Point3d.Origin, Vector3d.ZAxis, Vector3d.ZAxis);
             double MinimalDistance = double.MaxValue;
-            foreach (Point3d IntersectionPointFound in ListOfPossibleIntersections)
+            foreach (var Intersection in ListOfPossibleIntersections)
             {
-                double NewPointDistance = Lines.GetLength(IntersectionPointFound, blkRef.Position);
+                double NewPointDistance = Lines.GetLength(Intersection.Point, blkRef.Position);
                 if (NewPointDistance < MinimalDistance)
                 {
                     MinimalDistance = NewPointDistance;
-                    FinalPoint = IntersectionPointFound;
+                    FinalIntersection = Intersection;
                 }
             }
-            Vector3d translationVector = FinalPoint - blkRef.Position;
+            Vector3d translationVector = FinalIntersection.Point - blkRef.Position;
             blkRef.TransformBy(Matrix3d.Displacement(translationVector));
+            if (AlignToSegment)
+            {
+                AlignEntityToSegment(blkRef, blkRef.Position, FinalIntersection.SegmentVector, FinalIntersection.PerpendicularVector);
+            }
+
+        }
+        private static void AlignEntityToSegment(BlockReference ent, Point3d basePoint, Vector3d segmentVector, Vector3d perpendicularVector)
+        {
+            if (ent == null) return;
+
+            Matrix3d resetRotationMatrix = Matrix3d.Rotation(-ent.Rotation, Vector3d.ZAxis, ent.Position);
+            ent.TransformBy(resetRotationMatrix);
+            ent.Rotation = 0;
+            Polyline corners = ent.GetExtents().GetGeometry();
+
+            var ClosestPoint = corners.GetClosestPointTo(basePoint, false);
+
+            //Get closest line of the extend to get the base allignement vector
+            double minDistance = double.MaxValue;
+            int closestIndex = 0;
+            for (int i = 0; i < corners.NumberOfVertices; i++)
+            {
+                Point3d p1 = corners.GetPoint3dAt(i);
+                Point3d p2 = corners.GetPoint3dAt((i + 1) % corners.NumberOfVertices);
+
+                using (LineSegment3d ln = new LineSegment3d(p1, p2))
+                {
+                   if (ln.IsOn(ClosestPoint))
+                    {
+                        double distance = basePoint.DistanceTo(p1.GetMiddlePoint(p2));
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            closestIndex = i;
+                        }
+                    }
+                }
+            }
+
+            Point3d closestP1 = corners.GetPoint3dAt(closestIndex);
+            Point3d closestP2 = corners.GetPoint3dAt((closestIndex + 1) % corners.NumberOfVertices);
+            Vector3d closestEdgeVector = (closestP2 - closestP1).GetNormal();
+
+            //Always face up
+            if (!segmentVector.IsVectorOnRightSide(perpendicularVector))
+            {
+                segmentVector = segmentVector.Inverse();
+            }
+            double rotationAngle = closestEdgeVector.GetAngleTo(segmentVector, Vector3d.ZAxis);
+            Matrix3d finalRotation = Matrix3d.Rotation(rotationAngle, Vector3d.ZAxis, basePoint);
+            ent.TransformBy(finalRotation);
         }
     }
 }

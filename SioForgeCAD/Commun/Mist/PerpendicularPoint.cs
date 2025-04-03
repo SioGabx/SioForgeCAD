@@ -68,8 +68,7 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-            List<Line> PerpendicularLinesCollectionSorted = PerpendicularLinesCollection.OrderBy(line => line.Length).ToList();
-            return PerpendicularLinesCollectionSorted;
+            return PerpendicularLinesCollection.OrderBy(line => line.Length).ToList();
         }
 
         public static bool CheckIfLineIsIntersectingOtherSegments(Polyline TargetPolyline, Line PerpendicularLine, int CurrentIndex = -1)

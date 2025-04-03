@@ -157,6 +157,19 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static PromptResult GetOptions(this Editor ed, string Message, params string[] Keywords)
+        {
+            PromptKeywordOptions options = new PromptKeywordOptions(Message);
+            foreach (string item in Keywords)
+            {
+                options.Keywords.Add(item);
+            }
+            options.Keywords.Default = Keywords[0];
+            options.AllowNone = false;
+
+            return ed.GetKeywords(options);
+        }
+
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             PromptSelectionOptions promptSelectionOptions = new PromptSelectionOptions()

@@ -518,7 +518,8 @@ namespace SioForgeCAD
             Functions.ROTATEONSINGLEAXIS.Rotate();
         }
 
-        [CommandMethod("SIOFORGECAD", "GENERATEBOUNDINGBOX", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "DRAWBOUNDINGBOX", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "DRAWEXTENDS", CommandFlags.UsePickSet)]
         //Draw the bounding box of selected entities
         public static void DRAWBOUNDINGBOX()
         {
