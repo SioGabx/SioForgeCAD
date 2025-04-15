@@ -38,6 +38,9 @@ namespace SioForgeCAD
 
             //Overrule
             Functions.WIPEOUTGRIP.EnableOverrule(true);
+
+            //Event
+            Functions.SAVEFILEATCLOSE.Event.Attach();
         }
 
         public void Terminate() { }

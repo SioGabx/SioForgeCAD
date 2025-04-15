@@ -64,6 +64,7 @@ namespace SioForgeCAD.Commun.Extensions
                     Hatch TargetHatch = Target as Hatch;
                     if (OriginHatch.IsGradient)
                     {
+                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
                         TargetHatch.SetGradient(OriginHatch.GradientType, OriginHatch.GradientName);
                         TargetHatch.GradientOneColorMode = OriginHatch.GradientOneColorMode;
                         TargetHatch.GradientShift = OriginHatch.GradientShift;
@@ -78,6 +79,8 @@ namespace SioForgeCAD.Commun.Extensions
                         TargetHatch.PatternAngle = OriginHatch.PatternAngle;
                         TargetHatch.PatternDouble = OriginHatch.PatternDouble;
                     }
+                    TargetHatch.ShadeTintValue = OriginHatch.ShadeTintValue;
+                    TargetHatch.HatchObjectType = OriginHatch.HatchObjectType;
                     TargetHatch.BackgroundColor = OriginHatch.BackgroundColor;
                     TargetHatch.Normal = OriginHatch.Normal;
                     TargetHatch.Origin = OriginHatch.Origin;

@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices.Core;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.ApplicationServices.Core;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -8,6 +9,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -623,11 +625,18 @@ namespace SioForgeCAD
             Functions.WIPEOUTGRIP.ToggleGrip();
         }
 
+        [CommandMethod("SIOFORGECAD", "SAVEFILEATCLOSE", CommandFlags.Redraw)]
+        public static void SAVEFILEATCLOSE()
+        {
+            Functions.SAVEFILEATCLOSE.Toggle();
+        }
+        
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            
         }
+
+      
 
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
