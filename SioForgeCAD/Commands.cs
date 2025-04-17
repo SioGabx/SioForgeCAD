@@ -155,12 +155,6 @@ namespace SioForgeCAD
             Functions.BLKADDENTITIES.Add();
         }
 
-        [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
-        public static void OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE()
-        {
-            Functions.OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE.Convert();
-        }
-
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
@@ -188,6 +182,12 @@ namespace SioForgeCAD
         public static void POLYLINE2DTOPOLYLIGNE()
         {
             Functions.POLYLINE2DTOPOLYLIGNE.ConvertPolyline2dToPolylines();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CURVETOPOLYGON", CommandFlags.UsePickSet)]
+        public static void CURVETOPOLYGON()
+        {
+            Functions.CURVETOPOLYGON.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "DRAWCPTERRAIN", CommandFlags.Redraw)]
@@ -228,6 +228,12 @@ namespace SioForgeCAD
         public static void SETSELECTEDENTITIESCONTRAST()
         {
             Functions.SETSELECTEDENTITIESCONTRAST.Set();
+        }
+
+        [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
+        public static void OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE()
+        {
+            Functions.OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE.Convert();
         }
 
         [CommandMethod("SIOFORGECAD", "SSL", CommandFlags.Redraw)]
@@ -352,16 +358,22 @@ namespace SioForgeCAD
             Functions.PURGEALL.Purge();
         }
 
+        [CommandMethod("SIOFORGECAD", "READXDATA", CommandFlags.UsePickSet)]
+        public static void READXDATA()
+        {
+            Functions.ENTITIESXDATA.Read();
+        }
+
         [CommandMethod("SIOFORGECAD", "REMOVEENTITIESXDATA", CommandFlags.UsePickSet)]
         public static void REMOVEENTITIESXDATA()
         {
-            Functions.REMOVEENTITIESXDATA.Remove();
+            Functions.ENTITIESXDATA.Remove();
         }
 
         [CommandMethod("SIOFORGECAD", "REMOVEALLENTITIESXDATA", CommandFlags.Modal)]
         public static void REMOVEALLENTITIESXDATA()
         {
-            Functions.REMOVEENTITIESXDATA.RemoveAll();
+            Functions.ENTITIESXDATA.RemoveAll();
         }
 
         [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
@@ -459,11 +471,6 @@ namespace SioForgeCAD
             Functions.CONVERTIMAGETOOLE.RasterToOle();
         }
 
-        [CommandMethod("SIOFORGECAD", "CURVETOPOLYGON", CommandFlags.UsePickSet)]
-        public static void CURVETOPOLYGON()
-        {
-            Functions.CURVETOPOLYGON.Convert();
-        }
 
         [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYMODELTOPAPER()
@@ -486,9 +493,9 @@ namespace SioForgeCAD
         {
             Functions.VIEWPORTOUTLINE.OutlineAll(false);
         }
-        [CommandMethod("SIOFORGECAD", "VPOSELECTED", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        [CommandMethod("SIOFORGECAD", "VPOSELECTEDLAYOUTTAB", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         //Outline (in model space) all viewport  in current layout tab
-        public static void VIEWPORTOUTLINESELECTED()
+        public static void VPOSELECTEDLAYOUTTAB()
         {
             Functions.VIEWPORTOUTLINE.OutlineAll(true);
         }
@@ -500,14 +507,8 @@ namespace SioForgeCAD
             Functions.DELETESUBGROUP.Delete();
         }
 
-        [CommandMethod("SIOFORGECAD", "EXECUTECOMMANDONEACHSELECTED", CommandFlags.UsePickSet)]
-        public static void EXECUTECOMMANDONEACHSELECTED()
-        {
-            Functions.EXECUTECOMMANDONEACHSELECTED.Execute();
-        }
-
         [CommandMethod("SIOFORGECAD", "LIMITNUMBERINSELECTION", CommandFlags.Redraw)]
-        //Limit the selection to one entity
+        //Limit the number of selected entities.
         public static void LIMITNUMBERINSELECTION()
         {
             Functions.LIMITNUMBERINSELECTION.Limit();
@@ -529,7 +530,7 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "DXFIMPORT", CommandFlags.UsePickSet)]
-        //Allow user to import multiples DXF at once
+        //Allow user to import multiples DXF or DWG at once
         public static void DXFIMPORT()
         {
             Functions.DXFIMPORT.Import();
@@ -671,27 +672,6 @@ namespace SioForgeCAD
             DelaunayTriangulate.TriangulateCommand();
         }
 
-        [CommandMethod("DEBUG", "READXDATA", CommandFlags.UsePickSet)]
-        public static void READXDATA()
-        {
-            var ed = Generic.GetEditor();
-            var db = Generic.GetDatabase();
-            var result = ed.GetEntity("Selectionnez un object");
-            if (result.Status != PromptStatus.OK)
-            {
-                return;
-            }
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                if (result.ObjectId.GetDBObject() is Entity ent)
-                {
-                    foreach (var item in ent.ReadXData())
-                    {
-                        Generic.WriteMessage(item.ToString());
-                    }
-                }
-            }
-        }
 
 #if DEBUG
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
