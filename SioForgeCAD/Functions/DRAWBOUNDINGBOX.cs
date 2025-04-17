@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
@@ -22,9 +23,11 @@ namespace SioForgeCAD.Functions
                 {
                     var ent = SelectedEntityObjId.GetEntity();
                     ent.GetExtents().GetGeometry().AddToDrawingCurrentTransaction();
-                    var geo = ent.GetVisualExtents(out _).GetGeometry();
+                    var x = new Point3dCollection();
+                    var geo = ent.GetVisualExtents(out x).GetGeometry();
+                    x.AddToDrawing(1);
                     geo.ColorIndex = 5;
-                        geo.AddToDrawingCurrentTransaction();
+                    geo.AddToDrawingCurrentTransaction();
                 }
                 tr.Commit();
             }

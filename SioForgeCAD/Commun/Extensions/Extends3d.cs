@@ -197,19 +197,19 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 ((DBText)ent).ExtractBounds(pts);
             }
-            else if (ent is MText)
-            {
-                // MText is also easy - you get all four corners
-                // returned by a function. That said, the points
-                // are of the MText's box, so may well be different
-                // from the bounds of the actual contents
-                MText txt = (MText)ent;
-                Point3dCollection pts2 = txt.GetBoundingPoints();
-                foreach (Point3d pt in pts2)
-                {
-                    pts.Add(pt);
-                }
-            }
+            //else if (ent is MText)
+            //{
+            //    // MText is also easy - you get all four corners
+            //    // returned by a function. That said, the points
+            //    // are of the MText's box, so may well be different
+            //    // from the bounds of the actual contents
+            //    MText txt = (MText)ent;
+            //    Point3dCollection pts2 = txt.GetBoundingPoints();
+            //    foreach (Point3d pt in pts2)
+            //    {
+            //        pts.Add(pt);
+            //    }
+            //}
             else if (ent is Face)
             {
                 Face f = (Face)ent;
@@ -247,7 +247,7 @@ namespace SioForgeCAD.Commun.Extensions
                         foreach (DBObject obj in oc)
                         {
                             Entity ent2 = obj as Entity;
-                            if (ent2 != null && ent2.Visible)
+                            if (ent2?.Visible == true)
                             {
                                 foreach (Point3d pt in CollectPoints(tr, ent2))
                                 {
