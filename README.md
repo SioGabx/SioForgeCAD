@@ -18,7 +18,6 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 
 | Command | Description |
 |---|---|
-
 | `CCI` | Compute an intermediate point between two elevation points. |
 | `CCP` | Compute slope value between two elevation points. |
 | `CCD` | Calculate a point from a known elevation point using a slope. |
