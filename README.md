@@ -57,6 +57,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `SSOF` | Select entities strictly inside a polyline. |
 | `RRR` | Rotate entities around a base point. |
 | `RP2` | Rotate view to current UCS system. |
+| `FRAMESELECTED` | View : Frame selected entity. |
 | `TAREA` | Calculate area of selected objects. |
 | `TLENS` | Compute total length of selected curves. |
 | `VEGBLOC` | Create VEGBLOC. |

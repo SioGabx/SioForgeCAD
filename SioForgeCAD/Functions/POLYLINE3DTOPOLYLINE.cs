@@ -46,10 +46,6 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
-                using (btr)
-                {
                     if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
                     {
                         selResult = ed.GetSelection();
@@ -72,7 +68,6 @@ namespace SioForgeCAD.Functions
                         }
                         ed.SetImpliedSelection(ConvertionResult.ToArray());
                     }
-                }
                 tr.Commit();
             }
         }

@@ -118,6 +118,7 @@
     <Compile Include="Commun\Extensions\CircularArc.cs" />
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
+    <Compile Include="Commun\Extensions\DBText.cs" />
     <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
     <Compile Include="Functions\FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.cs" />
     <Compile Include="Functions\FIXDRAWING.cs" />
+    <Compile Include="Functions\FRAMESELECTED.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />

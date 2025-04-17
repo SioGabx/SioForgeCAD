@@ -298,6 +298,12 @@ namespace SioForgeCAD
             Functions.RP2.RotateUCS();
         }
 
+        [CommandMethod("SIOFORGECAD", "FRAMESELECTED", CommandFlags.Redraw)]
+        public static void FRAMESELECTED()
+        {
+            Functions.FRAMESELECTED.FrameEntityToView();
+        }
+
         [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]
         public static void TAREA()
         {
@@ -470,7 +476,6 @@ namespace SioForgeCAD
         {
             Functions.CONVERTIMAGETOOLE.RasterToOle();
         }
-
 
         [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYMODELTOPAPER()
@@ -671,7 +676,6 @@ namespace SioForgeCAD
         {
             DelaunayTriangulate.TriangulateCommand();
         }
-
 
 #if DEBUG
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]

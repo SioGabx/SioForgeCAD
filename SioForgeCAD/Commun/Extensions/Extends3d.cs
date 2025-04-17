@@ -1,5 +1,8 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -116,6 +119,148 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             return list.GetExtents();
+        }
+
+        public static Extents3d GetVisualExtents(this Entity ent, out Point3dCollection entPts)
+        {
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                entPts = CollectPoints(tr, ent);
+                
+                Extents3d extents = new Extents3d();
+                foreach (Point3d item in entPts)
+                {
+                    extents.AddExtents(new Extents3d(item, item));
+                }
+                tr.Commit();
+                return extents;
+            }
+        }
+
+        private static Point3dCollection CollectPoints(Transaction tr, Entity ent)
+        {
+            // The collection of points to populate and return
+            Point3dCollection pts = new Point3dCollection();
+
+            // We'll start by checking a block reference for
+            // attributes, getting their bounds and adding
+            // them to the point list. We'll still explode
+            // the BlockReference later, to gather points
+            // from other geometry, it's just that approach
+            // doesn't work for attributes (we only get the
+            // AttributeDefinitions, which don't have bounds)
+
+            BlockReference br = ent as BlockReference;
+            if (br != null)
+            {
+                foreach (ObjectId arId in br.AttributeCollection)
+                {
+                    DBObject obj = tr.GetObject(arId, OpenMode.ForRead);
+                    if (obj is AttributeReference)
+                    {
+                        AttributeReference ar = (AttributeReference)obj;
+                        ar.ExtractBounds(pts);
+                    }
+                }
+            }
+            // If we have a curve - other than a polyline, which
+            // we will want to explode - we'll get points along
+            // its length
+
+            Curve cur = ent as Curve;
+
+            if (cur != null && !(cur is Polyline || cur is Polyline2d || cur is Polyline3d))
+            {
+                // Two points are enough for a line, we'll go with
+                // a higher number for other curves
+                int segs = (ent is Line ? 2 : 20);
+                double param = cur.EndParam - cur.StartParam;
+
+                for (int i = 0; i < segs; i++)
+                {
+                    try
+                    {
+                        Point3d pt = cur.GetPointAtParameter(cur.StartParam + (i * param / (segs - 1)));
+                        pts.Add(pt);
+                    }
+                    catch { }
+                }
+            }
+            else if (ent is DBPoint)
+            {
+                pts.Add(((DBPoint)ent).Position);
+            }
+            else if (ent is DBText)
+            {
+                ((DBText)ent).ExtractBounds(pts);
+            }
+            else if (ent is MText)
+            {
+                // MText is also easy - you get all four corners
+                // returned by a function. That said, the points
+                // are of the MText's box, so may well be different
+                // from the bounds of the actual contents
+                MText txt = (MText)ent;
+                Point3dCollection pts2 = txt.GetBoundingPoints();
+                foreach (Point3d pt in pts2)
+                {
+                    pts.Add(pt);
+                }
+            }
+            else if (ent is Face)
+            {
+                Face f = (Face)ent;
+                try
+                {
+                    for (short i = 0; i < 4; i++)
+                    {
+                        pts.Add(f.GetVertexAt(i));
+                    }
+                }
+                catch { }
+            }
+            else if (ent is Solid)
+            {
+                Solid sol = (Solid)ent;
+                try
+                {
+                    for (short i = 0; i < 4; i++)
+                    {
+                        pts.Add(sol.GetPointAt(i));
+                    }
+                }
+                catch { }
+            }
+            else
+            {
+                // Here's where we attempt to explode other types
+                // of object
+                DBObjectCollection oc = new DBObjectCollection();
+                try
+                {
+                    ent.Explode(oc);
+                    if (oc.Count > 0)
+                    {
+                        foreach (DBObject obj in oc)
+                        {
+                            Entity ent2 = obj as Entity;
+                            if (ent2 != null && ent2.Visible)
+                            {
+                                foreach (Point3d pt in CollectPoints(tr, ent2))
+                                {
+                                    pts.Add(pt);
+                                }
+                            }
+                            obj.Dispose();
+                        }
+                    }
+                }
+                catch { }
+            }
+            return pts;
         }
 
         public static Point3d GetCenter(this Extents3d extents)

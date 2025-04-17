@@ -42,7 +42,6 @@ namespace SioForgeCAD.Functions
                 AllSelectedObject = ed.GetSelectionRedraw("Selectionnez des entités pour lequels vous souhaitez supprimer les XDATAs", true, false);
             }
             RemoveAllXDataFromCollection(AllSelectedObject.Value.GetObjectIds());
-
         }
 
         public static void RemoveAll()

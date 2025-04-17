@@ -22,6 +22,9 @@ namespace SioForgeCAD.Functions
                 {
                     var ent = SelectedEntityObjId.GetEntity();
                     ent.GetExtents().GetGeometry().AddToDrawingCurrentTransaction();
+                    var geo = ent.GetVisualExtents(out _).GetGeometry();
+                    geo.ColorIndex = 5;
+                        geo.AddToDrawingCurrentTransaction();
                 }
                 tr.Commit();
             }
