@@ -1,13 +1,10 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -39,7 +36,7 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
- 
+
         private static void TransformAlign(ObjectId[] objectIds, Polyline terrain, bool align)
         {
             Database db = Generic.GetDatabase();
@@ -47,7 +44,7 @@ namespace SioForgeCAD.Functions
             {
                 foreach (ObjectId objId in objectIds)
                 {
-                    if (Layers.IsEntityOnLockedLayer(objId)) { continue; };
+                    if (Layers.IsEntityOnLockedLayer(objId)) { continue; }
 
                     Entity entity = objId.GetEntity(OpenMode.ForWrite);
                     if (entity is BlockReference blockRef)

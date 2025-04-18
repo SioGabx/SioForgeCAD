@@ -17,7 +17,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 return PolyMiddle.GripModes[index];
             }
             return null;
-
         }
 
         public override uint CurrentModeId(Entity entity, GripData gripData)

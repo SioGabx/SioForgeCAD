@@ -79,8 +79,10 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                     EntityId = entity.ObjectId,
                     OnHotGripAction = _onHotGripAction
                 };
-
-                grips.Add(grip);
+                if (!grips.Contains(grip))
+                {
+                    grips.Add(grip);
+                }
 
                 if (!_hideOriginals)
                 {

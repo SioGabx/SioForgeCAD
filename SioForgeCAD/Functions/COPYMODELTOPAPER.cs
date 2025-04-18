@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage("Perspective views not supported");
                 return;
             }
-            var SelectedEnts = ed.GetSelectionRedraw(RejectObjectsOnLockedLayers:true);
+            var SelectedEnts = ed.GetSelectionRedraw(RejectObjectsOnLockedLayers: true);
             if (SelectedEnts.Status != PromptStatus.OK)
             {
                 return;

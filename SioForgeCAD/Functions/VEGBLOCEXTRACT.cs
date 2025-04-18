@@ -3,9 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows;
 
 namespace SioForgeCAD.Functions
@@ -37,7 +35,7 @@ namespace SioForgeCAD.Functions
             if (SelectionBlkPSR.Status != PromptStatus.OK || AllBlkBSR.Status != PromptStatus.OK) { return; }
             Generic.WriteMessage("Extraction en cours... Veuillez patienter...");
             System.Windows.Forms.Application.DoEvents();
-            List <VegInstance> VegInstanceList = new List<VegInstance>();
+            List<VegInstance> VegInstanceList = new List<VegInstance>();
             HashSet<ObjectId> ExtractedBlocObjIds = new HashSet<ObjectId>();
 
             ObjectId[] SelectedBlocObjIds = SelectionBlkPSR.Value.GetObjectIds();

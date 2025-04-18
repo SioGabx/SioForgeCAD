@@ -42,7 +42,6 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
         public static void Edit()
         {
             Database db = Generic.GetDatabase();

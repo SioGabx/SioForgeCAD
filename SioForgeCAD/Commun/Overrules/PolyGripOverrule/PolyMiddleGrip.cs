@@ -65,8 +65,7 @@ namespace SioForgeCAD.Commun.Overrules
                 Transform(OriginLeft, YVector), //K
             };
 
-
-            return worldDraw.DrawGrip(points, type); ;
+            return worldDraw.DrawGrip(points, type);
         }
 
         public override ReturnValue OnHotGrip(ObjectId entityId, Context contextFlags)
@@ -85,7 +84,7 @@ namespace SioForgeCAD.Commun.Overrules
             modes.Add(new GripMode()
             {
                 ModeId = (int)PolyGripOverrule.PolyGripOverrule.ModeIdAction.Stretch,
-                DisplayString = $"Etirer le sommet",
+                DisplayString = "Etirer le sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = ""
             });
@@ -93,13 +92,12 @@ namespace SioForgeCAD.Commun.Overrules
             modes.Add(new GripMode()
             {
                 ModeId = (int)PolyGripOverrule.PolyGripOverrule.ModeIdAction.Add,
-                DisplayString = $"Ajouter sommet",
+                DisplayString = "Ajouter sommet",
                 Action = GripMode.ActionType.DragOn,
                 ToolTip = ""
             });
 
             return true;
         }
-
     }
 }

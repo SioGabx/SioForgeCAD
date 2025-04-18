@@ -8,8 +8,6 @@ namespace SioForgeCAD.Commun.Overrules
 {
     internal class PolyCornerGrip : GripData
     {
-
-
         public PolyCornerGrip()
         {
             ForcedPickOn = false;
@@ -105,6 +103,5 @@ namespace SioForgeCAD.Commun.Overrules
 
             return true;
         }
-
     }
 }

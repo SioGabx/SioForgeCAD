@@ -1,8 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -159,9 +156,8 @@ namespace SioForgeCAD.Commun.Extensions
                 foreach (ObjectId arId in br.AttributeCollection)
                 {
                     DBObject obj = tr.GetObject(arId, OpenMode.ForRead);
-                    if (obj is AttributeReference)
+                    if (obj is AttributeReference ar)
                     {
-                        AttributeReference ar = (AttributeReference)obj;
                         ar.ExtractBounds(pts);
                     }
                 }
@@ -189,13 +185,13 @@ namespace SioForgeCAD.Commun.Extensions
                     catch { }
                 }
             }
-            else if (ent is DBPoint)
+            else if (ent is DBPoint dBPoint)
             {
-                pts.Add(((DBPoint)ent).Position);
+                pts.Add(dBPoint.Position);
             }
-            else if (ent is DBText)
+            else if (ent is DBText dBText)
             {
-                ((DBText)ent).ExtractBounds(pts);
+                dBText.ExtractBounds(pts);
             }
             //else if (ent is MText)
             //{
@@ -210,9 +206,8 @@ namespace SioForgeCAD.Commun.Extensions
             //        pts.Add(pt);
             //    }
             //}
-            else if (ent is Face)
+            else if (ent is Face f)
             {
-                Face f = (Face)ent;
                 try
                 {
                     for (short i = 0; i < 4; i++)
@@ -222,9 +217,8 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 catch { }
             }
-            else if (ent is Solid)
+            else if (ent is Solid sol)
             {
-                Solid sol = (Solid)ent;
                 try
                 {
                     for (short i = 0; i < 4; i++)

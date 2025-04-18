@@ -24,7 +24,6 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             _points = Points;
         }
 
-
         public PromptPointResult Drag()
         {
             try

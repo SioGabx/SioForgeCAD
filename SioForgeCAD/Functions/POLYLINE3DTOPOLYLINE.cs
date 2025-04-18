@@ -46,28 +46,28 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                    if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
+                if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
+                {
+                    selResult = ed.GetSelection();
+                }
+                if (selResult.Status == PromptStatus.OK)
+                {
+                    List<ObjectId> ConvertionResult = new List<ObjectId>();
+                    foreach (SelectedObject selObj in selResult.Value)
                     {
-                        selResult = ed.GetSelection();
-                    }
-                    if (selResult.Status == PromptStatus.OK)
-                    {
-                        List<ObjectId> ConvertionResult = new List<ObjectId>();
-                        foreach (SelectedObject selObj in selResult.Value)
+                        if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
                         {
-                            if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
+                            Polyline3d poly3d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline3d;
+                            using (Polyline pline = poly3d.ToPolyline())
                             {
-                                Polyline3d poly3d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline3d;
-                                using (Polyline pline = poly3d.ToPolyline())
-                                {
-                                    poly3d.CopyPropertiesTo(pline);
-                                    ConvertionResult.Add(pline.AddToDrawing());
-                                    poly3d.Erase();
-                                }
+                                poly3d.CopyPropertiesTo(pline);
+                                ConvertionResult.Add(pline.AddToDrawing());
+                                poly3d.Erase();
                             }
                         }
-                        ed.SetImpliedSelection(ConvertionResult.ToArray());
                     }
+                    ed.SetImpliedSelection(ConvertionResult.ToArray());
+                }
                 tr.Commit();
             }
         }

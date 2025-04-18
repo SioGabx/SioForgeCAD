@@ -18,8 +18,10 @@ namespace SioForgeCAD.Commun.Extensions
         public static Handle GetDynamicBlockHandleFromAnonymousBlock(this BlockTableRecord btr)
         {
             if (!btr.IsAnonymous)
+            {
                 return ObjectId.Null.Handle;
-            Handle btrHand = btr.ObjectId.Handle;
+            }
+
             ResultBuffer rb = btr.GetXDataForApplication("AcDbBlockRepBTag");
             if (rb == null)
                 return ObjectId.Null.Handle;
@@ -33,7 +35,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return ObjectId.Null.Handle;
         }
-
 
         public static BlockTableRecord GetBlocDefinition(this Database db, string BlocName)
         {

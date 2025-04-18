@@ -1,14 +1,9 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -18,9 +13,8 @@ namespace SioForgeCAD.Functions
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-            PromptSelectionResult selResult;
 
-            if (!ed.GetImpliedSelection(out selResult))
+            if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
             {
                 selResult = ed.GetSelection();
             }
@@ -50,7 +44,7 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
-                    
+
                     if (InCurrentSpace > 0)
                     {
                         ed.SetImpliedSelection(selResult.Value);
@@ -106,16 +100,21 @@ namespace SioForgeCAD.Functions
 
                     if (i < (sel.Count - 1))
                     {
-                        var Wait = ed.GetPoint(new PromptPointOptions($"\nCliquez pour afficher l'entité suivante - {i + 1}/{sel.Count} ..."));
-                        if (Wait.Status != PromptStatus.OK)
+                        var Options = new PromptPointOptions($"\nCliquez pour afficher l'entité suivante - {i + 1}/{sel.Count} ...")
+                        {
+                            AllowNone = true,
+                            AllowArbitraryInput = true
+                        };
+                        var Wait = ed.GetPoint(Options);
+                        if (Wait.Status != PromptStatus.OK && Wait.Status != PromptStatus.None)
                         {
                             break;
                         }
                     }
                 }
+                ed.SetImpliedSelection(Array.Empty<ObjectId>());
                 tr.Commit();
             }
-
         }
     }
 }
