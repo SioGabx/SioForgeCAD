@@ -23,11 +23,11 @@ namespace SioForgeCAD.Functions
                 {
                     var ent = SelectedEntityObjId.GetEntity();
                     ent.GetExtents().GetGeometry().AddToDrawingCurrentTransaction();
-                    var x = new Point3dCollection();
-                    var geo = ent.GetVisualExtents(out x).GetGeometry();
-                    x.AddToDrawing(1);
-                    geo.ColorIndex = 5;
-                    geo.AddToDrawingCurrentTransaction();
+                    //var x = new Point3dCollection();
+                    //var geo = ent.GetVisualExtents(out x).GetGeometry();
+                    //x.AddToDrawing(1);
+                    //geo.ColorIndex = 5;
+                    //geo.AddToDrawingCurrentTransaction();
                 }
                 tr.Commit();
             }

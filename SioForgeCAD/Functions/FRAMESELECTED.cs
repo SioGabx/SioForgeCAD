@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,40 +14,104 @@ namespace SioForgeCAD.Functions
 {
     public static class FRAMESELECTED
     {
-        public static void FrameEntityToView()
+        public static void FrameEntitiesToView()
         {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+            PromptSelectionResult selResult;
+
+            if (!ed.GetImpliedSelection(out selResult))
+            {
+                selResult = ed.GetSelection();
+            }
+            if (selResult.Status == PromptStatus.OK)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    Extents3d Extend = new Extents3d();
+                    int NotInCurrentSpace = 0;
+                    int InCurrentSpace = 0;
+                    foreach (SelectedObject selObj in selResult.Value)
+                    {
+                        if (selObj.ObjectId.GetDBObject() is Entity ent)
+                        {
+                            if (ent.OwnerId == db.CurrentSpaceId)
+                            {
+                                Extend.AddExtents(ent.GetExtents());
+                                if (ent.Bounds is Extents3d EntBound)
+                                {
+                                    Extend.AddExtents(EntBound);
+                                }
+                                InCurrentSpace++;
+                            }
+                            else
+                            {
+                                NotInCurrentSpace++;
+                            }
+                        }
+                    }
+                    ed.SetImpliedSelection(selResult.Value);
+                    Extend.Expand(1.25);
+                    Extend.ZoomExtents();
+                    if (NotInCurrentSpace > 0)
+                    {
+                        Generic.WriteMessage($"{NotInCurrentSpace}/{NotInCurrentSpace + InCurrentSpace} entité(s) n'étaient pas dans l'espace courant.");
+                    }
+                    tr.Commit();
+                }
+                if (selResult.Value.Count > 1)
+                {
+                    var Options = ed.GetOptions("Voullez-vous zoomer sur chaque entités individuellement ?", "Oui", "Non");
+                    if (Options.Status == PromptStatus.OK && Options.StringResult == "Oui")
+                    {
+                        FrameEachIndividualEntityToView(selResult.Value);
+                    }
+                }
+            }
+        }
+
+        public static void FrameEachIndividualEntityToView(SelectionSet sel)
+        {
+            if (sel == null || sel.Count == 0)
+            {
+                return;
+            }
+
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (!ed.GetImpliedSelection(out PromptSelectionResult selResult))
+                for (int i = 0; i < sel.Count; i++)
                 {
-                    selResult = ed.GetSelection();
-                }
-                if (selResult.Status == PromptStatus.OK)
-                {
-                    Extents3d Extend = new Extents3d();
-                    foreach (SelectedObject selObj in selResult.Value)
+                    SelectedObject selObj = sel[i];
+                    if (selObj.ObjectId == ObjectId.Null || !(selObj.ObjectId.GetDBObject() is Entity ent))
                     {
-                        if (selObj.ObjectId.GetDBObject() is Entity ent)
-                        {
-                            Extend.AddExtents(ent.GetExtents());
-                            if (ent.Bounds is Extents3d EntBound)
-                            {
-                                Extend.AddExtents(EntBound);
-                            }
-                        }
-
+                        continue;
                     }
-                    ed.SetImpliedSelection(selResult.Value);
+                    BlockTableRecord EntSpace = ent.BlockId.GetDBObject() as BlockTableRecord;
+                    if (EntSpace?.IsLayout == true && ent.OwnerId != db.CurrentSpaceId)
+                    {
+                        LayoutManager.Current.SetCurrentLayoutId(EntSpace.LayoutId);
+                        ed.SetImpliedSelection(sel.GetObjectIds().Where(objid => objid.GetDBObject() is Entity selectent && selectent.OwnerId == db.CurrentSpaceId).ToArray());
+                    }
 
-                    Extend.Expand(1.25);
-                    Extend.ZoomExtents();
+                    Extents3d ext = ent.GetExtents();
+                    ext.Expand(1.2);
+                    ext.ZoomExtents();
 
+                    if (i < (sel.Count - 1))
+                    {
+                        var Wait = ed.GetPoint(new PromptPointOptions($"\nCliquez pour afficher l'entité suivante - {i + 1}/{sel.Count} ..."));
+                        if (Wait.Status != PromptStatus.OK)
+                        {
+                            break;
+                        }
+                    }
                 }
                 tr.Commit();
             }
+
         }
     }
 }

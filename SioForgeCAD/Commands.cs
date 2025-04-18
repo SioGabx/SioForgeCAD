@@ -301,7 +301,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "FRAMESELECTED", CommandFlags.Redraw)]
         public static void FRAMESELECTED()
         {
-            Functions.FRAMESELECTED.FrameEntityToView();
+            Functions.FRAMESELECTED.FrameEntitiesToView();
         }
 
         [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]

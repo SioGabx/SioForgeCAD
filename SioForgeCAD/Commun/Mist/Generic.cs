@@ -127,12 +127,12 @@ namespace SioForgeCAD.Commun
             return HostApplicationServices.WorkingDatabase;
         }
 
-        public static BlockTableRecord GetCurrentSpaceBlockTableRecord(Transaction acTrans)
+        public static BlockTableRecord GetCurrentSpaceBlockTableRecord(Transaction acTrans, OpenMode openMode = OpenMode.ForWrite)
         {
             //https://spiderinnet1.typepad.com/blog/2012/03/autocad-net-api-modelspacepaperspacecurrentspace-and-entity-creation.html
             //Use db.CurrentSpaceId instead of bt[BlockTableRecord.ModelSpace
             Database db = Generic.GetDatabase();
-            return acTrans.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
+            return acTrans.GetObject(db.CurrentSpaceId, openMode) as BlockTableRecord;
         }
 
         public static Editor GetEditor()
