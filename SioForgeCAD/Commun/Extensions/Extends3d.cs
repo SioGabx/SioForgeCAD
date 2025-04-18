@@ -129,7 +129,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
                 entPts = CollectPoints(tr, ent);
-                
+
                 Extents3d extents = new Extents3d();
                 foreach (Point3d item in entPts)
                 {
@@ -274,7 +274,16 @@ namespace SioForgeCAD.Commun.Extensions
         public static void Expand(this ref Extents3d extents, double factor)
         {
             var center = extents.GetCenter();
-            extents = new Extents3d(center + (factor * (extents.MinPoint - center)), center + (factor * (extents.MaxPoint - center)));
+            Point3d Min = center + (factor * (extents.MinPoint - center));
+            Point3d Max = center + (factor * (extents.MaxPoint - center));
+            try
+            {
+                extents = new Extents3d(Min, Max);
+            }
+            catch
+            {
+                extents = new Extents3d();
+            }
         }
 
         public static bool IsPointIn(this Extents3d extents, Point3d point)

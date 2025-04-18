@@ -50,9 +50,13 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
-                    ed.SetImpliedSelection(selResult.Value);
-                    Extend.Expand(1.25);
-                    Extend.ZoomExtents();
+                    
+                    if (InCurrentSpace > 0)
+                    {
+                        ed.SetImpliedSelection(selResult.Value);
+                        Extend.Expand(1.25);
+                        Extend.ZoomExtents();
+                    }
                     if (NotInCurrentSpace > 0)
                     {
                         Generic.WriteMessage($"{NotInCurrentSpace}/{NotInCurrentSpace + InCurrentSpace} entité(s) n'étaient pas dans l'espace courant.");
