@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
 using System;
 using System.Collections.Generic;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -28,6 +29,7 @@ namespace SioForgeCAD
             promptKeywordOptions.Keywords.Add("Settings");
             promptKeywordOptions.Keywords.Add("Register");
             promptKeywordOptions.Keywords.Add("Unregister");
+            promptKeywordOptions.Keywords.Add("LoadCUIX");
             var result = ed.GetKeywords(promptKeywordOptions);
             switch (result.StringResult)
             {
@@ -38,6 +40,13 @@ namespace SioForgeCAD
                     break;
                 case "Unregister":
                     PluginRegister.Unregister();
+                    break;
+                case "LoadCUIX":
+                    var cs = Generic.GetDocument().CreatePartialCui("SIOFORGECAD");
+                    cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "Cancel F1 Key", "ID_Cancel_F1");
+                    cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "Cancel F4 Key", "ID_Cancel_F4");
+                    cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle QPMODE", "Toggle_QPMODE");
+                    cs.LoadCui();
                     break;
             }
         }
@@ -639,6 +648,18 @@ namespace SioForgeCAD
         public static void TEST()
         {
             Functions.LINESAVERAGE.ComputeFrechet();
+        }
+
+        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
+        public static void TEST2()
+        {
+            var cs = Generic.GetDocument().CreatePartialCui(@"C:\Users\AMPLITUDE PAYSAGE\Downloads\test\test.cuix", "SIOFORGECAD");
+            cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "Cancel F1 Key", "ID_Cancel_F1");
+            cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "Cancel F4 Key", "ID_Cancel_F4");
+            cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle QPMODE", "Toggle_QPMODE");
+            cs.LoadCui();
+
+            //cs.MenuGroup;
         }
 
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]

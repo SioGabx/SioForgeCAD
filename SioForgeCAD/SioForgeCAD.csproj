@@ -129,6 +129,7 @@
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
     <Compile Include="Commun\Mist\Colors.cs" />
+    <Compile Include="Commun\Mist\CUI.cs" />
     <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
     <Compile Include="Commun\Drawing\Circles.cs" />
