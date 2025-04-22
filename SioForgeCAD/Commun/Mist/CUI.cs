@@ -1,16 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Customization;
-using Autodesk.AutoCAD.MacroRecorder;
-using Autodesk.AutoCAD.Windows.Data;
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace SioForgeCAD.Commun.Mist
 {
@@ -19,7 +11,6 @@ namespace SioForgeCAD.Commun.Mist
         //https://github.com/HanDefu/SunacCoordination/blob/master/RemoveCuiDoubleClick/CUITools.cs
         public static CustomizationSection GetMainCustomizationSection(this Document _)
         {
-            //AutoCAD > 2009 == CUIX
             string mainCuiFile = Application.GetSystemVariable("MENUNAME") + ".CUIX";
             return new CustomizationSection(mainCuiFile);
         }
@@ -62,6 +53,21 @@ namespace SioForgeCAD.Commun.Mist
             Application.LoadPartialMenu(cs.CUIFileName);
         }
 
+        public static MenuMacro GetRubbanCommand(this CustomizationSection source, string ElementID)
+        {
+            foreach (MacroGroup macrog in source.MenuGroup.MacroGroups)
+            {
+                foreach (MenuMacro menug in macrog.MenuMacros)
+                {
+                    if (menug.ElementID == ElementID)
+                    {
+                        return menug;
+                    }
+                }
+            }
+            return null;
+        }
+
         public static MenuAccelerator AddPermanentKeyboardShortcut(this CustomizationSection source, string AcceleratorShortcutKey, string Name, string Command, string Description, string NewElementID)
         {
             foreach (MenuAccelerator item in source.MenuGroup.Accelerators)
@@ -84,7 +90,6 @@ namespace SioForgeCAD.Commun.Mist
                 ElementID = NewElementID
             };
         }
-
 
         public static TemporaryOverride AddTempKeyboardShortcut(this CustomizationSection source, string OverrideShortcutKey, string Name, string Command, string Description, string NewElementID)
         {

@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Microsoft.Win32;
-using System.Reflection;
 using RegistryKey = Autodesk.AutoCAD.Runtime.RegistryKey;
 
 namespace SioForgeCAD.Commun
