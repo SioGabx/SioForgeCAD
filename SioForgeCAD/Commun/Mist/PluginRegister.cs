@@ -29,7 +29,7 @@ namespace SioForgeCAD.Commun
             }
 
             // Get the location of this module
-            string sAssemblyPath = Assembly.GetExecutingAssembly().Location;
+            string sAssemblyPath = Generic.GetExtensionDLLLocation();
 
             // Register the application
             RegistryKey regAppAddInKey = regAcadAppKey.CreateSubKey(sAppName);

@@ -50,6 +50,12 @@ namespace SioForgeCAD.Commun
         {
             return Assembly.GetExecutingAssembly().GetName().Name;
         }
+        
+        public static string GetExtensionDLLLocation()
+        {
+            return Assembly.GetExecutingAssembly().Location;
+        }
+        
 
         public static ObjectId AddFontStyle(string font)
         {
