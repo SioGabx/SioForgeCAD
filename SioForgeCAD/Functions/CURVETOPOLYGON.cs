@@ -14,10 +14,13 @@ namespace SioForgeCAD.Functions
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                using (var poly = ed.GetPolyline("Selectionnez une polyligne", Clone: false))
+                ObjectId OriginalPoly = ObjectId.Null;
+                using (var poly = ed.GetPolyline(out OriginalPoly, "Selectionnez une polyligne", Clone: false))
                 {
                     int NumberOfVerticesBefore = poly.NumberOfVertices;
-                    poly.UpgradeOpen();
+
+                    if (!poly.IsWriteEnabled) { poly.UpgradeOpen(); }
+                    
                     PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Indiquez le nombre minimum de segments par arcs")
                     {
                         DefaultValue = 3
@@ -25,9 +28,10 @@ namespace SioForgeCAD.Functions
                     var value = ed.GetDouble(promptDoubleOptions);
                     if (value.Status != PromptStatus.OK) { return; }
                     var Polygon = poly.ToPolygon((uint)value.Value);
-                    poly.CopyPropertiesTo(Polygon);
+                    var OriginalPolyEnt = OriginalPoly.GetEntity();
+                    OriginalPolyEnt.CopyPropertiesTo(Polygon);
                     Polygon.AddToDrawing();
-                    poly.EraseObject();
+                    OriginalPolyEnt.EraseObject();
                     tr.Commit();
                 }
             }

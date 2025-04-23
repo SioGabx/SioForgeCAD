@@ -18,9 +18,9 @@ namespace SioForgeCAD.Functions
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var FirstPoly = ed.GetPolyline("Selectionnez une première polyline", false, true, true);
+                var FirstPoly = ed.GetPolyline(out _, "Selectionnez une première polyline", false, true, true);
                 if (FirstPoly is null) { return (null, null); }
-                var SecondPoly = ed.GetPolyline("Selectionnez une deuxième polyline", false, true, true);
+                var SecondPoly = ed.GetPolyline(out _, "Selectionnez une deuxième polyline", false, true, true);
                 if (SecondPoly is null) { return (null, null); }
 
                 if (FirstPoly.IsClockwise() != SecondPoly.IsClockwise())
@@ -31,7 +31,6 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
                 return (FirstPoly, SecondPoly);
             }
-
         }
         public static void Compute()
         {
@@ -102,8 +101,5 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-
-
     }
 }

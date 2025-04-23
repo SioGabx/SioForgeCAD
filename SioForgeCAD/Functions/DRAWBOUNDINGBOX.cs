@@ -31,5 +31,27 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
+
+        public static void DrawExplodedExtends()
+        {
+            Editor ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+
+            var result = ed.GetSelectionRedraw();
+            if (result.Status != PromptStatus.OK) { return; }
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId SelectedEntityObjId in result.Value.GetObjectIds())
+                {
+                    var ent = SelectedEntityObjId.GetEntity();
+                    foreach (var item in ent.GetExplodedExtents())
+                    {
+                        item.GetGeometry().AddToDrawing(5);
+                    }
+                }
+                tr.Commit();
+            }
+        }
     }
 }

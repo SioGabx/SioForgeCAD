@@ -56,7 +56,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                     foreach (Point2d pt in bounds)
                     {
-                        pts.Add(pl.EvaluatePoint(pt.RotateBy(txt.Rotation, Point2d.Origin)));
+                        pts?.Add(pl.EvaluatePoint(pt.RotateBy(txt.Rotation, Point2d.Origin)));
                     }
                 }
             }

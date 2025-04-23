@@ -220,9 +220,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true, bool AllowOtherCurveType = true)
+        public static Polyline GetPolyline(this Editor ed, string Message, bool RejectObjectsOnLockedLayers = true, bool Clone = true)
         {
-            return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone, AllowOtherCurveType);
+            return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone, false);
         }
 
         public static PromptSelectionResult GetSelectionRedraw(this Editor ed, string Message = null, bool RejectObjectsOnLockedLayers = true, bool SingleOnly = false, SelectionFilter selectionFilter = null)

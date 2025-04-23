@@ -14,6 +14,8 @@ using System.Drawing;
 using System.Globalization;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
+#pragma warning disable CS0618 
+
 namespace SioForgeCAD.Functions
 {
     public static class VEGBLOC
@@ -149,9 +151,14 @@ namespace SioForgeCAD.Functions
                 Debug.WriteLine(ex);
                 return null;
             }
+            return GetLEGACYDataStore(BlkRef);
+            //return null;
+        }
 
-            //LEGACY 
-            var OldVeg = BlocDescription.Split('\n');
+        [Obsolete("Old VEGBLOC versions, for compatibility only.", false)]
+        private static Dictionary<DataStore, string> GetLEGACYDataStore(BlockReference BlkRef)
+        {
+            var OldVeg = BlkRef.GetDescription().Split('\n');
             if (OldVeg.Length == 3)
             {
                 try
@@ -169,7 +176,6 @@ namespace SioForgeCAD.Functions
                     Debug.WriteLine(ex);
                 }
             }
-
             return null;
         }
 
@@ -513,3 +519,4 @@ namespace SioForgeCAD.Functions
         }
     }
 }
+#pragma warning restore CS0618

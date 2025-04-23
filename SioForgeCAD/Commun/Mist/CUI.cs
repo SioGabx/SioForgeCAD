@@ -68,7 +68,7 @@ namespace SioForgeCAD.Commun.Mist
             return null;
         }
 
-        public static MenuAccelerator AddPermanentKeyboardShortcut(this CustomizationSection source, string AcceleratorShortcutKey, string Name, string Command, string Description, string NewElementID)
+        public static MenuAccelerator AddPermanentKeyboardShortcut(this CustomizationSection source, string AcceleratorShortcutKey, string Name, string Command, string NewElementID)
         {
             foreach (MenuAccelerator item in source.MenuGroup.Accelerators)
             {
@@ -82,16 +82,16 @@ namespace SioForgeCAD.Commun.Mist
                 }
             }
 
-            MacroGroup mg = GetMacroGroup(source, Name);
+            MacroGroup mg = GetMacroGroup(source);
             MenuMacro Macro = new MenuMacro(mg, Name, Command, NewElementID, MacroType.Overrides);
             return new MenuAccelerator(Macro, source.MenuGroup)
             {
                 AcceleratorShortcutKey = AcceleratorShortcutKey,
-                ElementID = NewElementID
+                ElementID = NewElementID,
             };
         }
 
-        public static TemporaryOverride AddTempKeyboardShortcut(this CustomizationSection source, string OverrideShortcutKey, string Name, string Command, string Description, string NewElementID)
+        public static TemporaryOverride AddTempKeyboardShortcut(this CustomizationSection source, string OverrideShortcutKey, string Name, string Command, string NewElementID)
         {
             // This command will install a temporary override key. Temporary override keys are keys that temporarily 
             // turn on or turn off one of the drawing aids that are set in the Drafting Settings dialog box 
@@ -107,7 +107,7 @@ namespace SioForgeCAD.Commun.Mist
                     }
                 }
             }
-            MacroGroup mg = GetMacroGroup(source, Name);
+            MacroGroup mg = GetMacroGroup(source);
             MenuMacro Macro = new MenuMacro(mg, Name, Command, NewElementID, MacroType.Overrides);
             return new TemporaryOverride(source.MenuGroup, Macro)
             {
@@ -116,7 +116,7 @@ namespace SioForgeCAD.Commun.Mist
             };
         }
 
-        private static MacroGroup GetMacroGroup(this CustomizationSection source, string name)
+        private static MacroGroup GetMacroGroup(this CustomizationSection source)
         {
             MenuGroup menuGroup = source.MenuGroup;
             return menuGroup.FindMacroGroup(menuGroup.Name) ?? new MacroGroup(menuGroup.Name, menuGroup);
@@ -135,7 +135,6 @@ namespace SioForgeCAD.Commun.Mist
             macro.macro.ToolTip.BasicContent = helpString;
             macro.macro.ToolTip.HasCommandName = true;
             macro.macro.ToolTip.CommandName = name;
-          
         }
 
         private static MenuMacro TryGetUpdateExistingMacro(MenuMacroCollection macros, string name, string command, string elementID, string helpString, string imagePath, string CLICommand, bool UpdateIfExist)
@@ -154,12 +153,10 @@ namespace SioForgeCAD.Commun.Mist
             return null;
         }
 
-
-
         public static MenuMacro AddMacro(this CustomizationSection source, string name, string command, string elementID, string helpString, string imagePath, string CLICommand = "", bool UpdateIfExist = false)
         {
-            MacroGroup macroGroup = GetMacroGroup(source, name);
-            MenuMacro existingMacro = TryGetUpdateExistingMacro(macroGroup.MenuMacros, name, command, elementID, helpString, imagePath, CLICommand,UpdateIfExist);
+            MacroGroup macroGroup = GetMacroGroup(source);
+            MenuMacro existingMacro = TryGetUpdateExistingMacro(macroGroup.MenuMacros, name, command, elementID, helpString, imagePath, CLICommand, UpdateIfExist);
 
             if (UpdateIfExist)
             {
@@ -244,12 +241,14 @@ namespace SioForgeCAD.Commun.Mist
             return new ToolbarButton(macroId, name, parent, index);
         }
 
-        public static void AttachToolbarToFlyout(this Toolbar parent, int index, Toolbar toolbarRef)
+        public static ToolbarFlyout AttachToolbarToFlyout(this Toolbar parent, int index, Toolbar toolbarRef)
         {
-            ToolbarFlyout flyout = new ToolbarFlyout(parent, index);
-            flyout.ToolbarReference = toolbarRef.Name;
+            ToolbarFlyout flyout = new ToolbarFlyout(parent, index)
+            {
+                ToolbarReference = toolbarRef.Name
+            };
             toolbarRef.ToolbarVisible = ToolbarVisible.hide;
+            return flyout;
         }
-
     }
 }

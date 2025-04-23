@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            Polyline ProjectionTarget = ed.GetPolyline("Sélectionnez une polyligne", false, false, true);
+            Polyline ProjectionTarget = ed.GetPolyline(out _, "Sélectionnez une polyligne", false, false, true);
             if (ProjectionTarget is null)
             {
                 return;

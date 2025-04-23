@@ -56,7 +56,6 @@ namespace SioForgeCAD.Commun
             return Assembly.GetExecutingAssembly().Location;
         }
 
-
         public static ObjectId AddFontStyle(string font)
         {
             var doc = GetDocument();

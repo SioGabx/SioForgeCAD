@@ -45,10 +45,10 @@ namespace SioForgeCAD
                     var doc = Generic.GetDocument();
                     var cs = doc.CreatePartialCui("SIOFORGECAD");
                     cs.AddMacro("Mesurer", "^C^C_MEASUREGEOM _distance", "SFC_Dist", "Mesure la distance entre deux point ou le long d'une polyligne.", "RCDATA_32_QUICKMEASURE", "_MEASUREGEOM", true);
-                    cs.AddMacro("Précédente sélection", "(if (wcmatch (getvar 'cmdnames) \"\") (sssetfirst nil (ssget \"_P\")) (ssget \"_P\"))", "SFC_PSelectLast", "Récupère la dernière sélection", "RCDATA_16_SELWIN","_PSELECT", true);
-                    cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "Cancel F1 Key", "ID_Cancel_F1");
-                    cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "Cancel F4 Key", "ID_Cancel_F4");
-                    cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle QPMODE", "Toggle_QPMODE");
+                    cs.AddMacro("Précédente sélection", "(if (wcmatch (getvar 'cmdnames) \"\") (sssetfirst nil (ssget \"_P\")) (ssget \"_P\"))", "SFC_PSelectLast", "Récupère la dernière sélection", "RCDATA_16_SELWIN", "_PSELECT", true);
+                    cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "ID_Cancel_F1");
+                    cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "ID_Cancel_F4");
+                    cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle_QPMODE");
                     cs.LoadCui();
                     Application.ReloadAllMenus();
                     break;
@@ -651,13 +651,12 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-
+            Functions.DRAWBOUNDINGBOX.DrawExplodedExtends();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-
         }
 
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]

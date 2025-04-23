@@ -193,19 +193,6 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 dBText.ExtractBounds(pts);
             }
-            //else if (ent is MText)
-            //{
-            //    // MText is also easy - you get all four corners
-            //    // returned by a function. That said, the points
-            //    // are of the MText's box, so may well be different
-            //    // from the bounds of the actual contents
-            //    MText txt = (MText)ent;
-            //    Point3dCollection pts2 = txt.GetBoundingPoints();
-            //    foreach (Point3d pt in pts2)
-            //    {
-            //        pts.Add(pt);
-            //    }
-            //}
             else if (ent is Face f)
             {
                 try
@@ -255,6 +242,72 @@ namespace SioForgeCAD.Commun.Extensions
                 catch { }
             }
             return pts;
+        }
+
+        public static List<Extents3d> GetExplodedExtents(this Entity ent)
+        {
+            List<Extents3d> ext;
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                ext = CollectExtends(tr, ent);
+
+                tr.Commit();
+                return ext;
+            }
+        }
+
+        private static List<Extents3d> CollectExtends(Transaction tr, Entity ent)
+        {
+            List<Extents3d> ext = new List<Extents3d>();
+
+            if (ent is DBPoint dBPoint)
+            {
+                ext.Add(dBPoint.GetExtents());
+            }
+            else if (ent is Entity && (
+                ent is Line ||
+                ent is Circle ||
+                ent is Arc ||
+                ent is Hatch ||
+                ent is Line
+                ))
+            {
+                ext.Add(ent.GetExtents());
+            }
+            else
+            {
+                // Here's where we attempt to explode other types
+                // of object
+                DBObjectCollection oc = new DBObjectCollection();
+                try
+                {
+                    ent.Explode(oc);
+                    if (oc.Count > 0)
+                    {
+                        foreach (DBObject obj in oc)
+                        {
+                            Entity ent2 = obj as Entity;
+                            if (ent2?.Visible == true)
+                            {
+                                ext.AddRange(CollectExtends(tr, ent2));
+                            }
+                            obj.Dispose();
+                        }
+                    }
+                    else
+                    {
+                        ext.Add(ent.GetExtents());
+                    }
+                }
+                catch
+                {
+                    ext.Add(ent.GetExtents());
+                }
+            }
+            return ext;
         }
 
         public static Point3d GetCenter(this Extents3d extents)
