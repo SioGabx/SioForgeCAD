@@ -122,24 +122,63 @@ namespace SioForgeCAD.Commun.Mist
             return menuGroup.FindMacroGroup(menuGroup.Name) ?? new MacroGroup(menuGroup.Name, menuGroup);
         }
 
-        public static MenuMacro AddMacro(this CustomizationSection source, string name, string command, string tag, string helpString, string imagePath)
+        private static void UpdateMacroProperties(MenuMacro macro, string name, string command, string helpString, string imagePath, string CLICommand)
         {
-            MacroGroup mg = GetMacroGroup(source, name);
-            foreach (MenuMacro macro in mg.MenuMacros)
+            macro.macro.prepForUpdate();
+            macro.macro.Command = command;
+            macro.macro.CLICommand = CLICommand;
+            macro.macro.Name = name;
+            macro.macro.Tags = new StringCollection();
+            macro.macro.SmallImage = imagePath;
+            macro.macro.LargeImage = imagePath;
+            macro.macro.HelpString = helpString;
+            macro.macro.ToolTip.BasicContent = helpString;
+            macro.macro.ToolTip.HasCommandName = true;
+            macro.macro.ToolTip.CommandName = name;
+          
+        }
+
+        private static MenuMacro TryGetUpdateExistingMacro(MenuMacroCollection macros, string name, string command, string elementID, string helpString, string imagePath, string CLICommand, bool UpdateIfExist)
+        {
+            foreach (MenuMacro macro in macros)
             {
-                if (macro.ElementID == tag)
+                if (macro.ElementID == elementID)
                 {
-                    return null;
+                    if (UpdateIfExist)
+                    {
+                        UpdateMacroProperties(macro, name, command, helpString, imagePath, CLICommand);
+                    }
+                    return macro;
                 }
             }
+            return null;
+        }
 
-            MenuMacro menuMacro = new MenuMacro(mg, name, command, tag);
-            menuMacro.macro.HelpString = helpString;
-            if (!string.IsNullOrEmpty(imagePath))
+
+
+        public static MenuMacro AddMacro(this CustomizationSection source, string name, string command, string elementID, string helpString, string imagePath, string CLICommand = "", bool UpdateIfExist = false)
+        {
+            MacroGroup macroGroup = GetMacroGroup(source, name);
+            MenuMacro existingMacro = TryGetUpdateExistingMacro(macroGroup.MenuMacros, name, command, elementID, helpString, imagePath, CLICommand,UpdateIfExist);
+
+            if (UpdateIfExist)
             {
-                menuMacro.macro.LargeImage = imagePath;
-                menuMacro.macro.SmallImage = imagePath;
+                CustomizationSection MainSource = GetMainCustomizationSection(null);
+                if (MainSource != source)
+                {
+                    foreach (MacroGroup mgo in MainSource.MenuGroup.MacroGroups)
+                    {
+                        if (TryGetUpdateExistingMacro(mgo.MenuMacros, name, command, elementID, helpString, imagePath, CLICommand, UpdateIfExist) != null)
+                        {
+                            MainSource.Save();
+                        }
+                    }
+                }
             }
+            if (existingMacro != null) { return existingMacro; }
+            MenuMacro menuMacro = new MenuMacro(macroGroup, name, command, elementID);
+            UpdateMacroProperties(menuMacro, name, command, helpString, imagePath, CLICommand);
+
             return menuMacro;
         }
 
