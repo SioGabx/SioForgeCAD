@@ -5,8 +5,17 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
+        public static bool IsFileLockedOrReadOnly(string path)
+        {
+            return IsFileLockedOrReadOnly(new FileInfo(path));
+        }
+
         public static bool IsFileLockedOrReadOnly(FileInfo fi)
         {
+            if (!fi.Exists)
+            {
+                return false;
+            }
             FileStream fs = null;
             try
             {

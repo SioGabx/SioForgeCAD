@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Mist;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -19,7 +20,10 @@ namespace SioForgeCAD.Commun
         {
             // Determine path
             byte[] ressource_bytes = Properties.Resources.ResourceManager.GetObject(name) as byte[];
-            File.WriteAllBytes(ToFilePath, ressource_bytes);
+            if (!Files.IsFileLockedOrReadOnly(ToFilePath))
+            {
+                File.WriteAllBytes(ToFilePath, ressource_bytes);
+            }
         }
 
         public static string GetCurrentDocumentPath()

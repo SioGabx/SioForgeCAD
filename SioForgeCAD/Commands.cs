@@ -657,6 +657,12 @@ namespace SioForgeCAD
             Functions.SAVEFILEATCLOSE.Toggle();
         }
 
+        [CommandMethod("SIOFORGECAD", "MOFFSET", CommandFlags.UsePickSet)]
+        public static void MOFFSET()
+        {
+            Functions.MOFFSET.Offset();
+        }
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
@@ -729,7 +735,9 @@ namespace SioForgeCAD
             }).ContinueWith(g =>
             {
                 var z = InplaceTextEditor.Current;
-                SetForegroundWindow(Application.MainWindow.Handle);
+                //Application.MainWindow.WindowState = WindowState.Normal;
+                
+                 SetForegroundWindow(Application.MainWindow.Handle);
                 InplaceTextEditor.Current.Close(TextEditor.ExitStatus.ExitSave);
 
             }, TaskScheduler.FromCurrentSynchronizationContext());

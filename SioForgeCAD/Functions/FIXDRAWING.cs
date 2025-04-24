@@ -44,6 +44,7 @@ namespace SioForgeCAD.Functions
             Generic.Command("_SNAP", "_OFF");
             Generic.Command("_INSUNITS", 6); //6 == Meters //Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
             Generic.Command("_-UNITS", 2, 4, 1, 4, 0, "_NO");
+            Generic.Command("_INSBASE", Point3d.Origin);
 
             db.SetAnnotativeScale("1:1", 1, 1);
         }

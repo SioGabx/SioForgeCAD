@@ -78,7 +78,7 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            if (Files.IsFileLockedOrReadOnly(new FileInfo(Xref.Filename)))
+            if (Files.IsFileLockedOrReadOnly(Xref.Filename))
             {
                 Generic.WriteMessage("Impossible de modifier la XREF. Elle est peut-être ouverte dans l'éditeur ou en lecture seule.");
             }

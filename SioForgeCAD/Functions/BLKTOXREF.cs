@@ -63,7 +63,7 @@ namespace SioForgeCAD.Functions
 
                     const int MaxWaitMs = 5000;
                     int CurrentWaitMs = 0;
-                    while (!File.Exists(dwgFileName) && CurrentWaitMs < MaxWaitMs && Files.IsFileLockedOrReadOnly(new FileInfo(dwgFileName)))
+                    while (!File.Exists(dwgFileName) && CurrentWaitMs < MaxWaitMs && Files.IsFileLockedOrReadOnly(dwgFileName))
                     {
                         const int WaitTimeIncrement = 100;
                         CurrentWaitMs += WaitTimeIncrement;
