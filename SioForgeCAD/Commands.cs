@@ -666,6 +666,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            //https://www.keanw.com/2007/06/using-a-modal-1.html
             var db = Generic.GetDatabase();
             var doc = Generic.GetDocument();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
@@ -736,7 +737,7 @@ namespace SioForgeCAD
             {
                 var z = InplaceTextEditor.Current;
                 //Application.MainWindow.WindowState = WindowState.Normal;
-                
+              
                  SetForegroundWindow(Application.MainWindow.Handle);
                 InplaceTextEditor.Current.Close(TextEditor.ExitStatus.ExitSave);
 
@@ -768,8 +769,13 @@ namespace SioForgeCAD
             {
                 var ent = res.ObjectId.GetNoTransactionDBObject();
                 Generic.WriteMessage("Ent");
+                
             }
         }
+
+        //TODO : Auto add area
+        //TOTO : Transform perspective
+        //TODO : Edit field formula
 
         [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
         public static void TESTMERGE()
