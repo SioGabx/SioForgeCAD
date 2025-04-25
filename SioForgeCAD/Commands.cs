@@ -11,12 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -59,7 +59,7 @@ namespace SioForgeCAD
                     cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "ID_Cancel_F4");
                     cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle_QPMODE");
                     cs.LoadCui();
-                    AcApp.ReloadAllMenus();
+                    Application.ReloadAllMenus();
                     break;
             }
         }
@@ -635,12 +635,12 @@ namespace SioForgeCAD
             switch (result.StringResult)
             {
                 case ACTIVE:
-                    AcApp.SetSystemVariable("ROLLOVERTIPS", 0);
-                    AcApp.SetSystemVariable("XDWGFADECTL", 0);
+                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Application.SetSystemVariable("XDWGFADECTL", 0);
                     break;
                 case DESACTIVE:
-                    AcApp.SetSystemVariable("ROLLOVERTIPS", 0);
-                    AcApp.SetSystemVariable("XDWGFADECTL", 50);
+                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Application.SetSystemVariable("XDWGFADECTL", 50);
                     break;
             }
         }
@@ -663,113 +663,37 @@ namespace SioForgeCAD
             Functions.MOFFSET.Offset();
         }
 
+        [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
+        public static void FIELDEDITOR()
+        {
+           Functions.FIELDEDITOR.Test();
+        }
+
+       
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
-        public static void TEST()
+        public static void TEST2()
         {
-            //https://www.keanw.com/2007/06/using-a-modal-1.html
-            var db = Generic.GetDatabase();
-            var doc = Generic.GetDocument();
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-                //Functions.DRAWBOUNDINGBOX.DrawExplodedExtends();
-                Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor.Current;
-
-                string fc2 = "%<\\AcVar Date \\f \"dd/MM/yyyy\">%";
-                Field fld = new Field(fc2);
-                fld.Evaluate();
-
-
-                var settings = new InplaceTextEditorSettings();
-                settings.Type = InplaceTextEditorSettings.EntityType.Default;
-                settings.Flags = InplaceTextEditorSettings.EditFlags.SelectAll;
-                settings.SimpleMText = true;
-                var t = new MText();
-
-                t.SetField(fld);
-                t.AddToDrawing();
-                
-                //AcApp.Idle += AcApp_Idle;
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        Thread.Sleep(3000);
-                    }
-                    catch (System.Exception ex)
-                    {
-                        // Log exception or inform user
-                        Console.WriteLine(ex.Message);
-                    }
-                }).ContinueWith(g =>
-                {
-
-                    SetForegroundWindow(Application.MainWindow.Handle);
-                    //start while send key, stop when event raised
-                    SendKeys.SendWait("^h");
-                    //AcApp.Idle -= AcApp_Idle;
-
-                }, TaskScheduler.FromCurrentSynchronizationContext());
-                AcApp.EnterModal += AcApp_EnterModal;
-                AcApp.LeaveModal += AcApp_LeaveModal;
-                InplaceTextEditor.Invoke(t, settings);
-                AcApp.EnterModal -= AcApp_EnterModal;
-                AcApp.LeaveModal -= AcApp_LeaveModal;
-                
-                Generic.WriteMessage("Done");
-                acTrans.Commit();
-            }
-        }
-
-        private static void AcApp_LeaveModal(object sender, EventArgs e)
-        {
-            Task.Run(() =>
-            {
-                try
-                {
-                    Thread.Sleep(3000);
-                }
-                catch (System.Exception ex)
-                {
-                    // Log exception or inform user
-                    Console.WriteLine(ex.Message);
-                }
-            }).ContinueWith(g =>
-            {
-                var z = InplaceTextEditor.Current;
-                //Application.MainWindow.WindowState = WindowState.Normal;
-              
-                 SetForegroundWindow(Application.MainWindow.Handle);
-                InplaceTextEditor.Current.Close(TextEditor.ExitStatus.ExitSave);
-
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-            Thread.Sleep(300);
-           
-            Debug.WriteLine("AcApp_LeaveModal");
-        }
-
-        [DllImport("user32.dll")]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
-
-
-        private static void AcApp_EnterModal(object sender, EventArgs e)
-        {
-            Debug.WriteLine("AcApp_EnterModal");
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
-        public static void TEST2()
+        public static void TEST()
         {
-            //https://www.keanw.com/2007/07/accessing-the-a.html
-            //https://www.keanw.com/2007/06/embedding_field.html
-            //https://www.cadforum.cz/en/qaID.asp?tip=6381
-            //%<\AcExpr (%<\AcObjProp Object(%<\_ObjId 2621431877296>%).Area>%+10) \f "%lu6">%
-            var ed = Generic.GetEditor();
-            var res = ed.GetEntity("tte");
-            if (res.Status == PromptStatus.OK)
+        }
+
+        [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
+        public static void TEST3()
+        {
+            Application.EnterModal += DetectModal;
+        }
+       
+        private static void DetectModal(object sender, EventArgs e)
+        {
+            Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor.Current;
+            var i = x.Selection;
+            if (i?.FieldObject != null)
             {
-                var ent = res.ObjectId.GetNoTransactionDBObject();
-                Generic.WriteMessage("Ent");
-                
+               
+                //Replace by SioForgeCad field editor
             }
         }
 

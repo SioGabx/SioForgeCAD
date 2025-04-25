@@ -157,12 +157,16 @@ namespace SioForgeCAD.Commun
 
         public static void SetSystemVariable(string Name, object Value, bool EchoChanges = true)
         {
-            var OldValue = Application.TryGetSystemVariable(Name);
+            var OldValue = GetSystemVariable(Name);
             if (OldValue.ToString() != Value.ToString())
             {
                 if (EchoChanges) { Generic.WriteMessage($"Changement de la variable {Name} de {OldValue} à {Value}."); }
                 Application.SetSystemVariable(Name, Value);
             }
+        }
+        public static object GetSystemVariable(string Name)
+        {
+            return Application.TryGetSystemVariable(Name);
         }
 
         public static void Command(params object[] args)

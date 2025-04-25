@@ -24,6 +24,10 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return extends.MinPoint.Y;
         }
+        public static Point3d Middle(this Extents3d extends)
+        {
+            return new Point3d((extends.Left() + extends.Right()) / 2, (extends.Top() + extends.Bottom()) / 2, 0);
+        }
         public static Point3d TopLeft(this Extents3d extends)
         {
             return new Point3d(extends.Left(), extends.Top(), 0);

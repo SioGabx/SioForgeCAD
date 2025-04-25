@@ -178,6 +178,7 @@
     <Compile Include="Commun\Mist\PolygonOperations\PolyHole.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Substraction.cs" />
     <Compile Include="Commun\Mist\PolygonOperations\Union.cs" />
+    <Compile Include="Commun\Mist\User32PInvoke.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
     <Compile Include="Commun\Mist\PerpendicularPoint.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="Functions\DXFIMPORT.cs" />
     <Compile Include="Functions\ELLIPSETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CONVERTIMAGETOOLE.cs" />
+    <Compile Include="Functions\FIELDEDITOR.cs" />
     <Compile Include="Functions\FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.cs" />
     <Compile Include="Functions\FIXDRAWING.cs" />
     <Compile Include="Functions\FRAMESELECTED.cs" />
