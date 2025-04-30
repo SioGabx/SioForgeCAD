@@ -56,41 +56,42 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
-        //Compute a intermedian point between two points
+        //Compute an intermediate point between two elevation points.
         public static void CCI()
         {
             new Functions.CCI().Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
-        //Compute the slope value between two points
+        //Compute slope value between two elevation points.
         public static void CCP()
         {
             new Functions.CCP().Compute();
         }
+
         [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
-        //Compute a new point from existing one using a slope value
+        //Calculate a point from a known elevation point using a slope.
         public static void CCD()
         {
             new Functions.CCD().Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
-        //Take a altitude point and add or substract a user defined value to it
+        //Add or subtract an elevation value to/from a point.
         public static void CCA()
         {
             Functions.CCA.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]
-        //Take a altitude from a text and add a block
+        //Create a block from a text-based elevation value
         public static void CCFROMTEXT()
         {
             Functions.CCFROMTEXT.CreateCotationBlocFromText();
         }
 
         [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
-        //Move a XREF point into the drawing
+        //Move a XREF elevation point into the drawing.
         public static void CCXREF()
         {
             Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
@@ -652,12 +653,6 @@ namespace SioForgeCAD
         public static void SAVEFILEATCLOSE()
         {
             Functions.SAVEFILEATCLOSE.Toggle();
-        }
-
-        [CommandMethod("SIOFORGECAD", "MOFFSET", CommandFlags.UsePickSet)]
-        public static void MOFFSET()
-        {
-            Functions.MOFFSET.Offset();
         }
 
 #if DEBUG
