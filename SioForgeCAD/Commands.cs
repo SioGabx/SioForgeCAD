@@ -335,6 +335,12 @@ namespace SioForgeCAD
         {
             Functions.TLEN.Compute();
         }
+        
+        [CommandMethod("SIOFORGECAD", "TLENSBLKATTR", CommandFlags.Redraw)]
+        public static void TLENSBLKATTR()
+        {
+            Functions.TLENSBLKATTR.Compute();
+        }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
         public static void VEGBLOC()
@@ -663,6 +669,8 @@ namespace SioForgeCAD
             Functions.MOFFSET.Offset();
         }
 
+#if DEBUG
+
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
         public static void FIELDEDITOR()
         {
@@ -734,7 +742,6 @@ namespace SioForgeCAD
             DelaunayTriangulate.TriangulateCommand();
         }
 
-#if DEBUG
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS()
         {

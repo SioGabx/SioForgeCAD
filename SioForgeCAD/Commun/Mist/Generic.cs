@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Mist;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -36,11 +37,15 @@ namespace SioForgeCAD.Commun
             Debug.WriteLine(directory);
             return directory;
         }
-
+        public static double FormatNumberForPrint(double Number)
+        {
+            short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
+            return Math.Round(Number, DisplayPrecision);
+        }
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed.WriteMessage($"\n{message}\n");
+            ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028')}\n");
         }
 
         public static void LoadLispFromStringCommand(string lispCode)

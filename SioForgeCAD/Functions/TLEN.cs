@@ -41,8 +41,7 @@ namespace SioForgeCAD.Functions
                         TotalLength += Reg.Perimeter;
                     }
                 }
-                short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
-                var Message = $"La longueur totale des courbes sélectionnées est égale à {Math.Round(TotalLength, DisplayPrecision)}";
+                var Message = $"La longueur totale des courbes sélectionnées est égale à {Generic.FormatNumberForPrint(TotalLength)}";
                 Generic.WriteMessage(Message);
                 Application.ShowAlertDialog(Message);
                 System.Windows.Clipboard.SetText(TotalLength.ToString());

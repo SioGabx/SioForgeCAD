@@ -124,6 +124,7 @@
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
+    <Compile Include="Commun\Extensions\Object.cs" />
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
@@ -277,6 +278,7 @@
     <Compile Include="Functions\SUBSTRACTPOLYLIGNES.cs" />
     <Compile Include="Functions\TAREA.cs" />
     <Compile Include="Functions\TLEN.cs" />
+    <Compile Include="Functions\TLENSBLKATTR.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />

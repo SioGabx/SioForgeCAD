@@ -60,6 +60,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `FRAMESELECTED` | View : Frame selected entity. |
 | `TAREA` | Calculate area of selected objects. |
 | `TLENS` | Compute total length of selected curves. |
+| `TLENSBLKATTR` | Compute total length of selected block reference attributes (standards + dynamics). |
 | `VEGBLOC` | Create VEGBLOC. |
 | `VEGBLOCEDIT` | Edit VEGBLOC. |
 | `VEGBLOCCOPYGRIP` | Enable VEGBLOC grip. |
