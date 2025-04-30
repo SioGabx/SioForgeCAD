@@ -20,7 +20,7 @@ namespace SioForgeCAD.Functions
                     int NumberOfVerticesBefore = poly.NumberOfVertices;
 
                     if (!poly.IsWriteEnabled) { poly.UpgradeOpen(); }
-                    
+
                     PromptDoubleOptions promptDoubleOptions = new PromptDoubleOptions("Indiquez le nombre minimum de segments par arcs")
                     {
                         DefaultValue = 3

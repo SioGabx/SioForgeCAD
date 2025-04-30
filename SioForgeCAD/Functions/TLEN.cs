@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD.Functions

@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -9,14 +8,6 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Threading;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -335,7 +326,7 @@ namespace SioForgeCAD
         {
             Functions.TLEN.Compute();
         }
-        
+
         [CommandMethod("SIOFORGECAD", "TLENSBLKATTR", CommandFlags.Redraw)]
         public static void TLENSBLKATTR()
         {
@@ -674,10 +665,10 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
         public static void FIELDEDITOR()
         {
-           Functions.FIELDEDITOR.Test();
+            Functions.FIELDEDITOR.Test();
         }
 
-       
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST2()
         {
@@ -693,14 +684,14 @@ namespace SioForgeCAD
         {
             Application.EnterModal += DetectModal;
         }
-       
+
         private static void DetectModal(object sender, EventArgs e)
         {
             Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor.Current;
             var i = x.Selection;
             if (i?.FieldObject != null)
             {
-               
+
                 //Replace by SioForgeCad field editor
             }
         }

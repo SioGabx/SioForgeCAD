@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SioForgeCAD.Commun.Extensions
+﻿namespace SioForgeCAD.Commun.Extensions
 {
     public static class ObjectExtensions
     {
@@ -18,10 +12,12 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 value = (float)obj;
             }
-            else if (obj is int) {
+            else if (obj is int)
+            {
                 value = (int)obj;
             }
-            else if (obj is short) {
+            else if (obj is short)
+            {
                 value = (short)obj;
             }
             else
