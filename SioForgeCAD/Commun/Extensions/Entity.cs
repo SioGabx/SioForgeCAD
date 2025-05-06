@@ -141,12 +141,28 @@ namespace SioForgeCAD.Commun.Extensions
                 Target.ColorIndex = Origin.ColorIndex;
             }
 
-            if (Origin.LayerId != ObjectId.Null) Target.LayerId = Origin.LayerId;
-            if (Origin.Linetype != "") Target.Linetype = Origin.Linetype;
+            if (Origin.LayerId != ObjectId.Null)
+            {
+                Target.LayerId = Origin.LayerId;
+            }
+
+            if (Origin.Linetype != "")
+            {
+                Target.Linetype = Origin.Linetype;
+            }
+
             Target.LinetypeScale = Origin.LinetypeScale;
             Target.LineWeight = Origin.LineWeight;
-            if (Origin.Material != "") Target.Material = Origin.Material;
-            if (Origin.OwnerId != ObjectId.Null) Target.OwnerId = Origin.OwnerId;
+            if (Origin.Material != "")
+            {
+                Target.Material = Origin.Material;
+            }
+
+            if (Origin.OwnerId != ObjectId.Null)
+            {
+                Target.OwnerId = Origin.OwnerId;
+            }
+
             Target.ReceiveShadows = Origin.ReceiveShadows;
             Target.Transparency = Origin.Transparency;
             Target.Visible = Origin.Visible;

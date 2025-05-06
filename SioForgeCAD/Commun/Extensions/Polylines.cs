@@ -673,9 +673,20 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 var SegA = polylineA.GetSegmentAt(i);
                 var SegB = polylineB.GetSegmentAt(i);
-                if (!SegA.StartPoint.IsEqualTo(SegB.StartPoint, tol)) return false;
-                if (!SegA.EndPoint.IsEqualTo(SegB.EndPoint, tol)) return false;
-                if (SegA.Bulge != SegB.Bulge) return false;
+                if (!SegA.StartPoint.IsEqualTo(SegB.StartPoint, tol))
+                {
+                    return false;
+                }
+
+                if (!SegA.EndPoint.IsEqualTo(SegB.EndPoint, tol))
+                {
+                    return false;
+                }
+
+                if (SegA.Bulge != SegB.Bulge)
+                {
+                    return false;
+                }
             }
 
             return true;

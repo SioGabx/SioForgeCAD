@@ -246,7 +246,9 @@ namespace SioForgeCAD.Commun
             LayerTableRecord targetLayer = tr.GetObject(targetLayerId, OpenMode.ForRead) as LayerTableRecord;
 
             if (sourceLayer == null || targetLayer == null)
+            {
                 return;
+            }
 
             string sourceLayerName = sourceLayer.Name;
 

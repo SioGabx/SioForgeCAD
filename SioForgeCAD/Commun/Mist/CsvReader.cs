@@ -49,7 +49,9 @@ namespace SioForgeCAD.Commun.Mist
             delimLength = delimiter.Length;
 
             if (delimLength == 0)
+            {
                 throw new ArgumentException("Delimiter cannot be empty.");
+            }
         }
 
         char[] buffer = null;
@@ -64,10 +66,16 @@ namespace SioForgeCAD.Commun.Mist
         private int ReadBlockAndCheckEof(char[] buffer, int start, int len, ref bool eof)
         {
             if (len == 0)
+            {
                 return 0;
+            }
+
             var read = rdr.ReadBlock(buffer, start, len);
             if (read < len)
+            {
                 eof = true;
+            }
+
             return read;
         }
 
@@ -82,7 +90,9 @@ namespace SioForgeCAD.Commun.Mist
                 {
                     actualBufferLen += ReadBlockAndCheckEof(buffer, freeStart, buffer.Length - freeStart, ref eof);
                     if (lineStartPos > 0)
+                    {
                         actualBufferLen += ReadBlockAndCheckEof(buffer, 0, lineStartPos, ref eof);
+                    }
                 }
                 else
                 {
@@ -140,7 +150,9 @@ namespace SioForgeCAD.Commun.Mist
                 pos = start + offset;
                 idx = pos < bufferLength ? pos : pos % bufferLength;
                 if (pos >= maxPos || buffer[idx] != Delimiter[offset])
+                {
                     return false;
+                }
             }
             end = start + offset - 1;
             return true;
@@ -150,7 +162,10 @@ namespace SioForgeCAD.Commun.Mist
         {
             fieldsCount++;
             while (fieldsCount > fields.Count)
+            {
                 fields.Add(new Field());
+            }
+
             var f = fields[fieldsCount - 1];
             f.Reset(startIdx);
             return f;
@@ -372,7 +387,10 @@ namespace SioForgeCAD.Commun.Mist
                     var lenWithoutQuotes = Length - 2;
                     var val = lenWithoutQuotes > 0 ? GetString(buf, s, lenWithoutQuotes) : String.Empty;
                     if (EscapedQuotesCount > 0)
+                    {
                         val = val.Replace("\"\"", "\"");
+                    }
+
                     return val;
                 }
                 var len = Length;

@@ -41,7 +41,9 @@ namespace SioForgeCAD.Functions
                 {
                     accumulatedProbability += pair.Pourcentage;
                     if (randomNumber <= accumulatedProbability)
+                    {
                         return pair;
+                    }
                 }
                 return default;  // this code will never come while you use this programm right :)
             }

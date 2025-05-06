@@ -221,12 +221,30 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool HasEndPointOrStartPointInCommun(this Curve A, Curve B)
         {
-            if (A == null || B == null) return false;
+            if (A == null || B == null)
+            {
+                return false;
+            }
 
-            if (A.EndPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
-            if (A.EndPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
-            if (A.StartPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance)) return true;
-            if (A.StartPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance)) return true;
+            if (A.EndPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.EndPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.StartPoint.IsEqualTo(B.EndPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
+
+            if (A.StartPoint.IsEqualTo(B.StartPoint, Generic.LowTolerance))
+            {
+                return true;
+            }
 
             return false;
         }

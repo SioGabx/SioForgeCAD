@@ -16,7 +16,10 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
 
             var per = ed.GetSelectionRedraw("Selectionnez des entités");
-            if (per.Status != PromptStatus.OK) return;
+            if (per.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'angle de rotation (sens horaire) :")
             {
@@ -32,10 +35,16 @@ namespace SioForgeCAD.Functions
             }
 
             PromptDoubleResult PromptAngle = ed.GetDouble(pdo);
-            if (PromptAngle.Status != PromptStatus.OK) return;
+            if (PromptAngle.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             var RotationAxis = GetRotateAxis(ed);
-            if (RotationAxis is null) return;
+            if (RotationAxis is null)
+            {
+                return;
+            }
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {

@@ -82,14 +82,18 @@ namespace SioForgeCAD.Commun.Extensions
         {
             Matrix3d xform = GetModelToPaperTransform(viewport).Inverse();
             foreach (Entity ent in src)
+            {
                 ent.TransformBy(xform);
+            }
         }
 
         public static void ModelToPaper(this IEnumerable<Entity> src, Viewport viewport)
         {
             Matrix3d xform = GetModelToPaperTransform(viewport);
             foreach (Entity ent in src)
+            {
                 ent.TransformBy(xform);
+            }
         }
 
         public static bool IsInModel(this Editor _)

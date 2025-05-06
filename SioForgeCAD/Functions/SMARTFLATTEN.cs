@@ -24,7 +24,10 @@ namespace SioForgeCAD.Functions
                 {
                     BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
 
-                    if (btr.IsLayout) continue;
+                    if (btr.IsLayout)
+                    {
+                        continue;
+                    }
 
                     Debug.WriteLine($"Inspecting block: {btr.Name}");
 

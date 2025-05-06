@@ -173,7 +173,9 @@ namespace SioForgeCAD.Commun
             foreach (var id in ids)
             {
                 if (!col.Contains(id))
+                {
                     col.Add(id);
+                }
             }
         }
 

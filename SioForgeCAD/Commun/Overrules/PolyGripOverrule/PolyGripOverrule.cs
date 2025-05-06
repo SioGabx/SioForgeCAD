@@ -40,7 +40,11 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
         {
             if (enable)
             {
-                if (_enabled) return;
+                if (_enabled)
+                {
+                    return;
+                }
+
                 _originalOverruling = Overrule.Overruling;
                 AddOverrule(RXClass.GetClass(_targetType), this, false);
                 SetCustomFilter();
@@ -51,7 +55,11 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             }
             else
             {
-                if (!_enabled) return;
+                if (!_enabled)
+                {
+                    return;
+                }
+
                 RemoveOverrule(RXClass.GetClass(_targetType), this);
                 Overrule.Overruling = _originalOverruling;
                 _enabled = false;

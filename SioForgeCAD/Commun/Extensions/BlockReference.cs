@@ -24,7 +24,10 @@ namespace SioForgeCAD.Commun.Extensions
 
             ResultBuffer rb = btr.GetXDataForApplication("AcDbBlockRepBTag");
             if (rb == null)
+            {
                 return ObjectId.Null.Handle;
+            }
+
             foreach (TypedValue tv in rb)
             {
                 if (tv.TypeCode == 1005 && tv.Value is string strValue)

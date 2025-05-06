@@ -16,7 +16,10 @@ namespace SioForgeCAD.Functions
 
             using (Polyline terrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
             {
-                if (terrainBasePolyline == null) return;
+                if (terrainBasePolyline == null)
+                {
+                    return;
+                }
 
                 var promptOptions = new PromptSelectionOptions
                 {
@@ -114,7 +117,10 @@ namespace SioForgeCAD.Functions
 
         private static void AlignEntityToSegment(BlockReference ent, Point3d basePoint, Vector3d segmentVector, Vector3d perpendicularVector)
         {
-            if (ent == null) return;
+            if (ent == null)
+            {
+                return;
+            }
 
             Matrix3d resetRotationMatrix = Matrix3d.Rotation(-ent.Rotation, Vector3d.ZAxis, ent.Position);
             ent.TransformBy(resetRotationMatrix);

@@ -657,6 +657,13 @@ namespace SioForgeCAD
             Functions.SAVEFILEATCLOSE.Toggle();
         }
 
+
+        [CommandMethod("SIOFORGECAD", "REMOVEALLPROXIES", CommandFlags.Redraw)]
+        public static void REMOVEALLPROXIES()
+        {
+            Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
+        }
+
 #if DEBUG
 
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
@@ -667,7 +674,7 @@ namespace SioForgeCAD
 
 
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
-        public static void TEST2()
+        public static void TEST()
         {
             var ed = Generic.GetEditor();
             var z = ed.GetSelectionRedraw();
@@ -678,108 +685,9 @@ namespace SioForgeCAD
             }
         }
 
-
-
-        //[CommandMethod("RemoveProxiesFromNOD", "RemoveProxiesFromNOD", CommandFlags.Modal)]
-        //public void RemoveProxiesFromNOD()
-        //{
-        //    Database db = HostApplicationServices.WorkingDatabase;
-        //    // Help file says the following about HandOverTo:
-        //    // "This method is not allowed on objects that are
-        //    // transaction resident.
-        //    // If the object on which the method is called is transaction
-        //    // resident, then no handOverTo operation is performed."
-        //    // That's why we need to use Open/Close transaction
-        //    // instead of the normal one
-        //    using (Transaction tr = db.TransactionManager.StartOpenCloseTransaction())
-        //    {
-        //        RemoveProxiesFromDictionary(db.NamedObjectsDictionaryId, tr);
-        //        tr.Commit();
-        //    }
-        //}
-
-
-
-        //[CommandMethod("RemoveProxiesFromBlocks", "RemoveProxiesFromBlocks", CommandFlags.Modal)]
-        //public void RemoveProxiesFromBlocks()
-        //{
-        //    Database db = HostApplicationServices.WorkingDatabase;
-        //    using (Transaction tr = db.TransactionManager.StartOpenCloseTransaction())
-        //    {
-        //        BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-
-        //        foreach (ObjectId btrId in bt)
-        //        {
-        //            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
-
-        //            foreach (ObjectId entId in btr)
-        //            {
-        //                if (entId.ObjectClass.Name == "AcDbZombieEntity")
-        //                {
-        //                    ProxyEntity ent = (ProxyEntity)tr.GetObject(entId, OpenMode.ForRead);
-        //                    // If you want to check what exact proxy it is
-
-        //                    if (ent.ApplicationDescription != "ProxyToRemove")
-        //                    {
-        //                        return;
-        //                    }
-        //                    ent.UpgradeOpen();
-
-        //                    using (DBObject newEnt = new Line())
-        //                    {
-        //                        ent.HandOverTo(newEnt, false, false);
-        //                        newEnt.Erase();
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        tr.Commit();
-        //    }
-        //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
-        public static void TEST()
+        public static void TEST2()
         {
-            REMOVEALLPROXIES.searchAndEraseProxy();
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
@@ -809,7 +717,9 @@ namespace SioForgeCAD
             Editor ed = Generic.GetEditor();
             PromptSelectionResult selRes = ed.GetSelection();
             if (selRes.Status != PromptStatus.OK)
+            {
                 return;
+            }
 
             SelectionSet sel = selRes.Value;
             List<Curve> Curves = new List<Curve>();

@@ -242,9 +242,20 @@ namespace SioForgeCAD.Commun.Drawing
                             if (BlocPropertyCollectionDictionnary.TryGetValue(ValueKey, out DynamicBlockReferenceProperty BlocProperty))
                             {
                                 object Value = ConvertValueToProperty((DwgDataType)BlocProperty.PropertyTypeCode, AttributesValues[ValueKey]);
-                                if (Value is int ValueAsInt) BlocProperty.Value = (short)ValueAsInt;
-                                if (Value is double ValueAsDbl) BlocProperty.Value = ValueAsDbl;
-                                if (Value is string ValueAsStr) BlocProperty.Value = ValueAsStr;
+                                if (Value is int ValueAsInt)
+                                {
+                                    BlocProperty.Value = (short)ValueAsInt;
+                                }
+
+                                if (Value is double ValueAsDbl)
+                                {
+                                    BlocProperty.Value = ValueAsDbl;
+                                }
+
+                                if (Value is string ValueAsStr)
+                                {
+                                    BlocProperty.Value = ValueAsStr;
+                                }
                             }
                         }
                     }

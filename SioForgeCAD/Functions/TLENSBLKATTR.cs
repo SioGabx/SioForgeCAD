@@ -117,7 +117,10 @@ namespace SioForgeCAD.Functions
             foreach (ObjectId attId in blockRef.AttributeCollection)
             {
                 AttributeReference attRef = attId.GetDBObject() as AttributeReference;
-                if (attRef == null || string.IsNullOrWhiteSpace(attRef.TextString)) continue;
+                if (attRef == null || string.IsNullOrWhiteSpace(attRef.TextString))
+                {
+                    continue;
+                }
 
                 string tag = attRef.Tag;
 

@@ -67,7 +67,9 @@ namespace SioForgeCAD.Commun.Extensions
             for (long i = 0; i < db.Handseed.Value; i++)
             {
                 if (db.TryGetObjectId(new Handle(i), out ObjectId id))
+                {
                     dict.Add(id, id.ObjectClass.Name);
+                }
             }
             return dict;
         }
