@@ -243,6 +243,7 @@
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />
+    <Compile Include="Functions\REMOVEALLPROXIES.cs" />
     <Compile Include="Functions\SAVEFILEATCLOSE.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
     <Compile Include="Functions\FINDHATCHWITHOUTASSOCIATIVEBOUNDARY.cs" />

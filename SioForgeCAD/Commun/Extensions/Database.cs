@@ -58,6 +58,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+
+
+    
         public static Dictionary<ObjectId, string> GetAllObjects(this Database db)
         {
             var dict = new Dictionary<ObjectId, string>();

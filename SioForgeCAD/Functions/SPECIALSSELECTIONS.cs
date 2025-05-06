@@ -5,7 +5,9 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -110,16 +112,34 @@ namespace SioForgeCAD.Functions
             var SelRedraw = ed.GetSelectionRedraw();
             if (SelRedraw.Status != PromptStatus.OK) { return; }
 
+
+            Type GetTypeFromObjectId(ObjectId ObjId)
+            {
+                var SelItemEnt = ObjId.GetDBObject();
+                if (AssocArray.IsAssociativeArray(ObjId))
+                {
+                    return typeof(AssocArray);
+                }
+                else if (SelItemEnt is Viewport)
+                {
+                    return typeof(Viewport);
+                }
+                else
+                {
+                    return SelItemEnt.GetType();
+                }
+            }
+
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<string> EntityTypes = new List<string>();
-                foreach (var SelItem in SelRedraw.Value.GetObjectIds())
+                List<Type> EntityTypes = new List<Type>();
+                foreach (var SelItemObjId in SelRedraw.Value.GetObjectIds())
                 {
-                    RXClass rX = SelItem.ObjectClass;
-                    var DxfName = rX.Name;
-                    if (!EntityTypes.Contains(DxfName))
+                    var SelItemType = GetTypeFromObjectId(SelItemObjId);
+                    if (!EntityTypes.Contains(SelItemType))
                     {
-                        EntityTypes.Add(DxfName);
+                        EntityTypes.Add(SelItemType);
                     }
                 }
 
@@ -131,14 +151,16 @@ namespace SioForgeCAD.Functions
                     return;
                 }
                 HashSet<ObjectId> SameTypeEntsObjId = new HashSet<ObjectId>();
-                foreach (var SelItem in psr.Value.GetObjectIds())
+
+                foreach (var SelItemObjId in psr.Value.GetObjectIds())
                 {
-                    RXClass rX = SelItem.ObjectClass;
-                    if (rX != null && (EntityTypes.Contains(rX.Name)))
+                    var SelItemType = GetTypeFromObjectId(SelItemObjId);
+                    if (EntityTypes.Contains(SelItemType))
                     {
-                        SameTypeEntsObjId.Add(SelItem);
+                        SameTypeEntsObjId.Add(SelItemObjId);
                     }
                 }
+
 
                 ed.SetImpliedSelection(SameTypeEntsObjId.ToArray());
                 tr.Commit();
