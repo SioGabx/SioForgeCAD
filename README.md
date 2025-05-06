@@ -9,6 +9,9 @@
 3. Select the compiled `.dll` file.
 4. Once loaded, use the command prefix `SIOFORGECAD` followed by one of the available commands listed below.
 
+ONLY FOR AUTOCAD < 2025
+-> https://gilecad.azurewebsites.net/Resources/Migration_NET_Core.pdf
+
 ---
 
 ## 🧭 Command Reference
