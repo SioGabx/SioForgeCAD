@@ -6,7 +6,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
-using SioForgeCAD.Functions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
