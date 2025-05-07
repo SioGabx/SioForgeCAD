@@ -214,7 +214,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_MLEADERSTYLE"))
                 {
                     ObjectIdCollection MLeaderStyleObjectIdCollection = new ObjectIdCollection();
@@ -249,7 +249,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_DWFDEFINITIONS"))
                 {
                     ObjectIdCollection DwfDefinitionsObjectIdCollection = new ObjectIdCollection();
@@ -284,7 +284,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_PDFDEFINITIONS"))
                 {
                     ObjectIdCollection PdfDefinitionsObjectIdCollection = new ObjectIdCollection();
@@ -319,7 +319,7 @@ namespace SioForgeCAD.Functions
             ObjectIdCollection objectIdCollection = new ObjectIdCollection();
             using (var tr = db.TransactionManager.StartTransaction())
             {
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_DGNDEFINITIONS"))
                 {
                     ObjectIdCollection DgnDefinitionsObjectIdCollection = new ObjectIdCollection();
@@ -354,7 +354,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_IMAGE_DICT"))
                 {
                     foreach (DBDictionaryEntry ImageEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_IMAGE_DICT").GetDBObject()))
@@ -384,7 +384,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                DBDictionary dbdictionary = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+                DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                 if (dbdictionary.Contains("ACAD_SCALELIST"))
                 {
                     foreach (DBDictionaryEntry ScaleEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_SCALELIST").GetDBObject()))
