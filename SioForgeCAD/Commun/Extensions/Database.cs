@@ -20,47 +20,6 @@ namespace SioForgeCAD.Commun.Extensions
             docCol.MdiActiveDocument = newDoc;
         }
 
-        public static void Purge(this Database _)
-        {
-            Generic.Command("_-PURGE", "_ALL", "*", "N");
-        }
-
-        public static void PurgeRegisteredApplication(this Database _)
-        {
-            Generic.Command("_-PURGE", "_REGAPPS", "*", "N");
-        }
-        public static void PurgeRasterImages(this Database db)
-        {
-            try
-            {
-                using (var tr = db.TransactionManager.StartTransaction())
-                {
-                    var NOD = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
-                    var NODKey = NOD.GetAt("ACAD_IMAGE_DICT");
-                    var imageDict = (DBDictionary)NODKey.GetDBObject(OpenMode.ForRead);
-                    var imageIds = new ObjectIdCollection();
-                    foreach (var entry in imageDict)
-                    {
-                        imageIds.Add(entry.Value);
-                    }
-                    db.Purge(imageIds);
-                    foreach (ObjectId id in imageIds)
-                    {
-                        tr.GetObject(id, OpenMode.ForWrite).Erase();
-                    }
-                    tr.Commit();
-                }
-            }
-            catch (Autodesk.AutoCAD.Runtime.Exception ex)
-            {
-                //Catch eKeyNotFound
-                Debug.WriteLine(ex.ToString());
-            }
-        }
-
-
-
-    
         public static Dictionary<ObjectId, string> GetAllObjects(this Database db)
         {
             var dict = new Dictionary<ObjectId, string>();
