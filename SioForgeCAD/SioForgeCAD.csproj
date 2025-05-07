@@ -164,6 +164,7 @@
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
     <Compile Include="Commun\Mist\CsvReader.cs" />
+    <Compile Include="Commun\Mist\DWGDataStorage.cs" />
     <Compile Include="Commun\Mist\Files.cs" />
     <Compile Include="Commun\Mist\GetPointTransient.cs" />
     <Compile Include="Commun\Mist\HightLighter.cs" />
@@ -191,6 +192,12 @@
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripJig.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGrip.cs" />
+    <Compile Include="Forms\NotesPalette.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\NotesPalette.Designer.cs">
+      <DependentUpon>NotesPalette.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -305,6 +312,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Forms\InputDialogBox.resx">
       <DependentUpon>InputDialogBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NotesPalette.resx">
+      <DependentUpon>NotesPalette.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\VegblocDialog.resx">
       <DependentUpon>VegblocDialog.cs</DependentUpon>

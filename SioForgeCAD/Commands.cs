@@ -1,11 +1,14 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -675,19 +678,128 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            var ed = Generic.GetEditor();
-            var z = ed.GetSelectionRedraw();
-            foreach (var item in z.Value.GetObjectIds())
-            {
-                var obj = item.GetNoTransactionDBObject();
-                Debug.WriteLine(obj.AcadObject.ToString());
-            }
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
         }
+
+
+
+
+
+
+        private PaletteSet _paletteSet;
+        private NotesPalette notesControl;
+
+
+        [CommandMethod("NOTES")]
+        public void ShowNotesPalette()
+        {
+            if (_paletteSet == null)
+            {
+                notesControl = new NotesPalette();
+
+                notesControl.OnSaveNote = content =>
+                {
+                    var doc = Generic.GetDocument();
+                  
+                        string fileName = Generic.GetDocument().Name;
+                        string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        string key = $"Note_{Guid.NewGuid()}";
+                        string fullText = $"{date} - {fileName} {content}";
+                        DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, fullText);
+                        notesControl.AddHistoryItem(fullText);
+                    
+                };
+
+                notesControl.OnPinNote = content =>
+                {
+                    string key = $"Pinned_{Guid.NewGuid()}";
+                    DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, content);
+                    notesControl.AddPinnedItem(content);
+                };
+
+                notesControl.OnUnpinNote = content =>
+                {
+                    var doc = Generic.GetDocument();
+                    using (var tr = doc.TransactionManager.StartTransaction())
+                    {
+                        var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
+                        string myDictName = Generic.GetExtensionDLLName();
+                        if (!nod.Contains(myDictName)) return;
+                        var myDict = (DBDictionary)tr.GetObject(nod.GetAt(myDictName), OpenMode.ForWrite);
+                        foreach (DBDictionaryEntry entry in myDict)
+                        {
+                            if (entry.Key.StartsWith("Pinned_"))
+                            {
+                                string value = DWGDataStorage.LoadTextFromDrawing(doc.Database, entry.Key);
+                                if (value == content)
+                                {
+                                    myDict.Remove(entry.Key);
+                                    break;
+                                }
+                            }
+                        }
+                        tr.Commit();
+                    }
+                };
+
+                _paletteSet = new PaletteSet("Notes DWG")
+                {
+                    Style = PaletteSetStyles.ShowCloseButton | PaletteSetStyles.NameEditable,
+                    MinimumSize = new System.Drawing.Size(300, 300)
+                };
+                _paletteSet.Add("Notes", notesControl);
+                LoadAllNotes();
+            }
+
+            _paletteSet.Visible = true;
+        }
+
+        private void LoadAllNotes()
+        {
+            var doc = Generic.GetDocument();
+            using (Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
+                string dictName = Generic.GetExtensionDLLName();
+                if (!nod.Contains(dictName)) return;
+                var myDict = (DBDictionary)tr.GetObject(nod.GetAt(dictName), OpenMode.ForRead);
+                foreach (DBDictionaryEntry entry in myDict)
+                {
+                    string value = DWGDataStorage.LoadTextFromDrawing(doc.Database, entry.Key);
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        if (entry.Key.StartsWith("Pinned_"))
+                            notesControl.AddPinnedItem(value);
+                        else
+                            notesControl.AddHistoryItem(value);
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
