@@ -5,6 +5,7 @@ using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace SioForgeCAD.Functions
 {
@@ -72,10 +73,13 @@ namespace SioForgeCAD.Functions
                     GetBlockReferenceStandardProperties(blockRef, AttrResult);
                 }
 
+                StringBuilder stringBuilder = new StringBuilder();
                 foreach (var AttrResult in AttrResults)
                 {
-                    Generic.WriteMessage(AttrResult);
+                    Generic.WriteMessage(AttrResult.ToString());
+                    stringBuilder.AppendLine($"{AttrResult}\n");
                 }
+                System.Windows.Clipboard.SetText(stringBuilder.ToString());
                 ed.SetImpliedSelection(res.Value);
                 tr.Commit();
             }
