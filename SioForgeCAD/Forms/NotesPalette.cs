@@ -12,6 +12,18 @@ namespace SioForgeCAD.Forms
 {
     public partial class NotesPalette : UserControl
     {
+        /*
+        https://www.autodesk.com/fr/support/technical/article/caas/sfdcarticles/sfdcarticles/FRA/toolbar-background-rgb-colors-in-autocad.html
+        // Light Theme
+        public System.Drawing.Color light_backcolor { get { return System.Drawing.SystemColors.Control; } }
+        public System.Drawing.Color light_forecolor { get { return System.Drawing.SystemColors.ControlText; } }
+
+        // Dark Theme
+        public System.Drawing.Color dark_forecolor { get { return System.Drawing.Color.FromArgb(245, 245, 245); } }
+        public System.Drawing.Color dark_backcolor { get { return System.Drawing.Color.FromArgb(59, 68, 83); } }
+         */
+
+
         private TabControl tabs;
         private TextBox historyBox;
         private TextBox newNoteBox;
