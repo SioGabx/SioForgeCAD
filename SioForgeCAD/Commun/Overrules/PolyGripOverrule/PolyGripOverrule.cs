@@ -45,12 +45,12 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                     return;
                 }
 
-                _originalOverruling = Overrule.Overruling;
-                AddOverrule(RXClass.GetClass(_targetType), this, false);
+                _originalOverruling = Overruling;
+                AddOverrule(GetClass(_targetType), this, false);
                 SetCustomFilter();
                 var overruled = new PolyGripMenu();
-                Overrule.GetClass(_targetType).AddX(GetClass(typeof(PolyGripMenu)), overruled);
-                Overrule.Overruling = true;
+                GetClass(_targetType).AddX(GetClass(typeof(PolyGripMenu)), overruled);
+                Overruling = true;
                 _enabled = true;
             }
             else
@@ -60,8 +60,8 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                     return;
                 }
 
-                RemoveOverrule(RXClass.GetClass(_targetType), this);
-                Overrule.Overruling = _originalOverruling;
+                RemoveOverrule(GetClass(_targetType), this);
+                Overruling = _originalOverruling;
                 _enabled = false;
             }
         }

@@ -38,7 +38,7 @@ namespace SioForgeCAD.Commun
 
         public static List<Line> GetListOfPerpendicularLinesFromPoint(Points BasePoint, Polyline TargetPolyline, bool CheckForSegmentIntersections = true)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 

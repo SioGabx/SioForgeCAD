@@ -32,7 +32,7 @@ namespace SioForgeCAD.Commun
                             if (NewBoundary.IsSegmentIntersecting(SimplifiedSubstractionPolygonCurve, out var _, Intersect.OnBothOperands))
                             {
                                 //pts.AddToDrawing(5);
-                                var Cuts = PolygonOperation.Slice(NewBoundary, SimplifiedSubstractionPolygonCurve);
+                                var Cuts = Slice(NewBoundary, SimplifiedSubstractionPolygonCurve);
                                 //if the boundary was cuted 
                                 if (Cuts.Count > 0)
                                 {

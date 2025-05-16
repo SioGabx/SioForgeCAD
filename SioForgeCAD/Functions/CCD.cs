@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
                 SlopePourcentage = (double)SlopeValueNullable;
-                OriginCotePoint = Commun.CotePoints.GetCotePoints("Selectionnez la cote de base", null);
+                OriginCotePoint = CotePoints.GetCotePoints("Selectionnez la cote de base", null);
                 if (CotePoints.NullPointExit(OriginCotePoint)) { continue; }
                 PlacePoint(OriginCotePoint);
             }
@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
             {
                 Database db = Generic.GetDatabase();
                 Editor ed = Generic.GetEditor();
-                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
+                DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();

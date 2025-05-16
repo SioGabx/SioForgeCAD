@@ -135,7 +135,7 @@ namespace SioForgeCAD.Forms
         {
             if (!IsContiguousSelection())
             {
-                Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("La selection n'est pas contigue");
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("La selection n'est pas contigue");
                 return;
             }
             string data = Clipboard.GetText();
@@ -263,7 +263,7 @@ namespace SioForgeCAD.Forms
 
         public static string[][] ParseCSV(string input, string delimiter = "\t")
         {
-            var csvStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(input));
+            var csvStream = new MemoryStream(Encoding.UTF8.GetBytes(input));
             var csvReader = new Commun.Mist.CsvReader(new StreamReader(csvStream), delimiter);
             var Lines = new List<string[]>();
             while (csvReader.Read())

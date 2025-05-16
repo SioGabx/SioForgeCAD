@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun
     {
         public static void TriangulateCommand()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
             TypedValue[] PointTypedValue = { new TypedValue(0, "POINT") };
@@ -285,7 +285,7 @@ namespace SioForgeCAD.Commun
                 );
             }
 
-            Application.UpdateScreen();
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
         }
 
         public static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)

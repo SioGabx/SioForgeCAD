@@ -23,13 +23,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en polyligne");
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Ellipse));
+                RXClass rxc = RXObject.GetClass(typeof(Ellipse));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Ellipse));
+                RXClass rxc = RXObject.GetClass(typeof(Ellipse));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
@@ -41,7 +41,7 @@ namespace SioForgeCAD.Functions
 
         public static void ConvertEllipseToPolylines()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 

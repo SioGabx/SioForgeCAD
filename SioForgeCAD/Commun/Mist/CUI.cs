@@ -11,14 +11,14 @@ namespace SioForgeCAD.Commun.Mist
         //https://github.com/HanDefu/SunacCoordination/blob/master/RemoveCuiDoubleClick/CUITools.cs
         public static CustomizationSection GetMainCustomizationSection(this Document _)
         {
-            string mainCuiFile = Application.GetSystemVariable("MENUNAME") + ".CUIX";
+            string mainCuiFile = Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("MENUNAME") + ".CUIX";
             return new CustomizationSection(mainCuiFile);
         }
         public static CustomizationSection CreatePartialCui(this Document _, string menuGroupName, string cuiFilePath = null)
         {
             if (string.IsNullOrEmpty(cuiFilePath))
             {
-                cuiFilePath = Path.Combine(System.IO.Path.GetDirectoryName(Generic.GetExtensionDLLLocation()), Generic.GetExtensionDLLName() + ".CUIX");
+                cuiFilePath = Path.Combine(Path.GetDirectoryName(Generic.GetExtensionDLLLocation()), Generic.GetExtensionDLLName() + ".CUIX");
             }
 
             if (!File.Exists(cuiFilePath))

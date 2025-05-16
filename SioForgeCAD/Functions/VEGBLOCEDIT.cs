@@ -82,7 +82,7 @@ namespace SioForgeCAD.Functions
 
                 if (BlkRef.IsEntityOnLockedLayer())
                 {
-                    Autodesk.AutoCAD.ApplicationServices.Application.ShowAlertDialog("Le bloc sélectionné est sur un calque verrouillé");
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Le bloc sélectionné est sur un calque verrouillé");
                     return;
                 }
 

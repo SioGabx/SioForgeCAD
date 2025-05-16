@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static void OpenAsNewTab(this Database db)
         {
-            DocumentCollection docCol = Application.DocumentManager;
+            DocumentCollection docCol = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager;
             string FilName = Path.Combine(Path.GetTempPath(), $"Memory_{DateTime.Now.Ticks}.dwg");
             db.SaveAs(FilName, DwgVersion.Current);
             Document newDoc = docCol.Open(FilName, false);
@@ -60,7 +60,7 @@ namespace SioForgeCAD.Commun.Extensions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
-                RXClass RXClassType = type == null ? null : RXClass.GetClass(type);
+                RXClass RXClassType = type == null ? null : RXObject.GetClass(type);
                 ObjectId EntLastObjectId = ObjectId.Null;
                 foreach (ObjectId objId in btr)
                 {

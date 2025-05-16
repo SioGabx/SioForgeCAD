@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.Colors;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -27,7 +28,7 @@ namespace SioForgeCAD.Functions
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
-            var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, vegblocDialog, true);
+            var DialogResult = Application.ShowModalDialog(null, vegblocDialog, true);
             if (DialogResult != System.Windows.Forms.DialogResult.OK)
             {
                 return;
@@ -109,8 +110,7 @@ namespace SioForgeCAD.Functions
             BlockData = Description;
             if (!BlockReferences.IsBlockExist(BlocName))
             {
-                BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty);
-
+                BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty, false, BlockScaling.Uniform);
                 WasSuccessfullyCreated = true;
             }
             BlocEntities.DeepDispose();
@@ -493,7 +493,7 @@ namespace SioForgeCAD.Functions
                 {
                     entity.Layer = LayerName;
                 }
-                if (entity.Transparency.IsByBlock) { entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByLayer); }
+                if (entity.Transparency.IsByBlock) { entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(TransparencyMethod.ByLayer); }
                 if (entity.Linetype == "BYBLOCK") { entity.Linetype = "BYLAYER"; }
                 if (entity.LineWeight == LineWeight.ByBlock) { entity.LineWeight = LineWeight.ByLayer; }
             }

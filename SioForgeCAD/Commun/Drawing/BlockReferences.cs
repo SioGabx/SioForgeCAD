@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class BlockReferences
     {
-        public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection, Points Origin)
+        public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection, Points Origin, bool IsExplodable = true, BlockScaling BlockScaling = BlockScaling.Any)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -29,6 +29,9 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     Name = BlockName,
                     Comments = Description,
+                    Explodable = IsExplodable,
+                    Units = UnitsValue.Meters,
+                    BlockScaling = BlockScaling,
                 };
                 if (Origin != Points.Null)
                 {

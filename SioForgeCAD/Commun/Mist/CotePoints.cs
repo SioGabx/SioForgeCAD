@@ -5,7 +5,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -68,7 +67,7 @@ namespace SioForgeCAD.Commun
 
         public static bool NullPointExit(CotePoints cotePoints)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             if (cotePoints is null)
             {
@@ -161,7 +160,7 @@ namespace SioForgeCAD.Commun
 
         public static double? ExtractDoubleInStringFromPoint(string OriginalString)
         {
-            var doc = AcAp.DocumentManager.MdiActiveDocument;
+            var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
 
             if (OriginalString.Contains("%"))
@@ -219,16 +218,16 @@ namespace SioForgeCAD.Commun
             BlockReference blkRef = null;
             List<ObjectId> XrefObjectId;
 
-            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = Commun.SelectInXref.Select(Message, NonInterractivePickedPoint);
+            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = SelectInXref.Select(Message, NonInterractivePickedPoint);
             XrefObjectId = XrefSelection.XrefObjectId.ToList();
             PromptStatus = XrefSelection.PromptStatus;
             if (XrefSelection.PromptStatus != PromptStatus.OK)
             {
-                return CotePoints.Null;
+                return Null;
             }
             if (XrefSelection.SelectedObjectId == ObjectId.Null)
             {
-                return CotePoints.Null;
+                return Null;
             }
 
             HightLighter.UnhighlightAll();
@@ -261,10 +260,10 @@ namespace SioForgeCAD.Commun
 
             if (blkRef is null)
             {
-                return CotePoints.Null;
+                return Null;
             }
 
-            double? Altimetrie = CotePoints.GetAltitudeFromBloc(blkRef);
+            double? Altimetrie = GetAltitudeFromBloc(blkRef);
             Points BlockPosition = SelectInXref.TransformPointInXrefsToCurrent(blkRef.Position, XrefObjectId.ToArray());
 
             if (Altimetrie == null)
@@ -274,7 +273,7 @@ namespace SioForgeCAD.Commun
                 {
                     return new CotePoints(BlockPosition, 0);
                 }
-                PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {CotePoints.FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?\n");
+                PromptKeywordOptions options = new PromptKeywordOptions($"Aucune cote n'a été trouvée pour ce bloc, cependant une altitude Z a été définie à {FormatAltitude(Altimetrie)}. Voulez-vous utiliser cette valeur ?\n");
                 options.Keywords.Add("OUI");
                 options.Keywords.Add("NON");
                 options.AllowNone = true;
@@ -333,7 +332,7 @@ namespace SioForgeCAD.Commun
                     if (blockReference.IsXref())
                     {
                         CotePoints CotePoint = GetBlockInXref(string.Empty, PromptBlocSelectionResult.PickedPoint, out PromptStatus _);
-                        bool IsCotePointNotNull = CotePoint != CotePoints.Null;
+                        bool IsCotePointNotNull = CotePoint != Null;
                         bool IsAltimetrieDefined = (CotePoint?.Altitude ?? 0) != 0;
                         if (IsCotePointNotNull && IsAltimetrieDefined)
                         {
@@ -421,7 +420,7 @@ namespace SioForgeCAD.Commun
                 }
             } while (IsLooping);
 
-            return CotePoints.Null;
+            return Null;
         }
     }
 }

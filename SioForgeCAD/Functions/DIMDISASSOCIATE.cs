@@ -19,13 +19,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Dissocier les cotes");
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Dimension));
+                RXClass rxc = RXObject.GetClass(typeof(Dimension));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Dimension));
+                RXClass rxc = RXObject.GetClass(typeof(Dimension));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 

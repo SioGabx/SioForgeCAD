@@ -83,7 +83,7 @@ namespace SioForgeCAD.Functions
                             EntitiesObjectIdCollection.Add(ent.AddToDrawing());
                             ent.Dispose();
                         }
-                        Commun.Drawing.Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
+                        Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
                     }
                     insertionTransientPoints.Dispose();
                     HightLighter.UnhighlightAll(SelectedCoteBloc);
@@ -247,8 +247,8 @@ namespace SioForgeCAD.Functions
                     return true;
                 }
                 //Redraw only if Inversed changed;
-                bool IsLastPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, LastPoint);
-                bool IsNewPointInverted = DRAWCPTERRAIN.CheckIfIsInversed(TerrainBasePolyline, NewPoint);
+                bool IsLastPointInverted = CheckIfIsInversed(TerrainBasePolyline, LastPoint);
+                bool IsNewPointInverted = CheckIfIsInversed(TerrainBasePolyline, NewPoint);
                 return IsLastPointInverted != IsNewPointInverted;
             }
 

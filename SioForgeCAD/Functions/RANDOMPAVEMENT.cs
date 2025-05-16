@@ -158,7 +158,7 @@ namespace SioForgeCAD.Functions
                         EntitiesObjectIdCollection.Add(poly.AddToDrawingCurrentTransaction());
                     }
                 }
-                Commun.Drawing.Groups.Create("RANDOMPAVEMENTS", $"PavementRowsWidth : {PavementRowsWidth}\nPavementColumnsWidth : {PavementColumnsWidth}\nPavementFill : {PavementFill}\nBaseSettings : {BaseSettings}", EntitiesObjectIdCollection);
+                Groups.Create("RANDOMPAVEMENTS", $"PavementRowsWidth : {PavementRowsWidth}\nPavementColumnsWidth : {PavementColumnsWidth}\nPavementFill : {PavementFill}\nBaseSettings : {BaseSettings}", EntitiesObjectIdCollection);
                 tr.Commit();
             }
         }

@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
                 double StepValue = (double)StepValueNullable;
-                CotePoints PointCote = Commun.CotePoints.GetCotePoints("Selectionnez un point", null);
+                CotePoints PointCote = CotePoints.GetCotePoints("Selectionnez un point", null);
                 if (CotePoints.NullPointExit(PointCote)) { return; }
                 PlacePoint(PointCote, StepValue);
             }

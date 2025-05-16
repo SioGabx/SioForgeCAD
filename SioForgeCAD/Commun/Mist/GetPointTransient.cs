@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -66,7 +65,7 @@ namespace SioForgeCAD.Commun
 
         public virtual void UpdateTransGraphics(Point3d curPt, Point3d moveToPt)
         {
-            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
             var db = doc.Database;
 
@@ -266,14 +265,14 @@ namespace SioForgeCAD.Commun
             Point3d curPt = basePt;
             CreateTransGraphics();
 
-            void handler(object sender, PointMonitorEventArgs e)
+            void PointMonitorHandler(object sender, PointMonitorEventArgs e)
             {
                 Point3d pt = e.Context.ComputedPoint;
                 UpdateTransGraphics(curPt, pt);
                 curPt = pt;
             }
 
-            ed.PointMonitor += handler;
+            ed.PointMonitor += PointMonitorHandler;
             PromptPointOptions pointOptions = new PromptPointOptions("\n" + Message);
             foreach (string KeyWord in KeyWords)
             {
@@ -303,7 +302,7 @@ namespace SioForgeCAD.Commun
                 }
             }
 
-            ed.PointMonitor -= handler;
+            ed.PointMonitor -= PointMonitorHandler;
             var InsertionPointResult = Points.GetFromPromptPointResult(InsertionPromptPointResult);
             ClearTransGraphics();
             if (InsertionPromptPointResult.Status == PromptStatus.OK)

@@ -10,7 +10,7 @@ namespace SioForgeCAD.Commun
     {
         public static string GetCurrentLayerName()
         {
-            return AcAp.GetSystemVariable("clayer").ToString();
+            return Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("clayer").ToString();
         }
         public static void SetCurrentLayerName(string LayerName)
         {
@@ -262,7 +262,7 @@ namespace SioForgeCAD.Commun
                     {
                         if (ent.IsEntityOnLockedLayer())
                         {
-                            Layers.SetLock(ent.Layer, false);
+                            SetLock(ent.Layer, false);
                         }
                         ent.UpgradeOpen();
                         ent.LayerId = targetLayerId;
@@ -286,7 +286,7 @@ namespace SioForgeCAD.Commun
 
         public static Color GetLayerColor(string LayerName)
         {
-            ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(LayerName);
+            ObjectId LayerTableRecordObjId = GetLayerIdByName(LayerName);
             return GetLayerColor(LayerTableRecordObjId);
         }
 

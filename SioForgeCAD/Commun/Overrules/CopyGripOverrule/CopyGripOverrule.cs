@@ -34,10 +34,10 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                     return;
                 }
 
-                _originalOverruling = Overrule.Overruling;
-                AddOverrule(RXClass.GetClass(_targetType), this, false);
+                _originalOverruling = Overruling;
+                AddOverrule(GetClass(_targetType), this, false);
                 SetCustomFilter();
-                Overrule.Overruling = true;
+                Overruling = true;
                 _enabled = true;
             }
             else
@@ -47,8 +47,8 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                     return;
                 }
 
-                RemoveOverrule(RXClass.GetClass(_targetType), this);
-                Overrule.Overruling = _originalOverruling;
+                RemoveOverrule(GetClass(_targetType), this);
+                Overruling = _originalOverruling;
                 _enabled = false;
             }
         }

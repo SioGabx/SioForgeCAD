@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
             {
                 if (!IsActive)
                 {
-                    Application.DocumentManager.DocumentToBeDestroyed += Execute;
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.DocumentToBeDestroyed += Execute;
                     IsActive = true;
                 }
             }
@@ -27,7 +27,7 @@ namespace SioForgeCAD.Functions
             {
                 if (IsActive)
                 {
-                    Application.DocumentManager.DocumentToBeDestroyed -= Execute;
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.DocumentToBeDestroyed -= Execute;
                     IsActive = false;
                 }
             }

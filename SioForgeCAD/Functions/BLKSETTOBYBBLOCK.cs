@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
         private static void SetEntityToByBloc(Entity entity)
         {
             entity.ColorIndex = 0; //ByBlock 
-            entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Autodesk.AutoCAD.Colors.TransparencyMethod.ByBlock);
+            entity.Transparency = new Autodesk.AutoCAD.Colors.Transparency(TransparencyMethod.ByBlock);
             entity.Linetype = "BYBLOCK";
             entity.LineWeight = LineWeight.ByBlock;
             entity.Layer = "0";

@@ -43,12 +43,12 @@ namespace SioForgeCAD.Functions
                         }
                     }
                 }
-                short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
+                short DisplayPrecision = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("LUPREC");
                 const string NoValidAreaObjectMessage = "\n\nAttention : Certain(s) objet(s) sélectionné(s) n'ont pas d'aire valide. Ils ont été exclus de la sélection";
                 var Message = $"L'aire totale des objets est égale à {Math.Round(TotalArea, DisplayPrecision)}{((NoAreaObjects.Count > 0) ? NoValidAreaObjectMessage : "")}";
 
                 Generic.WriteMessage(Message);
-                Application.ShowAlertDialog(Message);
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog(Message);
                 System.Windows.Clipboard.SetText(TotalArea.ToString());
                 var AllValidAreaObjectIds = AllSelectedObjectIds.RemoveCommun(NoAreaObjects);
                 ed.SetImpliedSelection(AllValidAreaObjectIds.ToArray());

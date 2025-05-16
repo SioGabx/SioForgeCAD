@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
@@ -14,9 +13,9 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-            short SavedPICKSTYLE = (short)Application.GetSystemVariable("PICKSTYLE");
-            Application.SetSystemVariable("PICKSTYLE", 1);
-            Application.SystemVariableChanged += CancelPickStyleVariableChange;
+            short SavedPICKSTYLE = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("PICKSTYLE");
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("PICKSTYLE", 1);
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SystemVariableChanged += CancelPickStyleVariableChange;
 
             if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
             {
@@ -30,8 +29,8 @@ namespace SioForgeCAD.Functions
                 AllSelectedObject = ed.GetSelection(selectionOptions);
             }
 
-            Application.SystemVariableChanged -= CancelPickStyleVariableChange;
-            Application.SetSystemVariable("PICKSTYLE", SavedPICKSTYLE);
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SystemVariableChanged -= CancelPickStyleVariableChange;
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("PICKSTYLE", SavedPICKSTYLE);
 
             if (AllSelectedObject.Status != PromptStatus.OK)
             {
@@ -97,11 +96,11 @@ namespace SioForgeCAD.Functions
 
         private static void CancelPickStyleVariableChange(object sender, Autodesk.AutoCAD.ApplicationServices.SystemVariableChangedEventArgs e)
         {
-            if (e.Name == "PICKSTYLE" && (short)Application.GetSystemVariable("PICKSTYLE") != 1)
+            if (e.Name == "PICKSTYLE" && (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("PICKSTYLE") != 1)
             {
                 //Cancel
                 Generic.WriteMessage("Impossible de changer la valeur de PICKSTYLE lors de la sélection d'un groupe");
-                Application.SetSystemVariable("PICKSTYLE", 1);
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("PICKSTYLE", 1);
             }
         }
     }

@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
                     bool IsInsertSuccess = true;
                     while (IsInsertSuccess)
                     {
-                        IsInsertSuccess = Functions.VEGBLOC.AskInsertVegBloc(BlkName, blockReference.Layer, Origin) != ObjectId.Null;
+                        IsInsertSuccess = VEGBLOC.AskInsertVegBloc(BlkName, blockReference.Layer, Origin) != ObjectId.Null;
                     }
 
                     if (Settings.VegblocCopyGripDeselectAfterCopy)

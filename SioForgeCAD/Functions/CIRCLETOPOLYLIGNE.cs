@@ -23,13 +23,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en polyligne");
                 mi.Click += OnConvert;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Circle));
+                RXClass rxc = RXObject.GetClass(typeof(Circle));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Circle));
+                RXClass rxc = RXObject.GetClass(typeof(Circle));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 

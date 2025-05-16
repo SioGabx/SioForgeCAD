@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -39,7 +38,7 @@ namespace SioForgeCAD.Commun
         }
         public static double FormatNumberForPrint(double Number)
         {
-            short DisplayPrecision = (short)Application.GetSystemVariable("LUPREC");
+            short DisplayPrecision = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("LUPREC");
             return Math.Round(Number, DisplayPrecision);
         }
         public static void WriteMessage(object message)
@@ -50,7 +49,7 @@ namespace SioForgeCAD.Commun
 
         public static void LoadLispFromStringCommand(string lispCode)
         {
-            Document doc = Generic.GetDocument();
+            Document doc = GetDocument();
             string loadCommand = $"(eval '{lispCode})";
             doc.SendStringToExecute(loadCommand, true, false, false);
         }
@@ -72,7 +71,7 @@ namespace SioForgeCAD.Commun
             using (Transaction newTransaction = doc.TransactionManager.StartTransaction())
             {
                 BlockTable newBlockTable = newTransaction.GetObject(doc.Database.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord newBlockTableRecord = Generic.GetCurrentSpaceBlockTableRecord(newTransaction);
+                BlockTableRecord newBlockTableRecord = GetCurrentSpaceBlockTableRecord(newTransaction);
                 TextStyleTable newTextStyleTable = newTransaction.GetObject(db.TextStyleTableId, OpenMode.ForRead) as TextStyleTable;
 
                 if (!newTextStyleTable.Has(font.ToUpperInvariant()))  //The TextStyle is currently not in the database
@@ -100,7 +99,7 @@ namespace SioForgeCAD.Commun
 
         public static Document GetDocument()
         {
-            return Application.DocumentManager.MdiActiveDocument;
+            return Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
         }
 
         public static DwgVersion GetSaveVersion()
@@ -116,14 +115,14 @@ namespace SioForgeCAD.Commun
             //var section = profile.OpenSubsection("General");
             //var format = section.ReadProperty("DefaultFormatForSave", 0);
 
-            var db = Generic.GetDatabase();
+            var db = GetDatabase();
             return db.OriginalFileSavedByVersion;
 
             // return Application.DocumentManager.DefaultFormatForSave;
         }
         public static DocumentLock GetLock()
         {
-            var doc = Generic.GetDocument();
+            var doc = GetDocument();
             return GetLock(doc);
         }
 
@@ -145,7 +144,7 @@ namespace SioForgeCAD.Commun
         {
             //https://spiderinnet1.typepad.com/blog/2012/03/autocad-net-api-modelspacepaperspacecurrentspace-and-entity-creation.html
             //Use db.CurrentSpaceId instead of bt[BlockTableRecord.ModelSpace
-            Database db = Generic.GetDatabase();
+            Database db = GetDatabase();
             return acTrans.GetObject(db.CurrentSpaceId, openMode) as BlockTableRecord;
         }
 
@@ -156,7 +155,7 @@ namespace SioForgeCAD.Commun
 
         public static void SendStringToExecute(string Command, bool Echo = true)
         {
-            Document doc = Generic.GetDocument();
+            Document doc = GetDocument();
             doc.SendStringToExecute(string.Concat(Command, ' '), true, false, Echo);
         }
 
@@ -165,22 +164,22 @@ namespace SioForgeCAD.Commun
             var OldValue = GetSystemVariable(Name);
             if (OldValue.ToString() != Value.ToString())
             {
-                if (EchoChanges) { Generic.WriteMessage($"Changement de la variable {Name} de {OldValue} à {Value}."); }
-                Application.SetSystemVariable(Name, Value);
+                if (EchoChanges) { WriteMessage($"Changement de la variable {Name} de {OldValue} à {Value}."); }
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable(Name, Value);
             }
         }
         public static object GetSystemVariable(string Name)
         {
-            return Application.TryGetSystemVariable(Name);
+            return Autodesk.AutoCAD.ApplicationServices.Core.Application.TryGetSystemVariable(Name);
         }
 
         public static void Command(params object[] args)
         {
-            short cmdecho = (short)Application.GetSystemVariable("CMDECHO");
-            Application.SetSystemVariable("CMDECHO", 0);
+            short cmdecho = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("CMDECHO");
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", 0);
             Editor ed = GetEditor();
             ed.Command(args);
-            Application.SetSystemVariable("CMDECHO", cmdecho);
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", cmdecho);
         }
 
         public static void Regen()
@@ -189,28 +188,28 @@ namespace SioForgeCAD.Commun
         }
         public static void UpdateScreen()
         {
-            Generic.GetEditor().UpdateScreen();
+            GetEditor().UpdateScreen();
             Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
         }
 
         public static async Task CommandAsync(params object[] args)
         {
-            short cmdecho = (short)Application.GetSystemVariable("CMDECHO");
-            Application.SetSystemVariable("CMDECHO", 0);
+            short cmdecho = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("CMDECHO");
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", 0);
             Editor ed = GetEditor();
             await ed.CommandAsync(args);
-            Application.SetSystemVariable("CMDECHO", cmdecho);
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", cmdecho);
         }
 
         public static void CommandInApplicationContext(params object[] args)
         {
             try
             {
-                Application.DocumentManager.ExecuteInApplicationContext((_) => Command(args), null);
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.ExecuteInApplicationContext((_) => Command(args), null);
             }
             catch (System.Exception ex)
             {
-                Generic.WriteMessage($"Exception: {ex.Message}");
+                WriteMessage($"Exception: {ex.Message}");
             }
         }
 
@@ -221,11 +220,11 @@ namespace SioForgeCAD.Commun
             try
             {
                 // Ask AutoCAD to execute our command in the right context
-                await Application.DocumentManager.ExecuteInCommandContextAsync(async (_) => await CommandAsync(args), null);
+                await Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.ExecuteInCommandContextAsync(async (_) => await CommandAsync(args), null);
             }
             catch (System.Exception ex)
             {
-                Generic.WriteMessage($"Exception: {ex.Message}");
+                WriteMessage($"Exception: {ex.Message}");
             }
         }
     }

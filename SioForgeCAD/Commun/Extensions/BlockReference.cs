@@ -153,7 +153,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Point3d ProjectXrefPointToCurrentSpace(this Point3d pointInXref, ObjectId xrefId)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
 
             using (Transaction transaction = db.TransactionManager.StartTransaction())
@@ -179,7 +179,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsThereABlockReference(this Point3d position, string blockName, string attributeValue, out BlockReference blockReference)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())

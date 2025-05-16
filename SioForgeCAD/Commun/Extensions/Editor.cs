@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -28,10 +27,10 @@ namespace SioForgeCAD.Commun.Extensions
         {
             //https://drive-cad-with-code.blogspot.com/2013/04/how-to-get-current-view-size.html
             //Get current view height
-            double h = (double)Application.GetSystemVariable("VIEWSIZE");
+            double h = (double)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("VIEWSIZE");
             //Get current view width,
             //by calculate current view's width-height ratio
-            Point2d screen = (Point2d)Application.GetSystemVariable("SCREENSIZE");
+            Point2d screen = (Point2d)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("SCREENSIZE");
             double w = h * (screen.X / screen.Y);
             return new Size(w, h);
         }
@@ -47,7 +46,7 @@ namespace SioForgeCAD.Commun.Extensions
             //Get current view's centre.
             //Note, the centre point from VIEWCTR is in UCS and
             //need to be transformed back to World CS
-            Point3d cent = ((Point3d)Application.GetSystemVariable("VIEWCTR")).TransformBy(ed.CurrentUserCoordinateSystem);
+            Point3d cent = ((Point3d)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("VIEWCTR")).TransformBy(ed.CurrentUserCoordinateSystem);
 
             Point3d minPoint = new Point3d(cent.X - (w / 2.0), cent.Y - (h / 2.0), 0);
             Point3d maxPoint = new Point3d(cent.X + (w / 2.0), cent.Y + (h / 2.0), 0);

@@ -32,7 +32,7 @@ namespace SioForgeCAD.Functions
                 var LineWeightPane = StatusBar.GetDefaultPane(DefaultPane.LineWeight);
                 var LineWeightPaneIndex = StatusBar.Panes.IndexOf(LineWeightPane);
                 StatusBar.Panes.Insert(LineWeightPaneIndex + 1, PickStylePane);
-                AcApp.SystemVariableChanged += SystemVariableChanged;
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.SystemVariableChanged += SystemVariableChanged;
                 AddTrayContextMenu();
             }
         }
@@ -95,7 +95,7 @@ namespace SioForgeCAD.Functions
 
         private static short GetPickStyle()
         {
-            return (short)AcApp.GetSystemVariable("PICKSTYLE");
+            return (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("PICKSTYLE");
         }
 
         private static bool IsActive()
@@ -115,8 +115,8 @@ namespace SioForgeCAD.Functions
 
         private static void SetPickStyle(short Value)
         {
-            AcApp.SetSystemVariable("PICKSTYLE", Value);
-            if ((short)AcApp.GetSystemVariable("PICKSTYLE") == Value)
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("PICKSTYLE", Value);
+            if ((short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("PICKSTYLE") == Value)
             {
                 Generic.WriteMessage($"PICKSTYLE est désormais {GetPickStyleMessage(Value)}");
             }

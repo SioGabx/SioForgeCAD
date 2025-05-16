@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Extensions;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -25,14 +24,14 @@ namespace SioForgeCAD.Commun
 
         public static Point3d ToCurrentSCU(Point3d OriginalPoint)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
             Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
             return ConvertedPoint;
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var ed = doc.Editor;
             Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem);
             return ConvertedPoint;
@@ -54,7 +53,7 @@ namespace SioForgeCAD.Commun
             return new Points(Point3d);
         }
 
-        public static bool GetPoint(out Points Points, string Message, Points BasePoint = Points.Null)
+        public static bool GetPoint(out Points Points, string Message, Points BasePoint = Null)
         {
             Editor ed = Generic.GetEditor();
 
@@ -66,7 +65,7 @@ namespace SioForgeCAD.Commun
                 UseBasePoint = false,
             };
 
-            if (BasePoint != Points.Null)
+            if (BasePoint != Null)
             {
                 promptPointOptions.UseBasePoint = true;
                 promptPointOptions.UseDashedLine = true;
@@ -76,10 +75,10 @@ namespace SioForgeCAD.Commun
             var SelectedPoint = ed.GetPoint(promptPointOptions);
             if (SelectedPoint.Status == PromptStatus.OK)
             {
-                Points = Points.GetFromPromptPointResult(SelectedPoint);
+                Points = GetFromPromptPointResult(SelectedPoint);
                 return true;
             }
-            Points = Points.Empty;
+            Points = Empty;
             return false;
         }
     }

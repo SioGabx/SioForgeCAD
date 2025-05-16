@@ -26,13 +26,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en OLE (embed)");
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = Entity.GetClass(typeof(Ole2Frame));
+                RXClass rxc = RXObject.GetClass(typeof(Ole2Frame));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = Entity.GetClass(typeof(Ole2Frame));
+                RXClass rxc = RXObject.GetClass(typeof(Ole2Frame));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 

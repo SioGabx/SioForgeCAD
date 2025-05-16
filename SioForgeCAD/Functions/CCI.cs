@@ -20,11 +20,11 @@ namespace SioForgeCAD.Functions
             {
                 Editor ed = Generic.GetEditor();
                 Database db = Generic.GetDatabase();
-                FirstPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un premier point", null);
+                FirstPointCote = CotePoints.GetCotePoints("Selectionnez un premier point", null);
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
-                SecondPointCote = Commun.CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
+                SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
-                ObjectId Line = Commun.Drawing.Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
+                ObjectId Line = Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
 
                 bool isMultipleIndermediairePlacement = false;
                 do

@@ -11,14 +11,12 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
 namespace SioForgeCAD
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1102:Make class static")]
     public class Commands
     {
         //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
@@ -637,12 +635,12 @@ namespace SioForgeCAD
             switch (result.StringResult)
             {
                 case ACTIVE:
-                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
-                    Application.SetSystemVariable("XDWGFADECTL", 0);
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("XDWGFADECTL", 0);
                     break;
                 case DESACTIVE:
-                    Application.SetSystemVariable("ROLLOVERTIPS", 0);
-                    Application.SetSystemVariable("XDWGFADECTL", 50);
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("ROLLOVERTIPS", 0);
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("XDWGFADECTL", 50);
                     break;
             }
         }
@@ -704,14 +702,14 @@ namespace SioForgeCAD
                 notesControl.OnSaveNote = content =>
                 {
                     var doc = Generic.GetDocument();
-                  
-                        string fileName = Generic.GetDocument().Name;
-                        string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        string key = $"Note_{Guid.NewGuid()}";
-                        string fullText = $"{date} - {fileName} {content}";
-                        DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, fullText);
-                        notesControl.AddHistoryItem(fullText);
-                    
+
+                    string fileName = Generic.GetDocument().Name;
+                    string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    string key = $"Note_{Guid.NewGuid()}";
+                    string fullText = $"{date} - {fileName} {content}";
+                    DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, fullText);
+                    notesControl.AddHistoryItem(fullText);
+
                 };
 
                 notesControl.OnPinNote = content =>
@@ -804,12 +802,12 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
-            Application.EnterModal += DetectModal;
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal += DetectModal;
         }
 
         private static void DetectModal(object sender, EventArgs e)
         {
-            Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor.Current;
+            Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = InplaceTextEditor.Current;
             var i = x.Selection;
             if (i?.FieldObject != null)
             {

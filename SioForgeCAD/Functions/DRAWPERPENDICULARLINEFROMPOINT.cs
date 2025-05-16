@@ -12,7 +12,7 @@ namespace SioForgeCAD.Functions
     {
         public static void DrawPerpendicularLineFromPoint()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 

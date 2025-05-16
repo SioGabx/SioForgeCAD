@@ -1,6 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -21,7 +20,7 @@ namespace SioForgeCAD.Commun.Drawing
 
         public static ObjectId Draw(Circle acLine, int? ColorIndex = 256)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
             var db = doc.Database;
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {

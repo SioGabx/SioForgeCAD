@@ -267,7 +267,7 @@ namespace SioForgeCAD.Commun
                         if (ParsedHole.IsSegmentIntersecting(PolyHoleBoundary, out Point3dCollection _, Intersect.OnBothOperands) || ParsedHole.IsInside(polyHole.Boundary, false))
                         {
                             HoleUnionResult.Remove(HoleUnionResultList[i]);
-                            if (PolygonOperation.Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
+                            if (Substraction(new PolyHole(ParsedHole, null), new Polyline[] { PolyHoleBoundary }, out var SubResult))
                             {
                                 foreach (var item in SubResult.GetBoundaries())
                                 {
@@ -316,7 +316,7 @@ namespace SioForgeCAD.Commun
                     {
                         foreach (var HoleB in PolyHoleB.Holes)
                         {
-                            PolygonOperation.Intersection(new PolyHole(HoleA, null), new PolyHole(HoleB, null), out var IntersectResult);
+                            Intersection(new PolyHole(HoleA, null), new PolyHole(HoleB, null), out var IntersectResult);
                             HoleUnionResult.AddRange(IntersectResult.GetBoundaries());
                         }
                     }
