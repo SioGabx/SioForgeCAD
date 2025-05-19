@@ -667,7 +667,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
         public static void REGIONFORSKETCHUP()
         {
-            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundary();
+            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
         }
 
 #if DEBUG

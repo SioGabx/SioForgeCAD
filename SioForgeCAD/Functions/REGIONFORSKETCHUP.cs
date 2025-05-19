@@ -41,17 +41,21 @@ namespace SioForgeCAD.Functions
 
                 foreach (SelectedObject selObj in psr.Value)
                 {
-                    Entity ent = selObj?.ObjectId.GetDBObject() as Entity;
-                    if (ent == null) continue;
+                    if (!(selObj?.ObjectId.GetDBObject() is Entity ent)) continue;
+                    var flattenedEnt = ent.Clone() as Entity;
+                    flattenedEnt.Flatten();
 
-                    DBObjectCollection curves = new DBObjectCollection
+                    DBObjectCollection curves = new DBObjectCollection { flattenedEnt };
+
+                    DBObjectCollection regions = null;
+                    try
                     {
-                        ent.Clone() as Entity
-                    };
-
-                    DBObjectCollection regions = Region.CreateFromCurves(curves);
+                        regions = Region.CreateFromCurves(curves);
+                    }
+                    catch { }
                     curves.DeepDispose();
-                    if (regions.Count == 0)
+
+                    if (regions is null || regions.Count == 0)
                     {
                         Generic.WriteMessage($"Échec : Impossible de créer une région pour l'entité {ent.GetType().Name} (ID: {ent.ObjectId}).");
                         continue;
