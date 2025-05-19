@@ -89,7 +89,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (entities.Any())
             {
-                var extent = (entities.First(obj => obj is Entity) as Entity).GeometricExtents;
+                var extent = new Extents3d();
                 foreach (var dbobj in entities)
                 {
                     if (dbobj is Entity ent)

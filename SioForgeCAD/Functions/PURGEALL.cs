@@ -12,6 +12,13 @@ namespace SioForgeCAD.Functions
         public static void Purge()
         {
             var db = Generic.GetDatabase();
+            Purge(db);
+        }
+
+
+        public static void Purge(Database db)
+        {
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 //unlock all layers but keep trace

@@ -186,6 +186,11 @@ namespace SioForgeCAD.Commun
         {
             SendStringToExecute("_.REGEN", false);
         }
+        public static void RegenALL()
+        {
+            SendStringToExecute("_.REGENALL", false);
+        }
+
         public static void UpdateScreen()
         {
             GetEditor().UpdateScreen();
