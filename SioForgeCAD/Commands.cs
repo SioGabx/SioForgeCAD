@@ -664,6 +664,12 @@ namespace SioForgeCAD
             Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
         }
 
+        [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
+        public static void REGIONFORSKETCHUP()
+        {
+            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundary();
+        }
+
 #if DEBUG
 
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
