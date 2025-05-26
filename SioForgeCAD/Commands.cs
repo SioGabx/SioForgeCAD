@@ -325,9 +325,9 @@ namespace SioForgeCAD
         }
 
         [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw)]
-        public static void TLEN()
+        public static void TLENS()
         {
-            Functions.TLEN.Compute();
+            Functions.TLENS.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "TLENSBLKATTR", CommandFlags.Redraw)]

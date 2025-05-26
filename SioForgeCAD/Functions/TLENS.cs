@@ -7,7 +7,7 @@ using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD.Functions
 {
-    public static class TLEN
+    public static class TLENS
     {
         public static void Compute()
         {
