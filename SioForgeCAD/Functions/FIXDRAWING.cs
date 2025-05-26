@@ -2,6 +2,8 @@
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System.Windows.Controls.Primitives;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -27,6 +29,7 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("MEASUREMENT", 1);//Controls whether the current drawing uses imperial or metric hatch pattern and linetype files. 0 (imperial) or 1 (metric)
             Generic.SetSystemVariable("MEASUREINIT", 1); //Controls whether a drawing you start from scratch uses imperial or metric default settings.  0 (imperial) or 1 (metric)
             Generic.SetSystemVariable("INSUNITS", 6);//Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing.  https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
+            Generic.SetSystemVariable("PICKADD", 2); //2 = Turns on PICKADD. Each object selected, either individually or by windowing, is added to the current selection set. If the SELECT command is used, keeps objects selected after the command ends.https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-47C2A568-30EE-4F07-916F-884CDE25CBCA
             Generic.SetSystemVariable("PICKAUTO", 5);
             Generic.SetSystemVariable("HIDEXREFSCALES", 1);
             Generic.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
