@@ -670,6 +670,13 @@ namespace SioForgeCAD
             Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
         }
 
+        [CommandMethod("DEBUG", "OFFSETMULTIPLE", CommandFlags.Redraw)]
+        public static void OFFSETMULTIPLE()
+        {
+            Functions.OFFSETMULTIPLE.Execute();
+        }
+
+
 #if DEBUG
 
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
@@ -826,34 +833,6 @@ namespace SioForgeCAD
         //TOTO : Transform perspective
         //TODO : Edit field formula
 
-        [CommandMethod("DEBUG", "TESTMERGE", CommandFlags.UsePickSet)]
-        public static void TESTMERGE()
-        {
-            Editor ed = Generic.GetEditor();
-            PromptSelectionResult selRes = ed.GetSelection();
-            if (selRes.Status != PromptStatus.OK)
-            {
-                return;
-            }
-
-            SelectionSet sel = selRes.Value;
-            List<Curve> Curves = new List<Curve>();
-
-            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId selectedObjectId in sel.GetObjectIds())
-                {
-                    DBObject ent = selectedObjectId.GetDBObject();
-                    if (ent is Curve)
-                    {
-                        Curve curv = ent.Clone() as Curve;
-                        Curves.Add(curv);
-                    }
-                }
-                Curves.JoinMerge().AddToDrawing(2);
-                tr.Commit();
-            }
-        }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()

@@ -208,8 +208,7 @@ namespace SioForgeCAD.Functions
             }
             string ResultValue = GetStringValue.StringResult;
             BaseSettings = ResultValue;
-            var InputValuePourcentage = ResultValue.Split(';');
-            foreach (var ValuePourcentage in InputValuePourcentage)
+            foreach (var ValuePourcentage in ResultValue.Split(';'))
             {
                 string[] SplittedValuePourcentage = ValuePourcentage.Split('%');
                 string PourcentageStr = SplittedValuePourcentage.First();

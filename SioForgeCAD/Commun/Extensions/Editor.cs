@@ -181,9 +181,9 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetCurves(promptSelectionOptions);
         }
 
-        public static PromptSelectionResult GetCurves(this Editor ed, PromptSelectionOptions promptSelectionOptions)
+        public static SelectionFilter GetCurvesFilter(this Editor ed)
         {
-            TypedValue[] filterList = new TypedValue[] {
+            return new SelectionFilter(new TypedValue[] {
                     new TypedValue((int)DxfCode.Operator, "<or"),
                     new TypedValue((int)DxfCode.Start, "LWPOLYLINE"), //Regular
                     new TypedValue((int)DxfCode.Start, "POLYLINE"), // 2D + 3D
@@ -193,8 +193,13 @@ namespace SioForgeCAD.Commun.Extensions
                     new TypedValue((int)DxfCode.Start, "CIRCLE"),
                     new TypedValue((int)DxfCode.Start, "SPLINE"),
                     new TypedValue((int)DxfCode.Operator, "or>"),
-                };
-            return ed.GetSelection(promptSelectionOptions, new SelectionFilter(filterList));
+                });
+        }
+
+        public static PromptSelectionResult GetCurves(this Editor ed, PromptSelectionOptions promptSelectionOptions)
+        {
+            SelectionFilter filterList = GetCurvesFilter(ed);
+            return ed.GetSelection(promptSelectionOptions, filterList);
         }
 
         public static bool GetImpliedSelection(this Editor ed, out PromptSelectionResult SelectionResult)
