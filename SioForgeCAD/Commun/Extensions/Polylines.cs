@@ -388,7 +388,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
             AddVertex(Poly, point, bulge, startWidth, endWidth);
         }
-        public static bool IsClockwise(this Polyline poly)
+
+        [Obsolete]
+        public static bool IsClockwiseOld(this Polyline poly)
         {
             double sum = 0;
             for (var i = 0; i < poly.NumberOfVertices - 1; i++)
@@ -398,6 +400,22 @@ namespace SioForgeCAD.Commun.Extensions
                 sum += (next.X - cur.X) * (next.Y + cur.Y);
             }
             return sum > 0;
+        }
+
+        public static bool IsClockwise(this Polyline poly)
+        {
+            if (!poly.Closed)
+                return false;
+
+            double area = 0.0;
+            for (int i = 0; i < poly.NumberOfVertices; i++)
+            {
+                Point2d p1 = poly.GetPoint2dAt(i);
+                Point2d p2 = poly.GetPoint2dAt((i + 1) % poly.NumberOfVertices);
+                area += (p2.X - p1.X) * (p2.Y + p1.Y);
+            }
+
+            return area > 0; // horaire si aire > 0 (repère AutoCAD)
         }
 
         /// <summary>

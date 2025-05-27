@@ -82,5 +82,19 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return result.ToString();
         }
+
+        public static string[] SplitByListString(this string input, IEnumerable<string> delimiters)
+        {
+            return input.Split(delimiters.ToArray(), StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public static string[] SplitUserInputByDelimiters(this string input, params string[] delimiters)
+        {
+            //var PossibleValuesSeparators = new List<string> { ";", "," };
+            var LanguageSeparator = System.Globalization.CultureInfo.CurrentUICulture.NumberFormat.NumberDecimalSeparator; //french use , as decimal separaror
+            var newdelimiters = delimiters.Where(car => car.Trim() != LanguageSeparator);
+            return input.SplitByListString(newdelimiters).ToArray();
+        }
+
     }
 }

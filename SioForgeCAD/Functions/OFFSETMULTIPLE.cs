@@ -6,6 +6,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -26,7 +27,7 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            double[] offsets = GetOffsetsInteractively(ed);
+            double[] offsets = GetOffsetsInteractively(ed, Generic.GetSystemVariable("OFFSETDIST").ToString());
             if (offsets == null)
             {
                 return;
@@ -35,83 +36,86 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
-
-                foreach (SelectedObject selObj in selRes.Value)
+                while (true)
                 {
-                    if (!(tr.GetObject(selObj.ObjectId, OpenMode.ForRead) is Curve curve))
+                    DBObjectCollection PreviewStaticEntities = new DBObjectCollection();
+
+                    foreach (SelectedObject selObj in selRes.Value)
                     {
-                        continue;
-                    }
+                        if (!(tr.GetObject(selObj.ObjectId, OpenMode.ForRead) is Curve curve))
+                        {
+                            continue;
+                        }
 
-                    bool isClockwise = curve is Polyline poly &&  curve.Closed && poly.IsClockwise();
-
-                    while (true)
-                    {
-                        DBObjectCollection PreviewStaticEntities = new DBObjectCollection();
-
+                        bool isClockwise = curve is Polyline poly && curve.Closed && poly.IsClockwise();
                         foreach (double offsetDist in offsets)
                         {
-                            double effectiveOffset = isClockwise ? -offsetDist : offsetDist;
+                            double effectiveOffset = offsetDist;
+                            if (isClockwise)
+                            {
+                                effectiveOffset = -offsetDist;
+                            }
 
                             foreach (Entity ent in curve.GetOffsetCurves(effectiveOffset))
                             {
                                 PreviewStaticEntities.Add(ent);
                             }
                         }
+                    }
 
-                        using (GetPointTransient transient = new GetPointTransient(new DBObjectCollection(), null)
+                    using (GetPointTransient transient = new GetPointTransient(new DBObjectCollection(), null)
+                    {
+                        SetStaticEntities = PreviewStaticEntities
+                    })
+                    {
+                        var input = transient.GetPoint("Cliquez pour valider", Points.Null, "Inverser", "Redéfinir");
+
+                        var status = input.PromptPointResult.Status;
+
+                        if (status == PromptStatus.OK)
                         {
-                            SetStaticEntities = PreviewStaticEntities
-                        })
+                            foreach (Entity ent in PreviewStaticEntities)
+                            {
+                                PreviewStaticEntities.AddToDrawing(Clone: true);
+                            }
+                            break;
+                        }
+                        else if (status == PromptStatus.Keyword)
                         {
-                            var input = transient.GetPoint("Cliquez pour valider", Points.Null, "Inverser", "Redéfinir");
-
-                            var status = input.PromptPointResult.Status;
-
-                            if (status == PromptStatus.OK)
+                            if (input.PromptPointResult.StringResult == "Inverser")
                             {
-                                foreach (Entity ent in PreviewStaticEntities)
-                                {
-                                    PreviewStaticEntities.AddToDrawing(Clone: true);
-                                }
-                                break;
+                                offsets = offsets.Select(o => -o).ToArray();
                             }
-                            else if (status == PromptStatus.Keyword)
+                            else if (input.PromptPointResult.StringResult == "Redéfinir")
                             {
-                                if (input.PromptPointResult.StringResult == "Inverser")
+                                offsets = GetOffsetsInteractively(ed, string.Join(";", offsets));
+                                if (offsets == null)
                                 {
-                                    offsets = offsets.Select(o => -o).ToArray();
+                                    return;
                                 }
-                                else if (input.PromptPointResult.StringResult == "Redéfinir")
-                                {
-                                    offsets = GetOffsetsInteractively(ed);
-                                    if (offsets == null)
-                                    {
-                                        return;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                Generic.WriteMessage("Opération annulée.");
-                                tr.Commit();
-                                return;
                             }
                         }
+                        else
+                        {
+                            Generic.WriteMessage("Opération annulée.");
+                            tr.Commit();
+                            return;
+                        }
                     }
+
                 }
 
                 tr.Commit();
             }
         }
 
-        private static double[] GetOffsetsInteractively(Editor ed)
+        private static double[] GetOffsetsInteractively(Editor ed, string OldValue)
         {
             PromptStringOptions strOpts = new PromptStringOptions("\nEntrez les distances d'offset séparées par ';' : ")
             {
                 AllowSpaces = false,
                 UseDefaultValue = true,
-                DefaultValue = Generic.GetSystemVariable("OFFSETDIST").ToString()
+                DefaultValue = OldValue
             };
 
             PromptResult strRes = ed.GetString(strOpts);
@@ -121,10 +125,12 @@ namespace SioForgeCAD.Functions
                 return null;
             }
 
+
             try
             {
+
                 return strRes.StringResult
-                    .Split(';', ',')
+                    .SplitUserInputByDelimiters(";", ",")
                     .Select(s => Convert.ToDouble(s.Trim()))
                     .ToArray();
             }
