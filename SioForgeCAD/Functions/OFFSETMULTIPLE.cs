@@ -74,10 +74,7 @@ namespace SioForgeCAD.Functions
 
                         if (status == PromptStatus.OK)
                         {
-                            foreach (Entity ent in PreviewStaticEntities)
-                            {
-                                PreviewStaticEntities.AddToDrawing(Clone: true);
-                            }
+                            PreviewStaticEntities.AddToDrawing(Clone: true);
                             break;
                         }
                         else if (status == PromptStatus.Keyword)
