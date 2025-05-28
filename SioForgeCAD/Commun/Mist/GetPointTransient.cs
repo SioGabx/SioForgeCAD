@@ -261,8 +261,7 @@ namespace SioForgeCAD.Commun
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
 
-            Point3d basePt = Points.Empty.SCG;
-            Point3d curPt = basePt;
+            Point3d curPt = Point3d.Origin;
             CreateTransGraphics();
 
             void PointMonitorHandler(object sender, PointMonitorEventArgs e)

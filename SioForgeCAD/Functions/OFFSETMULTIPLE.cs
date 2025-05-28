@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -47,7 +48,7 @@ namespace SioForgeCAD.Functions
                             continue;
                         }
 
-                        bool isClockwise = curve is Polyline poly && curve.Closed && poly.IsClockwise();
+                        bool isClockwise = curve is Polyline poly && ((curve.Closed || poly.NumberOfVertices >= 2) ? poly.IsClockwise() : poly.IsAtRightSide(Point3d.Origin));
                         foreach (double offsetDist in offsets)
                         {
                             double effectiveOffset = offsetDist;

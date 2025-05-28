@@ -404,7 +404,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool IsClockwise(this Polyline poly)
         {
-            if (!poly.Closed)
+            if (poly.NumberOfVertices < 2)
                 return false;
 
             double area = 0.0;

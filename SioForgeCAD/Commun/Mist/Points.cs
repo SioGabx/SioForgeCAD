@@ -24,10 +24,8 @@ namespace SioForgeCAD.Commun
 
         public static Point3d ToCurrentSCU(Point3d OriginalPoint)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-            Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
-            return ConvertedPoint;
+           var ed = Generic.GetEditor();
+            return OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)
         {
@@ -44,10 +42,6 @@ namespace SioForgeCAD.Commun
             return PromptedPoint;
         }
 
-        public static Points From3DPoint(double x, double y, double z)
-        {
-            return new Points(new Point3d(x, y, z));
-        }
         public static Points From3DPoint(Point3d Point3d)
         {
             return new Points(Point3d);
