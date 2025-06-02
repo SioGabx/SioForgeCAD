@@ -10,33 +10,25 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
     public class GetPointTransient : DrawJig
     {
         private Point3d _currentPoint = Point3d.Origin;
-        private Point3d _basePoint = Point3d.Origin;
-        private bool _useBasePoint = false;
-        private readonly DBObjectCollection _entities;
-        private readonly Func<Points, Dictionary<string, string>> _updateFunction;
-        private readonly Editor _ed;
-        private Dictionary<string, string> _keywordMap;
+
+
+        private string[] _keywords;
         private string _message;
 
-        public GetPointTransient(DBObjectCollection entities, Func<Points, Dictionary<string, string>> updateFunction)
-        {
-            _entities = entities;
-            _updateFunction = updateFunction;
-            _ed = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
-        }
 
-        public (Points Point, PromptResult PromptPointResult) Run(string message, Points originPoint, params string[] keywords)
+        public DBObjectCollection Entities { get; set; }
+        public DBObjectCollection StaticEntities { get; set; }
+
+        public Func<Points, DrawJig, Dictionary<string, string>> UpdateFunction;
+        public Points BasePoint = Points.Null;
+
+
+        public (Points Point, PromptResult PromptPointResult) GetPoint(string message, params string[] keywords)
         {
             _message = message;
-            _currentPoint = originPoint != Points.Null ? originPoint.SCU : Point3d.Origin;
+            _keywords = keywords;
 
-            if (originPoint != Points.Null)
-            {
-                _useBasePoint = true;
-                _basePoint = originPoint.SCU;
-            }
-
-            PromptResult result = _ed.Drag(this);
+            PromptResult result = Generic.GetEditor().Drag(this);
 
             if (result.Status == PromptStatus.OK)
             {
@@ -44,35 +36,49 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
                 return (new Points(_currentPoint), result);
             }
 
-            return (null, result);
+            return (Points.Null, result);
         }
 
         protected override SamplerStatus Sampler(JigPrompts prompts)
         {
-            PromptPointOptions ppo = new PromptPointOptions("\n" + _message);
-            if (_useBasePoint)
+            JigPromptPointOptions ppo = new JigPromptPointOptions("\n" + _message);
+            if (BasePoint != Points.Null)
             {
                 ppo.UseBasePoint = true;
-                ppo.BasePoint = _basePoint;
+                ppo.BasePoint = BasePoint.SCU;
             }
 
-            if (_keywordMap != null)
+            ppo.UserInputControls =
+                UserInputControls.GovernedByOrthoMode |
+                UserInputControls.NullResponseAccepted |
+                UserInputControls.GovernedByUCSDetect |
+                UserInputControls.AcceptMouseUpAsPoint;
+
+
+            if (_keywords != null)
             {
-                foreach (var kv in _keywordMap)
+                foreach (var kv in _keywords)
                 {
-                    ppo.Keywords.Add(kv.Key);
+                    ppo.Keywords.Add(kv);
                 }
 
                 ppo.AppendKeywordsToMessage = true;
-                ppo.AllowArbitraryInput = true;
+                ppo.UserInputControls = ppo.UserInputControls |
+                UserInputControls.AcceptOtherInputString |
+                UserInputControls.NullResponseAccepted;
             }
+
 
             PromptPointResult res = prompts.AcquirePoint(ppo);
             if (res.Status != PromptStatus.OK)
+            {
                 return SamplerStatus.Cancel;
+            }
 
             if (res.Value.IsEqualTo(_currentPoint))
+            {
                 return SamplerStatus.NoChange;
+            }
 
             _currentPoint = res.Value;
             return SamplerStatus.OK;
@@ -80,21 +86,32 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
 
         protected override bool WorldDraw(WorldDraw draw)
         {
-            // Appelle la fonction de mise à jour si elle existe
-            if (_updateFunction != null)
+            if (UpdateFunction != null)
             {
-                var values = _updateFunction(new Points(_currentPoint));
-                // Tu peux t'en servir pour tracer ou manipuler tes entités
+                UpdateFunction(new Points(_currentPoint), this);
             }
 
-            if (_entities != null)
+            if (Entities != null)
             {
-                foreach (Entity ent in _entities)
+                foreach (Entity ent in Entities)
                 {
                     Entity clone = ent.Clone() as Entity;
                     if (clone != null)
                     {
-                        clone.TransformBy(Matrix3d.Displacement(_basePoint.GetVectorTo(_currentPoint)));
+                        clone.TransformBy(Matrix3d.Displacement(BasePoint.SCU.GetVectorTo(_currentPoint)));
+                        draw.Geometry.Draw(clone);
+                        clone.Dispose();
+                    }
+                }
+            }
+
+            if (StaticEntities != null)
+            {
+                foreach (Entity ent in StaticEntities)
+                {
+                    Entity clone = ent.Clone() as Entity;
+                    if (clone != null)
+                    {
                         draw.Geometry.Draw(clone);
                         clone.Dispose();
                     }
