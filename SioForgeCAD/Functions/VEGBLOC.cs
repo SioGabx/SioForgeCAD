@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Windows.Controls;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
 #pragma warning disable CS0618 
@@ -102,18 +103,19 @@ namespace SioForgeCAD.Functions
                 Transparence = 90;
             }
             Layers.CreateLayer(BlocName, BlocColor, LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(Transparence), true);
-            Color HeightColorIndicator = GetColorFromHeight(Height);
-            //If the layer arealdy exist; we need to get the real color
-            BlocColor = Layers.GetLayerColor(BlocName);
-            var BlocEntities = GetBlocGeometry(ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
-            string Description = GenerateDataStore(BlocName, CompleteName, Height, Width, Type);
-            BlockData = Description;
+
             if (!BlockReferences.IsBlockExist(BlocName))
             {
-                BlockReferences.Create(BlocName, Description, BlocEntities, Points.Empty, false, BlockScaling.Uniform);
+                Color HeightColorIndicator = GetColorFromHeight(Height);
+                //If the layer arealdy exist; we need to get the real color
+                BlocColor = Layers.GetLayerColor(BlocName);
+                string Description = GenerateDataStore(BlocName, CompleteName, Height, Width, Type);
+                var blkId = BlockReferences.Create(BlocName, Description, new DBObjectCollection(), Points.Empty, false, BlockScaling.Uniform);
+                PopulateBlocGeometry(blkId, ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+                BlockData = Description;
                 WasSuccessfullyCreated = true;
             }
-            BlocEntities.DeepDispose();
+
             return BlocName;
         }
 
@@ -218,88 +220,104 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(rouge, vert, bleu);
         }
 
-        private static DBObjectCollection GetBlocGeometry(string DisplayName, string ShortType, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
+        private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, string ShortType, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
         {
-            DBObjectCollection BlocGeometry = new DBObjectCollection();
-            double WidthRadius = WidthDiameter / 2;
-            var FirstCircle = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, WidthRadius);
-            ObjectId FirstCircleId = FirstCircle.AddToDrawing();
-            Hatch acHatch = new Hatch();
-            acHatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
-            acHatch.Associative = false;
-            acHatch.Layer = "0";
-            acHatch.ColorIndex = 0;
-            acHatch.Transparency = new Transparency(TransparencyMethod.ByLayer);
-            acHatch.AppendLoop(HatchLoopTypes.Outermost, new ObjectIdCollection { FirstCircleId });
-            acHatch.EvaluateHatch(true);
-            FirstCircleId.EraseObject();
-            BlocGeometry.Add(acHatch);
-
-            GetCircle(0, 0);
-
-            if (Settings.VegblocGeneratePeripheryCircles)
+            var db = Generic.GetDatabase();
+            using (var tr = db.TransactionManager.StartTransaction())
             {
-                GetCircle(0.084, -0.05);
-                GetCircle(0.015, -0.1);
-                GetCircle(-0.1, 0.065);
-                GetCircle(-0.09, -0.06);
-                GetCircle(0.045, 0.05);
-            }
+                BlockTableRecord btr = blockDefinitionId.GetObject(OpenMode.ForWrite) as BlockTableRecord;
 
-            ObjectId GetCircle(double x, double y)
-            {
-                Point3d cerle_periph_position = new Point3d(0 + (x * WidthRadius), 0 + (y * WidthRadius), 0);
-                var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
+                double WidthRadius = WidthDiameter / 2;
+                var FirstCircle = GetCircle(0, 0);
+                ObjectId FirstCircleId = FirstCircle.ObjectId;
+                Hatch acHatch = new Hatch();
+                acHatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+                acHatch.Layer = "0";
+                acHatch.PatternScale = 1;
+                acHatch.ColorIndex = 0;
+                acHatch.Transparency = new Transparency(TransparencyMethod.ByLayer);
+
+                btr.AppendEntity(acHatch);
+                tr.AddNewlyCreatedDBObject(acHatch, true);
+
+                acHatch.Associative = true;
+                acHatch.AppendLoop(HatchLoopTypes.Default, new ObjectIdCollection { FirstCircleId });
+                acHatch.EvaluateHatch(true);
+
+                DrawOrderTable drawOrderTable = btr.DrawOrderTableId.GetObject(OpenMode.ForWrite) as DrawOrderTable;
+                drawOrderTable.MoveToBottom(new ObjectIdCollection { acHatch.ObjectId });
+
+                if (Settings.VegblocGeneratePeripheryCircles)
                 {
+                    GetCircle(0.084, -0.05);
+                    GetCircle(0.015, -0.1);
+                    GetCircle(-0.1, 0.065);
+                    GetCircle(-0.09, -0.06);
+                    GetCircle(0.045, 0.05);
+                }
+
+                Circle GetCircle(double offsetX, double offsetY)
+                {
+                    Point3d cerle_periph_position = new Point3d(0 + (offsetX * WidthRadius), 0 + (offsetY * WidthRadius), 0);
+                    var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
+                    {
+                        Layer = "0",
+                        LineWeight = LineWeight.ByLineWeightDefault,
+                        ColorIndex = 7,
+                        Transparency = new Transparency((byte)255)
+                    };
+
+                    btr.AppendEntity(Circle);
+                    tr.AddNewlyCreatedDBObject(Circle, true);
+                    return Circle;
+                }
+
+                const double TextBlocDisplayNameSizeReduceRatios = 0.15;
+                var TextBlocDisplayName = new MText
+                {
+                    Contents = DisplayName,
                     Layer = "0",
-                    LineWeight = LineWeight.ByLineWeightDefault,
-                    ColorIndex = 7,
-                    Transparency = new Transparency((byte)255)
-                };
-                BlocGeometry.Add(Circle);
-                return Circle.ObjectId;
-            }
-
-            const double TextBlocDisplayNameSizeReduceRatios = 0.15;
-            var TextBlocDisplayName = new MText
-            {
-                Contents = DisplayName,
-                Layer = "0",
-                Location = new Point3d(0, 0, 0),
-                Attachment = AttachmentPoint.MiddleCenter,
-                Width = WidthRadius,
-                TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
-                Transparency = new Transparency(255),
-                Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
-            };
-            BlocGeometry.Add(TextBlocDisplayName);
-
-            if (Height > 0)
-            {
-                var CircleHeightColorIndicator = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, WidthRadius)
-                {
-                    Layer = Settings.VegblocLayerHeightName,
-                    Color = HeightColorIndicator,
-                    LineWeight = LineWeight.ByLayer,
-                    Transparency = new Transparency(255)
-                };
-                BlocGeometry.Add(CircleHeightColorIndicator);
-
-                const double TextHeightColorIndicatorSizeReduceRatio = 0.1;
-                MText TextHeightColorIndicator = new MText
-                {
-                    Contents = Height.ToString(),
-                    Layer = Settings.VegblocLayerHeightName,
-                    Location = new Point3d(0, 0 - (WidthRadius * 0.7), 0),
+                    Location = new Point3d(0, 0, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     Width = WidthRadius,
-                    TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
+                    TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                     Transparency = new Transparency(255),
-                    Color = HeightColorIndicator
+                    Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
                 };
-                BlocGeometry.Add(TextHeightColorIndicator);
+
+                btr.AppendEntity(TextBlocDisplayName);
+                tr.AddNewlyCreatedDBObject(TextBlocDisplayName, true);
+
+                if (Height > 0)
+                {
+                    var CircleHeightColorIndicator = new Circle(new Point3d(0, 0, 0), Vector3d.ZAxis, WidthRadius)
+                    {
+                        Layer = Settings.VegblocLayerHeightName,
+                        Color = HeightColorIndicator,
+                        LineWeight = LineWeight.ByLayer,
+                        Transparency = new Transparency(255)
+                    };
+                    btr.AppendEntity(CircleHeightColorIndicator);
+                    tr.AddNewlyCreatedDBObject(CircleHeightColorIndicator, true);
+
+                    const double TextHeightColorIndicatorSizeReduceRatio = 0.1;
+                    MText TextHeightColorIndicator = new MText
+                    {
+                        Contents = Height.ToString(),
+                        Layer = Settings.VegblocLayerHeightName,
+                        Location = new Point3d(0, 0 - (WidthRadius * 0.7), 0),
+                        Attachment = AttachmentPoint.MiddleCenter,
+                        Width = WidthRadius,
+                        TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
+                        Transparency = new Transparency(255),
+                        Color = HeightColorIndicator
+                    };
+
+                    btr.AppendEntity(TextHeightColorIndicator);
+                    tr.AddNewlyCreatedDBObject(TextHeightColorIndicator, true);
+                }
+                tr.Commit();
             }
-            return BlocGeometry;
         }
 
         private static Color GetTextColorFromBackgroundColor(Color BlocColor, string ShortType)
