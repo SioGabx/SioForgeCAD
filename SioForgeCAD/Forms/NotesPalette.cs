@@ -17,7 +17,6 @@ namespace SioForgeCAD.Forms
          */
 
 
-        private TabControl tabs;
         private TextBox historyBox;
         private TextBox newNoteBox;
         private Button saveButton;

@@ -4,10 +4,11 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.DatabaseServices;
 using System;
 using System.Collections.Generic;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Commun.Mist.DrawJigs
 {
-    public class GetPointTransient : DrawJig
+    public class GetPointJig : DrawJig, IDisposable
     {
         private Point3d _currentPoint = Point3d.Origin;
 
@@ -19,9 +20,9 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
         public DBObjectCollection Entities { get; set; }
         public DBObjectCollection StaticEntities { get; set; }
 
-        public Func<Points, DrawJig, Dictionary<string, string>> UpdateFunction;
+        public Func<Points, GetPointJig, bool> UpdateFunction;
         public Points BasePoint = Points.Null;
-
+        private bool disposedValue;
 
         public (Points Point, PromptResult PromptPointResult) GetPoint(string message, params string[] keywords)
         {
@@ -51,8 +52,7 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
             ppo.UserInputControls =
                 UserInputControls.GovernedByOrthoMode |
                 UserInputControls.NullResponseAccepted |
-                UserInputControls.GovernedByUCSDetect |
-                UserInputControls.AcceptMouseUpAsPoint;
+                UserInputControls.GovernedByUCSDetect;
 
 
             if (_keywords != null)
@@ -88,9 +88,8 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
         {
             if (UpdateFunction != null)
             {
-                UpdateFunction(new Points(_currentPoint), this);
+               _ = UpdateFunction(new Points(_currentPoint), this);
             }
-
             if (Entities != null)
             {
                 foreach (Entity ent in Entities)
@@ -98,7 +97,7 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
                     Entity clone = ent.Clone() as Entity;
                     if (clone != null)
                     {
-                        clone.TransformBy(Matrix3d.Displacement(BasePoint.SCU.GetVectorTo(_currentPoint)));
+                        clone.TransformBy(Matrix3d.Displacement((BasePoint?.SCU ?? Point3d.Origin).GetVectorTo(_currentPoint)));
                         draw.Geometry.Draw(clone);
                         clone.Dispose();
                     }
@@ -119,6 +118,25 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
             }
 
             return true;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Entities.DeepDispose();
+                    StaticEntities.DeepDispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

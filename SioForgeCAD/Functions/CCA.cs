@@ -1,8 +1,10 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using SioForgeCAD.Commun.Mist.DrawJigs;
 
 namespace SioForgeCAD.Functions
 {
@@ -40,28 +42,44 @@ namespace SioForgeCAD.Functions
                         { "ALTIMETRIE", CotePoints.FormatAltitude(Altitude) }
                     };
                 }
+                bool UpdateFunction(Points CurrentPoint, GetPointJig jig)
+                {
+                    var Values = ComputeValue(CurrentPoint);
+                    foreach (var item in jig.Entities)
+                    {
+                        if (item is BlockReference blkRef)
+                        {
+                            blkRef.SetAttributeValues(Values);
+                        }
+                    }
+                    return true;
+                }
 
-                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
-                    GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
+
+
+                    var GetPointJig = new GetPointJig()
+                    {
+                        Entities = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points)),
+                        StaticEntities = new DBObjectCollection(),
+                        UpdateFunction = UpdateFunction
+                    };
+
                     string Signe = string.Empty;
                     if (StepValue > 0)
                     {
                         Signe = "+";
                     }
-                    string KeyWord = $"{Altitude - StepValue}{Signe}{StepValue}";
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point cote", PointCote.Points, KeyWord);
-                    Points NewPointLocation = InsertionTransientPointsValues.Point;
-                    PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
+                    var GetPointTransientResult = GetPointJig.GetPoint("Indiquez les emplacements des points cote", $"{Altitude - StepValue}{Signe}{StepValue}");
 
-                    if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
+                    if (GetPointTransientResult.Point == null || GetPointTransientResult.PromptPointResult.Status != PromptStatus.OK)
                     {
                         tr.Commit();
                         return;
                     }
-                    Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
+                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(GetPointTransientResult.Point));
                     tr.Commit();
                 }
             }

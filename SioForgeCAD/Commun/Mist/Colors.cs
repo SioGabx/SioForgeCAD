@@ -1,4 +1,5 @@
-﻿using SioForgeCAD.Commun.Extensions;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using SioForgeCAD.Commun.Extensions;
 using System;
 
 namespace SioForgeCAD.Commun.Mist
@@ -29,6 +30,22 @@ namespace SioForgeCAD.Commun.Mist
             }
 
             return (SetContrastChannel(R), SetContrastChannel(G), SetContrastChannel(B));
+        }
+
+
+        public static Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity _, bool IsStaticDrawable)
+        {
+            return Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, IsStaticDrawable ? (short)Settings.TransientSecondaryColorIndex : (short)Settings.TransientPrimaryColorIndex);
+        }
+
+        public static Autodesk.AutoCAD.Colors.Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)
+        {
+            if (IsStaticDrawable)
+            {
+                const byte Alpha = (255 * (100 - 50) / 100);
+                Drawable.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Alpha);
+            }
+            return Drawable.Transparency;
         }
     }
 }

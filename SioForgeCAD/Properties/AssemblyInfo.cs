@@ -32,6 +32,14 @@ using System.Runtime.InteropServices;
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut 
 // en utilisant '*', comme indiqué ci-dessous :
 // [assembly: AssemblyVersion("1.0.*")]
+
+//Hot Reload and Edit & Continue are not compatible with using * in AssemblyVersionAttribute value.
+//Presence of * in the version means that the compiler generates a new version every build based on the current time.
+//The build then produces non-reproducible, non-deterministic outputs
+#if DEBUG
+[assembly: AssemblyVersion("1.0.0.0")]
+#else
 [assembly: AssemblyVersion("1.0.*")]
+#endif
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: NeutralResourcesLanguage("")]

@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
 using System;
 
 namespace SioForgeCAD.Commun
@@ -45,7 +46,6 @@ namespace SioForgeCAD.Commun
             {
                 I_cote += I_dif_to_add_sus;
             }
-            //I_cote = Math.Round(I_cote, 3);
 
             if (double.IsNaN(I_cote))
             {
@@ -64,6 +64,37 @@ namespace SioForgeCAD.Commun
             const double PourcentageToDecimalRatio = 0.01;
             double Altimetrie = Math.Abs(OriginAltitude) + (Slope * PourcentageToDecimalRatio * Math.Abs(DistanceFromOrigin));
             return Altimetrie;
+        }
+
+        public static CotePoints FindDistanceToAltitudeBetweenTwoPoint(CotePoints First, CotePoints Second, double SearchedAltitude)
+        {
+            CotePoints LowestCotePoints;
+            CotePoints UpperCotePoints;
+            if (First.Altitude < Second.Altitude)
+            {
+                LowestCotePoints = First;
+                UpperCotePoints = Second;
+            }
+            else
+            {
+                LowestCotePoints = Second;
+                UpperCotePoints = First;
+            }
+
+            var LUDistance = LowestCotePoints.Points.SCG.DistanceTo(UpperCotePoints.Points.SCG);
+
+            var LUDiffAltitude = UpperCotePoints.Altitude - LowestCotePoints.Altitude;
+            var LIDiffAltitude = SearchedAltitude - LowestCotePoints.Altitude;
+            var DistRatio = LIDiffAltitude / LUDiffAltitude;
+            var DistFromLowest = DistRatio * LUDistance;
+
+
+            //var DistanceLI = LowestCotePoints.Altitude - SearchedAltitude;
+            //if (DistanceLI == 0 || DistanceFS == 0) { return CotePoints.Null; }
+            //var DistRatio = DistanceLI / DistanceFS;
+            //var DistFromLowest = DistanceFS * DistRatio;
+            var VectorLI = LowestCotePoints.Points.SCG.GetVectorTo(UpperCotePoints.Points.SCG).SetLength(DistFromLowest);
+            return new CotePoints(Points.From3DPoint(LowestCotePoints.Points.SCG.TransformBy(Matrix3d.Displacement(VectorLI))), SearchedAltitude);
         }
     }
 }

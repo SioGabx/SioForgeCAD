@@ -670,7 +670,7 @@ namespace SioForgeCAD
             Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
         }
 
-        [CommandMethod("DEBUG", "OFFSETMULTIPLE", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
         public static void OFFSETMULTIPLE()
         {
             Functions.OFFSETMULTIPLE.Execute();

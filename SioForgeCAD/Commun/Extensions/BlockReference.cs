@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.GraphicsInterface;
 using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
@@ -239,5 +240,35 @@ namespace SioForgeCAD.Commun.Extensions
                 tr.Commit();
             }
         }
+
+        //public static void Test(this BlockReference blockReference)
+        //{
+        //    using (Transaction tr = Generic.GetDatabase().TransactionManager.StartTransaction())
+        //    {
+        //        if (!blockReference.IsWriteEnabled)
+        //        {
+        //            blockReference.UpgradeOpen();
+        //        }
+        //        // Loop through the attributes of the block reference
+
+        //        foreach (var attId in blockReference.AttributeCollection)
+        //        {
+        //            if (attId is AttributeReference AttributeElement)
+        //            {
+        //                string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
+        //                if (Values?.ContainsKey(AttributeDefinitionName) == true)
+        //                {
+        //                    if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
+        //                    {
+        //                        AttributeElement.TextString = AttributeDefinitionTargetValue;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        tr.Commit();
+        //    }
+
+
+        //}
     }
 }
