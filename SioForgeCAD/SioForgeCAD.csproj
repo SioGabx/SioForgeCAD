@@ -164,6 +164,7 @@
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
     <Compile Include="Commun\Mist\CsvReader.cs" />
+    <Compile Include="Commun\Mist\DrawJigs\GetPointTransient.cs" />
     <Compile Include="Commun\Mist\DWGDataStorage.cs" />
     <Compile Include="Commun\Mist\Files.cs" />
     <Compile Include="Commun\Mist\GetPointTransient.cs" />

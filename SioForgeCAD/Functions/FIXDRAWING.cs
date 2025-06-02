@@ -32,6 +32,8 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("PICKADD", 2); //2 = Turns on PICKADD. Each object selected, either individually or by windowing, is added to the current selection set. If the SELECT command is used, keeps objects selected after the command ends.https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-47C2A568-30EE-4F07-916F-884CDE25CBCA
             Generic.SetSystemVariable("PICKAUTO", 5);
             Generic.SetSystemVariable("HIDEXREFSCALES", 1);
+            Generic.SetSystemVariable("INDEXCTL", 0);
+            Generic.SetSystemVariable("LOCKUI", 0);
             Generic.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
             Generic.SetSystemVariable("LTSCALE", 1); //Sets the global linetype scale factor. Use LTSCALE to change the scale factor of linetypes for all objects in a drawing
             Generic.SetSystemVariable("CELTSCALE", 1); //Sets the current object linetype scaling factor. - Sets the linetype scaling for new objects relative to the LTSCALE command setting
