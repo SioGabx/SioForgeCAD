@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Diagnostics;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.GraphicsSystem;
+using SioForgeCAD.Commun.Mist;
 
 namespace SioForgeCAD.Functions
 {
@@ -26,7 +29,10 @@ namespace SioForgeCAD.Functions
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
                 SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
-                ObjectId Line = Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
+
+                Line Line = new Line(FirstPointCote.Points.SCG, SecondPointCote.Points.SCG);
+                ObjectId LineObjId = Line.AddToDrawing(252);
+
 
                 bool isMultipleIndermediairePlacement = false;
                 do
@@ -55,37 +61,30 @@ namespace SioForgeCAD.Functions
                                     blkRef.SetAttributeValues(Values);
                                 }
                             }
-                            foreach (var item in jig.StaticEntities)
+                            foreach (var item in jig.StaticEntities.ToList())
                             {
                                 if (item is Polyline polyline)
                                 {
                                     polyline.SetPointAt(1, CurrentPoint.SCG.ToPoint2d());
                                 }
-                                if (item is Circle circle)
+                                if (item is Line ln)
                                 {
-                                    var Center = Arythmetique.FindDistanceToAltitudeBetweenTwoPoint(FirstPointCote, SecondPointCote, Convert.ToDouble(Values["ALTIMETRIE"]));
-                                    if (Center == CotePoints.Null || Center?.Points == Points.Null)
-                                    {
-                                        circle.Visible = false;
-                                    }
-                                    else
-                                    {
-                                        circle.Visible = true;
-                                        circle.Center = Center.Points.SCG;
-                                    }
+                                    jig.StaticEntities.Remove(ln);
+                                    ln.Dispose();
                                 }
+
                             }
+                            var Center = Arythmetique.FindDistanceToAltitudeBetweenTwoPoint(FirstPointCote, SecondPointCote, Convert.ToDouble(Values["ALTIMETRIE"]));
+                            jig.StaticEntities.AddRange(GetScale(Center.Points, Line, Convert.ToDouble(Values["DISTANCEPERCM"]), 50));
                             return true;
                         }
 
-
+                        var Pe = Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points);
+                        Pe.Color = Colors.GetTransGraphicsColor(null, true);
                         using (var GetPointJig = new GetPointJig()
                         {
                             Entities = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points)),
-                            StaticEntities = new DBObjectCollection() {
-                                Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points),
-                                new Circle(Point3d.Origin, Vector3d.ZAxis, 0.01)
-                            },
+                            StaticEntities = new DBObjectCollection() { Pe },
                             UpdateFunction = UpdateFunction
                         })
                         {
@@ -107,13 +106,52 @@ namespace SioForgeCAD.Functions
                             }
                             if (!isMultipleIndermediairePlacement)
                             {
-                                Line.EraseObject();
+                                LineObjId.EraseObject();
                             }
                         }
                         tr.Commit();
                     }
                 } while (isMultipleIndermediairePlacement);
             }
+        }
+
+        private static DBObjectCollection GetScale(Points center, Line baseLine, double segmentSpacing, int nbSegments)
+        {
+            if (nbSegments % 2 == 0) { nbSegments++; }
+            var collection = new DBObjectCollection();
+            if (segmentSpacing == 0) { return collection; }
+
+            Vector3d baseDir = baseLine.GetVector3d();
+            Vector3d perpDir = baseDir.GetPerpendicularVector();
+
+            const double segmentHalfLength = 0.01;
+
+            for (int i = 0; i < nbSegments; i++)
+            {
+                double offset = (i - ((nbSegments - 1) / 2.0)) * segmentSpacing;
+                Point3d centerPoint = center.SCG.Add(baseDir.MultiplyBy(offset));
+
+                // Check if the projected point lies within the limits of the segment
+                Vector3d vecFromStart = centerPoint - baseLine.StartPoint;
+                double projectedLength = vecFromStart.DotProduct(baseDir);
+
+                if (projectedLength < 0 || projectedLength > baseLine.Length)
+                {
+                    continue; // skip
+                }
+
+
+                Point3d p1 = centerPoint.Add(perpDir.Negate().MultiplyBy(segmentHalfLength));
+                Point3d p2 = centerPoint.Add(perpDir.MultiplyBy(segmentHalfLength));
+
+                Line segment = new Line(p1, p2)
+                {
+                    Color = Colors.GetTransGraphicsColor(null, true)
+                };
+                collection.Add(segment);
+            }
+
+            return collection;
         }
 
 
@@ -123,12 +161,15 @@ namespace SioForgeCAD.Functions
             double Altitude = ComputeSlopeAndIntermediate.Altitude;
             double Slope = ComputeSlopeAndIntermediate.Slope;
 
-            double DistancePerCm = -1;
-            var DistancePerCmRatioPart = FirstPointCote.Points.SCG.DistanceTo(SecondPointCote.Points.SCG) * Math.Abs(FirstPointCote.Altitude - SecondPointCote.Altitude);
-            if (DistancePerCmRatioPart > 0)
+            //Compute DISTANCEPERCM
+            double DistancePerCm = 0;
+            double AltitudeDifference = Math.Abs(FirstPointCote.Altitude - SecondPointCote.Altitude);
+            double DistanceBetweenPoints = FirstPointCote.Points.SCG.DistanceTo(SecondPointCote.Points.SCG);
+            if (AltitudeDifference > 0 && DistanceBetweenPoints > 0)
             {
-                DistancePerCm = DistancePerCmRatioPart / 0.01;
+                DistancePerCm = DistanceBetweenPoints / (AltitudeDifference / 0.01);
             }
+
             return new Dictionary<string, string>() {
                 {"ALTIMETRIE", CotePoints.FormatAltitude(Altitude) },
                 {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(Altitude, 3) },

@@ -139,6 +139,40 @@ namespace SioForgeCAD.Functions
             }
         }
 
+        //public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName)
+        //{
+        //    Database db = Generic.GetDatabase();
+        //    Editor ed = Generic.GetEditor();
+
+        //    using (Transaction tr = db.TransactionManager.StartTransaction())
+        //    {
+        //        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+        //        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+        //        foreach (ObjectId objId in btr)
+        //        {
+        //            Entity ent = objId.GetEntity(OpenMode.ForWrite);
+
+        //            if (ent is BlockReference br)
+        //            {
+        //                if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
+        //                {
+        //                    var newBrObjId = BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
+        //                    var newBr = newBrObjId.GetDBObject() as BlockReference;
+        //                    newBr.ScaleFactors = br.ScaleFactors;
+        //                    if (!br.IsErased)
+        //                    {
+        //                        br.Erase(true);
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        BlockReferences.Purge(OldBlockName);
+        //        tr.Commit();
+        //    }
+        //}
+
         public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName)
         {
             Database db = Generic.GetDatabase();
@@ -147,20 +181,31 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
-                foreach (ObjectId objId in btr)
+                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
+                foreach (ObjectId btrId in bt)
                 {
-                    Entity ent = objId.GetEntity(OpenMode.ForWrite);
+                    BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
 
-                    if (ent is BlockReference br)
+                    // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
+                    if (btr.IsAnonymous || btr.IsLayout == false && !btr.IsFromExternalReference)
+                        continue;
+
+                    foreach (ObjectId entId in btr)
                     {
-                        if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
+                        Entity ent = entId.GetObject(OpenMode.ForWrite) as Entity;
+
+                        if (ent is BlockReference br)
                         {
-                            BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
-                            if (!br.IsErased)
+                            if (br.GetBlockReferenceName() == OldBlockName)
                             {
-                                br.Erase(true);
+                                var newBrObjId = BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, btr);
+                                var newBr = newBrObjId.GetDBObject() as BlockReference;
+
+                                newBr.ScaleFactors = br.ScaleFactors;
+
+                                if (!br.IsErased)
+                                    br.Erase(true);
                             }
                         }
                     }
@@ -170,5 +215,6 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
+
     }
 }

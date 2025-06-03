@@ -180,14 +180,16 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
+        public static ObjectId InsertFromName(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null, BlockTableRecord targetSpace = null)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
                 BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
-                BlockTableRecord ms = Generic.GetCurrentSpaceBlockTableRecord(tr);
+                if (targetSpace == null) {
+                    targetSpace = Generic.GetCurrentSpaceBlockTableRecord(tr);
+                }
                 //Create new BlockReference, and link it to our block definition
                 using (BlockReference blockRef = GetBlockReference(BlocName, BlocLocation.SCG))
                 {
@@ -199,7 +201,7 @@ namespace SioForgeCAD.Commun.Drawing
                         //Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");
                         blockRef.Layer = Layer;
                     }
-                    ms.AppendEntity(blockRef);
+                    targetSpace.AppendEntity(blockRef);
                     tr.AddNewlyCreatedDBObject(blockRef, true);
 
                     if (AttributesValues != null)

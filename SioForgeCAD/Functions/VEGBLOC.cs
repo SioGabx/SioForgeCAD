@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using SioForgeCAD.JSONParser;
 using System;
@@ -13,7 +14,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Windows.Controls;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
 #pragma warning disable CS0618 
@@ -96,7 +96,7 @@ namespace SioForgeCAD.Functions
             string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
             string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false);
 
-            Color BlocColor = GetRandomColor();
+            Color BlocColor = GetBestUniqueRandomColorByDistance();
             int Transparence = 20;
             if (ShortType == "ARBR")
             {
@@ -189,19 +189,21 @@ namespace SioForgeCAD.Functions
             ObjectId BlkObjectId = ObjectId.Null;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null);
-                var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
-                Points NewPointLocation = InsertionTransientPointsValues.Point;
-                PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
-
-                if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
+                using (GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null))
                 {
-                    tr.Commit();
-                    return BlkObjectId;
-                }
-                BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
+                    Points NewPointLocation = InsertionTransientPointsValues.Point;
+                    PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 
-                tr.Commit();
+                    if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
+                    {
+                        tr.Commit();
+                        return BlkObjectId;
+                    }
+                    BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
+
+                    tr.Commit();
+                }
             }
             return BlkObjectId;
         }
@@ -272,14 +274,13 @@ namespace SioForgeCAD.Functions
                     return Circle;
                 }
 
-                const double TextBlocDisplayNameSizeReduceRatios = 0.15;
+                const double TextBlocDisplayNameSizeReduceRatios = 0.2;
                 var TextBlocDisplayName = new MText
                 {
                     Contents = DisplayName,
                     Layer = "0",
                     Location = new Point3d(0, 0, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
-                    Width = WidthRadius,
                     TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                     Transparency = new Transparency(255),
                     Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
@@ -287,6 +288,15 @@ namespace SioForgeCAD.Functions
 
                 btr.AppendEntity(TextBlocDisplayName);
                 tr.AddNewlyCreatedDBObject(TextBlocDisplayName, true);
+                const double TextBlocDisplayNameMargin = .1;
+                var TextBlocDisplayNameWidth = TextBlocDisplayName.GetExtents().Size().Width;
+                var TextBlocDisplayNameMaxWidth = WidthDiameter - TextBlocDisplayNameMargin * 2;
+                if (TextBlocDisplayNameMaxWidth < TextBlocDisplayNameWidth)
+                {
+                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxWidth / TextBlocDisplayNameWidth);
+                }
+
+
 
                 if (Height > 0)
                 {
@@ -322,11 +332,8 @@ namespace SioForgeCAD.Functions
 
         private static Color GetTextColorFromBackgroundColor(Color BlocColor, string ShortType)
         {
-            if (ShortType == "ARBR")
-            {
-                return Color.FromRgb(0, 0, 0);
-            }
             double IsContrasted = ((299 * BlocColor.Red) + (587 * BlocColor.Green) + (114 * BlocColor.Blue)) / 1000;
+
             if (IsContrasted > 160)
             {
                 return Color.FromRgb(0, 0, 0);
@@ -366,7 +373,7 @@ namespace SioForgeCAD.Functions
                 ShortName += " ";
                 if (OriginalName.Contains("'"))
                 {
-                    ShortName += Espece[0];
+                    ShortName += "";//Espece[0];
                 }
                 else
                 {
@@ -457,14 +464,88 @@ namespace SioForgeCAD.Functions
             return valueStr;
         }
 
-        private static Color GetRandomColor()
+        private static Color GetBestUniqueRandomColorByDistance()
         {
+            const int maxAttempts = 50;
+
             Random r = new Random();
-            byte Red = (byte)r.Next(20, 220);
-            byte Green = (byte)r.Next(50, 198);
-            byte Blue = (byte)r.Next(20, 220);
-            return Color.FromRgb(Red, Green, Blue);
+           
+            List<Color> existingColors = GetLayerColors();
+
+            Color bestCandidate = Color.FromRgb(0, 0, 0);
+            double bestMinDistance = -1;
+
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                double hue = r.NextDouble() * 360;
+                double saturation = 0.2 + (r.NextDouble() * 0.8);
+                double value = 0.1 + (r.NextDouble() * 0.9);
+
+                Color candidate = Colors.FromHSV(hue, saturation, value);
+
+                double minDistance = double.MaxValue;
+                foreach (var color in existingColors)
+                {
+                    if (color.ColorMethod != ColorMethod.ByColor)
+                        continue;
+
+                    int dr = color.Red - candidate.Red;
+                    int dg = color.Green - candidate.Green;
+                    int db = color.Blue - candidate.Blue;
+                    double distance = dr * dr + dg * dg + db * db; //avoid Math.Sqrt for performance
+
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                    }
+                }
+
+                // On cherche à maximiser la distance minimale à toutes les couleurs existantes
+                if (minDistance > bestMinDistance)
+                {
+                    bestMinDistance = minDistance;
+                    bestCandidate = candidate;
+                }
+            }
+
+            Debug.WriteLine($"Best color selected with minimal distance: {bestMinDistance:F2}");
+            return bestCandidate;
         }
+
+        private static List<Color> GetLayerColors()
+        {
+            List<Color> colors = new List<Color>();
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable layerTable = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (ObjectId layerId in layerTable)
+                {
+                    LayerTableRecord layer = (LayerTableRecord)tr.GetObject(layerId, OpenMode.ForRead);
+                    if (layer.Name.StartsWith(Settings.VegblocLayerPrefix))
+                    {
+                        colors.Add(layer.Color);
+                    }
+                }
+                tr.Commit();
+            }
+
+            return colors;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
 
         public class GetVegBlocPointTransient : GetPointTransient
         {
