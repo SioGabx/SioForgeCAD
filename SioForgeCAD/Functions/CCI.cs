@@ -71,7 +71,8 @@ namespace SioForgeCAD.Functions
 
                             }
                             var Center = Arythmetique.FindDistanceToAltitudeBetweenTwoPoint(FirstPointCote, SecondPointCote, Convert.ToDouble(Values["ALTIMETRIE"]));
-                            jig.StaticEntities.AddRange(GetScale(Center.Points, Line, Convert.ToDouble(Values["DISTANCEPERCM"]), 50));
+                            var Scale = GetScale(Center.Points, Line, Convert.ToDouble(Values["DISTANCEPERCM"]), 50);
+                            jig.StaticEntities.AddRange(Scale);
                             return true;
                         }
 
@@ -150,6 +151,28 @@ namespace SioForgeCAD.Functions
             return collection;
         }
 
+        public static Point3d GetClosestPointOnLines(Point3d referencePoint, DBObjectCollection dbObjectCollectif)
+        {
+            Point3d closestPoint = Point3d.Origin;
+            double minDistance = double.MaxValue;
+
+            foreach (DBObject obj in dbObjectCollectif)
+            {
+                if (obj is Line line)
+                {
+                    Point3d projectedPoint = line.StartPoint.GetMiddlePoint(line.EndPoint);
+                    double distance = projectedPoint.DistanceTo(referencePoint);
+
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestPoint = projectedPoint;
+                    }
+                }
+            }
+
+            return closestPoint;
+        }
 
         public Dictionary<string, string> ComputeValue(Points Intermediaire)
         {

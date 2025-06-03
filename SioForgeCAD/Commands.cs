@@ -49,9 +49,9 @@ namespace SioForgeCAD
                     cs.AddMacro("Mesurer", "^C^C_MEASUREGEOM _distance", "SFC_Dist", "Mesure la distance entre deux point ou le long d'une polyligne.", "RCDATA_32_QUICKMEASURE", "_MEASUREGEOM", true);
                     cs.AddMacro("Précédente sélection", "(if (wcmatch (getvar 'cmdnames) \"\") (sssetfirst nil (ssget \"_P\")) (ssget \"_P\"))", "SFC_PSelectLast", "Récupère la dernière sélection", "RCDATA_16_SELWIN", "_PSELECT", true);
                     cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "ID_Cancel_F1");
-                    cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^C^C", "ID_Cancel_F4");
+                    cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^P'_.osmode $M=$(if,$(and,$(getvar,osmode),16384),$(-,$(getvar,osmode),16384),$(+,$(getvar,osmode),16384))", "ID_Cancel_F4");
                     cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle_QPMODE");
-                    cs.LoadCui();
+                    cs.LoadCui(); 
                     Application.ReloadAllMenus();
                     break;
             }
@@ -678,7 +678,7 @@ namespace SioForgeCAD
 
 
 #if DEBUG
-
+        //https://www.keanw.com/2007/04/rendering_autoc.html
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
         public static void FIELDEDITOR()
         {
