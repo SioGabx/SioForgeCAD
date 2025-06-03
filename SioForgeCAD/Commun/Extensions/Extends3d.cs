@@ -85,6 +85,23 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Extents3d GetExtents(this IEnumerable<Extents3d> entities)
+        {
+            if (entities.Any())
+            {
+                var extent = new Extents3d();
+                foreach (var dbobj in entities)
+                {
+                    extent.AddExtents(dbobj);
+                }
+                return extent;
+            }
+            else
+            {
+                return new Extents3d();
+            }
+        }
+
         public static Extents3d GetExtents(this IEnumerable<object> entities)
         {
             if (entities.Any())

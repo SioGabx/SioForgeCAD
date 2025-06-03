@@ -194,12 +194,13 @@ namespace SioForgeCAD.Functions
 
                     foreach (ObjectId entId in btr)
                     {
-                        Entity ent = entId.GetObject(OpenMode.ForWrite) as Entity;
+                        Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
 
                         if (ent is BlockReference br)
                         {
                             if (br.GetBlockReferenceName() == OldBlockName)
                             {
+                                ent.UpgradeOpen();
                                 var newBrObjId = BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, btr);
                                 var newBr = newBrObjId.GetDBObject() as BlockReference;
 

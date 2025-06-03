@@ -275,6 +275,9 @@ namespace SioForgeCAD.Functions
                 }
 
                 const double TextBlocDisplayNameSizeReduceRatios = 0.2;
+                var TextBlocDisplayNameMaxWidth = WidthDiameter - WidthDiameter * 0.2;
+                var TextBlocDisplayNameMaxHeight = WidthDiameter - WidthDiameter * 0.3;
+
                 var TextBlocDisplayName = new MText
                 {
                     Contents = DisplayName,
@@ -283,19 +286,24 @@ namespace SioForgeCAD.Functions
                     Attachment = AttachmentPoint.MiddleCenter,
                     TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                     Transparency = new Transparency(255),
-                    Color = GetTextColorFromBackgroundColor(BlocColor, ShortType)
+                    Color = GetTextColorFromBackgroundColor(BlocColor, ShortType),
+                    Width = TextBlocDisplayNameMaxWidth
                 };
 
                 btr.AppendEntity(TextBlocDisplayName);
                 tr.AddNewlyCreatedDBObject(TextBlocDisplayName, true);
-                const double TextBlocDisplayNameMargin = .1;
-                var TextBlocDisplayNameWidth = TextBlocDisplayName.GetExtents().Size().Width;
-                var TextBlocDisplayNameMaxWidth = WidthDiameter - TextBlocDisplayNameMargin * 2;
-                if (TextBlocDisplayNameMaxWidth < TextBlocDisplayNameWidth)
+
+                var TextBlocDisplayNameSize = TextBlocDisplayName.GetExplodedExtents().GetExtents().Size();
+                if (TextBlocDisplayNameMaxWidth < TextBlocDisplayNameSize.Width)
                 {
-                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxWidth / TextBlocDisplayNameWidth);
+                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxWidth / TextBlocDisplayNameSize.Width);
                 }
 
+                TextBlocDisplayNameSize = TextBlocDisplayName.GetExplodedExtents().GetExtents().Size();
+                if (TextBlocDisplayNameMaxHeight < TextBlocDisplayNameSize.Height)
+                {
+                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxHeight / TextBlocDisplayNameSize.Height);
+                }
 
 
                 if (Height > 0)
