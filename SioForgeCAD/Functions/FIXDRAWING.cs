@@ -2,8 +2,6 @@
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System.Windows.Controls.Primitives;
-using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {

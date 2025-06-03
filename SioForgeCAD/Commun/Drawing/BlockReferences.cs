@@ -187,7 +187,8 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
                 BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
-                if (targetSpace == null) {
+                if (targetSpace == null)
+                {
                     targetSpace = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 }
                 //Create new BlockReference, and link it to our block definition

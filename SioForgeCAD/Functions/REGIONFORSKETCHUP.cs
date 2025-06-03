@@ -2,17 +2,9 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
-using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Region = Autodesk.AutoCAD.DatabaseServices.Region;
 
 namespace SioForgeCAD.Functions
@@ -137,7 +129,7 @@ namespace SioForgeCAD.Functions
                             region.TransformBy(Matrix3d.Displacement(translation));
                         }
                     }
-                    
+
                     newTr.Commit();
                     Application.DocumentManager.MdiActiveDocument = newDoc;
                     extents?.ZoomExtents();
@@ -150,7 +142,7 @@ namespace SioForgeCAD.Functions
 
                 tr.Commit();
             }
-          
+
             ed.WriteMessage($"\n{regionIdsInCurrentDb.Count} région(s) transférée(s) dans le nouveau dessin.");
             Generic.RegenALL();
         }

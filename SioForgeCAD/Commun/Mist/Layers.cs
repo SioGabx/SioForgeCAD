@@ -301,7 +301,7 @@ namespace SioForgeCAD.Commun
             {
                 LayerTableRecord layerTableRecord = LayerTableRecordObjId.GetDBObject() as LayerTableRecord;
                 trans.Commit();
-                return layerTableRecord?.Color ?? Color.FromRgb(0,0,0);
+                return layerTableRecord?.Color ?? Color.FromRgb(0, 0, 0);
             }
         }
     }

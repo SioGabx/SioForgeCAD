@@ -1,10 +1,9 @@
-﻿using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
-using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.Collections.Generic;
 using SioForgeCAD.Commun.Extensions;
+using System;
 
 namespace SioForgeCAD.Commun.Mist.DrawJigs
 {
@@ -88,7 +87,7 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
         {
             if (UpdateFunction != null)
             {
-               _ = UpdateFunction(new Points(_currentPoint), this);
+                _ = UpdateFunction(new Points(_currentPoint), this);
             }
             if (Entities != null)
             {

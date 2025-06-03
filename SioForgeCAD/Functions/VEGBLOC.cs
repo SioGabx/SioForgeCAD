@@ -469,7 +469,7 @@ namespace SioForgeCAD.Functions
             const int maxAttempts = 50;
 
             Random r = new Random();
-           
+
             List<Color> existingColors = GetLayerColors();
 
             Color bestCandidate = Color.FromRgb(0, 0, 0);

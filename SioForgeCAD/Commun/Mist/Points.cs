@@ -24,7 +24,7 @@ namespace SioForgeCAD.Commun
 
         public static Point3d ToCurrentSCU(Point3d OriginalPoint)
         {
-           var ed = Generic.GetEditor();
+            var ed = Generic.GetEditor();
             return OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)

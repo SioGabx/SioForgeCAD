@@ -60,13 +60,14 @@ namespace SioForgeCAD.Functions
                 var BlocData = VEGBLOC.GetDataStore(BlkRef);
                 if (BlocData != null)
                 {
-                    if (BlocData.TryGetValueString(VEGBLOC.DataStore.BlocName) == BlkRef.GetBlockReferenceName())
+                    if (BlocData.TryGetValueString(VEGBLOC.DataStore.BlocName) != BlkRef.GetBlockReferenceName())
                     {
-                        EditDialog.NameInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
-                        EditDialog.HeightInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Height);
-                        EditDialog.WidthInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Width);
-                        EditDialog.TypeInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Type);
+                        Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Des données ont été trouvées mais sont incohérentes.. Le nom du bloc à peut-être été modifié en dehors de VEGBLOCEDIT");
                     }
+                    EditDialog.NameInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
+                    EditDialog.HeightInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Height);
+                    EditDialog.WidthInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Width);
+                    EditDialog.TypeInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Type);
                 }
 
                 var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, EditDialog, true);

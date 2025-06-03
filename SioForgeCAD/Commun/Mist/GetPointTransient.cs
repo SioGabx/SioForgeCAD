@@ -6,7 +6,6 @@ using Autodesk.AutoCAD.GraphicsInterface;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace SioForgeCAD.Commun
 {

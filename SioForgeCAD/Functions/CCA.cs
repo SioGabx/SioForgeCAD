@@ -3,8 +3,8 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System.Collections.Generic;
 using SioForgeCAD.Commun.Mist.DrawJigs;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
