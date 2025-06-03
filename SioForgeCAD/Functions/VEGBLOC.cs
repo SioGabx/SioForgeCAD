@@ -228,7 +228,7 @@ namespace SioForgeCAD.Functions
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 BlockTableRecord btr = blockDefinitionId.GetObject(OpenMode.ForWrite) as BlockTableRecord;
-
+                //TODO : Custom style with romans.shx
                 double WidthRadius = WidthDiameter / 2;
                 var FirstCircle = GetCircle(0, 0);
                 ObjectId FirstCircleId = FirstCircle.ObjectId;
