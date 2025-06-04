@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
@@ -8,6 +9,7 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {
@@ -57,31 +59,27 @@ namespace SioForgeCAD.Functions
                                     blkRef.SetAttributeValues(Values);
                                 }
                             }
-                            foreach (var item in jig.StaticEntities.ToList())
+                            if (jig.StaticEntities != null)
                             {
-                                if (item is Polyline polyline)
-                                {
-                                    polyline.SetPointAt(1, CurrentPoint.SCG.ToPoint2d());
-                                }
-                                if (item is Line ln)
-                                {
-                                    jig.StaticEntities.Remove(ln);
-                                    ln.Dispose();
-                                }
-
+                                jig.StaticEntities.DeepDispose();
                             }
+                            jig.StaticEntities = new DBObjectCollection();
+
+                            var Pe = Polylines.GetPolylineFromPoints(FirstPointCote.Points, CurrentPoint, SecondPointCote.Points);
+                            Pe.Color = Colors.GetTransGraphicsColor(null, true);
+                            jig.StaticEntities.Add(Pe);
                             var Center = Arythmetique.FindDistanceToAltitudeBetweenTwoPoint(FirstPointCote, SecondPointCote, Convert.ToDouble(Values["ALTIMETRIE"]));
                             var Scale = GetScale(Center.Points, Line, Convert.ToDouble(Values["DISTANCEPERCM"]), 50);
+
                             jig.StaticEntities.AddRange(Scale);
                             return true;
                         }
 
-                        var Pe = Polylines.GetPolylineFromPoints(FirstPointCote.Points, SecondPointCote.Points, SecondPointCote.Points);
-                        Pe.Color = Colors.GetTransGraphicsColor(null, true);
+
                         using (var GetPointJig = new GetPointJig()
                         {
                             Entities = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points)),
-                            StaticEntities = new DBObjectCollection() { Pe },
+                            StaticEntities = new DBObjectCollection(),
                             UpdateFunction = UpdateFunction
                         })
                         {
@@ -114,38 +112,53 @@ namespace SioForgeCAD.Functions
 
         private static DBObjectCollection GetScale(Points center, Line baseLine, double segmentSpacing, int nbSegments)
         {
-            if (nbSegments % 2 == 0) { nbSegments++; }
-            var collection = new DBObjectCollection();
-            if (segmentSpacing == 0) { return collection; }
+            const double segmentHalfLength = 0.01;
 
             Vector3d baseDir = baseLine.GetVector3d();
             Vector3d perpDir = baseDir.GetPerpendicularVector();
 
-            const double segmentHalfLength = 0.01;
+            var collection = new DBObjectCollection();
+            if (segmentSpacing == 0) { return collection; }
+            var MiddleScaleLine = GetScaleLine(baseLine.StartPoint.GetIntermediatePoint(baseLine.EndPoint, 50), segmentHalfLength * 2);
+            var MiddleScalePolyline = MiddleScaleLine.ToPolyline();
+            MiddleScalePolyline.ConstantWidth = segmentHalfLength * .25;
+            MiddleScaleLine.Dispose();
 
+            collection.Add(MiddleScalePolyline);
             for (int i = 0; i < nbSegments; i++)
             {
                 double offset = (i - ((nbSegments - 1) / 2.0)) * segmentSpacing;
                 Point3d centerPoint = center.SCG.Add(baseDir.MultiplyBy(offset));
+                var Segment = GetScaleLine(centerPoint, segmentHalfLength);
+                if (Segment != null)
+                {
+                    double distanceFromCenter = Math.Abs(i - ((nbSegments - 1) / 2.0));
+                    double attenuation = 1 - (distanceFromCenter / ((nbSegments - 1) / 2.0)); // entre 0 (centre) et 1 (extrémité)
 
+                    byte alpha = (byte)(attenuation * 200);
+                    Segment.Transparency = new Transparency(alpha);
+
+                    collection.Add(Segment);
+                }
+            }
+
+            Line GetScaleLine(Point3d centerPoint, double Length)
+            {
                 // Check if the projected point lies within the limits of the segment
                 Vector3d vecFromStart = centerPoint - baseLine.StartPoint;
                 double projectedLength = vecFromStart.DotProduct(baseDir);
 
                 if (projectedLength < 0 || projectedLength > baseLine.Length)
                 {
-                    continue; // skip
+                    return null;
                 }
-
-
-                Point3d p1 = centerPoint.Add(perpDir.Negate().MultiplyBy(segmentHalfLength));
-                Point3d p2 = centerPoint.Add(perpDir.MultiplyBy(segmentHalfLength));
-
-                Line segment = new Line(p1, p2)
+                //Create segment
+                Point3d p1 = centerPoint.Add(perpDir.Negate().MultiplyBy(Length));
+                Point3d p2 = centerPoint.Add(perpDir.MultiplyBy(Length));
+                return new Line(p1, p2)
                 {
                     Color = Colors.GetTransGraphicsColor(null, true)
                 };
-                collection.Add(segment);
             }
 
             return collection;

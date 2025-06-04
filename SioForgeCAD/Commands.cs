@@ -689,6 +689,12 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            var val = Generic.GetEditor().GetEntity("kk");
+            if (val.Status == PromptStatus.OK)
+            {
+                var t = val.ObjectId.GetNoTransactionDBObject();
+                Generic.WriteMessage("test");
+            }
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
