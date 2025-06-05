@@ -128,7 +128,7 @@ namespace SioForgeCAD.Functions
                 { DataStore.Height, Height.ToString() },
                 { DataStore.Width, Width.ToString() },
                 { DataStore.Type, Type },
-                { DataStore.VegblocVersion, "3" },
+                { DataStore.VegblocVersion, "4" },
             };
             return data.ToJson();
         }
@@ -273,7 +273,7 @@ namespace SioForgeCAD.Functions
                     tr.AddNewlyCreatedDBObject(Circle, true);
                     return Circle;
                 }
-
+                var VegblocTextStyle = GetVegblocTextStyle();
                 const double TextBlocDisplayNameSizeReduceRatios = 0.2;
                 var TextBlocDisplayNameMaxWidth = WidthDiameter - WidthDiameter * 0.2;
                 var TextBlocDisplayNameMaxHeight = WidthDiameter - WidthDiameter * 0.3;
@@ -285,6 +285,7 @@ namespace SioForgeCAD.Functions
                     Location = new Point3d(0, 0, 0),
                     Attachment = AttachmentPoint.MiddleCenter,
                     TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
+                    TextStyleId = VegblocTextStyle,
                     Transparency = new Transparency(255),
                     Color = GetTextColorFromBackgroundColor(BlocColor, ShortType),
                     Width = TextBlocDisplayNameMaxWidth
@@ -304,7 +305,6 @@ namespace SioForgeCAD.Functions
                 {
                     TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxHeight / TextBlocDisplayNameSize.Height);
                 }
-
 
                 if (Height > 0)
                 {
@@ -326,6 +326,7 @@ namespace SioForgeCAD.Functions
                         Location = new Point3d(0, 0 - (WidthRadius * 0.7), 0),
                         Attachment = AttachmentPoint.MiddleCenter,
                         Width = WidthRadius,
+                        TextStyleId = VegblocTextStyle,
                         TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
                         Transparency = new Transparency(255),
                         Color = HeightColorIndicator
@@ -335,6 +336,44 @@ namespace SioForgeCAD.Functions
                     tr.AddNewlyCreatedDBObject(TextHeightColorIndicator, true);
                 }
                 tr.Commit();
+            }
+        }
+
+        private static ObjectId GetVegblocTextStyle()
+        {
+            var TextStyleName = Settings.VegblocLayerPrefix + "TextStyle";
+            var db = Generic.GetDatabase();
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                ObjectId textStyleId = db.GetObjectIdFromAppDictionary(tr, Generic.GetExtensionDLLName(), TextStyleName);
+
+                if (textStyleId.IsNull || textStyleId.IsErased)
+                {
+                    TextStyleTable textStyleTable = db.TextStyleTableId.GetDBObject() as TextStyleTable;
+
+
+                    if (!textStyleTable.Has(TextStyleName))
+                    {
+                        textStyleTable.UpgradeOpen();
+                        TextStyleTableRecord newStyle = new TextStyleTableRecord
+                        {
+                            Name = TextStyleName,
+                            FileName = "romans.shx",
+                            TextSize = 0,
+                            XScale = 1,
+                            ObliquingAngle = 0
+                        };
+                        textStyleId = textStyleTable.Add(newStyle);
+                        tr.AddNewlyCreatedDBObject(newStyle, true);
+                    }
+                    else
+                    {
+                        textStyleId = textStyleTable[TextStyleName];
+                    }
+                    db.StoreObjectIdInAppDictionary(tr, Generic.GetExtensionDLLName(), TextStyleName, textStyleId);
+                }
+                tr.Commit();
+                return textStyleId;
             }
         }
 

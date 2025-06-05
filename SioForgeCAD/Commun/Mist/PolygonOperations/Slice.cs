@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Commun
 {
@@ -30,7 +31,7 @@ namespace SioForgeCAD.Commun
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine, Intersect.OnBothOperands);
 
-                    //SplittedPolylines.AddToDrawing(5, true);
+                    SplittedPolylines.AddToDrawing(5, true);
                     if (SplittedPolylines.Count > 1)
                     {
                         Polygon.Remove(Poly);
@@ -134,6 +135,9 @@ namespace SioForgeCAD.Commun
             {
                 if (polyline.IsCurveCanClose(CutLine))
                 {
+                    polyline.AddToDrawing(2, true);
+                    CutLine.AddToDrawing(2, true);
+
                     polyline.JoinEntity(CutLine);
                     polyline.Closed = true;
                 }

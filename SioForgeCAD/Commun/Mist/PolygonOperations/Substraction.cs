@@ -70,7 +70,7 @@ namespace SioForgeCAD.Commun
 
             //Merge overlaping hole polyline
             Union(PolyHole.CreateFromList(NewBoundaryHoles.Cast<Polyline>()), out var HoleUnionResult);
-            NewBoundaryHoles.RemoveCommun(SubstractionPolygonsArg).RemoveCommun(BasePolygon.Holes).DeepDispose();
+            (NewBoundaryHoles.RemoveCommun(SubstractionPolygonsArg).RemoveCommun(BasePolygon.Holes)).DeepDispose();
             UnionResult = PolyHole.CreateFromList(CuttedPolyline, HoleUnionResult.GetBoundaries());
             return true;
         }

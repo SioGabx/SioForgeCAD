@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
@@ -20,7 +21,6 @@ namespace SioForgeCAD.Commun
                 UnionResult = new List<PolyHole>();
                 return false;
             }
-
             //We cant offset self-intersection curve in autocad, we need to disable this if this is the case
             bool AllowMarginError = RequestAllowMarginError && CheckAllowMarginError(PolyHoleList);
 
@@ -45,21 +45,39 @@ namespace SioForgeCAD.Commun
 
             //Check if Cutted line IsInside -> if true remove
             List<Polyline> GlobalSplittedCurves = RemoveInsideCutLine(PolyHoleList, SplittedCurvesOrigin);
-            GlobalSplittedCurves.CleanupPolylines();
-            List<Polyline> FilteredSplittedCurves = RemoveOverlaping(GlobalSplittedCurves);
 
-            List<Polyline> PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
-            //Dispose unused
-            GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
-            if (AllowMarginError)
+            
+            List<Polyline> PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
+            if (!(PossibleBoundary.Count == 1 && PossibleBoundary.First().Closed == true))
             {
-                PolyHoleList.GetBoundaries().DeepDispose();
-                FilteredSplittedCurves.DeepDispose();
+                PossibleBoundary.DeepDispose();
+                List<Polyline> FilteredSplittedCurves = RemoveOverlaping(GlobalSplittedCurves);
+                FilteredSplittedCurves.CleanupPolylines();
+
+                PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
+
+                GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
+                //Dispose unused
+
+                if (AllowMarginError)
+                {
+
+                    FilteredSplittedCurves.DeepDispose();
+                }
+                else
+                {
+                    FilteredSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
+                }
             }
             else
             {
-                FilteredSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
+                GlobalSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
             }
+
+            //if (AllowMarginError)
+            //{
+            //    PolyHoleList.GetBoundaries().DeepDispose();
+            //}
 
             if (RequestAllowMarginError)
             {
@@ -70,6 +88,7 @@ namespace SioForgeCAD.Commun
 
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
+            //UnionResult.GetBoundaries().AddToDrawing(1);
             if (AllowMarginError)
             {
                 var UnionResultCopy = UnionResult.ToList();
@@ -92,7 +111,6 @@ namespace SioForgeCAD.Commun
                     UnionResult.AddRange(UndoMargin);
                 }
             }
-
             Extents3d ExtendAfterUnion = UnionResult.GetBoundaries().GetExtents();
             var ExtendBeforeUnionSize = ExtendBeforeUnion.Size();
             var ExtendAfterUnionSize = ExtendAfterUnion.Size();
@@ -244,7 +262,26 @@ namespace SioForgeCAD.Commun
             for (int PolyHoleListIndex = 0; PolyHoleListIndex < PolyHoleList.Count; PolyHoleListIndex++)
             {
                 var polyHole = PolyHoleList[PolyHoleListIndex];
-                using (Polyline PolyHoleBoundary = (Polyline)(RequestAllowMarginError ? polyHole.Boundary.SmartOffset(Margin).DefaultIfEmpty(polyHole.Boundary.Clone()).FirstOrDefault() : polyHole.Boundary.Clone() as Polyline))
+
+                Polyline PolyHoleBoundary = null;
+                if (RequestAllowMarginError) {
+                    var offseted = polyHole.Boundary.SmartOffset(Margin);
+                    if (offseted.Any())
+                    {
+                        PolyHoleBoundary = offseted.First();
+                        offseted.Skip(1).ForEach(el => el.Dispose());
+                    }
+                    else
+                    {
+                        PolyHoleBoundary = polyHole.Boundary.Clone() as Polyline;
+                    }
+                }
+                else
+                {
+                    PolyHoleBoundary = polyHole.Boundary.Clone() as Polyline;
+                }
+
+                using (PolyHoleBoundary)
                 {
                     List<Polyline> HoleUnionResultList = HoleUnionResult.ToList();
                     for (int i = 0; i < HoleUnionResultList.Count; i++)
@@ -322,7 +359,6 @@ namespace SioForgeCAD.Commun
                     }
                 }
             }
-
             return HoleUnionResult;
         }
 

@@ -119,5 +119,84 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
+
+        public static ObjectId GetObjectIdFromAppDictionary(this Database db, Transaction tr, string appDictName, string keyName)
+        {
+            var nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+
+            if (!nod.Contains(appDictName))
+                return ObjectId.Null;
+
+            var appDict = (DBDictionary)tr.GetObject(nod.GetAt(appDictName), OpenMode.ForRead);
+
+            if (!appDict.Contains(keyName))
+                return ObjectId.Null;
+
+            var xrec = (Xrecord)tr.GetObject(appDict.GetAt(keyName), OpenMode.ForRead);
+            var data = xrec.Data.AsArray();
+
+            if (data.Length == 0 || !(data[0].Value is ObjectId))
+                return ObjectId.Null;
+
+            return (ObjectId)data[0].Value;
+        }
+
+
+        public static void StoreObjectIdInAppDictionary(this Database db, Transaction tr, string appDictName, string keyName, ObjectId objectId)
+        {
+            var nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+
+            DBDictionary appDict;
+            if (!nod.Contains(appDictName))
+            {
+                nod.UpgradeOpen();
+                appDict = new DBDictionary();
+                nod.SetAt(appDictName, appDict);
+                tr.AddNewlyCreatedDBObject(appDict, true);
+            }
+            else
+            {
+                appDict = (DBDictionary)tr.GetObject(nod.GetAt(appDictName), OpenMode.ForRead);
+            }
+
+            if (appDict.Contains(keyName)) return;
+
+            appDict.UpgradeOpen();
+            var xrec = new Xrecord
+            {
+                Data = new ResultBuffer(new TypedValue((int)DxfCode.SoftPointerId, objectId))
+            };
+            appDict.SetAt(keyName, xrec);
+            tr.AddNewlyCreatedDBObject(xrec, true);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
