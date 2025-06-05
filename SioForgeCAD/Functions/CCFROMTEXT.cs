@@ -5,6 +5,10 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SioForgeCAD.Functions
 {
@@ -26,6 +30,9 @@ namespace SioForgeCAD.Functions
                         PromptEntOption.AddAllowedClass(typeof(DBText), true);
                         PromptEntOption.AddAllowedClass(typeof(MText), true);
                         PromptEntOption.AddAllowedClass(typeof(AttributeDefinition), true);
+                        PromptEntOption.AddAllowedClass(typeof(ProxyEntity), false);
+
+                        PromptEntOption.AddAllowedClass(typeof(BlockReference), true);
 
                         var promptStatus = ed.GetEntity(PromptEntOption);
                         if (promptStatus.Status != PromptStatus.OK) { return; }
@@ -37,20 +44,27 @@ namespace SioForgeCAD.Functions
 
                         string Text = "";
                         Point3d Location = Point3d.Origin;
-                        if (Ent is DBText DBTextEnt)
+                        if (Ent is DBText || Ent is AttributeDefinition || Ent is MText || Ent is ProxyEntity)
                         {
-                            Text = DBTextEnt.TextString;
-                            Location = DBTextEnt.Position;
+                            var Values = GetAltitudeInObject(Ent);
+                            Text = Values.Text;
+                            Location = Values.Location;
                         }
-                        else if (Ent is AttributeDefinition AttributeDefinitionEnt)
+                        else if (Ent is BlockReference blockReference)
                         {
-                            Text = AttributeDefinitionEnt.TextString;
-                            Location = AttributeDefinitionEnt.Position;
-                        }
-                        else if (Ent is MText MTextEnt)
-                        {
-                            Text = MTextEnt.Text;
-                            Location = MTextEnt.Location;
+                            if (blockReference.IsXref())
+                            {
+                                List<ObjectId> XrefObjectId;
+                                (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = SelectInXref.Select(SelectMessage, promptStatus.PickedPoint);
+                                XrefObjectId = XrefSelection.XrefObjectId.ToList();
+                                if (XrefSelection.PromptStatus == PromptStatus.OK && XrefSelection.SelectedObjectId != ObjectId.Null)
+                                {
+                                    DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+                                    var Values = GetAltitudeInObject(XrefObject);
+                                    Text = Values.Text;
+                                    Location = Points.ToSCGFromCurentSCU(promptStatus.PickedPoint);
+                                }
+                            }
                         }
                         double Altimetrie = GetDoubleInString(Text);
 
@@ -81,6 +95,53 @@ namespace SioForgeCAD.Functions
                     }
                 }
             }
+        }
+
+
+        public static (string Text, Point3d Location) GetAltitudeInObject(DBObject Object)
+        {
+            if (Object is DBText DBTextEnt)
+            {
+                return (DBTextEnt.TextString, DBTextEnt.Position);
+            }
+            else if (Object is AttributeDefinition AttributeDefinitionEnt)
+            {
+                return (AttributeDefinitionEnt.TextString, AttributeDefinitionEnt.Position);
+            }
+            else if (Object is MText MTextEnt)
+            {
+                return (MTextEnt.Text, MTextEnt.Location);
+            }
+            else if (Object is ProxyEntity ProxyEnt)
+            {
+                var ProxyInnerEnts = new DBObjectCollection();
+                ProxyEnt.Explode(ProxyInnerEnts);
+
+                var PossiblesValues = new List<(string Text, Point3d Location)>();
+                foreach (DBObject ProxyInnerEnt in ProxyInnerEnts)
+                {
+                    var Values = GetAltitudeInObject(ProxyInnerEnt);
+                    if (!(string.IsNullOrEmpty(Values.Text)))
+                    {
+                        PossiblesValues.Add(Values);
+                    }
+                    ProxyInnerEnt.Dispose();
+                }
+
+                if (PossiblesValues.Count == 1)
+                {
+                    return PossiblesValues.First();
+                }
+                else if (PossiblesValues.Count > 1)
+                {
+                    var Possible = Generic.GetEditor().GetKeywords("Plusieurs valeurs possible trouvées :", PossiblesValues.Select(p => p.Text).Distinct().ToArray());
+                    if (Possible.Status == PromptStatus.OK)
+                    {
+                        return PossiblesValues.FirstOrDefault(p => p.Text == Possible.StringResult);
+                    }
+                }
+            }
+            return (string.Empty, Point3d.Origin);
         }
 
         private static double GetDoubleInString(string Text)
