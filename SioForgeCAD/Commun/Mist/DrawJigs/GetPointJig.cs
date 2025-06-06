@@ -32,7 +32,6 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
 
             if (result.Status == PromptStatus.OK)
             {
-
                 return (new Points(_currentPoint), result);
             }
 

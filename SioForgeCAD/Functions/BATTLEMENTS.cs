@@ -7,12 +7,13 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SioForgeCAD.Commun.Mist.DrawJigs;
 
 namespace SioForgeCAD.Functions
 {
     public static class BATTLEMENTS
     {
-        public static string BaseSettings = "10%0;25%0.25;25%0.5;25%0.75;10%1";
+        public static string BaseSettings = "10%0;25%0.25;25%0.50;25%0.75;10%1.00";
         public static double BattlementWidth = 0.25;
 
         public class ProportionalRandomSelector<T>
@@ -58,74 +59,76 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-
-                if (!GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur))
+                using (BaseLine)
+                using (DirectionLine)
                 {
-                    return;
-                }
-
-                var TriangleVectors = GetTriangleVectorsBasedFromVectors(BaseLine, DirectionLine);
-
-                while (true)
-                {
-                    Point3d StartPoint = BaseLine.StartPoint.TransformBy(Matrix3d.Displacement(BaseLine.GetVector3d().Inverse().SetLength(Largeur)));
-
-                    Point3d LastDiagonalPoint = StartPoint;
-                    Point3d LastDrawingPoint = StartPoint;
-                    double BaseLineHeight = (TriangleVectors.ABVector).FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, StartPoint).DistanceTo(BaseLine.EndPoint);
-
-                    int NumberOfGrid = (int)Math.Ceiling(BaseLineHeight / Largeur);
-
-                    using (Polyline polyline = new Polyline())
+                    if (!GetBattlementsParameters(out ProportionalRandomSelector<double> randomSelector, out double Largeur))
                     {
-                        for (int i = 1; i < NumberOfGrid; i++)
+                        return;
+                    }
+
+                    var TriangleVectors = GetTriangleVectorsBasedFromVectors(BaseLine, DirectionLine);
+
+                    while (true)
+                    {
+                        Point3d StartPoint = BaseLine.StartPoint.TransformBy(Matrix3d.Displacement(BaseLine.GetVector3d().Inverse().SetLength(Largeur)));
+
+                        Point3d LastDiagonalPoint = StartPoint;
+                        Point3d LastDrawingPoint = StartPoint;
+                        double BaseLineHeight = (TriangleVectors.ABVector).FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, StartPoint).DistanceTo(BaseLine.EndPoint);
+
+                        int NumberOfGrid = (int)Math.Ceiling(BaseLineHeight / Largeur);
+
+                        using (Polyline polyline = new Polyline())
                         {
-                            Point3d DrawingPoint = GetPointOnGridNearestFromBaseLine(TriangleVectors.ACVector, TriangleVectors.ABVector, TriangleVectors.BCVector, Largeur, ref LastDiagonalPoint, ref LastDrawingPoint);
-
-                            double BattlementLength = randomSelector.SelectItem().Value;
-                            Point3d BattlementPoint = DrawingPoint.TransformBy(Matrix3d.Displacement(DirectionLine.GetVector3d().SetLength(BattlementLength))); // use DirectionLine.GetVector3d() instead of BCVector to keep the direction of the initial vector (no rotate)
-                            Point3d BattlementWidthPoint = BattlementPoint.TransformBy(Matrix3d.Displacement(TriangleVectors.ABVector.SetLength(Largeur)));
-
-                            polyline.AddVertexIfNotExist(BattlementPoint);
-                            polyline.AddVertexIfNotExist(BattlementWidthPoint);
-                        }
-
-                        polyline.Cleanup();
-
-                        using (GetPointTransient ValidateDrawingTransient = new GetPointTransient(new DBObjectCollection(), null)
-                        {
-                            SetStaticEntities = new DBObjectCollection() { polyline.Clone() as DBObject }
-                        })
-                        {
-                            var InsertionTransientPointsValues = ValidateDrawingTransient.GetPoint("Cliquez pour valider", Points.Null, "Randomiser", "Paramètres");
-
-                            var Status = InsertionTransientPointsValues.PromptPointResult.Status;
-                            if (Status == PromptStatus.OK)
+                            for (int i = 1; i < NumberOfGrid; i++)
                             {
-                                //Validate current polyligne
-                                polyline.AddToDrawingCurrentTransaction();
-                                break;
+                                Point3d DrawingPoint = GetPointOnGridNearestFromBaseLine(TriangleVectors.ACVector, TriangleVectors.ABVector, TriangleVectors.BCVector, Largeur, ref LastDiagonalPoint, ref LastDrawingPoint);
+
+                                double BattlementLength = randomSelector.SelectItem().Value;
+                                Point3d BattlementPoint = DrawingPoint.TransformBy(Matrix3d.Displacement(DirectionLine.GetVector3d().SetLength(BattlementLength))); // use DirectionLine.GetVector3d() instead of BCVector to keep the direction of the initial vector (no rotate)
+                                Point3d BattlementWidthPoint = BattlementPoint.TransformBy(Matrix3d.Displacement(TriangleVectors.ABVector.SetLength(Largeur)));
+
+                                polyline.AddVertexIfNotExist(BattlementPoint);
+                                polyline.AddVertexIfNotExist(BattlementWidthPoint);
                             }
-                            if (Status == PromptStatus.Keyword)
+
+                            polyline.Cleanup();
+
+                            using (GetPointTransient ValidateDrawingTransient = new GetPointTransient(new DBObjectCollection(), null)
                             {
-                                if (InsertionTransientPointsValues.PromptPointResult.StringResult == "Paramètres")
+                                SetStaticEntities = new DBObjectCollection() { polyline.Clone() as DBObject }
+                            })
+                            {
+                                var InsertionTransientPointsValues = ValidateDrawingTransient.GetPoint("Cliquez pour valider", Points.Null, "Randomiser", "Paramètres");
+
+                                var Status = InsertionTransientPointsValues.PromptPointResult.Status;
+                                if (Status == PromptStatus.OK)
                                 {
-                                    if (!GetBattlementsParameters(out randomSelector, out Largeur))
+                                    //Validate current polyligne
+                                    polyline.AddToDrawingCurrentTransaction();
+                                    break;
+                                }
+                                if (Status == PromptStatus.Keyword)
+                                {
+                                    if (InsertionTransientPointsValues.PromptPointResult.StringResult == "Paramètres")
                                     {
-                                        return;
+                                        if (!GetBattlementsParameters(out randomSelector, out Largeur))
+                                        {
+                                            return;
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                //Insertion aborded
-                                tr.Commit();
-                                return;
+                                else
+                                {
+                                    //Insertion aborded
+                                    tr.Commit();
+                                    return;
+                                }
                             }
                         }
                     }
                 }
-
                 tr.Commit();
             }
         }
@@ -199,7 +202,7 @@ namespace SioForgeCAD.Functions
             {
                 DefaultValue = BaseSettings,
                 UseDefaultValue = true,
-                AllowSpaces = false
+                AllowSpaces = false,
             };
             var GetStringValue = ed.GetString(getStringOption);
             if (GetStringValue.Status != PromptStatus.OK)
@@ -214,7 +217,7 @@ namespace SioForgeCAD.Functions
                 string PourcentageStr = SplittedValuePourcentage.First();
                 string ValueStr = SplittedValuePourcentage.Last();
 
-                if (!double.TryParse(ValueStr, out var ValueDbl) || !double.TryParse(PourcentageStr, out var PourcentageDbl))
+                if (!double.TryParse(ValueStr.Trim(), out var ValueDbl) || !double.TryParse(PourcentageStr.Trim(), out var PourcentageDbl))
                 {
                     continue;
                 }
@@ -242,18 +245,45 @@ namespace SioForgeCAD.Functions
 
         private static bool GetDrawingVector(out Line BaseLine, out Line DirectionLine)
         {
-            if (!Points.GetPoint(out Points StartPoint, "Selectionnez le point de départ") ||
-                !Points.GetPoint(out Points EndPoint, "Selectionnez le point de fin", StartPoint) ||
-                !Points.GetPoint(out Points Direction, "Definissez l'angle des créneaux", StartPoint))
+            BaseLine = null;
+            DirectionLine = null;
+
+
+            bool UpdateFunction(Points CurrentPoint, GetPointJig jig)
             {
-                BaseLine = new Line();
-                DirectionLine = new Line();
-                return false;
+                foreach (var item in jig.StaticEntities)
+                {
+                    if (item is Polyline currentVector && currentVector.NumberOfVertices >= 2)
+                    {
+                        currentVector.SetPointAt(1, CurrentPoint.SCG.ToPoint2d());
+                    }
+                }
+                return true;
             }
 
-            BaseLine = new Line(StartPoint.SCG, EndPoint.SCG);
-            DirectionLine = new Line(StartPoint.SCG, Direction.SCG);
-            return true;
+            if (!Points.GetPoint(out Points StartPoint, "Selectionnez le point de départ")) { return false; }
+
+            using (var GetPointJig = new GetPointJig()
+            {
+                Entities = new DBObjectCollection(),
+                StaticEntities = new DBObjectCollection() { Polylines.GetPolylineFromPoints(StartPoint, StartPoint) },
+                UpdateFunction = UpdateFunction,
+                BasePoint = StartPoint
+            })
+            {
+                var GetEndPointTransientResult = GetPointJig.GetPoint("Selectionnez le point de fin");
+                if (GetEndPointTransientResult.PromptPointResult.Status != PromptStatus.OK) { return false; }
+                var EndPoint = GetEndPointTransientResult.Point;
+                GetPointJig.StaticEntities.Add(new Line(StartPoint.SCG, EndPoint.SCG));
+
+                var GetDirectionTransientResult = GetPointJig.GetPoint("Definissez l'angle des créneaux");
+                if (GetDirectionTransientResult.PromptPointResult.Status != PromptStatus.OK) { return false; }
+                var Direction = GetDirectionTransientResult.Point;
+
+                BaseLine = new Line(StartPoint.SCG, EndPoint.SCG);
+                DirectionLine = new Line(StartPoint.SCG, Direction.SCG);
+                return true;
+            }
         }
     }
 }
