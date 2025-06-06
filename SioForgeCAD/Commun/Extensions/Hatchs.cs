@@ -16,31 +16,43 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
             List<Curve> ExternalMergedCurves = ExternalCurves.JoinMerge();
-            ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
-            List<Curve> InnerCurves = OtherCurves.ConvertAll(tuple => tuple.curve);
-            if (Hachure.HatchStyle == HatchStyle.Ignore)
+            try
             {
-                InnerCurves.DeepDispose();
-                InnerCurves.Clear();
-            }
-            List<Curve> InnerMergedCurves = InnerCurves.JoinMerge();
-            InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
+                ExternalCurves.RemoveCommun(ExternalMergedCurves).DeepDispose();
+                List<Curve> InnerCurves = OtherCurves.ConvertAll(tuple => tuple.curve);
+                if (Hachure.HatchStyle == HatchStyle.Ignore)
+                {
+                    InnerCurves.DeepDispose();
+                    InnerCurves.Clear();
+                }
+                List<Curve> InnerMergedCurves = InnerCurves.JoinMerge();
+                InnerCurves.RemoveCommun(InnerMergedCurves).DeepDispose();
 
-            if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)
-            {
-                Generic.WriteMessage("Impossible de découpper cette hachure.");
-                return false;
+                if (Hachure is null || ExternalMergedCurves is null || ExternalMergedCurves.Count == 0)
+                {
+                    Generic.WriteMessage("Impossible de découpper cette hachure.");
+                    return false;
+                }
+                if (ExternalMergedCurves.Count > 1)
+                {
+                    Generic.WriteMessage("Impossible de découpper une hachure combinée.");
+                    return false;
+                }
+                var Boundary = ExternalMergedCurves[0].ToPolyline();
+                if (Boundary.TryGetArea() == 0)
+                {
+                    Generic.WriteMessage("Erreur, ompossible de découpper cette hachure pour le moment. Réouvrir le dessin peux aider à résoudre ce soucis");
+                    Boundary.Dispose();
+                    return false;
+                }
+
+                polyHole = new PolyHole(Boundary, InnerMergedCurves.Cast<Polyline>());
+                return true;
             }
-            if (ExternalMergedCurves.Count > 1)
+            finally
             {
-                Generic.WriteMessage("Impossible de découpper une hachure combinée.");
                 ExternalMergedCurves.DeepDispose();
-                return false;
             }
-            var Boundary = ExternalMergedCurves[0].ToPolyline();
-            ExternalMergedCurves.DeepDispose();
-            polyHole = new PolyHole(Boundary, InnerMergedCurves.Cast<Polyline>());
-            return true;
         }
 
         public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary)

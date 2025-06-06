@@ -211,9 +211,8 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     case Polyline _:
                         return ((Polyline)ent).Area;
-                    case Hatch hatch:
-                        var HatchArea = hatch.Area;
-                        return HatchArea;
+                    case Hatch _:
+                        return ((Hatch)ent).Area;
                     case Circle _:
                         return ((Circle)ent).Area;
                     case Ellipse _:
@@ -311,6 +310,8 @@ namespace SioForgeCAD.Commun.Extensions
             else if (entity is Helix helix)
             {
                 helix.StartPoint = helix.StartPoint.Flatten();
+                //helix.EndPoint = helix.EndPoint.Flatten(); //System.NotImplementedException 
+                helix.Height = 0;
                 helix.SetAxisPoint(helix.GetAxisPoint().Flatten(), true);
             }
             else if (entity is Arc arc)

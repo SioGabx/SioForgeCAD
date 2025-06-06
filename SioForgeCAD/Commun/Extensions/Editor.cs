@@ -192,6 +192,7 @@ namespace SioForgeCAD.Commun.Extensions
                     new TypedValue((int)DxfCode.Start, "ELLIPSE"),
                     new TypedValue((int)DxfCode.Start, "CIRCLE"),
                     new TypedValue((int)DxfCode.Start, "SPLINE"),
+                    new TypedValue((int)DxfCode.Start, "HELIX"),
                     new TypedValue((int)DxfCode.Operator, "or>"),
                 });
         }

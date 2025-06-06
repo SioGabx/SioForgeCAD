@@ -266,7 +266,9 @@ namespace SioForgeCAD.Commun.Extensions
             }
             if (curve is Helix ProjectionTargetHelix)
             {
-                Curve Converted = ProjectionTargetHelix.ToPolyline(true, true);
+                var FlattenProjectionTargetHelix = (Helix)ProjectionTargetHelix.Clone();
+                FlattenProjectionTargetHelix.Flatten();
+                Curve Converted = FlattenProjectionTargetHelix.ToPolyline(true, true);
                 return Converted as Polyline;
             }
             if (curve is Spline ProjectionTargetSpline)

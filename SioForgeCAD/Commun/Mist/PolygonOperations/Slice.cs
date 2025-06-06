@@ -1,12 +1,12 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using SioForgeCAD.Commun.Drawing;
 
 namespace SioForgeCAD.Commun
 {
@@ -31,7 +31,7 @@ namespace SioForgeCAD.Commun
                 {
                     DBObjectCollection SplittedPolylines = CutCurveByCurve(Poly, CutLine, Intersect.OnBothOperands);
 
-                    SplittedPolylines.AddToDrawing(5, true);
+                    //SplittedPolylines.AddToDrawing(5, true);
                     if (SplittedPolylines.Count > 1)
                     {
                         Polygon.Remove(Poly);
@@ -135,8 +135,8 @@ namespace SioForgeCAD.Commun
             {
                 if (polyline.IsCurveCanClose(CutLine))
                 {
-                    polyline.AddToDrawing(2, true);
-                    CutLine.AddToDrawing(2, true);
+                    //polyline.AddToDrawing(2, true);
+                    //CutLine.AddToDrawing(2, true);
 
                     polyline.JoinEntity(CutLine);
                     polyline.Closed = true;
@@ -222,6 +222,7 @@ namespace SioForgeCAD.Commun
             {
                 CutLines.Add(CutLine.Clone() as Polyline);
             }
+            //BoundaryPolyline.AddToDrawing(3, true);
             //CutLines.AddToDrawing(3, true);
             DBObjectCollection InsideCutLines = new DBObjectCollection();
             foreach (Polyline line in CutLines)

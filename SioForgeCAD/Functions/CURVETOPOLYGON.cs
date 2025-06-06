@@ -17,6 +17,9 @@ namespace SioForgeCAD.Functions
                 ObjectId OriginalPoly = ObjectId.Null;
                 using (var poly = ed.GetPolyline(out OriginalPoly, "Selectionnez une polyligne", Clone: false))
                 {
+                    if (poly == null) {
+                        tr.Commit();
+                        return; }
                     int NumberOfVerticesBefore = poly.NumberOfVertices;
 
                     if (!poly.IsWriteEnabled) { poly.UpgradeOpen(); }
