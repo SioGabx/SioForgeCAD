@@ -270,6 +270,7 @@ namespace SioForgeCAD.Commun.Extensions
                 FlattenProjectionTargetHelix.Flatten();
                 Curve Converted = FlattenProjectionTargetHelix.ToPolyline(true, true);
                 return Converted as Polyline;
+                
             }
             if (curve is Spline ProjectionTargetSpline)
             {
