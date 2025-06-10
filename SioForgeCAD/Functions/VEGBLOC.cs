@@ -237,6 +237,7 @@ namespace SioForgeCAD.Functions
                 acHatch.Layer = "0";
                 acHatch.PatternScale = 1;
                 acHatch.ColorIndex = 0;
+                acHatch.LineWeight = LineWeight.ByBlock;
                 acHatch.Transparency = new Transparency(TransparencyMethod.ByLayer);
 
                 btr.AppendEntity(acHatch);
@@ -264,7 +265,7 @@ namespace SioForgeCAD.Functions
                     var Circle = new Circle(cerle_periph_position, Vector3d.ZAxis, WidthRadius)
                     {
                         Layer = "0",
-                        LineWeight = LineWeight.ByLineWeightDefault,
+                        LineWeight = LineWeight.ByBlock,
                         ColorIndex = 7,
                         Transparency = new Transparency((byte)255)
                     };
@@ -288,7 +289,8 @@ namespace SioForgeCAD.Functions
                     TextStyleId = VegblocTextStyle,
                     Transparency = new Transparency(255),
                     Color = GetTextColorFromBackgroundColor(BlocColor, ShortType),
-                    Width = TextBlocDisplayNameMaxWidth
+                    Width = TextBlocDisplayNameMaxWidth,
+                    LineWeight = LineWeight.ByBlock,
                 };
 
                 btr.AppendEntity(TextBlocDisplayName);
@@ -329,7 +331,8 @@ namespace SioForgeCAD.Functions
                         TextStyleId = VegblocTextStyle,
                         TextHeight = WidthRadius * TextHeightColorIndicatorSizeReduceRatio,
                         Transparency = new Transparency(255),
-                        Color = HeightColorIndicator
+                        Color = HeightColorIndicator,
+                        LineWeight = LineWeight.ByBlock,
                     };
 
                     btr.AppendEntity(TextHeightColorIndicator);
