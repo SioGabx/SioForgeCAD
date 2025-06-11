@@ -1,10 +1,14 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -46,10 +50,11 @@ namespace SioForgeCAD.Commun
             //Check if Cutted line IsInside -> if true remove
             List<Polyline> GlobalSplittedCurves = RemoveInsideCutLine(PolyHoleList, SplittedCurvesOrigin);
 
-            
+
             List<Polyline> PossibleBoundary = GlobalSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
             if (!(PossibleBoundary.Count == 1 && PossibleBoundary.First().Closed == true))
             {
+
                 PossibleBoundary.DeepDispose();
                 List<Polyline> FilteredSplittedCurves = RemoveOverlaping(GlobalSplittedCurves);
                 FilteredSplittedCurves.CleanupPolylines();
@@ -57,7 +62,15 @@ namespace SioForgeCAD.Commun
                 PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
 
                 GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
-                //Dispose unused
+                foreach (var item in PossibleBoundary.ToList())
+                {
+                    if (item.TryGetArea() == 0)
+                    {
+                        PossibleBoundary.Remove(item);
+                        item.Dispose();
+                    }
+                }
+                ///Dispose unused
 
                 if (AllowMarginError)
                 {
@@ -74,24 +87,45 @@ namespace SioForgeCAD.Commun
                 GlobalSplittedCurves.RemoveCommun(PolyHoleList.GetBoundaries()).DeepDispose();
             }
 
-            //if (AllowMarginError)
-            //{
-            //    PolyHoleList.GetBoundaries().DeepDispose();
-            //}
+
 
             if (RequestAllowMarginError)
             {
-                //Check if generated union with boundary may result in hole,
-                //only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
+                ///Check if generated union with boundary may result in hole,
+                ///only usefull if RequireAllowMarginError is true for the moment because can cause issue with CUTHATCH if cuthole cause an another inner hole
                 CheckBoundaryUnionResultInHole(PossibleBoundary, Holes, AllowMarginError);
             }
 
+            if (AllowMarginError)
+            {
+                //PossibleBoundary.AddToDrawing(4, true);
+                /// This block allow to try deleting last and first segment
+                /// if overlapping with previous on (usefull when JoinMerge has merged wrong Margin segments
+                var clonedBoundaries = PossibleBoundary.ConvertAll(pe => (Polyline)pe.Clone());
+                clonedBoundaries.ForEach(CleanPolylineSegments);
+                //clonedBoundaries.AddToDrawing(5, true);
+                var mergedBoundaries = clonedBoundaries.JoinMerge().Cast<Polyline>().ToList();
+                //mergedBoundaries.AddToDrawing(6, true);
+
+                clonedBoundaries.RemoveCommun(mergedBoundaries).DeepDispose();
+                if (mergedBoundaries.Count < PossibleBoundary.Count)
+                {
+                    PossibleBoundary.DeepDispose();
+                    PossibleBoundary = mergedBoundaries;
+                }
+                else
+                {
+                    mergedBoundaries.DeepDispose();
+                }
+            }
+
+
             UnionResult = PolyHole.CreateFromList(PossibleBoundary, Holes);
 
-            //UnionResult.GetBoundaries().AddToDrawing(1);
             if (AllowMarginError)
             {
                 var UnionResultCopy = UnionResult.ToList();
+                //UnionResultCopy.GetBoundaries().AddToDrawing(1, true);
 
                 if (UnionResultCopy.Count == 0)
                 {
@@ -111,6 +145,7 @@ namespace SioForgeCAD.Commun
                     UnionResult.AddRange(UndoMargin);
                 }
             }
+            //UnionResult.GetBoundaries().AddToDrawing(1);
             Extents3d ExtendAfterUnion = UnionResult.GetBoundaries().GetExtents();
             var ExtendBeforeUnionSize = ExtendBeforeUnion.Size();
             var ExtendAfterUnionSize = ExtendAfterUnion.Size();
@@ -119,6 +154,61 @@ namespace SioForgeCAD.Commun
             return Math.Abs(ExtendBeforeUnionSize.Width - ExtendAfterUnionSize.Width) < Generic.LowTolerance.EqualPoint
                 && Math.Abs(ExtendBeforeUnionSize.Height - ExtendAfterUnionSize.Height) < Generic.LowTolerance.EqualPoint;
         }
+
+
+        public static void CleanPolylineSegments(Polyline pline)
+        {
+
+            if (pline == null || pline.NumberOfVertices < 3)
+            {
+                Debug.WriteLine("Polyligne invalide ou pas assez de sommets.");
+                return;
+            }
+
+            // === DEBUT : vérifier segments [0] et [1]
+            if (pline.GetSegmentType(0) == SegmentType.Line &&
+                pline.GetSegmentType(1) == SegmentType.Line)
+            {
+                var seg0 = pline.GetLineSegment2dAt(0);
+                var seg1 = pline.GetLineSegment2dAt(1);
+
+                var dir0 = seg0.EndPoint - seg0.StartPoint;
+                var dir1 = seg1.EndPoint - seg1.StartPoint;
+
+                var IsParallelTo = dir0.IsParallelTo(dir1, Generic.MediumTolerance);
+                if (IsParallelTo)
+                {
+                    pline.RemoveVertexAt(0);
+                    Debug.WriteLine("Segment du début supprimé (superposition détectée).");
+                }
+                seg0.Dispose();
+                seg1.Dispose();
+            }
+
+            // === FIN : vérifier segments [N-2] et [N-1]
+            int count = pline.NumberOfVertices;
+            if (count >= 3 &&
+                pline.GetSegmentType(count - 2) == SegmentType.Line &&
+                pline.GetSegmentType(count - 1) == SegmentType.Line)
+            {
+                var segA = pline.GetLineSegment2dAt(count - 2);
+                var segB = pline.GetLineSegment2dAt(count - 1);
+
+                var dirA = segA.EndPoint - segA.StartPoint;
+                var dirB = segB.EndPoint - segB.StartPoint;
+
+                var IsParallelTo = dirA.IsParallelTo(dirB, Generic.MediumTolerance);
+                if (IsParallelTo)
+                {
+                    pline.RemoveVertexAt(count - 1);
+                    Debug.WriteLine("Segment de fin supprimé (superposition détectée).");
+                }
+                segA.Dispose();
+                segB.Dispose();
+            }
+
+        }
+
 
         private static void CheckBoundaryUnionResultInHole(List<Polyline> PossibleBoundary, List<Polyline> Holes, bool AllowMarginError)
         {
@@ -264,7 +354,8 @@ namespace SioForgeCAD.Commun
                 var polyHole = PolyHoleList[PolyHoleListIndex];
 
                 Polyline PolyHoleBoundary = null;
-                if (RequestAllowMarginError) {
+                if (RequestAllowMarginError)
+                {
                     var offseted = polyHole.Boundary.SmartOffset(Margin);
                     if (offseted.Any())
                     {
@@ -383,7 +474,7 @@ namespace SioForgeCAD.Commun
             {
                 Generic.WriteMessage($"Impossible de merger les courbes (erreur lors de l'offset des contours). Offset value : {OffsetDistance}.");
                 return polyHoles;
-                throw new Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
+                throw new System.Exception("Impossible de merger les courbes (erreur lors de l'offset des contours).");
             }
 
             polyHole.Boundary.Dispose();
