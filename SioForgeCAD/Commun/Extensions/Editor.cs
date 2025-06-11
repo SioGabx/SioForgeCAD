@@ -139,7 +139,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             while (true)
             {
-                promptResult = ed.GetSelection(selectionOptions, new SelectionFilter(filterList));
+                promptResult = ed.GetSelectionRedraw(selectionOptions, new SelectionFilter(filterList));
 
                 if (promptResult.Status == PromptStatus.Cancel)
                 {

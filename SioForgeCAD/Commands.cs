@@ -170,6 +170,12 @@ namespace SioForgeCAD
             Functions.BLKADDENTITIES.Add();
         }
 
+        [CommandMethod("SIOFORGECAD", "BLKSETDEFINITIONTOSCALEUNIFORM", CommandFlags.UsePickSet)]
+        public static void BLKSETDEFINITIONTOSCALEUNIFORM()
+        {
+            Functions.BLKSETDEFINITIONTOSCALEUNIFORM.SetBlockScaleToUniform();
+        }
+
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT()
         {
