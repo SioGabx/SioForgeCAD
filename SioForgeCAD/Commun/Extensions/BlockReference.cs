@@ -5,6 +5,7 @@ using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -47,6 +48,22 @@ namespace SioForgeCAD.Commun.Extensions
                 throw new Exception($"Le bloc {BlocName} n'existe pas dans le dessin");
             }
             return bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
+        }
+
+        public static BlockTableRecord GetBlocDefinition(this BlockReference blkRef, OpenMode OpenMode = OpenMode.ForRead)
+        {
+            if (blkRef is BlockReference)
+            {
+                if (blkRef.IsDynamicBlock)
+                {
+                    return (BlockTableRecord)blkRef.DynamicBlockTableRecord.GetDBObject(OpenMode);
+                }
+                else
+                {
+                    return (BlockTableRecord)blkRef.BlockTableRecord.GetDBObject(OpenMode);
+                }
+            }
+            return null;
         }
 
         public static string GetBlockReferenceName(this BlockReference blockRef)

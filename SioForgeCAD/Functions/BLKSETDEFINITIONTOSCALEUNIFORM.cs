@@ -31,7 +31,7 @@ namespace SioForgeCAD.Functions
                 {
                     if (tr.GetObject(ObjId, OpenMode.ForRead) is BlockReference blkRef &&
                         !modifiedDefinitions.Contains(blkRef.BlockTableRecord) &&
-                        tr.GetObject(blkRef.BlockTableRecord, OpenMode.ForWrite) is BlockTableRecord btr)
+                        blkRef.GetBlocDefinition(OpenMode.ForWrite) is BlockTableRecord btr)
                     {
                         btr.BlockScaling = BlockScaling.Uniform;
                         modifiedDefinitions.Add(btr.ObjectId);
