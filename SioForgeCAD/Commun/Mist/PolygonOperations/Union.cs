@@ -64,7 +64,7 @@ namespace SioForgeCAD.Commun
                 GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
                 foreach (var item in PossibleBoundary.ToList())
                 {
-                    if (item.TryGetArea() == 0)
+                    if (item.TryGetArea() == 0 || item.NumberOfVertices < 3)
                     {
                         PossibleBoundary.Remove(item);
                         item.Dispose();
