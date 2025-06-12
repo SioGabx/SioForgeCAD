@@ -34,9 +34,8 @@ namespace SioForgeCAD.Functions
             private double attractionStrength = 0.05;
             private double maxStep = 2.0;
 
-            // Compression : fraction maximale de chevauchement autorisée (0 = pas de compression, 1 = overlap total)
-            private double compressionFactor = 0.1;           // 20% de compression
-            private double compressionResistanceExponent = 0.5; // plus élevé => résistance plus forte proche du centre
+            private double compressionFactor = 0.1;
+            private double compressionResistanceExponent = 0.5;
             private int relaxIterations = 3;
 
             public void Start()
@@ -72,7 +71,7 @@ namespace SioForgeCAD.Functions
 
             private void UpdateSimulation()
             {
-               
+
                 ClearTransients();
 
                 // Attraction vers le centre
@@ -134,7 +133,8 @@ namespace SioForgeCAD.Functions
 
             private void ClearTransients(bool Dispose = false)
             {
-                foreach (var t in transients) {
+                foreach (var t in transients)
+                {
                     TransientManager.CurrentTransientManager.EraseTransient(t, new IntegerCollection());
                     if (Dispose) t.Dispose();
                 }
@@ -145,3 +145,68 @@ namespace SioForgeCAD.Functions
         }
     }
 }
+
+//    private List<BlockReference> PromptBlockSelection()
+//    {
+//        var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+//        var result = ed.GetSelection(new SelectionFilter(new[]
+//        {
+//    new TypedValue((int)DxfCode.Start, "INSERT")
+//}));
+
+//        var names = new HashSet<BlockReference>();
+//        if (result.Status == PromptStatus.OK)
+//        {
+//            var tr = HostApplicationServices.WorkingDatabase.TransactionManager.StartTransaction();
+//            foreach (SelectedObject obj in result.Value)
+//            {
+//                if (obj?.ObjectId.IsValid != true) continue;
+//                var bref = (BlockReference)tr.GetObject(obj.ObjectId, OpenMode.ForRead);
+//                if (!names.Contains(bref))
+//                {
+//                    names.Add(bref);
+//                }
+//            }
+//            tr.Commit();
+//        }
+
+//        return new List<BlockReference>(names);
+//    }
+
+//    private Autodesk.AutoCAD.DatabaseServices.Polyline PromptBoundaryPolyline()
+//    {
+//        var ed = Application.DocumentManager.MdiActiveDocument.Editor;
+//        var res = ed.GetEntity("Sélectionnez une polyligne fermée :");
+//        if (res.Status != PromptStatus.OK) return null;
+
+//        var tr = HostApplicationServices.WorkingDatabase.TransactionManager.StartTransaction();
+//        var pline = tr.GetObject(res.ObjectId, OpenMode.ForRead) as Autodesk.AutoCAD.DatabaseServices.Polyline;
+//        tr.Commit();
+
+//        return (pline != null && pline.Closed) ? pline : null;
+//    }
+
+//    private void ClearTransients(bool Dispose = false)
+//    {
+//        foreach (var t in transients)
+//        {
+//            TransientManager.CurrentTransientManager.EraseTransient(t, new IntegerCollection());
+//            if (Dispose) t.Dispose();
+//        }
+//        transients.Clear();
+//    }
+
+//    // À toi d’implémenter cette fonction :
+//    private double GetBlockRadius(BlockReference BlkRef)
+//    {
+//        var BlocData = VEGBLOC.GetDataStore(BlkRef);
+//        if (BlocData != null)
+//        {
+//            if (BlocData.TryGetValueString(VEGBLOC.DataStore.BlocName) != BlkRef.GetBlockReferenceName())
+//            {
+//                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Des données ont été trouvées mais sont incohérentes.. Le nom du bloc à peut-être été modifié en dehors de VEGBLOCEDIT");
+//            }
+//            return double.Parse(BlocData.TryGetValueString(VEGBLOC.DataStore.Width));
+//        }
+//        return 0;
+//    }

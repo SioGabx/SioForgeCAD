@@ -11,7 +11,7 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-using static SioForgeCAD.Functions.VEGBLOCSCATTER;
+
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -828,7 +828,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]
         public static void VEGBLOCSCATTER()
         {
-            var sim = new CircleSimulation();
+            var sim = new Functions.VEGBLOCSCATTER.CircleSimulation();
             sim.Start();
         }
         
