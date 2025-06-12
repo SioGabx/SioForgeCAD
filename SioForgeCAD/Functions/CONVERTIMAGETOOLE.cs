@@ -1,8 +1,10 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
@@ -26,13 +28,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en OLE (embed)");
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = RXObject.GetClass(typeof(Ole2Frame));
+                RXClass rxc = RXObject.GetClass(typeof(RasterImage));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = RXObject.GetClass(typeof(Ole2Frame));
+                RXClass rxc = RXObject.GetClass(typeof(RasterImage));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
@@ -95,7 +97,7 @@ namespace SioForgeCAD.Functions
                             }
                             else if (AskContinue != DialogResult.No) { rasterImageColor = System.Drawing.Color.White; }
                         }
-
+                        Debug.WriteLine("Bitmap Size :" + bitmap.GetImageFileSize());
                         var ClipBackup = System.Windows.Clipboard.GetDataObject();
                         using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImageColor))
                         {
@@ -110,9 +112,9 @@ namespace SioForgeCAD.Functions
                                 continue;
                             }
                         }
-
+                        var RasterImagePosition = rasterImage.Position;
                         //Paste into the drawing because we cannot create a Ole2Frame in NET
-                        Generic.Command("_pasteclip", rasterImage.Position);
+                        Generic.Command("_pasteclip", RasterImagePosition);
                         try
                         {
                             System.Windows.Clipboard.SetDataObject(ClipBackup);
@@ -123,15 +125,45 @@ namespace SioForgeCAD.Functions
                         }
                         //Get last created entity of type Ole2Frame
                         var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
-                        Ole2Frame InsertedOLE = InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) as Ole2Frame;
+                        if (InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) is Ole2Frame InsertedOLE)
+                        {
+                            //Move OLE at the right position
+                            // Positionner l'OLE à l'emplacement de l'image raster
+                            var rasterExtent = rasterImage.GetExtents();
+                            InsertedOLE.Position3d = rasterExtent.ToRectangle3d();
 
-                        //Move OLE at the right position
-                        var rasterImageExtend = rasterImage.GetExtents();
-                        InsertedOLE.Position3d = rasterImageExtend.ToRectangle3d();
-                        //TransformToFitBoundingBox(InsertedOLE, rasterImageExtend);
-                        //InsertedOLE.TransformBy(Matrix3d.Displacement(InsertedOLE.GetExtents().MinPoint.GetVectorTo(rasterImageExtend.MinPoint)));
-                        rasterImage.CopyPropertiesTo(InsertedOLE);
-                        rasterImage.EraseObject();
+                            // Définir les propriétés de base de l'OLE
+                            InsertedOLE.Layer = "0";
+                            InsertedOLE.ColorIndex = 0; // ByBlock
+                            InsertedOLE.Transparency = new Autodesk.AutoCAD.Colors.Transparency(TransparencyMethod.ByBlock);
+                            InsertedOLE.Linetype = "BYBLOCK";
+                            InsertedOLE.LineWeight = LineWeight.ByBlock;
+
+                            // Créer un bloc unique contenant l'OLE
+                            string oleFileName = new System.IO.FileInfo(rasterImage.Path).Name;
+                            string blockName = BlockReferences.GetUniqueBlockName($"OLE_{oleFileName}");
+
+                            var blockOrigin = Points.From3DPoint(rasterExtent.MinPoint);
+                            var oleClone = InsertedOLE.Clone() as DBObject;
+
+                            BlockReferences.Create(blockName, "OLE Definition", new DBObjectCollection { oleClone }, blockOrigin, false, BlockScaling.Uniform);
+
+                            // Insérer le bloc et copier les propriétés de l'image raster
+                            var blkObj = BlockReferences.InsertFromName(blockName, blockOrigin, 0, null, rasterImage.Layer, rasterImage.Database.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
+
+                            var blkRef = blkObj.GetDBObject(OpenMode.ForWrite) as BlockReference;
+                            rasterImage.CopyPropertiesTo(blkRef);
+
+                            // Nettoyer les objets sources
+                            rasterImage.EraseObject();
+                            InsertedOLE.EraseObject();
+
+                        }
+                        else
+                        {
+                            Generic.WriteMessage("Une erreur s'est produite lors de la convertion.");
+                            tr.Abort();
+                        }
                     }
                     tr.Commit();
                 }

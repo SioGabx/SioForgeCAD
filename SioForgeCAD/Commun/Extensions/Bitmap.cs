@@ -1,5 +1,7 @@
-﻿using System;
+﻿using SioForgeCAD.Commun.Mist;
+using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media.Imaging;
 
@@ -42,6 +44,18 @@ namespace SioForgeCAD.Commun.Extensions
                 g.DrawImage(image, new Rectangle(-image.Width / 2, -image.Height / 2, image.Width, image.Height));
             }
             return rotatedImage;
+        }
+
+
+        public static string GetImageFileSize(this Image image)
+        {
+            long jpegByteSize;
+            using (var ms = new MemoryStream()) // estimatedLength can be original fileLength
+            {
+                image.Save(ms, ImageFormat.Jpeg); // save image to stream in Jpeg format
+                jpegByteSize = ms.Length;
+            }
+            return Files.FormatFileSizeFromByte(jpegByteSize, 2);
         }
     }
 }
