@@ -73,7 +73,7 @@ namespace SioForgeCAD.Functions
                     this.TerrainBaseAltimetrie = GetMinimalAltimetrie();
 
                     DrawCPTerrainInsertionTransientPoints insertionTransientPoints = new DrawCPTerrainInsertionTransientPoints(GetTerrain, TerrainBasePolyline);
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe", Points.Null);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Specifiez un point sur le coté pour definir l'orientation de la coupe", Points.Null, false);
                     if (InsertionTransientPointsValues.PromptPointResult.Status == PromptStatus.OK)
                     {
                         List<Entity> Terrain = GetTerrain(InsertionTransientPointsValues.Point);

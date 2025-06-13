@@ -210,7 +210,7 @@ namespace SioForgeCAD.Functions
             using (GetCutHatchLinePointTransient getCutHatchLinePointTransient = new GetCutHatchLinePointTransient(null, null))
             {
                 getCutHatchLinePointTransient.Polyline = Boundary;
-                var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null);
+                var getCutHatchLinePointResultOne = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", null, false);
                 if (getCutHatchLinePointResultOne.PromptPointResult.Status == PromptStatus.OK)
                 {
                     Points Origin = Points.GetFromPromptPointResult(getCutHatchLinePointResultOne.PromptPointResult).Flatten();
@@ -222,7 +222,7 @@ namespace SioForgeCAD.Functions
                     (Points Point, PromptPointResult PromptPointResult) getCutHatchLinePointResultTwo;
                     try
                     {
-                        getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", Origin);
+                        getCutHatchLinePointResultTwo = getCutHatchLinePointTransient.GetPoint("Selectionnez un point", Origin, false);
                     }
                     finally
                     {

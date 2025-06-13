@@ -191,7 +191,7 @@ namespace SioForgeCAD.Functions
             {
                 using (GetVegBlocPointTransient insertionTransientPoints = new GetVegBlocPointTransient(ents, null))
                 {
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Origin, true);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

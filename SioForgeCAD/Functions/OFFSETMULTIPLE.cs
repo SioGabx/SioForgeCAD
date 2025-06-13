@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                         SetStaticEntities = PreviewStaticEntities
                     })
                     {
-                        var input = transient.GetPoint("Cliquez pour valider", Points.Null, "Inverser", "Redéfinir");
+                        var input = transient.GetPoint("Cliquez pour valider", Points.Null, false, "Inverser", "Redéfinir");
 
                         var status = input.PromptPointResult.Status;
 

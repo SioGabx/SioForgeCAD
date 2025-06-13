@@ -100,7 +100,7 @@ namespace SioForgeCAD.Functions
                                 SetStaticEntities = new DBObjectCollection() { polyline.Clone() as DBObject }
                             })
                             {
-                                var InsertionTransientPointsValues = ValidateDrawingTransient.GetPoint("Cliquez pour valider", Points.Null, "Randomiser", "Paramètres");
+                                var InsertionTransientPointsValues = ValidateDrawingTransient.GetPoint("Cliquez pour valider", Points.Null, false, "Randomiser", "Paramètres");
 
                                 var Status = InsertionTransientPointsValues.PromptPointResult.Status;
                                 if (Status == PromptStatus.OK)

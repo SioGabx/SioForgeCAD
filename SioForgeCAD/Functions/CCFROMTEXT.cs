@@ -79,7 +79,7 @@ namespace SioForgeCAD.Functions
 
                         DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(null));
                         GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
-                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point", Location.ToPoints());
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point", Location.ToPoints(), false);
                         Points NewPointLocation = InsertionTransientPointsValues.Point;
                         PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

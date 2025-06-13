@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
                         KeyWord = "Multiples";
                         GetInsertionPointMessage = "Indiquez l'emplacements du point cote";
                     }
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\n{GetInsertionPointMessage}", PointCote.Points, KeyWord);
+                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint($"\n{GetInsertionPointMessage}", PointCote.Points, false, KeyWord);
                     Points NewPointLocation = InsertionTransientPointsValues.Point;
                     PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
 

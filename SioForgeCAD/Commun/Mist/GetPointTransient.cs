@@ -255,7 +255,7 @@ namespace SioForgeCAD.Commun
         {
         }
 
-        public (Points Point, PromptPointResult PromptPointResult) GetPoint(object Message, Points OriginPoint, params string[] KeyWords)
+        public (Points Point, PromptPointResult PromptPointResult) GetPoint(object Message, Points OriginPoint, bool AllowNone, params string[] KeyWords)
         {
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
@@ -285,6 +285,7 @@ namespace SioForgeCAD.Commun
                 pointOptions.UseBasePoint = true;
                 pointOptions.BasePoint = OriginPoint.SCU;
             }
+            if (AllowNone) pointOptions.AllowNone = true;
             bool IsNotValid = true;
             PromptPointResult InsertionPromptPointResult = null;
             while (IsNotValid)

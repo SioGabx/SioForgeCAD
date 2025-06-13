@@ -31,7 +31,7 @@ namespace SioForgeCAD.Functions
                     HightLighter.UnhighlightAll();
                     using (GetPointTransient insertionTransientPoints = new GetPointTransient(ents, null))
                     {
-                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null);
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("Indiquer l'emplacement du bloc pente à ajouter", Points.Null, false);
                         Points Indermediaire = InsertionTransientPointsValues.Point;
                         PromptPointResult IndermediairePromptPointResult = InsertionTransientPointsValues.PromptPointResult;
                         PromptStatus IndermediairePromptPointResultStatus = IndermediairePromptPointResult.Status;

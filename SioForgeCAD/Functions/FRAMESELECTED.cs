@@ -18,6 +18,7 @@ namespace SioForgeCAD.Functions
             {
                 selResult = ed.GetSelection();
             }
+            bool ForceFrameSelected = false;
             if (selResult.Status == PromptStatus.OK)
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -53,17 +54,25 @@ namespace SioForgeCAD.Functions
                     }
                     if (NotInCurrentSpace > 0)
                     {
+                        if (InCurrentSpace == 0)
+                        {
+                            ForceFrameSelected = true;
+                        }
                         Generic.WriteMessage($"{NotInCurrentSpace}/{NotInCurrentSpace + InCurrentSpace} entité(s) n'étaient pas dans l'espace courant.");
                     }
                     tr.Commit();
                 }
-                if (selResult.Value.Count > 1)
+                if (selResult.Value.Count > 1 || ForceFrameSelected)
                 {
-                    var Options = ed.GetOptions("Voullez-vous zoomer sur chaque entités individuellement ?", "Oui", "Non");
-                    if (Options.Status == PromptStatus.OK && Options.StringResult == "Oui")
+                    if (!ForceFrameSelected)
                     {
-                        FrameEachIndividualEntityToView(selResult.Value);
+                        PromptResult Options = ed.GetOptions("Voullez-vous zoomer sur chaque entités individuellement ?", "Oui", "Non");
+                        if ((Options?.Status != PromptStatus.OK || Options?.StringResult == "Non"))
+                        {
+                            return;
+                        }
                     }
+                    FrameEachIndividualEntityToView(selResult.Value);
                 }
             }
         }
