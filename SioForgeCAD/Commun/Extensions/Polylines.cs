@@ -602,6 +602,22 @@ namespace SioForgeCAD.Commun.Extensions
             return pt;
         }
 
+        public static Point3d GetCentroid(this Polyline pl)
+        {
+            int count = pl.NumberOfVertices;
+            if (count == 0) throw new ArgumentException("Polyline vide.");
+
+            double sumX = 0, sumY = 0, sumZ = 0;
+            for (int i = 0; i < count; i++)
+            {
+                Point3d pt = pl.GetPoint3dAt(i);
+                sumX += pt.X;
+                sumY += pt.Y;
+                sumZ += pt.Z;
+            }
+            return new Point3d(sumX / count, sumY / count, sumZ / count);
+        }
+
         public static bool IsOverlaping(this Polyline LineA, Polyline LineB)
         {
             var NumberOfVertices = LineA.GetReelNumberOfVertices();

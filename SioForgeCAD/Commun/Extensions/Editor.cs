@@ -78,6 +78,19 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Layout GetLayoutFromName(this Editor _, string Name)
+        {
+            var Layouts = GetAllLayout(_);
+            foreach (Layout item in Layouts)
+            {
+                if (item.LayoutName == Name)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+
         public static Viewport GetViewport(this Editor ed)
         {
             Database db = ed.Document.Database;
@@ -163,6 +176,8 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 options.Keywords.Add(item);
             }
+            options.AppendKeywordsToMessage = true;
+            options.AllowArbitraryInput = true;
             options.Keywords.Default = Keywords[0];
             options.AllowNone = false;
 

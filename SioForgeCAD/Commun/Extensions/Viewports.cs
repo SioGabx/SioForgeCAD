@@ -131,6 +131,7 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.IsInLayout() && !ed.IsInLayoutPaper();
         }
 
+      
         public static List<ObjectId> GetAllViewportsInPaperSpace(this Editor _, BlockTableRecord btr)
         {
             Database db = Generic.GetDatabase();
@@ -154,6 +155,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                try {
                 if (viewport == null) { return null; }
                 if (viewport.NonRectClipEntityId != ObjectId.Null)
                 {
@@ -184,6 +186,11 @@ namespace SioForgeCAD.Commun.Extensions
                     polyline.AddVertexAt(3, upperLeft.ToPoint2d(), 0, 0, 0);
                     polyline.Closed = true;
                     return polyline;
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
                 }
             }
         }

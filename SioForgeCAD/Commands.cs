@@ -367,6 +367,12 @@ namespace SioForgeCAD
             Functions.VEGBLOCLEGEND.Add();
         }
 
+         [CommandMethod("SIOFORGECAD", "VEGBLOCLAYOUT", CommandFlags.UsePickSet)]
+        public static void VEGBLOCLAYOUT()
+        {
+            Functions.VEGBLOCLAYOUT.Create();
+        }
+
         [CommandMethod("SIOFORGECAD", "VEGBLOCEXTRACT", CommandFlags.Redraw)]
         public static void VEGBLOCEXTRACT()
         {

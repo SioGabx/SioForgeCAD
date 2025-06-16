@@ -124,6 +124,7 @@
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
+    <Compile Include="Commun\Extensions\Layouts.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
     <Compile Include="Commun\Extensions\Object.cs" />
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
@@ -295,6 +296,7 @@
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />
     <Compile Include="Functions\VEGBLOCEXTRACT.cs" />
+    <Compile Include="Functions\VEGBLOCLAYOUT.cs" />
     <Compile Include="Functions\VEGBLOCLEGEND.cs" />
     <Compile Include="Functions\VEGBLOCSCATTER.cs" />
     <Compile Include="Functions\VIEWPORTLOCK.cs" />
