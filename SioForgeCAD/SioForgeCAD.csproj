@@ -251,6 +251,7 @@
     <Compile Include="Functions\FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.cs" />
     <Compile Include="Functions\FIXDRAWING.cs" />
     <Compile Include="Functions\FRAMESELECTED.cs" />
+    <Compile Include="Functions\LAYRENAME.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />
