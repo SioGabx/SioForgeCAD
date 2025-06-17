@@ -1,9 +1,12 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -169,20 +172,22 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static PromptResult GetOptions(this Editor ed, string Message, params string[] Keywords)
+        public static (PromptStatus Status, string StringResult) GetOptions(this Editor ed, string Message, params string[] Keywords)
         {
-            PromptKeywordOptions options = new PromptKeywordOptions(Message);
+            PromptKeywordOptions options = new PromptKeywordOptions("");
             foreach (string item in Keywords)
             {
-                options.Keywords.Add(item);
+                options.Keywords.Add(item.Replace("_", "ˍ"));
             }
+            options.Message = Message;
             options.AppendKeywordsToMessage = true;
-            options.AllowArbitraryInput = true;
-            options.Keywords.Default = Keywords[0];
+            options.AllowArbitraryInput = false;
+            options.Keywords.Default = options.Keywords[0].DisplayName;
             options.AllowNone = false;
-
-            return ed.GetKeywords(options);
+            var Result = ed.GetKeywords(options);
+            return (Result.Status, Result.StringResult.Replace("ˍ", "_"));
         }
+
 
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {

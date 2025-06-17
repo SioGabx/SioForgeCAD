@@ -69,6 +69,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `VEGBLOCCOPYGRIP` | Enable VEGBLOC grip. |
 | `VEGBLOCLEGEND` | Create VEGBLOC legend. |
 | `VEGBLOCEXTRACT` | Extract VEGBLOC. |
+| `VEGBLOCLAYOUT` | Create layout from existing template. |
 | `BATTLEMENTS` | Create battlement geometry. |
 | `RANDOMPAVEMENT` | Create random pavement patterns. |
 | `PURGEALL` | Purge all unused elements from the drawing. |
@@ -83,6 +84,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `GETINNERCENTROID` | Add point to inner centroid of polyline. |
 | `MERGEPOLYLIGNES` | Merge selected polylines. |
 | `SUBSTRACTPOLYLIGNES` | Subtract selected polylines. |
+| `OFFSETMULTIPLE` | Create multiple copies of a geometry at a specified offset distance, in one operation.. |
 | `POLYISCLOCKWISE` | Check if polyline is clockwise. |
 | `LINESAVERAGE` | Calculate the average polyline between two polyline. |
 | `VPL` /`VPLOCK` / `VPUNLOCK` /`VIEWPORTLOCK` | Lock / Unlock viewports. |
@@ -98,6 +100,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `ROTATEONSINGLEAXIS` | Rotate selected entities along a single axis (X, Y, Z) |
 | `DRAWBOUNDINGBOX` / `DRAWEXTENDS` | Draw bounding box around selected objects. |
 | `DXFIMPORT` | Import multiple DXF or DWG files at once. |
+| `DIMDISASSOCIATE` | Remove the associative link between a dimension and the geometry it references, so that the dimension no longer updates automatically when the object changes or is deleted. |
 | `RECREATEASSOCIATIVEHATCHBOUNDARY` / `HATCHRECREATEMISSINGBOUNDARIES` | Recreate polyline associative hatch boundaries. |
 | `HATCHSELECTWITHINVALIDAREA` / `FINDHATCHWITHOUTVALIDAREA` | Find hatches with invalid area. |
 | `HATCHSELECTWITHOUTASSOCIATIVEBOUNDARY` / `FINDHATCHWITHOUTASSOCIATIVEBOUNDARY` | Find hatches without associative boundaries. |
