@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System;
@@ -15,6 +16,20 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return (blockRef?.BlockTableRecord.GetDBObject() as BlockTableRecord)?.IsFromExternalReference ?? false;
         }
+
+        public static bool IsLayoutOrModel(this BlockReference br)
+        {
+            BlockTableRecord ownerBtr = (BlockTableRecord)br.OwnerId.GetDBObject();
+            if (ownerBtr.IsLayout || ownerBtr.Name == BlockTableRecord.ModelSpace)
+            {
+                return true;
+            }
+
+            BlockTableRecord referencedBtr = (BlockTableRecord)br.BlockTableRecord.GetDBObject();
+            return referencedBtr.IsLayout;
+        }
+
+
 
         public static Handle GetDynamicBlockHandleFromAnonymousBlock(this BlockTableRecord btr)
         {

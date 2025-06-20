@@ -150,8 +150,13 @@ namespace SioForgeCAD.Commun
                     else
                     {
                         double? ExtractedAltitude = ExtractDoubleInStringFromPoint(Attribute.TextString.Trim());
-                        if (ExtractedAltitude.HasValue) { blkRef.RegisterHighlight(); }
-                        return ExtractedAltitude;
+                        if (ExtractedAltitude.HasValue)
+                        {
+                            blkRef.RegisterHighlight();
+                            return ExtractedAltitude;
+                        }
+                        else
+                            continue;//If no value, continue search
                     }
                 }
             }
@@ -239,9 +244,9 @@ namespace SioForgeCAD.Commun
                 var DbObj = blkChildAttribute.OwnerId.GetDBObject();
                 blkRef = DbObj as BlockReference;
             }
-            else if (XrefObject is BlockReference)
+            else if (XrefObject is BlockReference XrefObjectBlkRef)
             {
-                blkRef = XrefObject as BlockReference;
+                blkRef = XrefObjectBlkRef;
             }
             else
             {
