@@ -139,23 +139,22 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
+        public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, string Message = "Selectionnez un bloc", bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             objectId = Array.Empty<ObjectId>();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = "Selectionnez un bloc",
+                MessageForAdding = Message,
                 SingleOnly = SingleOnly,
                 SinglePickInSpace = true,
-                RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers
-            };
+                RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers,
 
-            PromptSelectionResult promptResult;
+            };
 
             while (true)
             {
-                promptResult = ed.GetSelectionRedraw(selectionOptions, new SelectionFilter(filterList));
+                PromptSelectionResult promptResult = ed.GetSelectionRedraw(selectionOptions, new SelectionFilter(filterList));
 
                 if (promptResult.Status == PromptStatus.Cancel)
                 {
@@ -166,6 +165,35 @@ namespace SioForgeCAD.Commun.Extensions
                     if (promptResult.Value.Count > 0)
                     {
                         objectId = promptResult.Value.GetObjectIds();
+                        return true;
+                    }
+                }
+            }
+        }
+
+
+        public static bool GetBlock(this Editor ed, out ObjectId objectId, string Message = "Selectionnez un bloc", bool RejectObjectsOnLockedLayers = true)
+        {
+            objectId = ObjectId.Null;
+            PromptEntityOptions selectionOptions = new PromptEntityOptions(Message)
+            {
+                AllowObjectOnLockedLayer = RejectObjectsOnLockedLayers,
+                AllowNone = false,
+
+            };
+
+            while (true)
+            {
+                PromptEntityResult promptResult = ed.GetEntity(selectionOptions);
+                if (promptResult.Status == PromptStatus.Cancel)
+                {
+                    return false;
+                }
+                else if (promptResult.Status == PromptStatus.OK)
+                {
+                    if (promptResult.ObjectId != ObjectId.Null && promptResult.ObjectId.IsDerivedFrom(typeof(BlockReference)))
+                    {
+                        objectId = promptResult.ObjectId;
                         return true;
                     }
                 }

@@ -109,7 +109,7 @@ namespace SioForgeCAD.Functions
                 //If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
                 if (!string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
                 {
-                    ReplaceAllBlockReference(OldBlockName, NewBlockName);
+                    BlockReferences.ReplaceAllBlockReference(OldBlockName, NewBlockName);
                     OldBlockName = NewBlockName;
                 }
 
@@ -134,7 +134,7 @@ namespace SioForgeCAD.Functions
                 BlkDef.UpgradeOpen();
                 BlkDef.Comments = BlockData;
 
-                ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName);
+                BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, true, true);
                 Layers.Merge(OldBlockName, NewBlockName);
                 tr.Commit();
             }
@@ -174,49 +174,7 @@ namespace SioForgeCAD.Functions
         //    }
         //}
 
-        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName)
-        {
-            Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-
-                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
-                foreach (ObjectId btrId in bt)
-                {
-                    BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
-
-                    // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
-                    if (btr.IsAnonymous || btr.IsLayout == false && !btr.IsFromExternalReference)
-                        continue;
-
-                    foreach (ObjectId entId in btr)
-                    {
-                        Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
-
-                        if (ent is BlockReference br)
-                        {
-                            if (br.GetBlockReferenceName() == OldBlockName)
-                            {
-                                ent.UpgradeOpen();
-                                var newBrObjId = BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, btr);
-                                var newBr = newBrObjId.GetDBObject() as BlockReference;
-
-                                newBr.ScaleFactors = br.ScaleFactors;
-
-                                if (!br.IsErased)
-                                    br.Erase(true);
-                            }
-                        }
-                    }
-                }
-
-                BlockReferences.Purge(OldBlockName);
-                tr.Commit();
-            }
-        }
+        
 
     }
 }

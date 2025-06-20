@@ -37,6 +37,7 @@ Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
 | `BLKTOSTATICBLOCK` | Convert dynamic block to static block. |
 | `BLKTOXREF` | Convert block to external reference (XREF). |
 | `BLKADDENTITIES` | Add entities to an existing block or XREF. |
+| `BLKREPLACE` | Replace all instance of a block reference. |
 | `DRAWPERPENDICULARLINEFROMPOINT` | Draw a perpendicular line from a given point to a polyline. |
 | `CIRCLETOPOLYLIGNE` | Convert a circle to a polyline. |
 | `ELLIPSETOPOLYLIGNE` | Convert an ellipse to a polyline. |

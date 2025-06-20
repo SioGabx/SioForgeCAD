@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-            if (!ed.GetBlocks(out ObjectId[] ObjectIds, true, true))
+            if (!ed.GetBlocks(out ObjectId[] ObjectIds, null, true, true))
             {
                 return;
             }

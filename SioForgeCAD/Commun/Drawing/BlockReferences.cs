@@ -12,6 +12,59 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class BlockReferences
     {
+        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true)
+        {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+
+                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
+                foreach (ObjectId btrId in bt)
+                {
+                    BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
+
+                    // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
+                    if (btr.IsAnonymous || btr.IsLayout == false && !btr.IsFromExternalReference)
+                        continue;
+
+                    foreach (ObjectId entId in btr)
+                    {
+                        Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
+
+                        if (ent is BlockReference br)
+                        {
+                            if (br.GetBlockReferenceName() == OldBlockName)
+                            {
+                                ent.UpgradeOpen();
+                                var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, btr);
+                                var newBr = newBrObjId.GetDBObject() as BlockReference;
+
+                                if (KeepScale)
+                                {
+                                    newBr.ScaleFactors = br.ScaleFactors;
+                                }
+
+                                if (KeepRotation)
+                                {
+                                    newBr.Rotation = br.Rotation;
+                                }
+
+                                if (!br.IsErased)
+                                    br.Erase(true);
+                            }
+                        }
+                    }
+                }
+
+                Purge(OldBlockName);
+                tr.Commit();
+            }
+        }
+
+
         public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection, Points Origin, bool IsExplodable = true, BlockScaling BlockScaling = BlockScaling.Any)
         {
             Database db = Generic.GetDatabase();

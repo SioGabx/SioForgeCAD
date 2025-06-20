@@ -170,6 +170,12 @@ namespace SioForgeCAD
             Functions.BLKADDENTITIES.Add();
         }
 
+        [CommandMethod("SIOFORGECAD", "BLKREPLACE", CommandFlags.UsePickSet)]
+        public static void BLKREPLACE()
+        {
+            Functions.BLKREPLACE.All();
+        }
+
         [CommandMethod("SIOFORGECAD", "BLKSETDEFINITIONTOSCALEUNIFORM", CommandFlags.UsePickSet)]
         public static void BLKSETDEFINITIONTOSCALEUNIFORM()
         {
