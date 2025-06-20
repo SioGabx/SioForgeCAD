@@ -242,8 +242,11 @@ namespace SioForgeCAD.Commun.Extensions
 
             if (!polyline.Closed && polyline.StartPoint.IsEqualTo(polyline.EndPoint, Generic.LowTolerance))
             {
-                polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
-                polyline.Closed = true;
+                if (polyline.NumberOfVertices > 3)
+                {
+                    polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
+                    polyline.Closed = true;
+                }
             }
         }
 
