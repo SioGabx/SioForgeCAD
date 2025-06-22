@@ -257,6 +257,7 @@
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />
     <Compile Include="Functions\OFFSETMULTIPLE.cs" />
+    <Compile Include="Functions\PERSPECTIVETRANSFORM.cs" />
     <Compile Include="Functions\REGIONFORSKETCHUP.cs" />
     <Compile Include="Functions\REMOVEALLPROXIES.cs" />
     <Compile Include="Functions\SAVEFILEATCLOSE.cs" />

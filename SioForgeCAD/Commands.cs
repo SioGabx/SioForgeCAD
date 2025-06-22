@@ -390,6 +390,11 @@ namespace SioForgeCAD
         {
             Functions.BATTLEMENTS.Draw();
         }
+        [CommandMethod("SIOFORGECAD", "PERSPECTIVETRANSFORM", CommandFlags.Modal)]
+        public static void PERSPECTIVETRANSFORM()
+        {
+            Functions.PERSPECTIVETRANSFORM.Transform();
+        }
 
         [CommandMethod("SIOFORGECAD", "RANDOMPAVEMENT", CommandFlags.Modal)]
         public static void RANDOMPAVEMENT()
@@ -683,10 +688,17 @@ namespace SioForgeCAD
             Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
         }
 
+        [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUPINNEWDRAWING", CommandFlags.Redraw)]
+        public static void REGIONFORSKETCHUPINNEWDRAWING()
+        {
+            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries(true);
+        }
+        
+
         [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
         public static void REGIONFORSKETCHUP()
         {
-            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
+            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries(false);
         }
 
         [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
@@ -817,26 +829,6 @@ namespace SioForgeCAD
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]
         public static void VEGBLOCSCATTER()
         {
@@ -844,9 +836,6 @@ namespace SioForgeCAD
             sim.Start();
         }
         
-
-
-
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
@@ -867,7 +856,6 @@ namespace SioForgeCAD
         //TODO : Auto add area
         //TOTO : Transform perspective
         //TODO : Edit field formula
-
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
