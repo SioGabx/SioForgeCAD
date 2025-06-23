@@ -393,7 +393,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "PERSPECTIVETRANSFORM", CommandFlags.Modal)]
         public static void PERSPECTIVETRANSFORM()
         {
-            Functions.PERSPECTIVETRANSFORM.Transform();
+            Functions.PERSPECTIVETRANSFORM.Create();
         }
 
         [CommandMethod("SIOFORGECAD", "RANDOMPAVEMENT", CommandFlags.Modal)]

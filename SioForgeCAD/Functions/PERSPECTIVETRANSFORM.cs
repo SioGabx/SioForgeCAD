@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace SioForgeCAD.Functions
 {
@@ -35,176 +36,160 @@ namespace SioForgeCAD.Functions
             }
         }
 
-
-
-        public static void Transform()
+        public static void Create()
         {
-            Editor ed = Generic.GetEditor();
+            var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
-
-            var debug = false;
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var PromptCurves = ed.GetCurves("Selectionnez des courbes à convertir", false);
                 if (PromptCurves.Status == PromptStatus.OK)
                 {
-                    var OriginalCollection = new DBObjectCollection();
-                    var TransformCollection = new DBObjectCollection();
-                    foreach (var item in PromptCurves.Value.GetObjectIds())
-                    {
-                        var Ent = item.GetDBObject(OpenMode.ForWrite);
-                        if (Ent is Curve curvEnt)
-                        {
-                            var EntAsPolyline = curvEnt.ToPolyline();
-                            using (EntAsPolyline)
-                            {
-                                var Polygon = EntAsPolyline.ToPolygon(5);
-                                curvEnt.CopyPropertiesTo(Polygon);
-
-                                var DBObjectCollectionExploded = new DBObjectCollection();
-                                Polygon.Explode(DBObjectCollectionExploded);
-                                foreach (Entity ln in DBObjectCollectionExploded)
-                                {
-
-                                    var lnCopy = ln.Clone() as Entity;
-                                    lnCopy.Visible = debug;
-                                    TransformCollection.Add(ln);
-                                    OriginalCollection.Add(lnCopy);
-                                }
-                            }
-                        }
-                    }
-                    var Origin = OriginalCollection.GetExtents().MinPoint.ToPoints();
-                    var OBoundary = OriginalCollection.GetExtents().GetGeometry();
-                    OBoundary.Visible = debug;
-                    OriginalCollection.Add(OBoundary);
-
-                    var BlkDefOEntsId = BlockReferences.Create("*U", nameof(BlocDataType.PTOriginalEnts), OriginalCollection, Origin, false, BlockScaling.Uniform);
-                    var OEnts = new BlockReference(Origin.SCG, BlkDefOEntsId);
-                    OEnts.AddXData(nameof(BlocDataType.PTOriginalEnts));
-
-                    var TBoundary = TransformCollection.GetExtents().GetGeometry();
-                    TBoundary.Visible = debug;
-                    TransformCollection.Add(TBoundary);
-                    var BlkDefTEntsId = BlockReferences.Create("*U", nameof(BlocDataType.PTTransformedEnts), TransformCollection, Origin, false, BlockScaling.Uniform);
-                    var TEnts = new BlockReference(Origin.SCG, BlkDefTEntsId);
-                    TEnts.AddXData(nameof(BlocDataType.PTTransformedEnts));
-
-                    var BlkDefId = BlockReferences.Create("*U", nameof(BlocDataType.PTMain), new DBObjectCollection() { OEnts, TEnts }, Origin, false, BlockScaling.Uniform);
-                    var Ents = new BlockReference(Origin.SCG, BlkDefId);
-                    Ents.AddXData(nameof(BlocDataType.PTMain));
-
-                    Ents.AddToDrawing();
+                    var curves = PromptCurves.Value.GetObjectIds().Select(id => id.GetDBObject(OpenMode.ForWrite)).OfType<Curve>();
+                    var (origColl, transColl, origin) = BuildEntityCollections(curves);
+                    var mainBlk = BuildBlockHierarchy(origColl, transColl, origin);
+                    mainBlk.AddToDrawing();
+                    _ = Instance;
                 }
                 tr.Commit();
             }
-            var _ = Instance;
-            //https://adndevblog.typepad.com/autocad/2012/06/enabledisable-object-context-menu-for-specific-entity.html
         }
-
-
-        public static void TransformEnts(BlockReference MainBlk)
+        private static void TransformEnts(BlockReference mainBlk)
         {
-            BlockReference BlkPTOriginalEnts = null;
-            BlockReference BlkPTTransformedEnts = null;
-            using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+            using (var tr = Generic.GetDocument().TransactionManager.StartTransaction())
             {
-                foreach (var ent in GetEntitiesInBlock(MainBlk))
+                if (!TryGetSubBlocks(mainBlk, out var origRef, out var transRef))
                 {
-                    if (ent is BlockReference SubBlk)
-                    {
-                        var XData = SubBlk.ReadXData();
-                        if (XData.Contains(nameof(BlocDataType.PTTransformedEnts)))
-                        {
-                            BlkPTTransformedEnts = SubBlk;
-                        }
-                        else if (XData.Contains(nameof(BlocDataType.PTOriginalEnts)))
-                        {
-                            BlkPTOriginalEnts = SubBlk;
-                        }
-                    }
+                    return;
                 }
 
+                var origBoundary = GetBoundary(origRef);
+                var transBoundary = GetBoundary(transRef);
 
+                var direct = PerspectiveTransformFunctions.GetNormalizationCoefficients(origBoundary, transBoundary);
+               // var inverse = PerspectiveTransformFunctions.GetNormalizationCoefficients(transBoundary, origBoundary); // may be useful later.
 
-                var PTOriginalEnts = GetEntitiesInBlock(BlkPTOriginalEnts);
-                var PTTransformedEnts = GetEntitiesInBlock(BlkPTTransformedEnts);
+                ClearContent(transRef);
+                RebuildContent(origRef, transRef, direct, tr);
 
-                Polyline PTOriginalEntsBoundary = PTOriginalEnts.First(en => en is Polyline) as Polyline;
-                Polyline PTTransformedEntsBoundary = PTTransformedEnts.First(en => en is Polyline) as Polyline;
-
-                var PTOriginalEntsBoundaryPoints = PTOriginalEntsBoundary.GetPolyPoints().ToArray();
-                var PTTransformedEntsBoundaryPoints = PTTransformedEntsBoundary.GetPolyPoints().ToArray();
-
-
-                double[] TransformCoeffs = PerspectiveTransformFunctions.GetNormalizationCoefficients(PTOriginalEntsBoundaryPoints, PTTransformedEntsBoundaryPoints);
-                double[] TransformCoeffsInverse = PerspectiveTransformFunctions.GetNormalizationCoefficients(PTTransformedEntsBoundaryPoints, PTOriginalEntsBoundaryPoints);
-                //Console.WriteLine(string.Join(',', TransformCoeffs));
-                //Console.WriteLine(string.Join(',', TransformCoeffsInverse));
-                //Console.WriteLine(PerspectiveTransformFunctions.Transform(TransformCoeffs, new Point2d(7.5, 1)));
-                //Console.WriteLine(PerspectiveTransformFunctions.Transform(TransformCoeffs, new Point2d(3.5, 8)));
-
-                //Console.WriteLine(PerspectiveTransformFunctions.Transform(TransformCoeffsInverse, new Point2d(17.5, 3.111)));
-                //Console.WriteLine(PerspectiveTransformFunctions.Transform(TransformCoeffsInverse, new Point2d(12.833, 14)));
-
-                foreach (var item in PTTransformedEnts)
-                {
-                    if (!(item is Polyline))
-                    {
-                        item.EraseObject();
-                    }
-                }
-
-                BlockTableRecord BlockDef = BlkPTTransformedEnts.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
-
-                foreach (var item in PTOriginalEnts)
-                {
-                    if (item is Line ln)
-                    {
-                        var lnClone = ln.Clone() as Line;
-                        lnClone.Visible = true;
-                        lnClone.StartPoint = PerspectiveTransformFunctions.Transform(TransformCoeffs, lnClone.StartPoint.ToPoint2d()).ToPoint3d();
-                        lnClone.EndPoint = PerspectiveTransformFunctions.Transform(TransformCoeffs, lnClone.EndPoint.ToPoint2d()).ToPoint3d();
-                        BlockDef.AppendEntity(lnClone);
-                        tr.AddNewlyCreatedDBObject(lnClone, true);
-                    }
-                }
-               MainBlk.RegenAllBlkDefinition();
+                mainBlk.RegenAllBlkDefinition();
                 tr.Commit();
             }
         }
 
-        private static List<Entity> GetEntitiesInBlock(BlockReference BlockRef)
+        private static (DBObjectCollection original, DBObjectCollection transformed, Point3d origin) BuildEntityCollections(IEnumerable<Curve> curves)
         {
-            var result = new List<Entity>();
+            var original = new DBObjectCollection();
+            var transformed = new DBObjectCollection();
 
-            BlockTableRecord blockDef = BlockRef.BlockTableRecord.GetObject(OpenMode.ForRead) as BlockTableRecord;
-            foreach (ObjectId EntityInBlockDef in blockDef)
+            foreach (var curve in curves)
             {
-                result.Add(EntityInBlockDef.GetDBObject() as Entity);
-
-            }
-
-            return result;
-        }
-
-        public static Polyline GetPolylineInBlkRef(BlockReference MainBLK)
-        {
-            foreach (var ent in GetEntitiesInBlock(MainBLK))
-            {
-                if (ent is BlockReference TransformedEntsBLK)
+                using (var pline = curve.ToPolyline())
+                using (var polygon = pline.ToPolygon(5))
                 {
-                    if (TransformedEntsBLK.ReadXData().Contains(nameof(BlocDataType.PTTransformedEnts)))
+                    curve.CopyPropertiesTo(polygon);
+
+                    var exploded = new DBObjectCollection();
+                    polygon.Explode(exploded);
+
+                    foreach (Entity ent in exploded)
                     {
-                        foreach (var ent2 in GetEntitiesInBlock(TransformedEntsBLK))
-                        {
-                            if (ent2 is Polyline po) { return po; }
-                        }
+                        transformed.Add(ent);
+
+                        var entClone = (Entity)ent.Clone();
+                        entClone.Visible = false;
+                        original.Add(entClone);
                     }
                 }
             }
-            return null;
+
+            Point3d origin = original.GetExtents().MinPoint;
+
+            var oBoundary = original.GetExtents().GetGeometry();
+            var tBoundary = transformed.GetExtents().GetGeometry();
+            oBoundary.Visible = true;
+            tBoundary.Visible = true;
+            original.Add(oBoundary);
+            transformed.Add(tBoundary);
+
+            return (original, transformed, origin);
+        }
+
+        private static BlockReference BuildBlockHierarchy(DBObjectCollection original, DBObjectCollection transformed, Point3d origin)
+        {
+            var origBlkId = BlockReferences.Create("*U", nameof(BlocDataType.PTOriginalEnts), original, origin.ToPoints(), false, BlockScaling.Uniform);
+            var transBlkId = BlockReferences.Create("*U", nameof(BlocDataType.PTTransformedEnts), transformed, origin.ToPoints(), false, BlockScaling.Uniform);
+
+            var origRef = new BlockReference(origin, origBlkId);
+            origRef.AddXData(nameof(BlocDataType.PTOriginalEnts));
+
+            var transRef = new BlockReference(origin, transBlkId);
+            transRef.AddXData(nameof(BlocDataType.PTTransformedEnts));
+
+            var mainBlkId = BlockReferences.Create("*U", nameof(BlocDataType.PTMain), new DBObjectCollection { origRef, transRef }, origin.ToPoints(), false, BlockScaling.Uniform);
+            var mainRef = new BlockReference(origin, mainBlkId);
+            mainRef.AddXData(nameof(BlocDataType.PTMain));
+
+            return mainRef;
+        }
+
+        private static bool TryGetSubBlocks(BlockReference mainBlk, out BlockReference origRef, out BlockReference transRef)
+        {
+            origRef = transRef = null;
+            foreach (var ent in GetEntitiesInBlock(mainBlk))
+            {
+                if (!(ent is BlockReference sub))
+                {
+                    continue;
+                }
+
+                var data = sub.ReadXData();
+                if (data.Contains(nameof(BlocDataType.PTOriginalEnts)))
+                {
+                    origRef = sub;
+                }
+                else if (data.Contains(nameof(BlocDataType.PTTransformedEnts)))
+                {
+                    transRef = sub;
+                }
+            }
+            return origRef != null && transRef != null;
+        }
+
+        private static Point2d[] GetBoundary(BlockReference blk) => GetEntitiesInBlock(blk).OfType<Polyline>().First().GetPolyPoints().ToArray();
+
+        private static void ClearContent(BlockReference transRef)
+        {
+            foreach (var id in (BlockTableRecord)transRef.BlockTableRecord.GetObject(OpenMode.ForWrite))
+            {
+                var ent = id.GetDBObject(OpenMode.ForWrite);
+                if (!(ent is Polyline))
+                {
+                    ent.Erase();
+                }
+                
+            }
+        }
+
+        private static void RebuildContent(BlockReference origRef, BlockReference transRef, double[] coeffs, Transaction tr)
+        {
+            var record = (BlockTableRecord)transRef.BlockTableRecord.GetObject(OpenMode.ForWrite);
+            foreach (var ln in GetEntitiesInBlock(origRef).OfType<Line>())
+            {
+                var clone = (Line)ln.Clone();
+                clone.Visible = true;
+                clone.StartPoint = PerspectiveTransformFunctions.Transform(coeffs, ln.StartPoint.ToPoint2d()).ToPoint3d();
+                clone.EndPoint = PerspectiveTransformFunctions.Transform(coeffs, ln.EndPoint.ToPoint2d()).ToPoint3d();
+
+                record.AppendEntity(clone);
+                tr.AddNewlyCreatedDBObject(clone, true);
+            }
+        }
+
+        private static IEnumerable<Entity> GetEntitiesInBlock(BlockReference blk)
+        {
+            var def = (BlockTableRecord)blk.BlockTableRecord.GetObject(OpenMode.ForRead);
+            return def.Cast<ObjectId>().Select(id => id.GetDBObject()).OfType<Entity>();
         }
 
 
@@ -217,136 +202,118 @@ namespace SioForgeCAD.Functions
             {
                 Overrule.AddOverrule(RXClass.GetClass(typeof(BlockReference)), this, false);
             }
-            public static bool FilterFunction(Entity Entity)
+            public static bool FilterFunction(Entity e) =>
+                e is BlockReference br && br.ReadXData().Contains(nameof(BlocDataType.PTMain));
+
+            private static Polyline GetPolyline(BlockReference mainBlk)
             {
-                return Entity is BlockReference && Entity.ReadXData().Contains(nameof(BlocDataType.PTMain));
+                BlockReference BlkPTTransformedEnts = GetEntitiesInBlock(mainBlk)
+                 .OfType<BlockReference>()
+                 .FirstOrDefault(br => br.ReadXData().Contains(nameof(BlocDataType.PTTransformedEnts)));
+
+                return GetEntitiesInBlock(BlkPTTransformedEnts).OfType<Polyline>().FirstOrDefault();
             }
-            public static void CornerOnHotGripAction(ObjectId objectid, GripData GripData)
+
+            public static void CornerOnHotGripAction(ObjectId id, GripData gripData)
             {
-                using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+                using (var tr = Generic.GetDocument().TransactionManager.StartTransaction())
                 {
-                    if (objectid.GetDBObject(OpenMode.ForWrite) is BlockReference MainBlk)
+                    if (!(id.GetDBObject() is BlockReference mainBlk))
                     {
+                        return;
+                    }
 
-                        if (GetPolylineInBlkRef(MainBlk) is Polyline polyO && GripData is PolyCornerGrip polyGrip)
+                    if (!(GetPolyline(mainBlk) is Polyline poly))
+                    {
+                        return;
+                    }
+
+                    if (!(gripData is PolyCornerGrip polyGrip))
+                    {
+                        return;
+                    }
+
+                    var blockTransform = mainBlk.BlockTransform;
+                    var inverse = blockTransform;
+                    var workingCopy = (Polyline)poly.Clone();
+                    workingCopy.TransformBy(inverse);
+
+                    if ((int)polyGrip.CurrentModeId <= (int)PolyGripOverrule.ModeIdAction.Stretch)
+                    {
+                        var pts = StretchPoint(workingCopy, gripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
+                        if (pts is null)
                         {
-
-                            Matrix3d blockTransform = MainBlk.BlockTransform;
-                            Matrix3d inverseTransform = blockTransform;
-                            var polyT = polyO.Clone() as Polyline;
-                             polyT.TransformBy(inverseTransform);
-
-
-                            Debug.WriteLine($"Grip CurrentModeId : {(int)polyGrip.CurrentModeId}");
-                            Point2dCollection pts = null;
-                            if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Default ||
-                            ((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Stretch)
-                            {
-                                pts = StretchPoint(polyT, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
-
-                                polyO.UpgradeOpen();
-                                for (int i = 0; i < pts.Count - 1; i++)
-                                {
-                                    polyO.SetPointAt(i, pts[i].ToPoint3d().TransformBy(blockTransform.Inverse()).ToPoint2d());
-                                   
-                                }
-                                TransformEnts(MainBlk);
-                            }
+                            return;
                         }
+
+                        poly.UpgradeOpen();
+                        for (int i = 0; i < pts.Count - 1; i++)
+                        {
+                            poly.SetPointAt(i, pts[i].ToPoint3d().TransformBy(blockTransform.Inverse()).ToPoint2d());
+                        }
+
+                        TransformEnts(mainBlk);
                     }
                     tr.Commit();
                 }
             }
 
-            private static Point2dCollection StretchPoint(Polyline poly, Point3d Point, PolyGripOverrule.ModeIdAction Action)
+            private static Point2dCollection StretchPoint(Polyline poly, Point3d gripPt, PolyGripOverrule.ModeIdAction action)
             {
-                Point2dCollection EntVertices = new Point2dCollection();
-                foreach (Point3d EntVertice in poly.GetPoints())
+                var origVerts = new Point2dCollection(poly.GetPoints().Select(p => p.ToPoint2d()).ToArray());
+                using (var jigPoly = new Polyline { Closed = true })
                 {
-                    EntVertices.Add(EntVertice.ToPoint2d());
-                }
-
-                using (Polyline NewPoly = new Polyline())
-                {
-                    for (int i = 0; i < EntVertices.Count - 1; i++)
+                    for (int i = 0; i < origVerts.Count - 1; i++)
                     {
-                        Point2d WipeoutEntVertice = EntVertices[i];
-                        NewPoly.AddVertex(WipeoutEntVertice);
+                        jigPoly.AddVertex(origVerts[i]);
                     }
 
-                    NewPoly.Closed = true;
-                    var jig = new PolyGripJig(NewPoly, Point, new Point3dCollection() { Point });
-                    var JigResult = jig.Drag();
-                    if (JigResult?.Status == PromptStatus.OK)
+                    var jig = new PolyGripJig(jigPoly, gripPt, new Point3dCollection { gripPt });
+                    var jigRes = jig.Drag();
+                    if (jigRes?.Status != PromptStatus.OK)
                     {
-                        Point2dCollection pts = new Point2dCollection();
-                        foreach (Point2d PolyEntVertice in EntVertices)
-                        {
-                            if (PolyEntVertice.IsEqualTo(Point.ToPoint2d(), Generic.MediumTolerance))
-                            {
-                                pts.Add(JigResult.Value.ToPoint2d());
-                            }
-                            else
-                            {
-
-                                pts.Add(PolyEntVertice);
-                            }
-                        }
-                        return pts;
+                        return null;
                     }
-                    return null;
+
+                    var newVerts = new Point2dCollection();
+                    foreach (Point2d origVert in origVerts)
+                    {
+                        newVerts.Add(origVert.IsEqualTo(gripPt.ToPoint2d(), Generic.MediumTolerance) ? jigRes.Value.ToPoint2d() : origVert);
+                    }
+
+                    return newVerts;
                 }
             }
 
-            public override void GetGripPoints(Entity entity, GripDataCollection grips, double curViewUnitSize, int gripSize, Vector3d curViewDir, GetGripPointsFlags bitFlags)
+            public override void GetGripPoints(Entity entity, GripDataCollection grips, double viewUnit, int gripSize, Vector3d viewDir, GetGripPointsFlags flags)
             {
-                if (IsApplicable(entity))
+                if (!IsApplicable(entity)) { base.GetGripPoints(entity, grips, viewUnit, gripSize, viewDir, flags); return; }
+
+                if (!(entity is BlockReference blk)) return;
+                using (var tr = blk.Database.TransactionManager.StartTransaction())
                 {
-                    Point3dCollection AlreadyAddedPoints = new Point3dCollection();
-                    var blk = entity as BlockReference;
-                    if (blk != null || true)
+
+                    if (!(GetPolyline(blk) is Polyline po)) { tr.Commit(); return; }
+
+                    var added = new HashSet<Point3d>();
+                    int index = 0;
+                    foreach (var pt in po.GetPolyPoints())
                     {
-                        using (var tran = blk.Database.TransactionManager.StartTransaction())
+                        var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
+                        if (!added.Contains(transformed))
                         {
-
-                            if (GetPolylineInBlkRef(blk) is Polyline po)
+                            grips.Add(new PolyCornerGrip
                             {
-                                int index = 0;
-                                var poPoints = po.GetPoints();
-                                foreach (var o in poPoints)
-                                {
-                                    Matrix3d blockTransform = blk.BlockTransform;
-                                    Matrix3d inverseTransform = blockTransform;
-                                    var ot = o.TransformBy(inverseTransform);
-
-
-                                    if (!AlreadyAddedPoints.ContainsTolerance(ot, Generic.MediumTolerance))
-                                    {
-                                        index++;
-                                        var grip = new PolyCornerGrip()
-                                        {
-                                            Index = index,
-                                            GripPoint = ot,
-                                            EntityId = entity.ObjectId,
-                                            OnHotGripAction = CornerOnHotGripAction
-                                        };
-                                        grips.Add(grip);
-                                        AlreadyAddedPoints.Add(ot);
-                                    }
-                                }
-                            }
-
-
-                            tran.Abort();
+                                Index = ++index,
+                                GripPoint = transformed,
+                                EntityId = entity.ObjectId,
+                                OnHotGripAction = CornerOnHotGripAction
+                            });
                         }
-                        return;
                     }
-
+                    tr.Commit();
                 }
-
-                base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
             }
-
         }
 
 
@@ -354,26 +321,6 @@ namespace SioForgeCAD.Functions
 
         public static class PerspectiveTransformFunctions
         {
-            public static void Caller()
-            {
-                Point2d[] SourceRect = new Point2d[4]
-                {
-                new Point2d(0, 0),
-                new Point2d(0, 20),
-                new Point2d(15, 20),
-                new Point2d(15, 0),
-                };
-                Point2d[] DestinationRect = new Point2d[4]
-                {
-                new Point2d(0, 0),
-                new Point2d(12.5, 20),
-                new Point2d(22.5, 20),
-                new Point2d(35, 0),
-                };
-
-                GetMatrixTransformation(SourceRect, DestinationRect);
-            }
-
             public static Point2d Transform(double[] coeffs, Point2d Point)
             {
                 return new Point2d(
