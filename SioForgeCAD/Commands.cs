@@ -52,7 +52,7 @@ namespace SioForgeCAD
                     cs.AddPermanentKeyboardShortcut("F1", "Cancel F1", "^C^C", "ID_Cancel_F1");
                     cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^P'_.osmode $M=$(if,$(and,$(getvar,osmode),16384),$(-,$(getvar,osmode),16384),$(+,$(getvar,osmode),16384))", "ID_Cancel_F4");
                     cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle_QPMODE");
-                    cs.LoadCui(); 
+                    cs.LoadCui();
                     Application.ReloadAllMenus();
                     break;
             }
@@ -373,7 +373,7 @@ namespace SioForgeCAD
             Functions.VEGBLOCLEGEND.Add();
         }
 
-         [CommandMethod("SIOFORGECAD", "VEGBLOCLAYOUT", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "VEGBLOCLAYOUT", CommandFlags.UsePickSet)]
         public static void VEGBLOCLAYOUT()
         {
             Functions.VEGBLOCLAYOUT.Create();
@@ -693,7 +693,7 @@ namespace SioForgeCAD
         {
             Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries(true);
         }
-        
+
 
         [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
         public static void REGIONFORSKETCHUP()
@@ -723,8 +723,15 @@ namespace SioForgeCAD
             var val = Generic.GetEditor().GetEntity("kk");
             if (val.Status == PromptStatus.OK)
             {
-                var t = val.ObjectId.GetNoTransactionDBObject();
-                Generic.WriteMessage("test");
+                var db = Generic.GetDatabase();
+                using (var tr = db.TransactionManager.StartTransaction())
+                {
+                    var t = val.ObjectId.GetDBObject(OpenMode.ForWrite);
+                    (t as Entity).Visible = false;
+
+                    Generic.WriteMessage("test");
+                    tr.Commit();
+                }
             }
         }
 
@@ -835,7 +842,7 @@ namespace SioForgeCAD
             var sim = new Functions.VEGBLOCSCATTER.CircleSimulation();
             sim.Start();
         }
-        
+
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {

@@ -371,7 +371,11 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void AddVertex(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
         {
-            Poly.AddVertexAt(Poly.NumberOfVertices, point.ToPoint2d(), bulge, startWidth, endWidth);
+            AddVertex(Poly, point.ToPoint2d(), bulge, startWidth, endWidth);
+        } 
+        public static void AddVertex(this Polyline Poly, Point2d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
+        {
+            Poly.AddVertexAt(Poly.NumberOfVertices, point, bulge, startWidth, endWidth);
         }
 
         public static void AddVertex(this Polyline3d Poly, Point3d point)

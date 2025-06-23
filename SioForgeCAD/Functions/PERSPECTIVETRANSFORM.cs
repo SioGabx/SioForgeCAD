@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
     {
         public static void Transform()
         {
-
+            //var blockDefinition = new BlockTableRecord(){ Name = "*U" };
             Overrule.AddOverrule(RXClass.GetClass(typeof(BlockReference)), PerspectiveTransformGrips.Instance, false);
 
         }
@@ -125,13 +125,12 @@ namespace SioForgeCAD.Functions
             {
                 using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
                 {
-                    if (objectid.GetDBObject() is BlockReference blkRef)
+                    if (objectid.GetDBObject(OpenMode.ForWrite) is BlockReference blkRef)
                     {
                         Entity Poly = null;
                         foreach (var ent in GetEntitiesInBlock(blkRef))
                         {
-                            if (ent is Polyline po)
-                            { Poly = po; }
+                            if (ent is Polyline po) { Poly = po; }
                         }
 
 
@@ -143,22 +142,14 @@ namespace SioForgeCAD.Functions
                             ((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Stretch)
                             {
                                 pts = StretchPoint(poly, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
-                            }
 
-
-
-
-                            //Recreate polyline
-                            using (Polyline NewPoly = new Polyline())
-                            {
-                                foreach (var item in pts)
+                                poly.UpgradeOpen();
+                                for (int i = 0; i < pts.Count - 1; i++)
                                 {
-                                    NewPoly.AddVertex(item.ToPoint3d());
+                                    poly.SetPointAt(i, pts[i]);
+                                    blkRef.RegenAllBlkDefinition();
                                 }
-                                NewPoly.AddToDrawing();
-                                poly.EraseObject();
                             }
-
                         }
                     }
                     tr.Commit();
@@ -167,17 +158,17 @@ namespace SioForgeCAD.Functions
 
             private static Point2dCollection StretchPoint(Polyline poly, Point3d Point, PolyGripOverrule.ModeIdAction Action)
             {
-                Point3dCollection EntVertices = new Point3dCollection();
+                Point2dCollection EntVertices = new Point2dCollection();
                 foreach (Point3d EntVertice in poly.GetPoints())
                 {
-                    EntVertices.Add(EntVertice);
+                    EntVertices.Add(EntVertice.ToPoint2d());
                 }
 
                 using (Polyline NewPoly = new Polyline())
                 {
                     for (int i = 0; i < EntVertices.Count - 1; i++)
                     {
-                        Point3d WipeoutEntVertice = EntVertices[i];
+                        Point2d WipeoutEntVertice = EntVertices[i];
                         NewPoly.AddVertex(WipeoutEntVertice);
                     }
 
@@ -187,11 +178,16 @@ namespace SioForgeCAD.Functions
                     if (JigResult?.Status == PromptStatus.OK)
                     {
                         Point2dCollection pts = new Point2dCollection();
-                        foreach (Point3d WipeoutEntVertice in EntVertices)
+                        foreach (Point2d PolyEntVertice in EntVertices)
                         {
-                            if (WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
+                            if (PolyEntVertice.IsEqualTo(Point.ToPoint2d(), Generic.MediumTolerance))
                             {
                                 pts.Add(JigResult.Value.ToPoint2d());
+                            }
+                            else
+                            {
+
+                                pts.Add(PolyEntVertice);
                             }
                         }
                         return pts;

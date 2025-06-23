@@ -52,7 +52,7 @@ namespace SioForgeCAD.Commun
             }
             else
             {
-                return objectId.GetDBObject();
+                return objectId.GetDBObject(openMode);
             }
         }
 
