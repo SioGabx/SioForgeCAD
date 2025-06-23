@@ -21,6 +21,35 @@ namespace SioForgeCAD.Functions
     {
         public static void Transform()
         {
+            Editor ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var PromptCurves = ed.GetCurves("Selectionnez des courbes à convertir", false);
+                if (PromptCurves.Status == PromptStatus.OK)
+                {
+                    var TransformCollection = new DBObjectCollection();
+                    foreach (var item in PromptCurves.Value.GetObjectIds())
+                    {
+                        var Ent = item.GetDBObject(OpenMode.ForWrite);
+                        if (Ent is Curve curvEnt)
+                        {
+                            var EntAsPolyline = curvEnt.ToPolyline();
+                            using (EntAsPolyline)
+                            {
+                                var Polygon = EntAsPolyline.ToPolygon(5);
+                                curvEnt.CopyPropertiesTo(Polygon);
+                                TransformCollection.Add(Polygon);
+                            }
+                        }
+                    }
+                    var BlkDefId = BlockReferences.Create("*U", "PERSPECTIVETRANSFORM", TransformCollection, Points.Empty, false, BlockScaling.Uniform);
+                   var Blk =  new BlockReference(Point3d.Origin, BlkDefId);
+                    Blk.AddToDrawing();
+                }
+                tr.Commit();
+            }
             //var blockDefinition = new BlockTableRecord(){ Name = "*U" };
             Overrule.AddOverrule(RXClass.GetClass(typeof(BlockReference)), PerspectiveTransformGrips.Instance, false);
 

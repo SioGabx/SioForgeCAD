@@ -353,7 +353,7 @@ namespace SioForgeCAD.Commun.Extensions
                 NewPoly.Closed = poly.Closed;
                 return NewPoly;
             }
-            return poly;
+            return poly.Clone() as Polyline;
         }
 
         /// <summary>

@@ -71,14 +71,18 @@ namespace SioForgeCAD.Commun.Drawing
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
-                string BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
+                string BlockName = Name;
 
+                if (BlockName != "*U") //creating an anonymous block
+                {
+                    BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
+                }
                 if (bt.Has(BlockName))
                 {
                     Generic.WriteMessage($"Le bloc {Name} existe déja dans le dessin");
                 }
 
-                BlockTableRecord btr = new BlockTableRecord
+                BlockTableRecord btr = new BlockTableRecord()
                 {
                     Name = BlockName,
                     Comments = Description,
