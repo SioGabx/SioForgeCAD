@@ -21,7 +21,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
         public bool IsEnabled => _enabled;
         private bool _originalOverruling = false;
 
-        private readonly Type _targetType;
+        public readonly Type _targetType;
         private readonly bool _hideOriginals;
         private readonly Func<Entity, bool> _filterFunction;
         private readonly Action<ObjectId, GripData> _CornerOnHotGripAction;

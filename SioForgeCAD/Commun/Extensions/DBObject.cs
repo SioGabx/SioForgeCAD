@@ -30,5 +30,13 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
+        public static void TryUpgradeOpen(this DBObject Obj)
+        {
+            if (!Obj.IsWriteEnabled)
+            {
+                Obj.UpgradeOpen();
+            }
+        }
     }
 }

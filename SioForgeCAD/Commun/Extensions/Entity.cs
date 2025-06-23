@@ -562,7 +562,7 @@ namespace SioForgeCAD.Commun.Extensions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                ent.UpgradeOpen();
+                ent.TryUpgradeOpen();
 
                 RegAppTable regTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
                 string AppName = Generic.GetExtensionDLLName();

@@ -71,6 +71,7 @@ namespace SioForgeCAD.Functions
             entity.Linetype = "BYBLOCK";
             entity.LineWeight = LineWeight.ByBlock;
             entity.Layer = "0";
+            //entity.Visible = false;
         }
     }
 }
