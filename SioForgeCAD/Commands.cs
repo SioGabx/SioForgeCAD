@@ -11,7 +11,8 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-
+using System.Text;
+using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -863,6 +864,25 @@ namespace SioForgeCAD
         //TODO : Auto add area
         //TOTO : Transform perspective
         //TODO : Edit field formula
+
+        [CommandMethod("DEBUG", "INDESIGNCOPY", CommandFlags.UsePickSet)]
+        public static void INDESIGNCOPY()
+        {
+            var EPS = "%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 100 100\nnewpath\n0 0 moveto\n100 0 lineto\n100 100 lineto\n0 100 lineto\n0 66.7 33.3 33.3 0 0 curveto\nclosepath\n0.3 setgray\nfill\nshowpage";
+
+            
+            byte[] ba = Encoding.ASCII.GetBytes(EPS);
+
+
+            var hexString = BitConverter.ToString(ba);
+
+
+            hexString = hexString.Replace("-", "");
+            // "Encapsulated Postscript"
+            var dataformat = new DataFormat("Encapsulated Postscript", 50100);
+           
+            Clipboard.SetData("Encapsulated Postscript", EPS);
+        }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()

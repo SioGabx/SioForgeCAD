@@ -188,8 +188,8 @@ namespace SioForgeCAD.Functions
 
         private static IEnumerable<Entity> GetEntitiesInBlock(BlockReference blk)
         {
-            var def = (BlockTableRecord)blk.BlockTableRecord.GetObject(OpenMode.ForRead);
-            return def.Cast<ObjectId>().Select(id => id.GetDBObject()).OfType<Entity>();
+            var def = (BlockTableRecord)blk.BlockTableRecord.GetNoTransactionDBObject(OpenMode.ForRead);
+            return def.Cast<ObjectId>().Select(id => id.GetNoTransactionDBObject()).OfType<Entity>();
         }
 
 
@@ -218,7 +218,7 @@ namespace SioForgeCAD.Functions
             {
                 using (var tr = Generic.GetDocument().TransactionManager.StartTransaction())
                 {
-                    if (!(id.GetDBObject() is BlockReference mainBlk))
+                    if (!(id.GetNoTransactionDBObject() is BlockReference mainBlk))
                     {
                         return;
                     }
@@ -290,28 +290,32 @@ namespace SioForgeCAD.Functions
                 if (!IsApplicable(entity)) { base.GetGripPoints(entity, grips, viewUnit, gripSize, viewDir, flags); return; }
 
                 if (!(entity is BlockReference blk)) return;
-                using (var tr = blk.Database.TransactionManager.StartTransaction())
-                {
+                //using (var tr = blk.Database.TransactionManager.StartOpenCloseTransaction())
+                //{
 
-                    if (!(GetPolyline(blk) is Polyline po)) { tr.Commit(); return; }
+                    if (!(GetPolyline(blk) is Polyline po)) { return; }
 
                     var added = new HashSet<Point3d>();
-                    int index = 0;
                     foreach (var pt in po.GetPolyPoints())
                     {
                         var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
                         if (!added.Contains(transformed))
                         {
-                            grips.Add(new PolyCornerGrip
+                            var grip = new PolyCornerGrip
                             {
-                                Index = ++index,
+                                Index = grips.Count + 1,
                                 GripPoint = transformed,
                                 EntityId = entity.ObjectId,
                                 OnHotGripAction = CornerOnHotGripAction
-                            });
+                            };
+
+                            if (!grips.Contains(grip))
+                            {
+                                grips.Add(grip);
+                            }
                         }
-                    }
-                    tr.Commit();
+                    //}
+                    //tr.Abort();
                 }
             }
         }
