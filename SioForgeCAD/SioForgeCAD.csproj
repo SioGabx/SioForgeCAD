@@ -131,6 +131,7 @@
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Arythmetique.cs" />
+    <Compile Include="Commun\Mist\ClipboardHelper.cs" />
     <Compile Include="Commun\Mist\Colors.cs" />
     <Compile Include="Commun\Mist\CUI.cs" />
     <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
@@ -235,6 +236,7 @@
     <Compile Include="Commun\Mist\CotePoints.cs" />
     <Compile Include="Commun\Mist\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
+    <Compile Include="Functions\COPYGEOMETRYFORINDESIGN.cs" />
     <Compile Include="Functions\COPYMODELTOPAPER.cs" />
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
     <Compile Include="Functions\CURVETOPOLYGON.cs" />

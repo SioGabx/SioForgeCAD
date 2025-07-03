@@ -11,6 +11,8 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -784,7 +786,11 @@ namespace SioForgeCAD
                     {
                         var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
                         string myDictName = Generic.GetExtensionDLLName();
-                        if (!nod.Contains(myDictName)) return;
+                        if (!nod.Contains(myDictName))
+                        {
+                            return;
+                        }
+
                         var myDict = (DBDictionary)tr.GetObject(nod.GetAt(myDictName), OpenMode.ForWrite);
                         foreach (DBDictionaryEntry entry in myDict)
                         {
@@ -821,7 +827,11 @@ namespace SioForgeCAD
             {
                 var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
                 string dictName = Generic.GetExtensionDLLName();
-                if (!nod.Contains(dictName)) return;
+                if (!nod.Contains(dictName))
+                {
+                    return;
+                }
+
                 var myDict = (DBDictionary)tr.GetObject(nod.GetAt(dictName), OpenMode.ForRead);
                 foreach (DBDictionaryEntry entry in myDict)
                 {
@@ -829,9 +839,13 @@ namespace SioForgeCAD
                     if (!string.IsNullOrWhiteSpace(value))
                     {
                         if (entry.Key.StartsWith("Pinned_"))
+                        {
                             notesControl.AddPinnedItem(value);
+                        }
                         else
+                        {
                             notesControl.AddHistoryItem(value);
+                        }
                     }
                 }
             }
@@ -865,23 +879,24 @@ namespace SioForgeCAD
         //TOTO : Transform perspective
         //TODO : Edit field formula
 
-        [CommandMethod("DEBUG", "INDESIGNCOPY", CommandFlags.UsePickSet)]
-        public static void INDESIGNCOPY()
+
+
+
+        public class ClipboardHelper
         {
-            var EPS = "%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 100 100\nnewpath\n0 0 moveto\n100 0 lineto\n100 100 lineto\n0 100 lineto\n0 66.7 33.3 33.3 0 0 curveto\nclosepath\n0.3 setgray\nfill\nshowpage";
-
             
-            byte[] ba = Encoding.ASCII.GetBytes(EPS);
 
-
-            var hexString = BitConverter.ToString(ba);
-
-
-            hexString = hexString.Replace("-", "");
-            // "Encapsulated Postscript"
-            var dataformat = new DataFormat("Encapsulated Postscript", 50100);
            
-            Clipboard.SetData("Encapsulated Postscript", EPS);
+        }
+
+
+
+
+
+        [CommandMethod("DEBUG", "COPYGEOMETRYFORINDESIGN", CommandFlags.UsePickSet)]
+        public static void COPYGEOMETRYFORINDESIGN()
+        {
+            Functions.COPYGEOMETRYFORINDESIGN.Copy();
         }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
