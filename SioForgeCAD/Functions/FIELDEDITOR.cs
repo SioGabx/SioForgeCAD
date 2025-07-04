@@ -19,9 +19,23 @@ namespace SioForgeCAD.Functions
             //https://www.keanw.com/2007/07/accessing-the-a.html
             //https://www.keanw.com/2007/06/embedding_field.html
             //https://www.cadforum.cz/en/qaID.asp?tip=6381
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal += DetectModal;
             //%<\AcExpr (%<\AcObjProp Object(%<\_ObjId 2621431877296>%).Area>%+10) \f "%lu6">%
             Debug.WriteLine(EditField("%<\\AcVar Date \\f \"dd/MM/yyyy\">%"));
+        
         }
+
+        private static void DetectModal(object sender, EventArgs e)
+        {
+            Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = InplaceTextEditor.Current;
+            var i = x.Selection;
+            if (i?.FieldObject != null)
+            {
+
+                //Replace by SioForgeCad field editor
+            }
+        }
+
 
         public static string EditField(string FieldValue)
         {

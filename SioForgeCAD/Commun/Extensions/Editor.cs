@@ -108,6 +108,12 @@ namespace SioForgeCAD.Commun.Extensions
                         {
                             return (Viewport)tr.GetObject(ed.CurrentViewportObjectId, OpenMode.ForWrite);
                         }
+
+                        if (!ed.IsInLayoutPaper())
+                        {
+                            //In model space
+                            return null;
+                        }
                         if (ed.IsInModel())
                         {
                             ed.SwitchToPaperSpace();

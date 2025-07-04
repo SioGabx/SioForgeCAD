@@ -393,6 +393,7 @@ namespace SioForgeCAD
         {
             Functions.BATTLEMENTS.Draw();
         }
+
         [CommandMethod("SIOFORGECAD", "PERSPECTIVETRANSFORM", CommandFlags.Modal)]
         public static void PERSPECTIVETRANSFORM()
         {
@@ -710,6 +711,12 @@ namespace SioForgeCAD
             Functions.OFFSETMULTIPLE.Execute();
         }
 
+        [CommandMethod("DEBUG", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.UsePickSet)]
+        public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN()
+        {
+            Functions.COPYGEOMETRYTOCLIPBOARDFORINDESIGN.Copy();
+        }
+
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html
@@ -743,114 +750,6 @@ namespace SioForgeCAD
         {
         }
 
-
-
-
-
-
-        private PaletteSet _paletteSet;
-        private NotesPalette notesControl;
-
-
-        [CommandMethod("NOTES")]
-        public void ShowNotesPalette()
-        {
-            if (_paletteSet == null)
-            {
-                notesControl = new NotesPalette();
-
-                notesControl.OnSaveNote = content =>
-                {
-                    var doc = Generic.GetDocument();
-
-                    string fileName = Generic.GetDocument().Name;
-                    string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    string key = $"Note_{Guid.NewGuid()}";
-                    string fullText = $"{date} - {fileName} {content}";
-                    DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, fullText);
-                    notesControl.AddHistoryItem(fullText);
-
-                };
-
-                notesControl.OnPinNote = content =>
-                {
-                    string key = $"Pinned_{Guid.NewGuid()}";
-                    DWGDataStorage.SaveTextToDrawing(Generic.GetDatabase(), key, content);
-                    notesControl.AddPinnedItem(content);
-                };
-
-                notesControl.OnUnpinNote = content =>
-                {
-                    var doc = Generic.GetDocument();
-                    using (var tr = doc.TransactionManager.StartTransaction())
-                    {
-                        var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
-                        string myDictName = Generic.GetExtensionDLLName();
-                        if (!nod.Contains(myDictName))
-                        {
-                            return;
-                        }
-
-                        var myDict = (DBDictionary)tr.GetObject(nod.GetAt(myDictName), OpenMode.ForWrite);
-                        foreach (DBDictionaryEntry entry in myDict)
-                        {
-                            if (entry.Key.StartsWith("Pinned_"))
-                            {
-                                string value = DWGDataStorage.LoadTextFromDrawing(doc.Database, entry.Key);
-                                if (value == content)
-                                {
-                                    myDict.Remove(entry.Key);
-                                    break;
-                                }
-                            }
-                        }
-                        tr.Commit();
-                    }
-                };
-
-                _paletteSet = new PaletteSet("Notes DWG")
-                {
-                    Style = PaletteSetStyles.ShowCloseButton | PaletteSetStyles.NameEditable,
-                    MinimumSize = new System.Drawing.Size(300, 300)
-                };
-                _paletteSet.Add("Notes", notesControl);
-                LoadAllNotes();
-            }
-
-            _paletteSet.Visible = true;
-        }
-
-        private void LoadAllNotes()
-        {
-            var doc = Generic.GetDocument();
-            using (Transaction tr = doc.TransactionManager.StartTransaction())
-            {
-                var nod = (DBDictionary)tr.GetObject(doc.Database.NamedObjectsDictionaryId, OpenMode.ForRead);
-                string dictName = Generic.GetExtensionDLLName();
-                if (!nod.Contains(dictName))
-                {
-                    return;
-                }
-
-                var myDict = (DBDictionary)tr.GetObject(nod.GetAt(dictName), OpenMode.ForRead);
-                foreach (DBDictionaryEntry entry in myDict)
-                {
-                    string value = DWGDataStorage.LoadTextFromDrawing(doc.Database, entry.Key);
-                    if (!string.IsNullOrWhiteSpace(value))
-                    {
-                        if (entry.Key.StartsWith("Pinned_"))
-                        {
-                            notesControl.AddPinnedItem(value);
-                        }
-                        else
-                        {
-                            notesControl.AddHistoryItem(value);
-                        }
-                    }
-                }
-            }
-        }
-
         [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]
         public static void VEGBLOCSCATTER()
         {
@@ -858,46 +757,12 @@ namespace SioForgeCAD
             sim.Start();
         }
 
-        [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
-        public static void TEST3()
-        {
-            Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal += DetectModal;
-        }
-
-        private static void DetectModal(object sender, EventArgs e)
-        {
-            Autodesk.AutoCAD.ApplicationServices.InplaceTextEditor x = InplaceTextEditor.Current;
-            var i = x.Selection;
-            if (i?.FieldObject != null)
-            {
-
-                //Replace by SioForgeCad field editor
-            }
-        }
 
         //TODO : Auto add area
         //TOTO : Transform perspective
         //TODO : Edit field formula
 
 
-
-
-        public class ClipboardHelper
-        {
-            
-
-           
-        }
-
-
-
-
-
-        [CommandMethod("DEBUG", "COPYGEOMETRYFORINDESIGN", CommandFlags.UsePickSet)]
-        public static void COPYGEOMETRYFORINDESIGN()
-        {
-            Functions.COPYGEOMETRYFORINDESIGN.Copy();
-        }
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
