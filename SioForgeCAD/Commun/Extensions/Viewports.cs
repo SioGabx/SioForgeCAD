@@ -131,7 +131,7 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.IsInLayout() && !ed.IsInLayoutPaper();
         }
 
-      
+
         public static List<ObjectId> GetAllViewportsInPaperSpace(this Editor _, BlockTableRecord btr)
         {
             Database db = Generic.GetDatabase();
@@ -155,37 +155,38 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                try {
-                if (viewport == null) { return null; }
-                if (viewport.NonRectClipEntityId != ObjectId.Null)
+                try
                 {
-                    // Get the non-rectangular clipping boundary
-                    Entity clipEntity = viewport.NonRectClipEntityId.GetEntity(OpenMode.ForRead);
-                    if (clipEntity is Curve clipEntCurve)
+                    if (viewport == null) { return null; }
+                    if (viewport.NonRectClipEntityId != ObjectId.Null)
                     {
-                        return clipEntCurve.ToPolyline();
+                        // Get the non-rectangular clipping boundary
+                        Entity clipEntity = viewport.NonRectClipEntityId.GetEntity(OpenMode.ForRead);
+                        if (clipEntity is Curve clipEntCurve)
+                        {
+                            return clipEntCurve.ToPolyline();
+                        }
+                        return null;
                     }
-                    return null;
-                }
-                else
-                {
-                    // Get the standard rectangular boundary
-                    Point3d center = viewport.CenterPoint;
-                    double width = viewport.Width;
-                    double height = viewport.Height;
+                    else
+                    {
+                        // Get the standard rectangular boundary
+                        Point3d center = viewport.CenterPoint;
+                        double width = viewport.Width;
+                        double height = viewport.Height;
 
-                    Point3d lowerLeft = new Point3d(center.X - (width / 2), center.Y - (height / 2), center.Z);
-                    Point3d lowerRight = new Point3d(center.X + (width / 2), center.Y - (height / 2), center.Z);
-                    Point3d upperRight = new Point3d(center.X + (width / 2), center.Y + (height / 2), center.Z);
-                    Point3d upperLeft = new Point3d(center.X - (width / 2), center.Y + (height / 2), center.Z);
+                        Point3d lowerLeft = new Point3d(center.X - (width / 2), center.Y - (height / 2), center.Z);
+                        Point3d lowerRight = new Point3d(center.X + (width / 2), center.Y - (height / 2), center.Z);
+                        Point3d upperRight = new Point3d(center.X + (width / 2), center.Y + (height / 2), center.Z);
+                        Point3d upperLeft = new Point3d(center.X - (width / 2), center.Y + (height / 2), center.Z);
 
-                    Polyline polyline = new Polyline();
-                    polyline.AddVertexAt(0, lowerLeft.ToPoint2d(), 0, 0, 0);
-                    polyline.AddVertexAt(1, lowerRight.ToPoint2d(), 0, 0, 0);
-                    polyline.AddVertexAt(2, upperRight.ToPoint2d(), 0, 0, 0);
-                    polyline.AddVertexAt(3, upperLeft.ToPoint2d(), 0, 0, 0);
-                    polyline.Closed = true;
-                    return polyline;
+                        Polyline polyline = new Polyline();
+                        polyline.AddVertexAt(0, lowerLeft.ToPoint2d(), 0, 0, 0);
+                        polyline.AddVertexAt(1, lowerRight.ToPoint2d(), 0, 0, 0);
+                        polyline.AddVertexAt(2, upperRight.ToPoint2d(), 0, 0, 0);
+                        polyline.AddVertexAt(3, upperLeft.ToPoint2d(), 0, 0, 0);
+                        polyline.Closed = true;
+                        return polyline;
                     }
                 }
                 finally

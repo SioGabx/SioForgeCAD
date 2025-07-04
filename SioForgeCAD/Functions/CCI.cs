@@ -9,7 +9,6 @@ using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {

@@ -3,11 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -48,7 +44,7 @@ namespace SioForgeCAD.Functions
                 Layers.SetCurrentLayerName(BlkToReplacement.Layer);
                 foreach (var OldBlockNewRenameName in OldBlockNewRenameNames)
                 {
-                    
+
                     BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, true, true);
                 }
                 Layers.SetCurrentLayerName(BackupLayer);

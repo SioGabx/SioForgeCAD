@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.MacroRecorder;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -11,11 +10,7 @@ using SioForgeCAD.Commun.Overrules.PolyGripOverrule;
 using SioForgeCAD.Commun.Overrules.PolylineGripOverrule;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 
 namespace SioForgeCAD.Functions
 {
@@ -67,7 +62,7 @@ namespace SioForgeCAD.Functions
                 var transBoundary = GetBoundary(transRef);
 
                 var direct = PerspectiveTransformFunctions.GetNormalizationCoefficients(origBoundary, transBoundary);
-               // var inverse = PerspectiveTransformFunctions.GetNormalizationCoefficients(transBoundary, origBoundary); // may be useful later.
+                // var inverse = PerspectiveTransformFunctions.GetNormalizationCoefficients(transBoundary, origBoundary); // may be useful later.
 
                 ClearContent(transRef);
                 RebuildContent(origRef, transRef, direct, tr);
@@ -167,7 +162,7 @@ namespace SioForgeCAD.Functions
                 {
                     ent.Erase();
                 }
-                
+
             }
         }
 
@@ -293,27 +288,27 @@ namespace SioForgeCAD.Functions
                 //using (var tr = blk.Database.TransactionManager.StartOpenCloseTransaction())
                 //{
 
-                    if (!(GetPolyline(blk) is Polyline po)) { return; }
+                if (!(GetPolyline(blk) is Polyline po)) { return; }
 
-                    var added = new HashSet<Point3d>();
-                    foreach (var pt in po.GetPolyPoints())
+                var added = new HashSet<Point3d>();
+                foreach (var pt in po.GetPolyPoints())
+                {
+                    var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
+                    if (!added.Contains(transformed))
                     {
-                        var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
-                        if (!added.Contains(transformed))
+                        var grip = new PolyCornerGrip
                         {
-                            var grip = new PolyCornerGrip
-                            {
-                                Index = grips.Count + 1,
-                                GripPoint = transformed,
-                                EntityId = entity.ObjectId,
-                                OnHotGripAction = CornerOnHotGripAction
-                            };
+                            Index = grips.Count + 1,
+                            GripPoint = transformed,
+                            EntityId = entity.ObjectId,
+                            OnHotGripAction = CornerOnHotGripAction
+                        };
 
-                            if (!grips.Contains(grip))
-                            {
-                                grips.Add(grip);
-                            }
+                        if (!grips.Contains(grip))
+                        {
+                            grips.Add(grip);
                         }
+                    }
                     //}
                     //tr.Abort();
                 }

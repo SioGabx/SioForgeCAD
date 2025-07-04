@@ -241,8 +241,7 @@ namespace SioForgeCAD.Commun.Extensions
                 using (Polyline pline = polyline2d.ToPolyline())
                 {
                     polyline2d.CopyPropertiesTo(pline);
-                    pline.AddToDrawing();
-                    polyline2d.Erase();
+                    if (pline.AddToDrawing() != ObjectId.Null) polyline2d.Erase();
                 }
             }
             if (entity is Polyline3d polyline3d)
@@ -250,8 +249,7 @@ namespace SioForgeCAD.Commun.Extensions
                 using (Polyline pline = polyline3d.ToPolyline())
                 {
                     polyline3d.CopyPropertiesTo(pline);
-                    pline.AddToDrawing();
-                    polyline3d.Erase();
+                    if (pline.AddToDrawing() != ObjectId.Null) polyline3d.Erase();
                 }
             }
             else if (entity is Polyline polyline)

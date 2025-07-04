@@ -5,10 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SioForgeCAD.Functions
 {

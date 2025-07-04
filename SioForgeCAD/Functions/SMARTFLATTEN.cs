@@ -1,11 +1,11 @@
-﻿
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.ViewModel.PointCloudManager;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -57,10 +57,16 @@ namespace SioForgeCAD.Functions
         private static void FlatObjects(ObjectId[] objectIds)
         {
             Database db = Generic.GetDatabase();
+            using (LongOperationProcess LongOperation = new LongOperationProcess("Flattening..."))
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (ObjectId entityObjectId in objectIds)
+                LongOperation.SetTotalOperations(objectIds.Length);
+                for (int i = 0; i < objectIds.Length; i++)
                 {
+                    if (LongOperation.IsCanceled) { return; }
+                    LongOperation.UpdateProgress();
+
+                    ObjectId entityObjectId = objectIds[i];
                     var DbObjEnt = tr.GetObject(entityObjectId, OpenMode.ForWrite, true, true);
                     if (!(DbObjEnt is Entity entity))
                     {
@@ -72,6 +78,8 @@ namespace SioForgeCAD.Functions
                     {
                         Debug.WriteLine($"Entité non traitée : \"{entity.GetType()}\"");
                     }
+
+                   
                 }
                 tr.Commit();
             }

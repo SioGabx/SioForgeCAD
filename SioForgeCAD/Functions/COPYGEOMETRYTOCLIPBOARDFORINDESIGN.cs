@@ -1,20 +1,11 @@
 ﻿using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using SioForgeCAD.Commun.Mist;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -35,11 +26,11 @@ namespace SioForgeCAD.Functions
                 const double Scale = 25;
                 StringBuilder writer = new StringBuilder();
                 {
-                    writer.AppendLine("%!PS-Adobe-3.0 EPSF-3.0"); 
+                    writer.AppendLine("%!PS-Adobe-3.0 EPSF-3.0");
                     writer.AppendLine($"{Scale} {Scale} scale");
                     var extend = SelectedEnts.Value.GetObjectIds().GetExtents();
                     writer.AppendLine($"%%BoundingBox: {extend.MinPoint.X} {extend.MinPoint.Y} {extend.MaxPoint.X} {extend.MaxPoint.Y}");
-                   
+
 
 
                     foreach (ObjectId id in SelectedEnts.Value.GetObjectIds())
@@ -64,7 +55,7 @@ namespace SioForgeCAD.Functions
 
                         writer.AppendLine($"{1 / Scale} setlinewidth");
                         writer.AppendLine("1 setlinejoin"); //0 = biseau; 1 = Arrondi ; 2 = Chanfreiné 
-                      
+
                         writer.AppendLine($"{GetColor(ent)} setrgbcolor");
                         writer.AppendLine("stroke");
                         //writer.AppendLine("fill");

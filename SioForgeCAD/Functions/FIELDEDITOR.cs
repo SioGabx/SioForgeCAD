@@ -22,7 +22,7 @@ namespace SioForgeCAD.Functions
             Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal += DetectModal;
             //%<\AcExpr (%<\AcObjProp Object(%<\_ObjId 2621431877296>%).Area>%+10) \f "%lu6">%
             Debug.WriteLine(EditField("%<\\AcVar Date \\f \"dd/MM/yyyy\">%"));
-        
+
         }
 
         private static void DetectModal(object sender, EventArgs e)

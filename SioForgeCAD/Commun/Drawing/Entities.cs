@@ -52,11 +52,17 @@ namespace SioForgeCAD.Commun.Drawing
                 {
                     entity.ColorIndex = (int)ColorIndex;
                 }
-
-                acBlkTblRec.AppendEntity(entity);
-                acTrans.AddNewlyCreatedDBObject(entity, true);
-                acTrans.Commit();
-                return entity.ObjectId;
+                try
+                {
+                    acBlkTblRec.AppendEntity(entity);
+                    acTrans.AddNewlyCreatedDBObject(entity, true);
+                    acTrans.Commit();
+                    return entity.ObjectId;
+                }
+                catch
+                {
+                    return ObjectId.Null;
+                }
             }
         }
 

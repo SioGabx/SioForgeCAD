@@ -15,18 +15,19 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            using (LongOperationProcess LongOperation = new LongOperationProcess())
+            using (LongOperationProcess LongOperation = new LongOperationProcess("Importing..."))
             {
                 var ListOfFiles = GetFiles();
+                LongOperation.SetTotalOperations(ListOfFiles.Length);
                 for (int FileIndex = 0; FileIndex < ListOfFiles.Length; FileIndex++)
                 {
+                    LongOperation.UpdateProgress();
                     string FileName = ListOfFiles[FileIndex];
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
                         try
                         {
                             if (LongOperation.IsCanceled) { return; }
-                            //Application.DoEvents();
                             string BlocName = System.IO.Path.GetFileNameWithoutExtension(FileName);
                             using (Database dxfDb = new Database(false, true))
                             {

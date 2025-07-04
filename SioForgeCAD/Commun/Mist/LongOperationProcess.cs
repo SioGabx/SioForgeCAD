@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Runtime;
+using System;
 using System.Windows.Forms;
+using Application = System.Windows.Forms.Application;
 
 namespace SioForgeCAD.Commun
 {
@@ -7,6 +10,10 @@ namespace SioForgeCAD.Commun
     {
         public bool IsDisposed { get; private set; }
         private LongOperationMessageFilter Filter;
+        private ProgressMeter pm;
+
+        DocumentLock acLckDoc;
+
         public bool IsCanceled
         {
             get
@@ -15,13 +22,31 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public LongOperationProcess()
+        public LongOperationProcess(string Message)
         {
             Start();
+            pm = new ProgressMeter();
+            pm.Start(Message);
+            acLckDoc = Generic.GetDocument().LockDocument();
         }
+
+
+        public void SetTotalOperations(int totalOps)
+        {
+            pm.SetLimit(totalOps);
+        }
+
+        public void UpdateProgress()
+        {
+            pm.MeterProgress();
+            System.Windows.Forms.Application.DoEvents();
+        }
+
 
         public void Dispose()
         {
+            pm.Stop();
+            pm.Dispose(); acLckDoc.Dispose();
             IsDisposed = true;
             Application.RemoveMessageFilter(Filter);
             GC.SuppressFinalize(this);
