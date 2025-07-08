@@ -71,31 +71,54 @@ namespace SioForgeCAD.Functions
 
             bool AlwaysTrue(Points pt, GetPointJig gpj) => true;
 
+            DBObjectCollection StaticEntities = new DBObjectCollection();
+            foreach (var vec in vectors)
+            {
+                var clone = boundary.Clone() as Polyline;
+                clone.TransformBy(Matrix3d.Displacement(vec));
+                StaticEntities.Add(clone);
+            }
+
+
             using (var jig = new GetPointJig
             {
-                Entities = new DBObjectCollection { boundary },
-                StaticEntities = new DBObjectCollection(),
+                Entities = new DBObjectCollection { boundary.Clone() as Entity },
+                StaticEntities = StaticEntities,
                 UpdateFunction = AlwaysTrue,
             })
             {
                 while (true)
                 {
-                    var res = jig.GetPoint("Indiquez les emplacements des présentations", "Terminer");
+                    var res = jig.GetPoint("Indiquez les emplacements des présentations", "Terminer", "Annuler précédent");
 
                     if (res.PromptPointResult.Status == PromptStatus.OK)
                     {
                         var target = res.Point.SCG;
-
-                        if (res.PromptPointResult.Status == PromptStatus.Keyword)
-                        {
-                            return vectors;
-                        }
-
                         var clone = boundary.Clone() as Polyline;
                         clone.TransformBy(Matrix3d.Displacement(Point3d.Origin.GetVectorTo(target)));
                         jig.StaticEntities.Add(clone);
 
                         vectors.Add(centroid.GetVectorTo(target));
+                    }
+                    else if (res.PromptPointResult.Status == PromptStatus.Keyword)
+                    {
+                        if (res.PromptPointResult.StringResult == "Terminer")
+                        {
+                            return vectors;
+                        }
+                        else if (res.PromptPointResult.StringResult == "Annuler précédent")
+                        {
+                            int index = vectors.Count - 1;
+                            if (index >= 0)
+                            {
+                                vectors.RemoveAt(index);
+                                var Ent = jig.StaticEntities[index];
+                                jig.StaticEntities.RemoveAt(index);
+                                Ent.Dispose();
+
+                            }
+                        }
+                        continue;
                     }
                     else
                     {
