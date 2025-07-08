@@ -58,25 +58,23 @@ namespace SioForgeCAD.Commun.Extensions
         {
             Database db = Generic.GetDatabase();
             List<Layout> AllLayout = new List<Layout>();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
-                {
-                    BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
 
-                    if (btr.IsLayout && btr.Name != BlockTableRecord.ModelSpace)
+            foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+            {
+                BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                if (btr.IsLayout && btr.Name != BlockTableRecord.ModelSpace)
+                {
+                    Layout layout = btr.LayoutId.GetDBObject(OpenMode.ForRead) as Layout;
+                    if (!layout.ModelType)
                     {
-                        Layout layout = tr.GetObject(btr.LayoutId, OpenMode.ForRead) as Layout;
-                        if (!layout.ModelType)
-                        {
-                            AllLayout.Add(layout);
-                        }
+                        AllLayout.Add(layout);
                     }
                 }
-                tr.Commit();
-                return AllLayout;
             }
+            return AllLayout;
         }
+
 
         public static Layout GetLayoutFromName(this Editor _, string Name)
         {

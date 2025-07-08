@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
@@ -13,36 +14,18 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<ObjectId> SelectionObjId = new List<ObjectId>();
-                if (ed.IsInModel()) { return; }
-                if (ed.IsInLayoutViewport())
+                Layout layout = ed.GetLayoutFromName(LayoutManager.Current.CurrentLayout);
+                if (ed.IsInLayout())
                 {
-                    SelectionObjId.Add(ed.CurrentViewportObjectId);
-                }
-
-                if (SelectionObjId.Count == 0)
-                {
-                    var Selection = ed.GetSelectionRedraw(
-                    "Selectionnez une ou plusieurs Fenetres",
-                    false,
-                    false,
-                    new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Start, "VIEWPORT") }));
-
-                    if (Selection.Status != PromptStatus.OK)
+                    var btr = layout.BlockTableRecordId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+                    foreach (ObjectId VpObjId in ed.GetAllViewportsInPaperSpace(btr))
                     {
-                        return;
-                    }
-                    SelectionObjId = Selection.Value.GetObjectIds().ToList();
-                }
-
-                foreach (var SelectionItemObjId in SelectionObjId)
-                {
-                    if (SelectionItemObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport)
-                    {
-                        DrawOutline(viewport);
+                        if (VpObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport)
+                        {
+                            DrawOutline(viewport, layout.LayoutName);
+                        }
                     }
                 }
                 tr.Commit();
@@ -63,7 +46,7 @@ namespace SioForgeCAD.Functions
                     {
                         if (VpObjId.GetDBObject(OpenMode.ForRead) is Viewport viewport)
                         {
-                            DrawOutline(viewport);
+                            DrawOutline(viewport, layout.LayoutName);
                         }
                     }
                 }
@@ -71,7 +54,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void DrawOutline(Viewport viewport)
+        private static void DrawOutline(Viewport viewport, string layoutName)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -81,7 +64,27 @@ namespace SioForgeCAD.Functions
                 ViewportBoundary.PaperToModel(viewport);
                 BlockTableRecord blockTableRecord = (BlockTableRecord)SymbolUtilityServices.GetBlockModelSpaceId(db).GetDBObject(OpenMode.ForWrite);
                 blockTableRecord.AppendEntity(ViewportBoundary);
+
                 tr.AddNewlyCreatedDBObject(ViewportBoundary, true);
+
+                Point3d centroid = ViewportBoundary.GetInnerCentroid();
+
+
+                // Création du texte centré
+                DBText label = new DBText
+                {
+                    Position = centroid,
+                    TextString = layoutName,
+                    Height = 1.5, // taille du texte, à adapter selon l’échelle
+                    HorizontalMode = TextHorizontalMode.TextCenter,
+                    VerticalMode = TextVerticalMode.TextVerticalMid,
+                    AlignmentPoint = centroid
+                };
+
+                blockTableRecord.AppendEntity(label);
+                tr.AddNewlyCreatedDBObject(label, true);
+
+
                 tr.Commit();
             }
         }
