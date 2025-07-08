@@ -208,12 +208,12 @@ namespace SioForgeCAD.Commun.Extensions
             PromptKeywordOptions options = new PromptKeywordOptions("");
             foreach (string item in Keywords)
             {
-                options.Keywords.Add(item.Replace("_", "ˍ"));
+                options.Keywords.Add(item.Replace("_", "_"));
             }
             options.Message = Message;
             options.AppendKeywordsToMessage = true;
             options.AllowArbitraryInput = false;
-            options.Keywords.Default = options.Keywords[0].DisplayName;
+            options.Keywords.Default = options.Keywords[0].GlobalName;
             options.AllowNone = false;
             var Result = ed.GetKeywords(options);
             return (Result.Status, Result.StringResult.Replace("ˍ", "_"));

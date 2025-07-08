@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace SioForgeCAD.Functions
@@ -106,82 +107,6 @@ namespace SioForgeCAD.Functions
             return vectors;
         }
 
-
-        //public static void Create()
-        //{
-        //    Editor ed = Generic.GetEditor();
-        //    Database db = Generic.GetDatabase();
-        //    using (Transaction tr = db.TransactionManager.StartTransaction())
-        //    {
-        //        //WE NEED TO MAKE LAYOUT CURRENT !!!
-        //        string layoutName = PromptForLayoutName();
-        //        if (string.IsNullOrEmpty(layoutName)) return;
-        //        var Layout = ed.GetLayoutFromName(layoutName);
-        //        if (Layout == null) return;
-        //        var ViewPort = GetViewport(Layout);
-        //        var ViewportBoundary = ViewPort.GetBoundary();
-        //        ViewportBoundary.PaperToModel(ViewPort);
-
-        //        if (ViewportBoundary == null)
-        //        {
-        //            Generic.WriteMessage($"Aucun viewport rectangulaire trouvé dans le layout {layoutName}.");
-        //            tr.Commit();
-        //            return;
-        //        }
-        //        var ViewPortBoundaryCentroid = ViewportBoundary.GetCentroid();
-        //        var vect = ViewPortBoundaryCentroid.GetVectorTo(Point3d.Origin);
-        //        ViewportBoundary.TransformBy(Matrix3d.Displacement(vect));
-
-        //        List<Vector3d> vectors = new List<Vector3d>();
-        //        bool UpdateFunc(Points pt, GetPointJig gpj) { return true; }
-        //        using (var GetPointJig = new GetPointJig()
-        //        {
-        //            Entities = new DBObjectCollection() { ViewportBoundary },
-        //            StaticEntities = new DBObjectCollection() { },
-        //            UpdateFunction = UpdateFunc,
-        //        })
-        //        {
-        //            while (true)
-        //            {
-        //                var GetPointTransientResult = GetPointJig.GetPoint("Indiquez les emplacements des présentations", "Terminer");
-        //                if (GetPointTransientResult.PromptPointResult.Status == PromptStatus.OK)
-        //                {
-        //                    if (GetPointTransientResult.PromptPointResult.Status == PromptStatus.Keyword)
-        //                    {
-        //                        //Generate all
-        //                        GenerateLayout(Layout, vectors);
-        //                        break;
-        //                    }
-        //                    else
-        //                    {
-        //                        var ViewportBoundaryCloned = ViewportBoundary.Clone() as Autodesk.AutoCAD.DatabaseServices.Polyline;
-        //                        ViewportBoundaryCloned.TransformBy(Matrix3d.Displacement((Point3d.Origin).GetVectorTo(GetPointTransientResult.Point.SCG)));
-        //                        GetPointJig.StaticEntities.Add(ViewportBoundaryCloned);
-
-        //                        var TransformVector = ViewPortBoundaryCentroid.GetVectorTo(GetPointTransientResult.Point.SCG);
-        //                        vectors.Add(TransformVector);
-        //                    }
-        //                }
-        //                else if (vectors.Count > 0)
-        //                {
-        //                    var Generate = ed.GetOptions("Voullez terminer et générer les présentations ?", "Oui", "Non");
-        //                    if (Generate.Status == PromptStatus.OK && Generate.StringResult == "Oui")
-        //                    {
-        //                        GenerateLayout(Layout, vectors);
-        //                    }
-        //                    break;
-        //                }
-        //                else
-        //                {
-        //                    break;
-        //                }
-        //            }
-        //        }
-
-        //        tr.Commit();
-        //    }
-        //}
-
         private static void GenerateLayoutFromVectors(Layout BaseLayout, List<Vector3d> Vectors)
         {
             Editor ed = Generic.GetEditor();
@@ -222,7 +147,8 @@ namespace SioForgeCAD.Functions
         private static string PromptForLayoutName()
         {
             Editor ed = Generic.GetEditor();
-            List<string> layoutNames = ed.GetAllLayout().ConvertAll(ele => ele.LayoutName);
+            List<Layout> AllLayouts = ed.GetAllLayout();
+            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"{ele.TabOrder}_{ele.LayoutName}");
             if (layoutNames.Count == 0)
             {
                 ed.WriteMessage("\nAucun layout disponible.");
@@ -230,7 +156,10 @@ namespace SioForgeCAD.Functions
             }
 
             var res = ed.GetOptions("Sélectionnez le layout cible :", layoutNames.ToArray());
-            return res.Status == PromptStatus.OK ? res.StringResult : null;
+            string SelectedTabIndex = (res.StringResult ?? string.Empty).Split('_')?.First();
+            string SelectedLayoutName = AllLayouts.FirstOrDefault(ele => ele.TabOrder.ToString() == SelectedTabIndex)?.LayoutName;
+
+            return res.Status == PromptStatus.OK ? SelectedLayoutName : null;
         }
 
         private static Viewport GetViewport(Layout layout)
