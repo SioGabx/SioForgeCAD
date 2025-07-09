@@ -7,7 +7,7 @@ namespace SioForgeCAD.Commun.Mist
     {
         private const uint GMEM_MOVEABLE = 0x0002;
 
-        public static bool SetRawDataToClipboard(string Format, byte[] EPS)
+        public static bool SetRawDataToClipboard(string Format, byte[] EPS, bool Append = false)
         {
             uint cfEps = User32PInvoke.RegisterClipboardFormat(Format);
 
@@ -18,7 +18,7 @@ namespace SioForgeCAD.Commun.Mist
 
             try
             {
-                if (!User32PInvoke.EmptyClipboard())
+                if (Append && !User32PInvoke.EmptyClipboard())
                 {
                     return false;
                 }

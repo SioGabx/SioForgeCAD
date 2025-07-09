@@ -4,8 +4,10 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using static SioForgeCAD.Functions.SAVEFILEATCLOSE;
 
 namespace SioForgeCAD.Functions
 {
@@ -23,20 +25,35 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
+
+                List<Entity> EntsClones = new List<Entity>();
+                foreach (ObjectId id in SelectedEnts.Value.GetObjectIds())
+                {
+                    if (!(tr.GetObject(id, OpenMode.ForRead) is Entity ent)) continue;
+                    var entClone = ent.Clone() as Entity;
+                    EntsClones.Add(entClone);
+                }
+
+
                 const double Scale = 25;
+                var EntsClonesOriginalExtend = EntsClones.GetExtents();
+                var VectorToOrigin = EntsClonesOriginalExtend.MinPoint.GetVectorTo(Point3d.Origin);
+                foreach (var entClone in EntsClones)
+                {
+                    entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin)); //move ents to 0 0
+                    entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin)); //scale from 0 0
+                    
+                }
+
+                var EntsClonesScaledExtend = EntsClones.GetExtents();
+
                 StringBuilder writer = new StringBuilder();
                 {
                     writer.AppendLine("%!PS-Adobe-3.0 EPSF-3.0");
-                    writer.AppendLine($"{Scale} {Scale} scale");
-                    var extend = SelectedEnts.Value.GetObjectIds().GetExtents();
-                    writer.AppendLine($"%%BoundingBox: {extend.MinPoint.X} {extend.MinPoint.Y} {extend.MaxPoint.X} {extend.MaxPoint.Y}");
+                    writer.AppendLine($"%%BoundingBox: {Format(EntsClonesScaledExtend.MinPoint.X)} {Format(EntsClonesScaledExtend.MinPoint.Y)} {Format(EntsClonesScaledExtend.MaxPoint.X)} {Format(EntsClonesScaledExtend.MaxPoint.Y)}");
 
-
-
-                    foreach (ObjectId id in SelectedEnts.Value.GetObjectIds())
+                    foreach (var ent in EntsClones)
                     {
-                        Entity ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
-                        if (ent == null) continue;
                         writer.AppendLine("newpath");
                         switch (ent)
                         {
@@ -53,7 +70,7 @@ namespace SioForgeCAD.Functions
                                 break;
                         }
 
-                        writer.AppendLine($"{1 / Scale} setlinewidth");
+                        writer.AppendLine($"1 setlinewidth");
                         writer.AppendLine("1 setlinejoin"); //0 = biseau; 1 = Arrondi ; 2 = Chanfreiné 
 
                         writer.AppendLine($"{GetColor(ent)} setrgbcolor");
@@ -138,7 +155,7 @@ namespace SioForgeCAD.Functions
             Point2d cp2d = arc2d.Center;
             double startAngle = (new Line2d(cp2d, sp2d)).Direction.Angle;
             double endAngle = (new Line2d(cp2d, ep2d)).Direction.Angle;
-            return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2} {3} {4} {5}", Format(cp2d.X), Format(cp2d.Y), Format(arc2d.Radius), RadToDeg(startAngle), RadToDeg(endAngle), arc2d.IsClockWise ? "arcn" : "arc");
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2} {3} {4} {5}", Format(cp2d.X), Format(cp2d.Y), Format(arc2d.Radius), Format(RadToDeg(startAngle)), Format(RadToDeg(endAngle)), arc2d.IsClockWise ? "arcn" : "arc");
         }
 
 
