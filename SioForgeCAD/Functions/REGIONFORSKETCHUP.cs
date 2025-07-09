@@ -11,7 +11,7 @@ namespace SioForgeCAD.Functions
 {
     public static class REGIONFORSKETCHUP
     {
-        public static void GenerateRegionFromBoundaries(bool InNewDrawing)
+        public static void GenerateRegionFromBoundaries()
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
@@ -88,6 +88,9 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
+                var InNewDrawingPrompt = ed.GetOptions("Voullez vous créer un nouveau dessin avec les régions ?", "Oui", "Non");
+                bool InNewDrawing = InNewDrawingPrompt.Status == PromptStatus.OK && InNewDrawingPrompt.StringResult == "Oui";
+
                 if (InNewDrawing)
                 {
                     // Crée un nouveau dessin vide (sans template)
@@ -156,7 +159,7 @@ namespace SioForgeCAD.Functions
                         selObj.ObjectId.EraseObject();
                     }
 
-                    ed.WriteMessage($"\n{ForSketchupEntities.Count} région(s) transférée(s) dans le nouveau dessin.");
+                    ed.WriteMessage($"\n{ForSketchupEntities.Count} région(s) créée(s).");
                 }
                 tr.Commit();
             }

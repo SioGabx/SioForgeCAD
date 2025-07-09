@@ -685,17 +685,10 @@ namespace SioForgeCAD
             Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
         }
 
-        [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUPINNEWDRAWING", CommandFlags.Redraw)]
-        public static void REGIONFORSKETCHUPINNEWDRAWING()
-        {
-            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries(true);
-        }
-
-
         [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
         public static void REGIONFORSKETCHUP()
         {
-            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries(false);
+            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
         }
 
         [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
