@@ -6,6 +6,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -697,10 +698,16 @@ namespace SioForgeCAD
             Functions.OFFSETMULTIPLE.Execute();
         }
 
-        [CommandMethod("DEBUG", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.UsePickSet)]
         public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN()
         {
             Functions.COPYGEOMETRYTOCLIPBOARDFORINDESIGN.Copy();
+        }
+
+        [CommandMethod("SIOFORGECAD", "RENAMELAYOUT", CommandFlags.UsePickSet)]
+        public static void RENAMELAYOUT()
+        {
+            Functions.RENAMELAYOUT.Replace();
         }
 
 
@@ -734,6 +741,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
+            new RenameDialog().Show();
         }
 
         [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]

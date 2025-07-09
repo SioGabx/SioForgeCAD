@@ -530,8 +530,8 @@ namespace SioForgeCAD.Commun.Extensions
             string AppName = Generic.GetExtensionDLLName();
             Database db = Generic.GetDatabase();
             List<object> list = new List<object>();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //{
                 ResultBuffer rb = ent.GetXDataForApplication(AppName);
                 if (rb != null)
                 {
@@ -549,9 +549,9 @@ namespace SioForgeCAD.Commun.Extensions
                                 break;
                         }
                     }
-                }
-                tr.Commit();
-            }
+               }
+                //tr.Commit();
+            //}
             return list;
         }
 

@@ -29,14 +29,14 @@
         private void InitializeComponent()
         {
             this.DataGrid = new System.Windows.Forms.DataGridView();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.ValidateButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.ContentPanel = new System.Windows.Forms.Panel();
             this.NAME = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HEIGHT = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.WIDTH = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TYPE = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.ValidateButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.ContentPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.DataGrid)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.ContentPanel.SuspendLayout();
@@ -54,7 +54,7 @@
             this.DataGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.DataGrid.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.DataGrid.Location = new System.Drawing.Point(0, 0);
-            this.DataGrid.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.DataGrid.Margin = new System.Windows.Forms.Padding(2);
             this.DataGrid.Name = "DataGrid";
             this.DataGrid.RowHeadersWidth = 51;
             this.DataGrid.RowTemplate.Height = 24;
@@ -64,6 +64,44 @@
             this.DataGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DataGrid_CellBeginEdit);
             this.DataGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGrid_CellEndEdit);
             this.DataGrid.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DataGrid_KeyDown);
+            // 
+            // NAME
+            // 
+            this.NAME.HeaderText = "Nom latin \'Cultivar\'";
+            this.NAME.MinimumWidth = 6;
+            this.NAME.Name = "NAME";
+            this.NAME.Width = 325;
+            // 
+            // HEIGHT
+            // 
+            this.HEIGHT.HeaderText = "Hauteur";
+            this.HEIGHT.MinimumWidth = 6;
+            this.HEIGHT.Name = "HEIGHT";
+            this.HEIGHT.Width = 125;
+            // 
+            // WIDTH
+            // 
+            this.WIDTH.HeaderText = "Largeur";
+            this.WIDTH.MinimumWidth = 6;
+            this.WIDTH.Name = "WIDTH";
+            this.WIDTH.Width = 125;
+            // 
+            // TYPE
+            // 
+            this.TYPE.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            this.TYPE.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.TYPE.HeaderText = "Type";
+            this.TYPE.Items.AddRange(new object[] {
+            "ARBRES",
+            "CÉPÉES",
+            "ARBUSTES",
+            "GRIMPANTES",
+            "GRAMINÉES",
+            "VIVACES",
+            "BULBEUSES"});
+            this.TYPE.MinimumWidth = 6;
+            this.TYPE.Name = "TYPE";
+            this.TYPE.Width = 150;
             // 
             // toolStrip1
             // 
@@ -108,48 +146,10 @@
             this.ContentPanel.Controls.Add(this.DataGrid);
             this.ContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ContentPanel.Location = new System.Drawing.Point(0, 27);
-            this.ContentPanel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ContentPanel.Margin = new System.Windows.Forms.Padding(2);
             this.ContentPanel.Name = "ContentPanel";
             this.ContentPanel.Size = new System.Drawing.Size(507, 339);
             this.ContentPanel.TabIndex = 2;
-            // 
-            // NAME
-            // 
-            this.NAME.HeaderText = "Nom latin \'Cultivar\'";
-            this.NAME.MinimumWidth = 6;
-            this.NAME.Name = "NAME";
-            this.NAME.Width = 325;
-            // 
-            // HEIGHT
-            // 
-            this.HEIGHT.HeaderText = "Hauteur";
-            this.HEIGHT.MinimumWidth = 6;
-            this.HEIGHT.Name = "HEIGHT";
-            this.HEIGHT.Width = 125;
-            // 
-            // WIDTH
-            // 
-            this.WIDTH.HeaderText = "Largeur";
-            this.WIDTH.MinimumWidth = 6;
-            this.WIDTH.Name = "WIDTH";
-            this.WIDTH.Width = 125;
-            // 
-            // TYPE
-            // 
-            this.TYPE.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            this.TYPE.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.TYPE.HeaderText = "Type";
-            this.TYPE.Items.AddRange(new object[] {
-            "ARBRES",
-            "CÉPÉES",
-            "ARBUSTES",
-            "GRIMPANTES",
-            "GRAMINÉES",
-            "VIVACES",
-            "BULBEUSES"});
-            this.TYPE.MinimumWidth = 6;
-            this.TYPE.Name = "TYPE";
-            this.TYPE.Width = 150;
             // 
             // VegblocDialog
             // 
@@ -159,7 +159,7 @@
             this.Controls.Add(this.ContentPanel);
             this.Controls.Add(this.toolStrip1);
             this.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "VegblocDialog";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

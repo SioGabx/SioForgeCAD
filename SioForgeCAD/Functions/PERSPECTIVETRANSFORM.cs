@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -11,6 +12,7 @@ using SioForgeCAD.Commun.Overrules.PolylineGripOverrule;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace SioForgeCAD.Functions
 {
@@ -116,7 +118,7 @@ namespace SioForgeCAD.Functions
             var transBlkId = BlockReferences.Create("*U", nameof(BlocDataType.PTTransformedEnts), transformed, origin.ToPoints(), false, BlockScaling.Uniform);
 
             var origRef = new BlockReference(origin, origBlkId);
-            origRef.AddXData(nameof(BlocDataType.PTOriginalEnts));
+            origRef.AddXData(nameof(BlocDataType.PTOriginalEnts)); origRef.Transparency = Generic.GetTransparencyFromAlpha(0);
 
             var transRef = new BlockReference(origin, transBlkId);
             transRef.AddXData(nameof(BlocDataType.PTTransformedEnts));
@@ -181,6 +183,25 @@ namespace SioForgeCAD.Functions
             }
         }
 
+        private static IEnumerable<Entity> GetEntitiesInBlockNoTr(BlockReference blk)
+        {
+            DBObjectCollection Exploded = new DBObjectCollection();
+            if (blk != null)
+            {
+                blk.Explode(Exploded);
+                foreach (DBObject item in Exploded)
+                {
+                    if (item is Entity ent)
+                    {
+                        yield return ent;
+                    }
+                    else
+                    {
+                        item.Dispose();
+                    }
+                }
+            }
+        }
         private static IEnumerable<Entity> GetEntitiesInBlock(BlockReference blk)
         {
             var def = (BlockTableRecord)blk.BlockTableRecord.GetNoTransactionDBObject(OpenMode.ForRead);
@@ -200,7 +221,18 @@ namespace SioForgeCAD.Functions
             public static bool FilterFunction(Entity e) =>
                 e is BlockReference br && br.ReadXData().Contains(nameof(BlocDataType.PTMain));
 
-            private static Polyline GetPolyline(BlockReference mainBlk)
+            private static Polyline GetTransformedPolylineNoTr(BlockReference mainBlk)
+            {
+                var mainBlkInEnts = GetEntitiesInBlockNoTr(mainBlk);
+                BlockReference BlkPTTransformedEnts = mainBlkInEnts.OfType<BlockReference>().FirstOrDefault(br => !br.Transparency.IsByAlpha);
+                var BlkPTTransformedEntsInEnts = GetEntitiesInBlockNoTr(BlkPTTransformedEnts);
+                var Poly = BlkPTTransformedEntsInEnts.OfType<Polyline>().FirstOrDefault().Clone() as Polyline;
+                mainBlkInEnts.DeepDispose();
+                BlkPTTransformedEntsInEnts.DeepDispose();
+                return Poly;
+            }
+
+            private static Polyline GetTransformedPolyline(BlockReference mainBlk)
             {
                 BlockReference BlkPTTransformedEnts = GetEntitiesInBlock(mainBlk)
                  .OfType<BlockReference>()
@@ -218,7 +250,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
 
-                    if (!(GetPolyline(mainBlk) is Polyline poly))
+                    if (!(GetTransformedPolyline(mainBlk) is Polyline poly))
                     {
                         return;
                     }
@@ -230,24 +262,26 @@ namespace SioForgeCAD.Functions
 
                     var blockTransform = mainBlk.BlockTransform;
                     var inverse = blockTransform;
-                    var workingCopy = (Polyline)poly.Clone();
-                    workingCopy.TransformBy(inverse);
-
-                    if ((int)polyGrip.CurrentModeId <= (int)PolyGripOverrule.ModeIdAction.Stretch)
+                    using (var workingCopy = (Polyline)poly.Clone())
                     {
-                        var pts = StretchPoint(workingCopy, gripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
-                        if (pts is null)
-                        {
-                            return;
-                        }
+                        workingCopy.TransformBy(inverse);
 
-                        poly.UpgradeOpen();
-                        for (int i = 0; i < pts.Count - 1; i++)
+                        if ((int)polyGrip.CurrentModeId <= (int)PolyGripOverrule.ModeIdAction.Stretch)
                         {
-                            poly.SetPointAt(i, pts[i].ToPoint3d().TransformBy(blockTransform.Inverse()).ToPoint2d());
-                        }
+                            var pts = StretchPoint(workingCopy, gripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
+                            if (pts is null)
+                            {
+                                return;
+                            }
 
-                        TransformEnts(mainBlk);
+                            poly.UpgradeOpen();
+                            for (int i = 0; i < pts.Count - 1; i++)
+                            {
+                                poly.SetPointAt(i, pts[i].ToPoint3d().TransformBy(blockTransform.Inverse()).ToPoint2d());
+                            }
+
+                            TransformEnts(mainBlk);
+                        }
                     }
                     tr.Commit();
                 }
@@ -281,36 +315,41 @@ namespace SioForgeCAD.Functions
             }
 
             public override void GetGripPoints(Entity entity, GripDataCollection grips, double viewUnit, int gripSize, Vector3d viewDir, GetGripPointsFlags flags)
-            {
+            { //  Dont use transaction here, this cause AutoCAD to crash when changing properties : An item with the same key has already been added
+
                 if (!IsApplicable(entity)) { base.GetGripPoints(entity, grips, viewUnit, gripSize, viewDir, flags); return; }
 
                 if (!(entity is BlockReference blk)) return;
+
+
                 //using (var tr = blk.Database.TransactionManager.StartOpenCloseTransaction())
                 //{
-
-                if (!(GetPolyline(blk) is Polyline po)) { return; }
-
-                var added = new HashSet<Point3d>();
-                foreach (var pt in po.GetPolyPoints())
+                using (var ent = GetTransformedPolylineNoTr(blk))
                 {
-                    var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
-                    if (!added.Contains(transformed))
-                    {
-                        var grip = new PolyCornerGrip
-                        {
-                            Index = grips.Count + 1,
-                            GripPoint = transformed,
-                            EntityId = entity.ObjectId,
-                            OnHotGripAction = CornerOnHotGripAction
-                        };
+                    if (!(ent is Polyline po)) { return; }
 
-                        if (!grips.Contains(grip))
+                    var added = new HashSet<Point3d>();
+                    foreach (var pt in po.GetPolyPoints())
+                    {
+                        var transformed = pt.ToPoint3d().TransformBy(blk.BlockTransform);
+                        if (!added.Contains(transformed))
                         {
-                            grips.Add(grip);
+                            var grip = new PolyCornerGrip
+                            {
+                                Index = grips.Count + 1,
+                                GripPoint = transformed,
+                                EntityId = entity.ObjectId,
+                                OnHotGripAction = CornerOnHotGripAction
+                            };
+
+                            if (!grips.Contains(grip))
+                            {
+                                grips.Add(grip);
+                            }
                         }
+                        //}
+                        //tr.Abort();
                     }
-                    //}
-                    //tr.Abort();
                 }
             }
         }

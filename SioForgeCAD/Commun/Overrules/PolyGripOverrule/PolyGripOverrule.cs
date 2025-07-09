@@ -156,7 +156,7 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 Generic.WriteMessage("Impossible de déplacer un point superposé");
                 return;
             }
-            //base.MoveGripPointsAt(entity, grips, offset, bitFlags);
+            base.MoveGripPointsAt(entity, grips, offset, bitFlags);
         }
     }
 }

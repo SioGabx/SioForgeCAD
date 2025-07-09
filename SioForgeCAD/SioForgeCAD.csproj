@@ -196,11 +196,11 @@
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripJig.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGrip.cs" />
-    <Compile Include="Forms\NotesPalette.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="Forms\RenameDialog.cs">
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\NotesPalette.Designer.cs">
-      <DependentUpon>NotesPalette.cs</DependentUpon>
+    <Compile Include="Forms\RenameDialog.Designer.cs">
+      <DependentUpon>RenameDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
@@ -262,6 +262,7 @@
     <Compile Include="Functions\PERSPECTIVETRANSFORM.cs" />
     <Compile Include="Functions\REGIONFORSKETCHUP.cs" />
     <Compile Include="Functions\REMOVEALLPROXIES.cs" />
+    <Compile Include="Functions\RENAMELAYOUT.cs" />
     <Compile Include="Functions\SAVEFILEATCLOSE.cs" />
     <Compile Include="Functions\SCALERANDOM.cs" />
     <Compile Include="Functions\FINDHATCHWITHOUTASSOCIATIVEBOUNDARY.cs" />
@@ -326,8 +327,8 @@
     <EmbeddedResource Include="Forms\InputDialogBox.resx">
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\NotesPalette.resx">
-      <DependentUpon>NotesPalette.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\RenameDialog.resx">
+      <DependentUpon>RenameDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\VegblocDialog.resx">
       <DependentUpon>VegblocDialog.cs</DependentUpon>
@@ -347,6 +348,7 @@
     <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Pentes.dwg" />
     <EmbeddedResource Include="Commun\Blocks\_APUd_CP_Altimetries.dwg" />
     <None Include="packages.config" />
+    <None Include="Properties\DataSources\SioForgeCAD.Forms.RenameDialog.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

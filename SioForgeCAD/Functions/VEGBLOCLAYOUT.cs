@@ -159,7 +159,7 @@ namespace SioForgeCAD.Functions
                 string newName = baseName;
                 for (int index = 1; ListOfLayoutNames.Contains(newName); index++)
                 {
-                    newName = string.Format("{0}_{1}", baseName, index.ToString("D2"));
+                    newName = string.Format("{0}{1}", baseName, index.ToString("D2"));
                 }
                 return SymbolUtilityServices.RepairSymbolName(newName, false);
             }
@@ -171,7 +171,7 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             List<Layout> AllLayouts = ed.GetAllLayout();
-            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"{ele.TabOrder}_{ele.LayoutName}");
+            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"P{ele.TabOrder}_{ele.LayoutName}");
             if (layoutNames.Count == 0)
             {
                 ed.WriteMessage("\nAucun layout disponible.");
@@ -179,7 +179,7 @@ namespace SioForgeCAD.Functions
             }
 
             var res = ed.GetOptions("Sélectionnez le layout cible :", layoutNames.ToArray());
-            string SelectedTabIndex = (res.StringResult ?? string.Empty).Split('_')?.First();
+            string SelectedTabIndex = (res.StringResult ?? string.Empty).Split('_')?.First().TrimStart('P');
             string SelectedLayoutName = AllLayouts.FirstOrDefault(ele => ele.TabOrder.ToString() == SelectedTabIndex)?.LayoutName;
 
             return res.Status == PromptStatus.OK ? SelectedLayoutName : null;
