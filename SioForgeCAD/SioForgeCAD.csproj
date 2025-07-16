@@ -222,6 +222,7 @@
     </Compile>
     <Compile Include="Functions\BATTLEMENTS.cs" />
     <Compile Include="Functions\BLKADDENTITIES.cs" />
+    <Compile Include="Functions\BLKCREATEANONYMOUS.cs" />
     <Compile Include="Functions\BLKINSEDIT.cs" />
     <Compile Include="Functions\BLKREPLACE.cs" />
     <Compile Include="Functions\BLKSETDEFINITIONTOSCALEUNIFORM.cs" />
@@ -348,7 +349,6 @@
     <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Pentes.dwg" />
     <EmbeddedResource Include="Commun\Blocks\_APUd_CP_Altimetries.dwg" />
     <None Include="packages.config" />
-    <None Include="Properties\DataSources\SioForgeCAD.Forms.RenameDialog.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
