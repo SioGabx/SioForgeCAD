@@ -488,7 +488,8 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     ld.EndPoint = new Point3d(ld.EndPoint.X, ld.EndPoint.Y, 0);
                     ld.StartPoint = new Point3d(ld.StartPoint.X, ld.StartPoint.Y, 0);
-                };
+                }
+                ;
 
             }
             else if (entity is Solid)
@@ -532,25 +533,25 @@ namespace SioForgeCAD.Commun.Extensions
             List<object> list = new List<object>();
             //using (Transaction tr = db.TransactionManager.StartTransaction())
             //{
-                ResultBuffer rb = ent.GetXDataForApplication(AppName);
-                if (rb != null)
+            ResultBuffer rb = ent.GetXDataForApplication(AppName);
+            if (rb != null)
+            {
+                foreach (TypedValue tv in rb.AsArray())
                 {
-                    foreach (TypedValue tv in rb.AsArray())
+                    switch ((DxfCode)tv.TypeCode)
                     {
-                        switch ((DxfCode)tv.TypeCode)
-                        {
-                            case DxfCode.ExtendedDataAsciiString:
-                                string asciiStr = (string)tv.Value;
-                                list.Add(asciiStr);
-                                break;
-                            case DxfCode.ExtendedDataInteger16:
-                                int int16 = (short)tv.Value;
-                                list.Add(int16);
-                                break;
-                        }
+                        case DxfCode.ExtendedDataAsciiString:
+                            string asciiStr = (string)tv.Value;
+                            list.Add(asciiStr);
+                            break;
+                        case DxfCode.ExtendedDataInteger16:
+                            int int16 = (short)tv.Value;
+                            list.Add(int16);
+                            break;
                     }
-               }
-                //tr.Commit();
+                }
+            }
+            //tr.Commit();
             //}
             return list;
         }

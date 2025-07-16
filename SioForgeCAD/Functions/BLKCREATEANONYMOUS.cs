@@ -33,7 +33,7 @@ namespace SioForgeCAD.Functions
                 var orderedIds = drawOrderTable.GetFullDrawOrder(0)
                     .Cast<ObjectId>()
                     .Where(id => selectedIds.Contains(id));
-         
+
                 foreach (ObjectId SelectedEntityObjId in orderedIds)
                 {
                     var ent = SelectedEntityObjId.GetDBObject(OpenMode.ForWrite);

@@ -4,8 +4,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System;
-using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -79,7 +77,7 @@ namespace SioForgeCAD.Functions
                         Debug.WriteLine($"Entité non traitée : \"{entity.GetType()}\"");
                     }
 
-                   
+
                 }
                 tr.Commit();
             }

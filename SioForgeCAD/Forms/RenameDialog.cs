@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Forms
@@ -80,8 +73,9 @@ namespace SioForgeCAD.Forms
                 HeaderText = "",
                 DataPropertyName = nameof(DataTable.Include),
                 Name = nameof(DataTable.Include),
-                Width = 60, AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
-    
+                Width = 60,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+
             };
 
             var originalCol = new DataGridViewTextBoxColumn
@@ -91,7 +85,7 @@ namespace SioForgeCAD.Forms
                 Name = nameof(DataTable.Original),
                 DefaultCellStyle = new DataGridViewCellStyle()
                 {
-                    ForeColor = Color.FromArgb(100,100,100)
+                    ForeColor = Color.FromArgb(100, 100, 100)
                 }
             };
 

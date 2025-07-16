@@ -152,8 +152,8 @@ namespace SioForgeCAD
         public static void BLKTOSTATICBLOCK()
         {
             Functions.BLKTOSTATICBLOCK.Convert();
-        }  
-        
+        }
+
         [CommandMethod("SIOFORGECAD", "BLKCREATEANONYMOUS", CommandFlags.Redraw)]
         //Create anonymous block reference from selection
         public static void BLKCREATEANONYMOUS()

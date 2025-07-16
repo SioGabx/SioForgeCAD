@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using static SioForgeCAD.Functions.SAVEFILEATCLOSE;
 
 namespace SioForgeCAD.Functions
 {
@@ -42,7 +41,7 @@ namespace SioForgeCAD.Functions
                 {
                     entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin)); //move ents to 0 0
                     entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin)); //scale from 0 0
-                    
+
                 }
 
                 var EntsClonesScaledExtend = EntsClones.GetExtents();
