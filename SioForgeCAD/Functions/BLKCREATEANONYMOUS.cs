@@ -3,12 +3,8 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -30,7 +26,15 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var BlockReferencesCollection = new DBObjectCollection();
-                foreach (ObjectId SelectedEntityObjId in selResult.Value.GetObjectIds())
+
+                var modelSpace = SymbolUtilityServices.GetBlockModelSpaceId(db).GetObject(OpenMode.ForRead) as BlockTableRecord;
+                var drawOrderTable = modelSpace.DrawOrderTableId.GetObject(OpenMode.ForRead) as DrawOrderTable;
+                var selectedIds = new HashSet<ObjectId>(selResult.Value.GetObjectIds());
+                var orderedIds = drawOrderTable.GetFullDrawOrder(0)
+                    .Cast<ObjectId>()
+                    .Where(id => selectedIds.Contains(id));
+         
+                foreach (ObjectId SelectedEntityObjId in orderedIds)
                 {
                     var ent = SelectedEntityObjId.GetDBObject(OpenMode.ForWrite);
                     BlockReferencesCollection.Add(ent.Clone() as DBObject);
