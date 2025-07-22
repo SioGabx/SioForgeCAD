@@ -41,8 +41,9 @@ namespace SioForgeCAD.Functions
                     ent.Erase();
                 }
 
-                var BlkDefId = BlockReferences.Create("*U", "", BlockReferencesCollection, ptResult.Value.ToPoints(), true, BlockScaling.Any);
-                var BlkRef = new BlockReference(ptResult.Value, BlkDefId);
+                var InsPoint = Points.GetFromPromptPointResult(ptResult);
+                var BlkDefId = BlockReferences.Create("*U", "", BlockReferencesCollection, InsPoint, true, BlockScaling.Any);
+                var BlkRef = new BlockReference(InsPoint.SCG, BlkDefId);
                 BlkRef.AddToDrawing();
                 tr.Commit();
             }
