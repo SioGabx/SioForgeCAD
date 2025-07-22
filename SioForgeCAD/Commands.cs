@@ -717,6 +717,12 @@ namespace SioForgeCAD
             Functions.RENAMELAYOUT.Replace();
         }
 
+        [CommandMethod("SIOFORGECAD", "MANAGEDRAWINGCUSTOMPROPERTIES", CommandFlags.UsePickSet)]
+        public static void MANAGEDRAWINGCUSTOMPROPERTIES()
+        {
+            Functions.MANAGEDRAWINGCUSTOMPROPERTIES.Menu();
+        }
+
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html

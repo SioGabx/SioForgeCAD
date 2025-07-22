@@ -259,6 +259,7 @@
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />
+    <Compile Include="Functions\MANAGEDRAWINGCUSTOMPROPERTIES.cs" />
     <Compile Include="Functions\OFFSETMULTIPLE.cs" />
     <Compile Include="Functions\PERSPECTIVETRANSFORM.cs" />
     <Compile Include="Functions\REGIONFORSKETCHUP.cs" />

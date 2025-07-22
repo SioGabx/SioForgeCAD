@@ -45,6 +45,10 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return input.ToLowerInvariant().CapitalizeFirstLetters(1);
         }
+        public static string TrimStart(this string input, string prefix)
+        {
+            return input.StartsWith(prefix) ? input.Substring(prefix.Length) : input;
+        }
 
         public static string RemoveDiacritics(this string str)
         {
@@ -94,6 +98,22 @@ namespace SioForgeCAD.Commun.Extensions
             var LanguageSeparator = System.Globalization.CultureInfo.CurrentUICulture.NumberFormat.NumberDecimalSeparator; //french use , as decimal separaror
             var newdelimiters = delimiters.Where(car => car.Trim() != LanguageSeparator);
             return input.SplitByListString(newdelimiters).ToArray();
+        }
+        public static string SanitizeToAlphanumericHyphens(this string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            var sb = new StringBuilder();
+
+            foreach (char c in input)
+            {
+                if (char.IsLetterOrDigit(c))
+                    sb.Append(c);
+                else
+                    sb.Append('-');
+            }
+
+            return sb.ToString();
         }
 
     }

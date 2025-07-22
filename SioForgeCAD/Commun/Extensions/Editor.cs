@@ -204,9 +204,17 @@ namespace SioForgeCAD.Commun.Extensions
         public static (PromptStatus Status, string StringResult) GetOptions(this Editor ed, string Message, params string[] Keywords)
         {
             PromptKeywordOptions options = new PromptKeywordOptions("");
-            foreach (string item in Keywords)
+
+            Dictionary<string, string> optionsDic = new Dictionary<string, string>();
+            foreach (var item in Keywords)
             {
-                options.Keywords.Add(item.Replace("_", "_"));
+                optionsDic.Add(item.SanitizeToAlphanumericHyphens(), item);
+            }
+
+
+            foreach (string item in optionsDic.Keys)
+            {
+                options.Keywords.Add(item);
             }
             options.Message = Message;
             options.AppendKeywordsToMessage = true;
@@ -214,7 +222,8 @@ namespace SioForgeCAD.Commun.Extensions
             options.Keywords.Default = options.Keywords[0].GlobalName;
             options.AllowNone = false;
             var Result = ed.GetKeywords(options);
-            return (Result.Status, Result.StringResult.Replace("ˍ", "_"));
+            string SelectedStringResult = optionsDic[Result.StringResult];
+            return (Result.Status, SelectedStringResult);
         }
 
 

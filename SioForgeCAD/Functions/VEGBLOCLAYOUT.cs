@@ -171,7 +171,7 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             List<Layout> AllLayouts = ed.GetAllLayout();
-            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"P{ele.TabOrder}_{ele.LayoutName}");
+            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"{ele.LayoutName}");
             if (layoutNames.Count == 0)
             {
                 ed.WriteMessage("\nAucun layout disponible.");
@@ -179,8 +179,7 @@ namespace SioForgeCAD.Functions
             }
 
             var res = ed.GetOptions("Sélectionnez le layout cible :", layoutNames.ToArray());
-            string SelectedTabIndex = (res.StringResult ?? string.Empty).Split('_')?.First().TrimStart('P');
-            string SelectedLayoutName = AllLayouts.FirstOrDefault(ele => ele.TabOrder.ToString() == SelectedTabIndex)?.LayoutName;
+            string SelectedLayoutName = res.StringResult ?? string.Empty;
 
             return res.Status == PromptStatus.OK ? SelectedLayoutName : null;
         }
