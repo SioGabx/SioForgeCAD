@@ -240,6 +240,7 @@
     <Compile Include="Functions\COPYGEOMETRYTOCLIPBOARDFORINDESIGN.cs" />
     <Compile Include="Functions\COPYMODELTOPAPER.cs" />
     <Compile Include="Functions\CIRCLETOPOLYLIGNE.cs" />
+    <Compile Include="Functions\CPDRAWORDERGRADIENT.cs" />
     <Compile Include="Functions\CURVETOPOLYGON.cs" />
     <Compile Include="Functions\CUTHATCH.cs" />
     <Compile Include="Functions\DELETESUBGROUP.cs" />

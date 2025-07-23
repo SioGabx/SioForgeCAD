@@ -28,7 +28,7 @@ namespace SioForgeCAD.Functions
             private double minRadius = 2.0;
             private double maxRadius = 10.0;
             private int circleCount = 300;
-            private int intinerationCount = 30;
+            //private int intinerationCount = 30;
             private double attractionStrength = 0.05;
             private double maxStep = 2.0;
 

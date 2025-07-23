@@ -17,6 +17,8 @@ namespace SioForgeCAD
 {
     public class Commands
     {
+        public Commands() { }
+
         //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
@@ -231,6 +233,12 @@ namespace SioForgeCAD
         public static void DROPCPOBJECTTOTERRAIN()
         {
             Functions.DROPCPOBJECTTOTERRAIN.Project();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CPDRAWORDERGRADIENT", CommandFlags.UsePickSet)]
+        public static void CPDRAWORDERGRADIENT()
+        {
+            Functions.CPDRAWORDERGRADIENT.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
