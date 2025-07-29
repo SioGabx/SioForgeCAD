@@ -20,6 +20,7 @@ namespace SioForgeCAD.Commun.Drawing
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+                ObjectIdCollection objectIdCollection = new ObjectIdCollection();
 
                 // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
                 foreach (ObjectId btrId in bt)
@@ -33,33 +34,52 @@ namespace SioForgeCAD.Commun.Drawing
                     foreach (ObjectId entId in btr)
                     {
                         Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
-
-                        if (ent is BlockReference br)
+                        if (ent is BlockReference br && br.GetBlockReferenceName() == OldBlockName)
                         {
-                            if (br.GetBlockReferenceName() == OldBlockName)
-                            {
-                                ent.UpgradeOpen();
-                                var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, btr);
-                                var newBr = newBrObjId.GetDBObject() as BlockReference;
-
-                                if (KeepScale)
-                                {
-                                    newBr.ScaleFactors = br.ScaleFactors;
-                                }
-
-                                if (KeepRotation)
-                                {
-                                    newBr.Rotation = br.Rotation;
-                                }
-
-                                if (!br.IsErased)
-                                    br.Erase(true);
-                            }
+                            objectIdCollection.Add(ent.ObjectId);
                         }
                     }
                 }
-
+                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation);
                 Purge(OldBlockName);
+                tr.Commit();
+            }
+        }
+        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true)
+        {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+
+                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
+                foreach (ObjectId entid in objectIdCollection)
+                {
+                    Entity ent = entid.GetObject(OpenMode.ForRead) as Entity;
+
+                    if (ent is BlockReference br)
+                    {
+                        ent.UpgradeOpen();
+                        BlockTableRecord ownerBtr = tr.GetObject(br.OwnerId, OpenMode.ForWrite) as BlockTableRecord;
+                        var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, ownerBtr);
+                        var newBr = newBrObjId.GetDBObject() as BlockReference;
+
+                        if (KeepScale)
+                        {
+                            newBr.ScaleFactors = br.ScaleFactors;
+                        }
+
+                        if (KeepRotation)
+                        {
+                            newBr.Rotation = br.Rotation;
+                        }
+
+                        if (!br.IsErased)
+                            br.Erase(true);
+
+                    }
+                }
                 tr.Commit();
             }
         }
