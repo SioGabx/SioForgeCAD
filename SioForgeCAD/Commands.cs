@@ -210,6 +210,11 @@ namespace SioForgeCAD
         {
             Functions.ELLIPSETOPOLYLIGNE.ConvertEllipseToPolylines();
         }
+        [CommandMethod("SIOFORGECAD", "LINETOPOLYLIGNE", CommandFlags.Redraw)]
+        public static void LINETOPOLYLIGNE()
+        {
+            Functions.LINETOPOLYLIGNE.ConvertLineToPolylines();
+        }
 
         [CommandMethod("SIOFORGECAD", "POLYLINE3DTOPOLYLIGNE", CommandFlags.Redraw)]
         public static void POLYLINE3DTOPOLYLIGNE()

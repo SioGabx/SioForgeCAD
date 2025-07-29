@@ -63,8 +63,7 @@ namespace SioForgeCAD.Functions
                                 pline.Elevation = circle.Center.Z;
                                 pline.Closed = true;
                                 circle.CopyPropertiesTo(pline);
-                                ConvertionResult.Add(pline.AddToDrawing());
-                                circle.EraseObject();
+                                ConvertionResult.Add(circle.ReplaceInDrawing(pline));
                             }
                         }
                     }

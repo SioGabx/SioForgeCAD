@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -65,6 +66,29 @@ namespace SioForgeCAD.Commun.Drawing
                 }
             }
         }
+
+        public static ObjectId ReplaceInDrawing(this Entity OriginalEntity, Entity ReplaceEntity)
+        {
+            var db = Generic.GetDatabase();
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            {
+                BlockTableRecord ownerBtr = acTrans.GetObject(OriginalEntity.OwnerId, OpenMode.ForWrite) as BlockTableRecord;
+                if (ReplaceEntity?.IsErased != false || ownerBtr is null)
+                {
+                    acTrans.Abort();
+                    return ObjectId.Null;
+                }
+                OriginalEntity.TryUpgradeOpen();
+                ReplaceEntity.TryUpgradeOpen();
+
+                ownerBtr.AppendEntity(ReplaceEntity);
+                acTrans.AddNewlyCreatedDBObject(ReplaceEntity, true);
+                OriginalEntity.Erase();
+                acTrans.Commit();
+                return ReplaceEntity.ObjectId;
+            }
+        }
+
 
         public static ObjectId AddToDrawingCurrentTransaction(this Entity entity)
         {

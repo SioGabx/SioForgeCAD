@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
-    public static class POLYLINE2DTOPOLYLIGNE
+    public static class LINETOPOLYLIGNE
     {
         public static class ContextMenu
         {
@@ -23,13 +23,13 @@ namespace SioForgeCAD.Functions
                 MenuItem mi = new MenuItem("Convertir en polyligne");
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
-                RXClass rxc = RXObject.GetClass(typeof(Polyline2d));
+                RXClass rxc = RXObject.GetClass(typeof(Line));
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
             public static void Detach()
             {
-                RXClass rxc = RXObject.GetClass(typeof(Polyline2d));
+                RXClass rxc = RXObject.GetClass(typeof(Line));
                 Application.RemoveObjectContextMenuExtension(rxc, cme);
             }
 
@@ -39,7 +39,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static void ConvertPolyline2dToPolylines()
+        public static void ConvertLineToPolylines()
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -55,13 +55,13 @@ namespace SioForgeCAD.Functions
                     List<ObjectId> ConvertionResult = new List<ObjectId>();
                     foreach (SelectedObject selObj in selResult.Value)
                     {
-                        if (selObj.ObjectId.ObjectClass.DxfName == "POLYLINE")
+                        if (selObj.ObjectId.ObjectClass.DxfName == "LINE")
                         {
-                            Polyline2d poly2d = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Polyline2d;
-                            using (Polyline pline = poly2d.ToPolyline())
+                            Line line = tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) as Line;
+                            using (Polyline pline = line.ToPolyline())
                             {
-                                poly2d.CopyPropertiesTo(pline);
-                                ConvertionResult.Add(poly2d.ReplaceInDrawing(pline));
+                                line.CopyPropertiesTo(pline);
+                                ConvertionResult.Add(line.ReplaceInDrawing(pline));
                             }
                         }
                     }

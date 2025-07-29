@@ -68,8 +68,7 @@ namespace SioForgeCAD.Functions
                                     pline.Elevation = ellipse.Center.Z;
                                     ellipse.CopyPropertiesTo(pline);
                                     pline.Cleanup();
-                                    ConvertionResult.Add(pline.AddToDrawing());
-                                    ellipse.EraseObject();
+                                    ConvertionResult.Add(ellipse.ReplaceInDrawing(pline));
                                 }
                             }
                         }

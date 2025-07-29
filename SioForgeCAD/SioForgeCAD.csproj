@@ -258,6 +258,7 @@
     <Compile Include="Functions\FRAMESELECTED.cs" />
     <Compile Include="Functions\LAYRENAME.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
+    <Compile Include="Functions\LINETOPOLYLINE.cs" />
     <Compile Include="Functions\LONGITUDINALSECTION.cs" />
     <Compile Include="Functions\ENTITIESXDATA.cs" />
     <Compile Include="Functions\MANAGEDRAWINGCUSTOMPROPERTIES.cs" />

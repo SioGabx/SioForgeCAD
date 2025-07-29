@@ -44,8 +44,7 @@ namespace SioForgeCAD.Functions
                             {
                                 var Polygon = EntAsPolyline.ToPolygon((uint)LastConvertNumberOfSegmentPerArc);
                                 curvEnt.CopyPropertiesTo(Polygon);
-                                Polygon.AddToDrawing();
-                                curvEnt.EraseObject();
+                                curvEnt.ReplaceInDrawing(Polygon);
                             }
                         }
                     }

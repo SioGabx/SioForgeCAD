@@ -61,8 +61,7 @@ namespace SioForgeCAD.Functions
                             using (Polyline pline = poly3d.ToPolyline())
                             {
                                 poly3d.CopyPropertiesTo(pline);
-                                ConvertionResult.Add(pline.AddToDrawing());
-                                poly3d.Erase();
+                                ConvertionResult.Add(poly3d.ReplaceInDrawing(pline));
                             }
                         }
                     }
