@@ -222,8 +222,12 @@ namespace SioForgeCAD.Commun.Extensions
             options.Keywords.Default = options.Keywords[0].GlobalName;
             options.AllowNone = false;
             var Result = ed.GetKeywords(options);
-            string SelectedStringResult = optionsDic[Result.StringResult];
-            return (Result.Status, SelectedStringResult);
+            if (optionsDic.TryGetValue(Result.StringResult, out string SelectedStringResult))
+            {
+                return (Result.Status, SelectedStringResult);
+            }
+            return (PromptStatus.Error, Result.StringResult);
+            
         }
 
 
