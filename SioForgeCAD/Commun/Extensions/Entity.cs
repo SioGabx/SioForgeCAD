@@ -470,14 +470,21 @@ namespace SioForgeCAD.Commun.Extensions
                 mLeader.TextLocation = mLeader.TextLocation.Flatten();
                 for (int LeaderLineCount = 0; LeaderLineCount < mLeader.LeaderLineCount; LeaderLineCount++)
                 {
-                    mLeader.SetFirstVertex(LeaderLineCount, mLeader.GetFirstVertex(LeaderLineCount).Flatten());
-                    mLeader.SetLastVertex(LeaderLineCount, mLeader.GetLastVertex(LeaderLineCount).Flatten());
-                    for (int LeaderVerticesCount = 0; LeaderVerticesCount < mLeader.VerticesCount(LeaderLineCount); LeaderVerticesCount++)
+                    try
                     {
-                        Point3d Point = mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount);
-                        mLeader.SetVertex(LeaderLineCount, LeaderVerticesCount, Point.Flatten());
+                        mLeader.SetFirstVertex(LeaderLineCount, mLeader.GetFirstVertex(LeaderLineCount).Flatten());
+                        mLeader.SetLastVertex(LeaderLineCount, mLeader.GetLastVertex(LeaderLineCount).Flatten());
+                        for (int LeaderVerticesCount = 0; LeaderVerticesCount < mLeader.VerticesCount(LeaderLineCount); LeaderVerticesCount++)
+                        {
+                            Point3d Point = mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount);
+                            mLeader.SetVertex(LeaderLineCount, LeaderVerticesCount, Point.Flatten());
 
-                        Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}");
+                            Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        continue;
                     }
                 }
             }
