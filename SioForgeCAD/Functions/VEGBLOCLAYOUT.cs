@@ -21,6 +21,7 @@ namespace SioForgeCAD.Functions
             {
                 string layoutName = PromptForLayoutName();
                 if (string.IsNullOrEmpty(layoutName)) return;
+                Generic.WriteMessage($"Selected \"{layoutName}\"");
 
                 var layout = ed.GetLayoutFromName(layoutName);
                 if (layout == null) return;
@@ -44,7 +45,7 @@ namespace SioForgeCAD.Functions
                     CollectVectors(boundary, vectors);
                     if (vectors.Count > 0)
                     {
-                        var confirm = ed.GetOptions("Voulez-vous terminer et générer les présentations ?", "Générer", "Continuer", "Annuler");
+                        var confirm = ed.GetOptions("Voulez-vous terminer et générer les présentations ?",false, "Générer", "Continuer", "Annuler");
                         if (confirm.Status == PromptStatus.OK)
                         {
                             if (confirm.StringResult == "Générer")
@@ -178,7 +179,7 @@ namespace SioForgeCAD.Functions
                 return null;
             }
 
-            var res = ed.GetOptions("Sélectionnez le layout cible :", layoutNames.ToArray());
+            var res = ed.GetOptions("Sélectionnez le layout cible :",true, layoutNames.ToArray());
             string SelectedLayoutName = res.StringResult ?? string.Empty;
 
             return res.Status == PromptStatus.OK ? SelectedLayoutName : null;

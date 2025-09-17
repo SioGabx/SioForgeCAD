@@ -201,14 +201,19 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static (PromptStatus Status, string StringResult) GetOptions(this Editor ed, string Message, params string[] Keywords)
+        public static (PromptStatus Status, string StringResult) GetOptions(this Editor ed, string Message, bool LowerCaseOptions, params string[] Keywords)
         {
             PromptKeywordOptions options = new PromptKeywordOptions("");
 
             Dictionary<string, string> optionsDic = new Dictionary<string, string>();
             foreach (var item in Keywords)
             {
-                optionsDic.Add(item.SanitizeToAlphanumericHyphens(), item);
+                var SanitizedName = item.SanitizeToAlphanumericHyphens();
+                if (LowerCaseOptions)
+                {
+                    SanitizedName = SanitizedName.ToLowerInvariant();
+                }
+                optionsDic.Add(SanitizedName, item);
             }
 
 

@@ -48,7 +48,6 @@ namespace SioForgeCAD.Functions
 
                 tr.Commit();
             }
-
         }
 
         public static string GetUserValue(string Message)

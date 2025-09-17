@@ -19,7 +19,7 @@ namespace SioForgeCAD.Functions
         public static void Menu()
         {
             var ed = Generic.GetEditor();
-            var res = ed.GetOptions("Quelle option effectuer ?", "COPIER", "COLLER");
+            var res = ed.GetOptions("Quelle option effectuer ?", false, "COPIER", "COLLER");
             if (res.Status == Autodesk.AutoCAD.EditorInput.PromptStatus.OK)
             {
                 if (res.StringResult == "COPIER")

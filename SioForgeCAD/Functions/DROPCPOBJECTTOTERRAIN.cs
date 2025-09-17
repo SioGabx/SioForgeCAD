@@ -32,7 +32,7 @@ namespace SioForgeCAD.Functions
                 ObjectId[] objectIds = selectedObjects.Value.GetObjectIds();
                 TransformAlign(objectIds, terrainBasePolyline, false);
 
-                var alignChoice = ed.GetOptions("Voulez-vous aligner les entités ?", "Oui", "Non");
+                var alignChoice = ed.GetOptions("Voulez-vous aligner les entités ?", false, "Oui", "Non");
                 if (alignChoice.Status == PromptStatus.OK && alignChoice.StringResult == "Oui")
                 {
                     TransformAlign(objectIds, terrainBasePolyline, true);
