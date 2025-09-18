@@ -354,6 +354,12 @@ namespace SioForgeCAD
             Functions.FRAMESELECTED.FrameEntitiesToView();
         }
 
+        [CommandMethod("SIOFORGECAD", "AREATOFIELD", CommandFlags.Redraw)]
+        public static void AREATOFIELD()
+        {
+            Functions.AREATOFIELD.Compute();
+        }
+
         [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]
         public static void TAREA()
         {

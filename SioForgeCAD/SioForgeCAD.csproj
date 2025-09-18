@@ -220,6 +220,7 @@
     <Compile Include="Forms\InputDialogBox.Designer.cs">
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Functions\AREATOFIELD.cs" />
     <Compile Include="Functions\BATTLEMENTS.cs" />
     <Compile Include="Functions\BLKADDENTITIES.cs" />
     <Compile Include="Functions\BLKCREATEANONYMOUS.cs" />
