@@ -55,8 +55,11 @@ namespace SioForgeCAD.Functions
             Debug.WriteLine("NumberOfSaves : " + doc.Database.NumberOfSaves);
             try
             {
-                doc.Database.SaveAs(tempFileName, false, DwgVersion.Current, null);
-                Generic.WriteMessage("Sauvegarde temporaire créée à : " + tempFileName);
+                if (!System.IO.File.Exists(tempFileName))
+                {
+                    doc.Database.SaveAs(tempFileName, false, DwgVersion.Current, null);
+                    Generic.WriteMessage("Sauvegarde temporaire créée à : " + tempFileName);
+                }
             }
             catch (System.Exception ex)
             {
