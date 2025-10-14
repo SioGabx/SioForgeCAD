@@ -80,9 +80,9 @@ namespace SioForgeCAD.Functions
 
         private static void GetUserOptions(Editor ed, out bool keepRotation, out bool keepScale)
         {
-            var keepRotationPrompt = ed.GetOptions("Conserver la rotation du bloc À REMPLACER ?",false, "Oui", "Non");
+            var keepRotationPrompt = ed.GetOptions("Conserver la rotation du bloc À REMPLACER ?", false, "Oui", "Non");
             keepRotation = keepRotationPrompt.StringResult != "Non";
-            var keepScalePrompt = ed.GetOptions("Conserver l’échelle du bloc À REMPLACER ?",false, "Oui", "Non");
+            var keepScalePrompt = ed.GetOptions("Conserver l’échelle du bloc À REMPLACER ?", false, "Oui", "Non");
             keepScale = keepRotationPrompt.StringResult != "Non";
         }
     }

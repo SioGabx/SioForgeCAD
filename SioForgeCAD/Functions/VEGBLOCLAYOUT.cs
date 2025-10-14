@@ -5,7 +5,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Collections.Generic;
-using System.Linq;
 
 
 namespace SioForgeCAD.Functions
@@ -45,7 +44,7 @@ namespace SioForgeCAD.Functions
                     CollectVectors(boundary, vectors);
                     if (vectors.Count > 0)
                     {
-                        var confirm = ed.GetOptions("Voulez-vous terminer et générer les présentations ?",false, "Générer", "Continuer", "Annuler");
+                        var confirm = ed.GetOptions("Voulez-vous terminer et générer les présentations ?", false, "Générer", "Continuer", "Annuler");
                         if (confirm.Status == PromptStatus.OK)
                         {
                             if (confirm.StringResult == "Générer")
@@ -179,7 +178,7 @@ namespace SioForgeCAD.Functions
                 return null;
             }
 
-            var res = ed.GetOptions("Sélectionnez le layout cible :",true, layoutNames.ToArray());
+            var res = ed.GetOptions("Sélectionnez le layout cible :", true, layoutNames.ToArray());
             string SelectedLayoutName = res.StringResult ?? string.Empty;
 
             return res.Status == PromptStatus.OK ? SelectedLayoutName : null;

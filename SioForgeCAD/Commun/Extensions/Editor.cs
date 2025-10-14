@@ -232,7 +232,7 @@ namespace SioForgeCAD.Commun.Extensions
                 return (Result.Status, SelectedStringResult);
             }
             return (PromptStatus.Error, Result.StringResult);
-            
+
         }
 
 

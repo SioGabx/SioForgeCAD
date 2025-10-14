@@ -5,8 +5,6 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace SioForgeCAD.Functions
@@ -36,7 +34,7 @@ namespace SioForgeCAD.Functions
                 var SelectedIds = Selection.Value.GetObjectIds();
                 if (BlockRef.IsXref())
                 {
-                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr, db);
+                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
                 }
                 else
                 {
@@ -68,7 +66,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void AddEntitiesToXref(ObjectId BlockRefObjId, BlockReference XrefRef, ObjectId[] selectedIds, Transaction tr, Database db)
+        private static void AddEntitiesToXref(ObjectId BlockRefObjId, BlockReference XrefRef, ObjectId[] selectedIds, Transaction tr)
         {
             var XrefBtr = (XrefRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
             var Xref = XrefBtr.GetXrefDatabase(false);

@@ -4,11 +4,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -65,7 +62,8 @@ namespace SioForgeCAD.Functions
                 {
                     if (selObj == null || selObj.ObjectId.IsNull) continue;
 
-                    if (!(selObj.ObjectId.GetDBObject() is Entity ent) || ent.IsErased) {
+                    if (!(selObj.ObjectId.GetDBObject() is Entity ent) || ent.IsErased)
+                    {
                         continue;
                     }
 
@@ -101,10 +99,10 @@ namespace SioForgeCAD.Functions
 
                 dot.SetRelativeDrawOrder(sortedIds.ToObjectIdCollection());
 
-                Generic.WriteMessage($"{sortedIds.Length} entités triées par ordre d'affichage."); 
+                Generic.WriteMessage($"{sortedIds.Length} entités triées par ordre d'affichage.");
                 tr.Commit();
                 Generic.Regen();
             }
         }
     }
-    }
+}

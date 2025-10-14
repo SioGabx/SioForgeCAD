@@ -88,7 +88,7 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-                var InNewDrawingPrompt = ed.GetOptions("Voullez vous créer un nouveau dessin avec les régions ?",false, "Oui", "Non");
+                var InNewDrawingPrompt = ed.GetOptions("Voullez vous créer un nouveau dessin avec les régions ?", false, "Oui", "Non");
                 bool InNewDrawing = InNewDrawingPrompt.Status == PromptStatus.OK && InNewDrawingPrompt.StringResult == "Oui";
 
                 if (InNewDrawing)
