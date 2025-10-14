@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                 bool UnionSuccess = PolygonOperation.Union(new List<PolyHole>() { FirstHachurePolyHole, SecondHachurePolyHole }, out var unionResult, true);
                 if (!UnionSuccess)
                 {
-                    Generic.WriteMessage("Impossible de merger ces hachures. Veuillez verifier qu'elles se superposent & qu'elles ne s'auto-intersectent pas");
+                    Generic.WriteMessage("Impossible de merger ces hachures. Veuillez verifier qu'elles se superposent & qu'elles ne s'auto-intersectent pas ou que certains de ses vertices ne sont pas trop proche l'un de l'autre");
                 }
                 else
                 {

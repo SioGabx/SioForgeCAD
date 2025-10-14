@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                 var SelectedIds = Selection.Value.GetObjectIds();
                 if (BlockRef.IsXref())
                 {
-                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
+                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr, db);
                 }
                 else
                 {
@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void AddEntitiesToXref(ObjectId BlockRefObjId, BlockReference XrefRef, ObjectId[] selectedIds, Transaction tr)
+        private static void AddEntitiesToXref(ObjectId BlockRefObjId, BlockReference XrefRef, ObjectId[] selectedIds, Transaction tr, Database db)
         {
             var XrefBtr = (XrefRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
             var Xref = XrefBtr.GetXrefDatabase(false);
@@ -103,12 +103,12 @@ namespace SioForgeCAD.Functions
                         BlockTable blockTable = xrefTr.GetObject(Xref.BlockTableId, OpenMode.ForRead) as BlockTable;
                         BlockTableRecord xrefBlockDef = xrefTr.GetObject(blockTable[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
                         IdMapping acIdMap = new IdMapping();
+                        Xref.RestoreOriginalXrefSymbols();
+                        Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Ignore, false);
+                        Xref.RestoreForwardingXrefSymbols();
 
-                        //LayerTable layerTable = xrefTr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
-                        Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
                         MergeDuplicateLayers(xrefTr, xrefBlockDef.Database);
                         xrefTr.Commit();
-
                         foreach (ObjectId entId in SelectedIds)
                         {
                             entId.EraseObject();

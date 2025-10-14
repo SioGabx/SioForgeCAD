@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
@@ -56,12 +57,13 @@ namespace SioForgeCAD.Commun
                 FilteredSplittedCurves.CleanupPolylines();
 
                 PossibleBoundary = FilteredSplittedCurves.JoinMerge().Cast<Polyline>().ToList();
-
+                //remove from GlobalSplittedCurves old polyligne that was filtered
                 GlobalSplittedCurves.RemoveCommun(FilteredSplittedCurves).DeepDispose();
                 foreach (var item in PossibleBoundary.ToList())
                 {
-                    if (item.TryGetArea() == 0 || item.NumberOfVertices < 3)
+                    if (item.TryGetArea() == 0 || item.NumberOfVertices < 2)//cannot keep 3 because circle is valid and is only 2
                     {
+                        Debug.WriteLine("Deleted invalid geometry while doing UNION operation");
                         PossibleBoundary.Remove(item);
                         item.Dispose();
                     }
