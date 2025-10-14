@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -107,7 +108,7 @@ namespace SioForgeCAD.Functions
                         Xref.WblockCloneObjects(SelectedIds, xrefBlockDef.ObjectId, acIdMap, DuplicateRecordCloning.Ignore, false);
                         Xref.RestoreForwardingXrefSymbols();
 
-                        MergeDuplicateLayers(xrefTr, xrefBlockDef.Database);
+                        //MergeDuplicateLayers(xrefTr, xrefBlockDef.Database);
                         xrefTr.Commit();
                         foreach (ObjectId entId in SelectedIds)
                         {
@@ -115,45 +116,6 @@ namespace SioForgeCAD.Functions
                         }
 
                         tr.Commit();
-                    }
-                }
-            }
-        }
-
-        public static void MergeDuplicateLayers(Transaction Xreftr, Database Xrefdb)
-        {
-            if (!(Xreftr.GetObject(Xrefdb.LayerTableId, OpenMode.ForRead) is LayerTable layerTable))
-            {
-                return;
-            }
-            Dictionary<string, List<ObjectId>> layerGroups = new Dictionary<string, List<ObjectId>>();
-
-            foreach (ObjectId layerId in layerTable)
-            {
-                LayerTableRecord layer = Xreftr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
-                // Because its a XREF, it get his name like "XREF|LAYERNAME" while the new is only "LAYERNAME"
-                string layerName = layer.Name.Split('|').Last();
-
-                if (!layerGroups.TryGetValue(layerName, out List<ObjectId> value))
-                {
-                    value = new List<ObjectId>();
-                    layerGroups[layerName] = value;
-                }
-
-                value.Add(layerId);
-            }
-
-            foreach (var group in layerGroups)
-            {
-                List<ObjectId> layers = group.Value;
-                if (layers.Count > 1)
-                {
-                    ObjectId targetLayerId = layers.First();
-                    layers.RemoveAt(0);
-
-                    foreach (ObjectId duplicateLayerId in layers)
-                    {
-                        Layers.Merge(Xreftr, Xrefdb, duplicateLayerId, targetLayerId);
                     }
                 }
             }
