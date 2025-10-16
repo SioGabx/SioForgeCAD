@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
-    public static class CPDRAWORDERGRADIENT
+    public static class DRAWCPORDERGRADIENT
     {
         public static void Compute()
         {

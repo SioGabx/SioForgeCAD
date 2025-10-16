@@ -246,34 +246,34 @@ namespace SioForgeCAD
             Functions.DROPCPOBJECTTOTERRAIN.Project();
         }
 
-        [CommandMethod("SIOFORGECAD", "CPDRAWORDERGRADIENT", CommandFlags.UsePickSet)]
-        public static void CPDRAWORDERGRADIENT()
+        [CommandMethod("SIOFORGECAD", "DRAWCPORDERGRADIENT", CommandFlags.UsePickSet)]
+        public static void DRAWCPORDERGRADIENT()
         {
-            Functions.CPDRAWORDERGRADIENT.Compute();
+            Functions.DRAWCPORDERGRADIENT.Compute();
         }
 
-        [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.Redraw)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void FORCELAYERCOLORTOENTITY()
         {
             Functions.FORCELAYERCOLORTOENTITY.Convert();
         }
 
-        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCOLORTOGRAYSCALE", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCOLORTOGRAYSCALE", CommandFlags.Redraw)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void SETSELECTEDENTITIESCOLORTOGRAYSCALE()
         {
             Functions.SETSELECTEDENTITIESCOLORTOGRAYSCALE.Convert();
         }
 
-        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESBRIGHTNESS", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESBRIGHTNESS", CommandFlags.Redraw)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void SETSELECTEDENTITIESBRIGHTNESS()
         {
             Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
         }
 
-        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCONTRAST", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCONTRAST", CommandFlags.Redraw)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void SETSELECTEDENTITIESCONTRAST()
         {

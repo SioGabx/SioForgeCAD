@@ -17,8 +17,8 @@ namespace SioForgeCAD.Functions
             {
                 MessageForAdding = "Selectionnez les entités"
             };
-
-            var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
+            var AllSelectedObject = ed.GetSelectionRedraw(PromptSelectEntitiesOptions);
+            //var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
 
             if (AllSelectedObject.Status != PromptStatus.OK)
             {
@@ -31,6 +31,7 @@ namespace SioForgeCAD.Functions
                 {
                     ForceColor(ObjId);
                 }
+                ed.SetImpliedSelection(AllSelectedObject.Value.GetObjectIds());
                 tr.Commit();
             }
         }
