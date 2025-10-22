@@ -4,9 +4,11 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Windows;
 
 namespace SioForgeCAD.Functions
 {
@@ -33,18 +35,59 @@ namespace SioForgeCAD.Functions
                     EntsClones.Add(entClone);
                 }
 
+                //Max width / height : 57600 meters
+                //double Scale = 25;
+                //var EntsClonesOriginalExtend = EntsClones.GetExtents();
+                //var VectorToOrigin = EntsClonesOriginalExtend.MinPoint.GetVectorTo(Point3d.Origin);
+                //foreach (var entClone in EntsClones)
+                //{
+                //    entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin)); //move ents to 0 0
+                //    entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin)); //scale from 0 0
 
-                const double Scale = 25;
+                //}
+
+
+                //var EntsClonesScaledExtend = EntsClones.GetExtents();
+                double Scale = 25;
+                double MaxSizeInMeters = 57600.0; // en mètres
+
                 var EntsClonesOriginalExtend = EntsClones.GetExtents();
                 var VectorToOrigin = EntsClonesOriginalExtend.MinPoint.GetVectorTo(Point3d.Origin);
+
+                //Move all entities so that the lower-left corner is at (0,0)
                 foreach (var entClone in EntsClones)
                 {
-                    entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin)); //move ents to 0 0
-                    entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin)); //scale from 0 0
-
+                    entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin));
                 }
 
+                //Apply initial scaling (×25) from the origin
+                foreach (var entClone in EntsClones)
+                {
+                    entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin));
+                }
+
+                //Get new extents after scaling
                 var EntsClonesScaledExtend = EntsClones.GetExtents();
+                var EntsClonesScaledExtendSize = EntsClonesScaledExtend.Size();
+
+                double width = EntsClonesScaledExtendSize.Width;
+                double height = EntsClonesScaledExtendSize.Height;
+
+                //If the scaled drawing exceeds the maximum allowed size, reduce it proportionally
+                double maxDimension = Math.Max(width, height);
+                if (maxDimension > MaxSizeInMeters)
+                {
+                    double reductionFactor = MaxSizeInMeters / maxDimension;
+
+                    //Apply the reduction scaling to all entities (from the origin)
+                    foreach (var entClone in EntsClones)
+                    {
+                        entClone.TransformBy(Matrix3d.Scaling(reductionFactor, Point3d.Origin));
+                    }
+                }
+                //Update EntsClonesScaledExtend
+                EntsClonesScaledExtend = EntsClones.GetExtents();
+
 
                 StringBuilder writer = new StringBuilder();
                 {
@@ -80,6 +123,7 @@ namespace SioForgeCAD.Functions
                     tr.Commit();
                 }
                 byte[] EPS = Encoding.ASCII.GetBytes(writer.ToString());
+                Clipboard.Clear();
                 SioForgeCAD.Commun.Mist.ClipboardHelper.SetRawDataToClipboard("Encapsulated PostScript", EPS);
             }
         }
@@ -125,9 +169,15 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            if (pl.Closed || (pl.NumberOfVertices > 2 && pl.GetPoint2dAt(0).IsEqualTo(pl.GetPoint2dAt(pl.NumberOfVertices))))
+            try
+            {
+                if (pl.Closed || (pl.NumberOfVertices > 2 && pl.GetPoint2dAt(0).IsEqualTo(pl.GetPoint2dAt(pl.NumberOfVertices))))
             {
                 w.AppendLine("closepath");
+            }
+            }catch(Exception ex)
+            {
+                Generic.WriteMessage("Echec de l'ajout d'une polyligne");
             }
 
         }
