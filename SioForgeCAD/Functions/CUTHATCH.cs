@@ -123,7 +123,7 @@ namespace SioForgeCAD.Functions
                         var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
                         //If merge generate inside :
                         Holes.AddRange(MergedHoles.GetAllHoles());
-                        
+
                         //If hole is inside an hole, we add a new Hatch inside
                         foreach (var CurveA in Holes.ToArray())
                         {

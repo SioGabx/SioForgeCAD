@@ -25,7 +25,7 @@ namespace SioForgeCAD.Commun.Overrules
 
         public int Index { get; set; }
         public ObjectId EntityId { get; set; } = ObjectId.Null;
-        public Action<ObjectId, GripData> OnHotGripAction { get; set; } = (objectid, GripData) => Generic.WriteMessage("GRIPPED");
+        public Action<ObjectId, GripData> OnHotGripAction { get; set; } = (_, __) => Generic.WriteMessage("GRIPPED");
         public GripModeCollection GripModes { get; }
         public virtual GripMode.ModeIdentifier CurrentModeId { get; set; } = GripMode.ModeIdentifier.CustomStart;
 

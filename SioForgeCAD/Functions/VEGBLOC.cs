@@ -288,7 +288,7 @@ namespace SioForgeCAD.Functions
                     TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                     TextStyleId = VegblocTextStyle,
                     Transparency = new Transparency(255),
-                    Color = GetTextColorFromBackgroundColor(BlocColor, ShortType),
+                    Color = GetTextColorFromBackgroundColor(BlocColor),
                     Width = TextBlocDisplayNameMaxWidth,
                     LineWeight = LineWeight.ByBlock,
                 };
@@ -380,7 +380,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static Color GetTextColorFromBackgroundColor(Color BlocColor, string ShortType)
+        private static Color GetTextColorFromBackgroundColor(Color BlocColor)
         {
             double IsContrasted = ((299 * BlocColor.Red) + (587 * BlocColor.Green) + (114 * BlocColor.Blue)) / 1000;
 

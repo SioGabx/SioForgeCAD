@@ -69,7 +69,7 @@ namespace SioForgeCAD.Functions
             var toOrigin = centroid.GetVectorTo(Point3d.Origin);
             boundary.TransformBy(Matrix3d.Displacement(toOrigin));
 
-            bool AlwaysTrue(Points pt, GetPointJig gpj) => true;
+            bool AlwaysTrue(Points _, GetPointJig __) => true;
 
             DBObjectCollection StaticEntities = new DBObjectCollection();
             foreach (var vec in vectors)
