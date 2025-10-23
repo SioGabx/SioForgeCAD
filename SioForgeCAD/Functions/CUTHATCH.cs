@@ -109,8 +109,7 @@ namespace SioForgeCAD.Functions
                         ExistingBoundaryStyle.CopyPropertiesTo(CutLine);
                         ExistingBoundaryStyle.CopyPropertiesTo(HatchPolyHole.Boundary);
 
-                        //Hatch cutline -> remove the content if the cutline is cutting a hole
-
+                        //Hatch cutline -> remove the content if the cutline is cutting a hole : (PS : this is not anymore a hole)
                         PolygonOperation.Substraction(new PolyHole(CutLine, null), HatchPolyHole.Holes, out var CutLineSubResult);
                         foreach (var item in CutLineSubResult)
                         {
@@ -124,6 +123,7 @@ namespace SioForgeCAD.Functions
                         var Holes = MergedHoles.GetBoundaries().Cast<Curve>().ToList();
                         //If merge generate inside :
                         Holes.AddRange(MergedHoles.GetAllHoles());
+                        
                         //If hole is inside an hole, we add a new Hatch inside
                         foreach (var CurveA in Holes.ToArray())
                         {

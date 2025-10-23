@@ -36,20 +36,8 @@ namespace SioForgeCAD.Functions
                 }
 
                 //Max width / height : 57600 meters
-                //double Scale = 25;
-                //var EntsClonesOriginalExtend = EntsClones.GetExtents();
-                //var VectorToOrigin = EntsClonesOriginalExtend.MinPoint.GetVectorTo(Point3d.Origin);
-                //foreach (var entClone in EntsClones)
-                //{
-                //    entClone.TransformBy(Matrix3d.Displacement(VectorToOrigin)); //move ents to 0 0
-                //    entClone.TransformBy(Matrix3d.Scaling(Scale, Point3d.Origin)); //scale from 0 0
-
-                //}
-
-
-                //var EntsClonesScaledExtend = EntsClones.GetExtents();
-                double Scale = 25;
-                double MaxSizeInMeters = 57600.0; // en mètres
+                const double Scale = 25;
+                const double MaxSizeInMeters = 57600.0; // en mètres
 
                 var EntsClonesOriginalExtend = EntsClones.GetExtents();
                 var VectorToOrigin = EntsClonesOriginalExtend.MinPoint.GetVectorTo(Point3d.Origin);
@@ -125,6 +113,7 @@ namespace SioForgeCAD.Functions
                 byte[] EPS = Encoding.ASCII.GetBytes(writer.ToString());
                 Clipboard.Clear();
                 SioForgeCAD.Commun.Mist.ClipboardHelper.SetRawDataToClipboard("Encapsulated PostScript", EPS);
+                ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
             }
         }
 
@@ -172,12 +161,13 @@ namespace SioForgeCAD.Functions
             try
             {
                 if (pl.Closed || (pl.NumberOfVertices > 2 && pl.GetPoint2dAt(0).IsEqualTo(pl.GetPoint2dAt(pl.NumberOfVertices))))
-            {
-                w.AppendLine("closepath");
+                {
+                    w.AppendLine("closepath");
+                }
             }
-            }catch(Exception ex)
+            catch (Exception ex)
             {
-                Generic.WriteMessage("Echec de l'ajout d'une polyligne");
+                Generic.WriteMessage($"Echec de l'ajout d'une polyligne : {ex.Message}");
             }
 
         }
@@ -191,7 +181,22 @@ namespace SioForgeCAD.Functions
                 ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(EntityLayer);
                 Color = Layers.GetLayerColor(LayerTableRecordObjId);
             }
-            return $"{Color.ColorValue.R / 255} {Color.ColorValue.G / 255} {Color.ColorValue.B / 255}";
+            double Red; double Green; double Blue;
+            if (Color.IsByAci)
+            {
+                Red = Color.ColorValue.R;
+                Green = Color.ColorValue.G;
+                Blue = Color.ColorValue.B;
+            }
+            else
+            {
+                //Named Color like PANTOME
+                Red = Color.Red;
+                Green = Color.Green;
+                Blue = Color.Blue;
+            }
+
+            return $"{Red / 255.0} {Green / 255.0} {Blue / 255.0}";
         }
 
         private static string GetEpsFromArc(CircularArc2d arc2d)

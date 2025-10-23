@@ -730,7 +730,7 @@ namespace SioForgeCAD
             Functions.OFFSETMULTIPLE.Execute();
         }
 
-        [CommandMethod("SIOFORGECAD", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.Redraw)]
         public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN()
         {
             Functions.COPYGEOMETRYTOCLIPBOARDFORINDESIGN.Copy();
