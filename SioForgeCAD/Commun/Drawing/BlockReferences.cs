@@ -28,7 +28,7 @@ namespace SioForgeCAD.Commun.Drawing
                     BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
 
                     // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
-                    if (btr.IsAnonymous || btr.IsLayout == false && !btr.IsFromExternalReference)
+                    if (btr.IsAnonymous || (!btr.IsLayout && !btr.IsFromExternalReference))
                         continue;
 
                     foreach (ObjectId entId in btr)
@@ -74,6 +74,7 @@ namespace SioForgeCAD.Commun.Drawing
                         {
                             newBr.Rotation = br.Rotation;
                         }
+                        newBr.Color = br.Color;
 
                         if (!br.IsErased)
                             br.Erase(true);

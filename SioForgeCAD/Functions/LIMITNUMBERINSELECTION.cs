@@ -21,7 +21,7 @@ namespace SioForgeCAD.Functions
                 {
                     LowerLimit = 1,
                     UpperLimit = SelectedObjIds.Length,
-                    DefaultValue = Convert.ToInt32(Math.Round((double)(SelectedObjIds.Length / 2), 0)),
+                    DefaultValue = Convert.ToInt32(Math.Round((double)(SelectedObjIds.Length), 0)),
                     AllowNone = false
                 };
                 PromptIntegerResult PromptNumberToSelect = ed.GetInteger(PromptNumberToSelectOptions);
