@@ -257,6 +257,7 @@
     <Compile Include="Functions\FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.cs" />
     <Compile Include="Functions\FIXDRAWING.cs" />
     <Compile Include="Functions\FRAMESELECTED.cs" />
+    <Compile Include="Functions\IMPORT3DGEOMETRYFROMOBJFILE.cs" />
     <Compile Include="Functions\LAYRENAME.cs" />
     <Compile Include="Functions\LINESAVERAGE.cs" />
     <Compile Include="Functions\LINETOPOLYLINE.cs" />
@@ -301,6 +302,7 @@
     <Compile Include="Functions\STRIPTEXTFORMATING.cs" />
     <Compile Include="Functions\SUBSTRACTPOLYLIGNES.cs" />
     <Compile Include="Functions\TAREA.cs" />
+    <Compile Include="Functions\TBLK.cs" />
     <Compile Include="Functions\TLENS.cs" />
     <Compile Include="Functions\TLENSBLKATTR.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />

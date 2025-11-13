@@ -372,6 +372,12 @@ namespace SioForgeCAD
             Functions.TLENS.Compute();
         }
 
+        [CommandMethod("SIOFORGECAD", "TBLK", CommandFlags.Redraw)]
+        public static void TBLK()
+        {
+            Functions.TBLK.Compute();
+        }
+
         [CommandMethod("SIOFORGECAD", "TLENSBLKATTR", CommandFlags.Redraw)]
         public static void TLENSBLKATTR()
         {
@@ -748,6 +754,12 @@ namespace SioForgeCAD
             Functions.MANAGEDRAWINGCUSTOMPROPERTIES.Menu();
         }
 
+        [CommandMethod("SIOFORGECAD", "IMPORT3DGEOMETRYFROMOBJFILE", CommandFlags.UsePickSet)]
+        public static void IMPORT3DGEOMETRYFROMOBJFILE()
+        {
+            Functions.IMPORT3DGEOMETRYFROMOBJFILE.Menu();
+        }
+
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html
@@ -761,19 +773,20 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            var val = Generic.GetEditor().GetEntity("kk");
-            if (val.Status == PromptStatus.OK)
-            {
-                var db = Generic.GetDatabase();
-                using (var tr = db.TransactionManager.StartTransaction())
-                {
-                    var t = val.ObjectId.GetDBObject(OpenMode.ForWrite);
-                    (t as Entity).Visible = false;
+            //var val = Generic.GetEditor().GetEntity("kk");
+            //if (val.Status == PromptStatus.OK)
+            //{
+            //    var db = Generic.GetDatabase();
+            //    using (var tr = db.TransactionManager.StartTransaction())
+            //    {
+            //        var t = val.ObjectId.GetDBObject(OpenMode.ForWrite);
+            //        (t as Entity).Visible = false;
 
-                    Generic.WriteMessage("test");
-                    tr.Commit();
-                }
-            }
+            //        Generic.WriteMessage("test");
+            //        tr.Commit();
+            //    }
+            //}
+
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
