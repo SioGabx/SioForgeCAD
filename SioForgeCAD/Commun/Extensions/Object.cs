@@ -47,9 +47,9 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (obj is SelectionSet selectionSet)
             {
-                foreach (ObjectId item in selectionSet)
+                foreach (SelectedObject item in selectionSet)
                 {
-                    yield return item;
+                    yield return item.ObjectId;
                 }
             }
         }
