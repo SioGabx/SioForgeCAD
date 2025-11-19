@@ -1,4 +1,10 @@
-﻿namespace SioForgeCAD.Commun.Extensions
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Windows.Data;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace SioForgeCAD.Commun.Extensions
 {
     public static class ObjectExtensions
     {
@@ -26,6 +32,26 @@
                 return false;
             }
             return true;
+        }
+
+        public static ObjectId[] GetObjectIds(this object obj)
+        {
+            if (obj is SelectionSet selectionSet)
+            {
+                return selectionSet.GetObjectIds();
+            }
+            return System.Array.Empty<ObjectId>();
+        }
+
+        public static IEnumerable<ObjectId> GetSelectionSet(this object obj)
+        {
+            if (obj is SelectionSet selectionSet)
+            {
+                foreach (ObjectId item in selectionSet)
+                {
+                    yield return item;
+                }
+            }
         }
 
     }

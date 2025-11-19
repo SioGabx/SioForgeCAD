@@ -156,7 +156,9 @@ namespace SioForgeCAD.Commun
                             return ExtractedAltitude;
                         }
                         else
+                        {
                             continue;//If no value, continue search
+                        }
                     }
                 }
             }

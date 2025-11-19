@@ -32,7 +32,6 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("HIDEXREFSCALES", 1);
             Generic.SetSystemVariable("INDEXCTL", 0);
             Generic.SetSystemVariable("LOCKUI", 0);
-            Generic.SetSystemVariable("DYNMODE", 0); //Turns Dynamic Input features on and off. : 0=All Dynamic Input features, including dynamic prompts, off 
             Generic.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
             Generic.SetSystemVariable("LTSCALE", 1); //Sets the global linetype scale factor. Use LTSCALE to change the scale factor of linetypes for all objects in a drawing
             Generic.SetSystemVariable("CELTSCALE", 1); //Sets the current object linetype scaling factor. - Sets the linetype scaling for new objects relative to the LTSCALE command setting
@@ -43,6 +42,7 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("XREFNOTIFY", 2); //Controls the notification for updated or missing xrefs. https://help.autodesk.com/view/ACDLT/2022/ENU/?guid=GUID-D97BECAD-2380-4CA3-896C-A6896BE112F7
             Generic.SetSystemVariable("HPLAYER", "."); //Specifies a default layer for new hatches and fills in the current drawing.  https://help.autodesk.com/view/ACDLT/2023/ENU/?guid=GUID-8B64F625-7DD2-4264-8E59-3936F0992070
             Generic.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
+            //Generic.SetSystemVariable("DYNMODE", 0); //Turns Dynamic Input features on and off. : 0=All Dynamic Input features, including dynamic prompts, off 
             Generic.SetSystemVariable("DYNMODE", 3); //Turns Dynamic Input features on and off. 3 = Both pointer input and dimensional input on https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-1ED138FF-2679-45C4-9C2C-332A821C9D12
 
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.

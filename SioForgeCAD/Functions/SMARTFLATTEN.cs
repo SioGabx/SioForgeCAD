@@ -38,6 +38,8 @@ namespace SioForgeCAD.Functions
                 {
                     ids.Add(objId);
                 }
+
+                FlatSCU();
                 FlatObjects(ids.ToArray());
                 tr.Commit();
             }
@@ -46,10 +48,33 @@ namespace SioForgeCAD.Functions
         public static void Flatten()
         {
             var ed = Generic.GetEditor();
-            var EntitiesSelection = ed.GetSelectionRedraw();
+            var EntitiesSelection = ed.GetSelectionRedraw(Options: new string[] { "SCU" });
+            if (EntitiesSelection.Status == PromptStatus.Keyword) { FlatSCU(); }
             if (EntitiesSelection.Status != PromptStatus.OK) { return; }
 
             FlatObjects(EntitiesSelection.Value.GetObjectIds());
+
+        }
+
+        private static void FlatSCU()
+        {
+            //Flaten USC
+
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                UcsTable ucsTable = (UcsTable)db.UcsTableId.GetDBObject();
+                foreach (ObjectId ucsId in ucsTable)
+                {
+                    UcsTableRecord ucs = (UcsTableRecord)ucsId.GetDBObject(OpenMode.ForWrite);
+                    if (ucs.Origin.Z != 0)
+                    {
+                        Generic.WriteMessage($"Le SCU \"{ucs.Name}\" à été aplati. {ucs.Origin.Z} -> 0");
+                    }
+                    ucs.Origin = ucs.Origin.Flatten();
+                }
+                tr.Commit();
+            }
         }
 
         private static void FlatObjects(ObjectId[] objectIds)
@@ -76,8 +101,6 @@ namespace SioForgeCAD.Functions
                     {
                         Debug.WriteLine($"Entité non traitée : \"{entity.GetType()}\"");
                     }
-
-
                 }
                 tr.Commit();
             }

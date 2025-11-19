@@ -27,7 +27,7 @@ namespace SioForgeCAD.Functions
             var db = Generic.GetDatabase();
 
             SelectionFilter BlkSelectionFilter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "INSERT") });
-            PromptSelectionResult SelectionBlkPSR = ed.GetSelectionRedraw(null, false, false, BlkSelectionFilter);
+            var SelectionBlkPSR = ed.GetSelectionRedraw(null, false, false, BlkSelectionFilter);
 
 
             if (SelectionBlkPSR.Status != PromptStatus.OK) { return; }
@@ -41,14 +41,14 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (SelectedObject allBloc in SelectionBlkPSR.Value)
+                foreach (var allBlocObjid in SelectionBlkPSR.Value.GetSelectionSet())
                 {
-                    if (allBloc?.ObjectId == null || !allBloc.ObjectId.IsDerivedFrom(typeof(BlockReference)))
+                    if (!allBlocObjid.IsDerivedFrom(typeof(BlockReference)))
                     {
                         continue;
                     }
 
-                    BlockReference allBlocBlkRef = (BlockReference)tr.GetObject(allBloc.ObjectId, OpenMode.ForRead);
+                    BlockReference allBlocBlkRef = (BlockReference)tr.GetObject(allBlocObjid, OpenMode.ForRead);
                     if (allBlocBlkRef?.IsXref() == true) { continue; }
                     string blockName = allBlocBlkRef.GetBlockReferenceName();
 
@@ -59,9 +59,9 @@ namespace SioForgeCAD.Functions
                         BlkInstanceList.Add(instance);
                     }
 
-                    if (SelectedBlocObjIds.Contains(allBloc.ObjectId))
+                    if (SelectedBlocObjIds.Contains(allBlocObjid))
                     {
-                        ExtractedBlocObjIds.Add(allBloc.ObjectId);
+                        ExtractedBlocObjIds.Add(allBlocObjid);
                         instance.Count++;
                     }
                 }

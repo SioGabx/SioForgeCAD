@@ -32,7 +32,7 @@ namespace SioForgeCAD.Functions
                     int maxLength = Properties.Max(p => p.PropertyName.Length);
                     foreach (var prop in Properties)
                     {
-                        result += $"\n- {prop.PropertyName.PadRight(maxLength)} : {Generic.FormatNumberForPrint(prop.PropertyCumulatedValue)}"; ;
+                        result += $"\n- {prop.PropertyName.PadRight(maxLength)} : {Generic.FormatNumberForPrint(prop.PropertyCumulatedValue)}"; 
                     }
                 }
                 return result.TrimEnd();
@@ -44,14 +44,14 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            PromptSelectionResult res = ed.GetSelectionRedraw();
+            var res = ed.GetSelectionRedraw();
             if (res.Status != PromptStatus.OK) { return; }
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var AttrResults = new List<AttrResults>();
-                foreach (SelectedObject selObj in res.Value)
+                foreach (var selObj in res.Value.GetSelectionSet())
                 {
-                    if (!(selObj?.ObjectId.GetDBObject() is BlockReference blockRef))
+                    if (!(selObj.GetDBObject() is BlockReference blockRef))
                     {
                         continue;
                     }
@@ -80,7 +80,7 @@ namespace SioForgeCAD.Functions
                     stringBuilder.AppendLine($"{AttrResult}\n");
                 }
                 System.Windows.Clipboard.SetText(stringBuilder.ToString());
-                ed.SetImpliedSelection(res.Value);
+                ed.SetImpliedSelection(res.Value.GetSelectionSet().ToArray());
                 tr.Commit();
             }
         }

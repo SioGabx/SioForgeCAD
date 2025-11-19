@@ -30,19 +30,19 @@ namespace SioForgeCAD.Functions
             {
                 ObjectId BlockRefObjId = ObjectIds.First();
                 BlockReference BlockRef = BlockRefObjId.GetDBObject(OpenMode.ForWrite) as BlockReference;
-
-                var SelectedIds = Selection.Value.GetObjectIds();
-                if (BlockRef.IsXref())
-                {
-                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
-                }
-                else
-                {
-                    // Modifier le bloc dans le dessin courant
-                    AddEntitiesToBlock(BlockRef, SelectedIds, tr);
-                    tr.Commit();
-                }
-
+               
+                    var SelectedIds = Selection.Value.GetObjectIds();
+                    if (BlockRef.IsXref())
+                    {
+                        AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
+                    }
+                    else
+                    {
+                        // Modifier le bloc dans le dessin courant
+                        AddEntitiesToBlock(BlockRef, SelectedIds, tr);
+                        tr.Commit();
+                    }
+               
                 BlockRef.RegenAllBlkDefinition();
             }
         }

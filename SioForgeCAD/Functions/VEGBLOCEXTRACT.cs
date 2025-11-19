@@ -29,7 +29,7 @@ namespace SioForgeCAD.Functions
             var db = Generic.GetDatabase();
 
             SelectionFilter BlkSelectionFilter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "INSERT") });
-            PromptSelectionResult SelectionBlkPSR = ed.GetSelectionRedraw(null, false, false, BlkSelectionFilter);
+            var SelectionBlkPSR = ed.GetSelectionRedraw(null, false, false, BlkSelectionFilter);
             PromptSelectionResult AllBlkBSR = ed.SelectAll(BlkSelectionFilter);
 
             if (SelectionBlkPSR.Status != PromptStatus.OK || AllBlkBSR.Status != PromptStatus.OK) { return; }

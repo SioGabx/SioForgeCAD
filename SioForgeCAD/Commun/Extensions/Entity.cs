@@ -489,15 +489,12 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             else if (entity is Leader ld)
-            {  //Выноска Autocad
-
+            {
                 if (ld.EndPoint.Z != 0 || ld.StartPoint.Z != 0)
                 {
                     ld.EndPoint = new Point3d(ld.EndPoint.X, ld.EndPoint.Y, 0);
                     ld.StartPoint = new Point3d(ld.StartPoint.X, ld.StartPoint.Y, 0);
                 }
-                ;
-
             }
             else if (entity is Solid)
             {
@@ -536,7 +533,6 @@ namespace SioForgeCAD.Commun.Extensions
         public static List<object> ReadXData(this Entity ent)
         {
             string AppName = Generic.GetExtensionDLLName();
-            Database db = Generic.GetDatabase();
             List<object> list = new List<object>();
             //using (Transaction tr = db.TransactionManager.StartTransaction())
             //{

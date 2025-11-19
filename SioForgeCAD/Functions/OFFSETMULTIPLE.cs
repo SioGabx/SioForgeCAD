@@ -18,7 +18,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = doc.Database;
 
-            PromptSelectionResult selRes = ed.GetSelectionRedraw("Sélectionnez des curves :", true, false, ed.GetCurvesFilter());
+            var selRes = ed.GetSelectionRedraw("Sélectionnez des curves :", true, false, ed.GetCurvesFilter());
 
             if (selRes.Status != PromptStatus.OK)
             {
@@ -39,9 +39,9 @@ namespace SioForgeCAD.Functions
                 {
                     DBObjectCollection PreviewStaticEntities = new DBObjectCollection();
 
-                    foreach (SelectedObject selObj in selRes.Value)
+                    foreach (var selObj in selRes.Value.GetSelectionSet())
                     {
-                        if (!(tr.GetObject(selObj.ObjectId, OpenMode.ForRead) is Curve curve))
+                        if (!(tr.GetObject(selObj, OpenMode.ForRead) is Curve curve))
                         {
                             continue;
                         }

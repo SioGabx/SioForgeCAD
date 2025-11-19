@@ -100,7 +100,7 @@ namespace SioForgeCAD.Functions
                                 break;
                         }
 
-                        writer.AppendLine($"1 setlinewidth");
+                        writer.AppendLine("1 setlinewidth");
                         writer.AppendLine("1 setlinejoin"); //0 = biseau; 1 = Arrondi ; 2 = Chanfreiné 
 
                         writer.AppendLine($"{GetColor(ent)} setrgbcolor");
@@ -201,9 +201,6 @@ namespace SioForgeCAD.Functions
 
         private static string GetEpsFromArc(CircularArc2d arc2d)
         {
-            Interval arc2dInterval = arc2d.GetInterval();
-            double startParam = arc2dInterval.LowerBound;
-            double endParam = arc2dInterval.UpperBound;
             Point2d sp2d = arc2d.StartPoint;//arc2d.EvaluatePoint(startParam);
             Point2d ep2d = arc2d.EndPoint;//arc2d.EvaluatePoint(endParam);
             Point2d cp2d = arc2d.Center;
@@ -219,7 +216,7 @@ namespace SioForgeCAD.Functions
         }
         private static string Format(double value)
         {
-            return (value).ToString("0.###", CultureInfo.InvariantCulture);
+            return value.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
         private static string Format(Point2d pt)

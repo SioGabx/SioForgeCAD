@@ -36,11 +36,15 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
 
-            if (!ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObject))
+            if (ed.GetImpliedSelection(out PromptSelectionResult AllSelectedObjectImplied))
             {
-                AllSelectedObject = ed.GetSelectionRedraw("Selectionnez des entités pour lequels vous souhaitez supprimer les XDATAs", true, false);
+                RemoveAllXDataFromCollection(AllSelectedObjectImplied.Value.GetObjectIds());
             }
-            RemoveAllXDataFromCollection(AllSelectedObject.Value.GetObjectIds());
+            else
+            {
+                var AllSelectedObjectRedraw = ed.GetSelectionRedraw("Selectionnez des entités pour lequels vous souhaitez supprimer les XDATAs", true, false);
+                RemoveAllXDataFromCollection(AllSelectedObjectRedraw.Value.GetObjectIds());
+            }
         }
 
         public static void RemoveAll()

@@ -155,7 +155,7 @@ namespace SioForgeCAD.Commun.Extensions
 
             while (true)
             {
-                PromptSelectionResult promptResult = ed.GetSelectionRedraw(selectionOptions, new SelectionFilter(filterList));
+                var promptResult = ed.GetSelectionRedraw(selectionOptions, new SelectionFilter(filterList));
 
                 if (promptResult.Status == PromptStatus.Cancel)
                 {
@@ -163,9 +163,9 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 else if (promptResult.Status == PromptStatus.OK)
                 {
-                    if (promptResult.Value.Count > 0)
+                    if (promptResult.Value is SelectionSet selection && selection.Count > 0)
                     {
-                        objectId = promptResult.Value.GetObjectIds();
+                        objectId = selection.GetObjectIds();
                         return true;
                     }
                 }
@@ -297,7 +297,7 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetPolyline(out _, Message, RejectObjectsOnLockedLayers, Clone, false);
         }
 
-        public static PromptSelectionResult GetSelectionRedraw(this Editor ed, string Message = null, bool RejectObjectsOnLockedLayers = true, bool SingleOnly = false, SelectionFilter selectionFilter = null)
+        public static (PromptStatus Status, object Value) GetSelectionRedraw(this Editor ed, string Message = null, bool RejectObjectsOnLockedLayers = true, bool SingleOnly = false, SelectionFilter selectionFilter = null, string[] Options = null)
         {
             if (Message is null)
             {
@@ -309,42 +309,68 @@ namespace SioForgeCAD.Commun.Extensions
                 MessageForAdding = Message,
                 SingleOnly = SingleOnly,
                 SinglePickInSpace = SingleOnly,
-
                 RejectObjectsOnLockedLayers = RejectObjectsOnLockedLayers
             };
+
+            if (Options != null)
+            {
+                foreach (var opt in Options)
+                {
+                    selectionOptions.Keywords.Add(opt);
+                }
+            }
+            selectionOptions.MessageForAdding += selectionOptions.Keywords.GetDisplayString(true);
 
             return ed.GetSelectionRedraw(selectionOptions, selectionFilter);
         }
 
-        public static PromptSelectionResult GetSelectionRedraw(this Editor ed, PromptSelectionOptions selectionOptions, SelectionFilter selectionFilter = null)
+        private class PromptSelectionKeywordEntered : Exception
         {
+            public string Keyword = string.Empty;
+            public PromptSelectionKeywordEntered() : base() { }
+            public PromptSelectionKeywordEntered(string message) : base(message) { }
+            public PromptSelectionKeywordEntered(string message, Exception innerException) : base(message, innerException) { }
+        }
+
+        public static (PromptStatus Status, object Value) GetSelectionRedraw(this Editor ed, PromptSelectionOptions selectionOptions, SelectionFilter selectionFilter = null)
+        {
+
             PromptSelectionResult selectResult;
-            for (int index = 0; true; index++)
+            selectionOptions.KeywordInput += (sender, e) => throw new PromptSelectionKeywordEntered("Keyword entered") { Keyword = e.Input };
+
+            try
             {
-                if (index == 0)
+                for (int index = 0; true; index++)
                 {
-                    if (!ed.GetImpliedSelection(out selectResult))
+                    if (index == 0)
+                    {
+                        if (!ed.GetImpliedSelection(out selectResult))
+                        {
+                            selectResult = ed.GetSelection(selectionOptions, selectionFilter);
+                        }
+                    }
+                    else
                     {
                         selectResult = ed.GetSelection(selectionOptions, selectionFilter);
                     }
-                }
-                else
-                {
-                    selectResult = ed.GetSelection(selectionOptions, selectionFilter);
-                }
 
-                if (selectResult.Status == PromptStatus.Cancel)
-                {
-                    return selectResult;
+                    if (selectResult.Status == PromptStatus.Cancel)
+                    {
+                        return (selectResult.Status, selectResult.Value);
+                    }
+                    else if (selectResult.Status == PromptStatus.OK)
+                    {
+                        return (selectResult.Status, selectResult.Value);
+                    }
+                    else
+                    {
+                        Generic.WriteMessage("Sélection invalide.");
+                    }
                 }
-                else if (selectResult.Status == PromptStatus.OK)
-                {
-                    return selectResult;
-                }
-                else
-                {
-                    Generic.WriteMessage("Sélection invalide.");
-                }
+            }
+            catch (PromptSelectionKeywordEntered ex)
+            {
+                return (PromptStatus.Keyword, ex.Message);
             }
         }
 

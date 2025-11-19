@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
-            PromptSelectionResult psr = ed.GetSelectionRedraw(
+            var psr = ed.GetSelectionRedraw(
                 "Sélectionnez les entités fermées (polylignes, cercles...) :",
                 false,
                 false,
@@ -36,9 +36,9 @@ namespace SioForgeCAD.Functions
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
-                foreach (SelectedObject selObj in psr.Value)
+                foreach (var selObj in psr.Value.GetSelectionSet())
                 {
-                    if (!(selObj?.ObjectId.GetObject(OpenMode.ForRead) is Entity ent)) continue;
+                    if (!(selObj.GetObject(OpenMode.ForRead) is Entity ent)) continue;
                     if (ent is Curve)
                     {
                         // Clone l'entité sélectionnée pour ne pas modifier l'original
@@ -154,9 +154,9 @@ namespace SioForgeCAD.Functions
                 }
                 else
                 {
-                    foreach (SelectedObject selObj in psr.Value)
+                    foreach (var selObj in psr.Value.GetSelectionSet())
                     {
-                        selObj.ObjectId.EraseObject();
+                        selObj.EraseObject();
                     }
 
                     ed.WriteMessage($"\n{ForSketchupEntities.Count} région(s) créée(s).");

@@ -18,12 +18,12 @@ namespace SioForgeCAD.Functions
             Database db = doc.Database;
 
             // 0. Sélection des entités
-            PromptSelectionResult selRes = ed.GetSelectionRedraw();
+            var selRes = ed.GetSelectionRedraw();
             if (selRes.Status != PromptStatus.OK) return;
 
-            SelectionSet selSet = selRes.Value;
+            var selSet = selRes.Value.GetSelectionSet();
 
-            if (selSet.Count == 0)
+            if (!selSet.Any())
             {
                 Generic.WriteMessage("Aucune entité sélectionnée.");
                 return;
@@ -58,11 +58,11 @@ namespace SioForgeCAD.Functions
 
                 List<(Entity ent, double projection)> entitesAvecDistance = new List<(Entity ent, double projection)>();
 
-                foreach (SelectedObject selObj in selSet)
+                foreach (var selObj in selSet)
                 {
-                    if (selObj == null || selObj.ObjectId.IsNull) continue;
+                    if ( selObj.IsNull) continue;
 
-                    if (!(selObj.ObjectId.GetDBObject() is Entity ent) || ent.IsErased)
+                    if (!(selObj.GetDBObject() is Entity ent) || ent.IsErased)
                     {
                         continue;
                     }
