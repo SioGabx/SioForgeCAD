@@ -28,6 +28,7 @@ namespace SioForgeCAD
             //ContextMenu
             Functions.CIRCLETOPOLYLIGNE.ContextMenu.Attach();
             Functions.ELLIPSETOPOLYLIGNE.ContextMenu.Attach();
+            Functions.LINETOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE2DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.POLYLINE3DTOPOLYLIGNE.ContextMenu.Attach();
             Functions.CONVERTIMAGETOOLE.ContextMenu.Attach();

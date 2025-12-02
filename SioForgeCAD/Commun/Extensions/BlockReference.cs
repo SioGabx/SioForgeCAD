@@ -228,7 +228,7 @@ namespace SioForgeCAD.Commun.Extensions
                             // Check attribute values
                             foreach (ObjectId attId in blockReference.AttributeCollection)
                             {
-                                DBObject obj = tr.GetObject(attId, OpenMode.ForRead) as DBObject;
+                                DBObject obj = tr.GetObject(attId, OpenMode.ForRead);
                                 if (obj is AttributeReference attributeReference)
                                 {
                                     if (attributeReference.TextString == attributeValue)

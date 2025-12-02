@@ -15,12 +15,14 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
 
         private readonly Point3dCollection _points;
         private readonly Point3d _basePoint;
+        private readonly Point3d _initPoint;
 
-        public PolyGripJig(Autodesk.AutoCAD.DatabaseServices.Polyline Polyline, Point3d InitPoint, Point3dCollection Points)
+        public PolyGripJig(Autodesk.AutoCAD.DatabaseServices.Polyline Polyline, Point3d InitPoint, Point3d BasePoint, Point3dCollection Points)
         {
             _ed = Generic.GetEditor();
             _polyline = Polyline;
-            _basePoint = InitPoint;
+            _initPoint = InitPoint;
+            _basePoint = BasePoint;
             _points = Points;
         }
 
@@ -34,7 +36,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
                 {
                     AllowNone = false,
                     UseBasePoint = true,
-                    BasePoint = _basePoint,
+                    BasePoint = Points.ToCurrentSCU(_basePoint),
                     UseDashedLine = false
                 };
 
@@ -70,7 +72,7 @@ namespace SioForgeCAD.Commun.Overrules.PolylineGripOverrule
             try
             {
                 _tspolyline = new Autodesk.AutoCAD.DatabaseServices.Polyline();
-                Vector3d TransformVector = _basePoint.GetVectorTo(mousePoint);
+                Vector3d TransformVector = _initPoint.GetVectorTo(mousePoint);
                 var TransformMatrix = Matrix3d.Displacement(TransformVector);
                 for (int i = 0; i < _polyline.GetReelNumberOfVertices(); i++)
                 {

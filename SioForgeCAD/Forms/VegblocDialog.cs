@@ -166,7 +166,7 @@ namespace SioForgeCAD.Forms
                 newRow.CreateCells(DataGrid);
                 DataGrid.Rows.Insert(DataGrid.Rows.Count - 1, newRow);
             }
-            int[] rows = Enumerable.Range((int)startRow, Math.Min(DataGrid.RowCount, clipboardData.Length)).ToArray();
+            int[] rows = Enumerable.Range(startRow, Math.Min(DataGrid.RowCount, clipboardData.Length)).ToArray();
 
             List<int> columns = new List<int>();
             bool isColumnFound = false;

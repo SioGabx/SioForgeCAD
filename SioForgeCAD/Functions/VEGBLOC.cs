@@ -267,7 +267,7 @@ namespace SioForgeCAD.Functions
                         Layer = "0",
                         LineWeight = LineWeight.ByBlock,
                         ColorIndex = 7,
-                        Transparency = new Transparency((byte)255)
+                        Transparency = new Transparency(255)
                     };
 
                     btr.AppendEntity(Circle);

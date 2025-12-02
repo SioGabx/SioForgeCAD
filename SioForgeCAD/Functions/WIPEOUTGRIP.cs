@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                     }
                     else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Add)
                     {
-                        pts = AddStretchPoint(WipeoutEnt, polyGrip.PreviousPoint, PolyGripOverrule.ModeIdAction.Add);
+                        pts = AddStretchPoint(WipeoutEnt, polyGrip.GripPoint,polyGrip.PreviousPoint, PolyGripOverrule.ModeIdAction.Add);
                     }
                     RecreateWipeout(WipeoutEnt, pts);
                 }
@@ -86,11 +86,11 @@ namespace SioForgeCAD.Functions
                     if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Default ||
                     ((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Stretch)
                     {
-                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
+                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Stretch);
                     }
                     else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Add)
                     {
-                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Add);
+                        pts = AddStretchPoint(WipeoutEnt, GripData.GripPoint, GripData.GripPoint, PolyGripOverrule.ModeIdAction.Add);
                     }
                     else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Remove)
                     {
@@ -129,20 +129,20 @@ namespace SioForgeCAD.Functions
                 }
 
                 WipeoutPoly.Closed = true;
-                var jig = new PolyGripJig(WipeoutPoly, BasePoint, new Point3dCollection() { PreviousPoint, NextPoint });
+                var jig = new PolyGripJig(WipeoutPoly, BasePoint, BasePoint, new Point3dCollection() { PreviousPoint, NextPoint });
                 var JigResult = jig.Drag();
                 if (JigResult?.Status == PromptStatus.OK)
                 {
                     Point2dCollection pts = new Point2dCollection();
 
-                    Vector3d TransformVector = BasePoint.GetVectorTo(JigResult.Value);
+                    Vector3d TransformVector = BasePoint.GetVectorTo(Points.GetFromPromptPointResult(JigResult).SCG);
                     var TransformMatrix = Matrix3d.Displacement(TransformVector);
 
                     for (int i = 0; i < WipeoutEntVertices.Count; i++)
                     {
-                        Point3d PreviousWipeoutEntVertices = (Point3d)WipeoutEntVertices[i > 0 ? i - 1 : WipeoutEntVertices.Count - 2];
-                        Point3d ActualWipeoutEntVertices = (Point3d)WipeoutEntVertices[i];
-                        Point3d NextWipeoutEntVertices = (Point3d)WipeoutEntVertices[i < (WipeoutEntVertices.Count - 1) ? i + 1 : 1];
+                        Point3d PreviousWipeoutEntVertices = WipeoutEntVertices[i > 0 ? i - 1 : WipeoutEntVertices.Count - 2];
+                        Point3d ActualWipeoutEntVertices = WipeoutEntVertices[i];
+                        Point3d NextWipeoutEntVertices = WipeoutEntVertices[i < (WipeoutEntVertices.Count - 1) ? i + 1 : 1];
 
                         bool Check(Point3d Point)
                         {
@@ -173,15 +173,18 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static Point2dCollection AddStretchPoint(Wipeout WipeoutEnt, Point3d Point, PolyGripOverrule.ModeIdAction Action)
+        private static Point2dCollection AddStretchPoint(Wipeout WipeoutEnt, Point3d BasePoint, Point3d Point, PolyGripOverrule.ModeIdAction Action)
         {
             Point3dCollection WipeoutEntVertices = new Point3dCollection();
+            double UniqueDisplacement = 0;
+
             foreach (Point3d WipeoutEntVertice in WipeoutEnt.GetVertices())
             {
                 WipeoutEntVertices.Add(WipeoutEntVertice);
                 if (Action == PolyGripOverrule.ModeIdAction.Add && WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
                 {
-                    Point = Point.Displacement(Vector3d.XAxis, 100);
+                    UniqueDisplacement = WipeoutEnt.GetExtents().MaxPoint.X + WipeoutEnt.GetExtents().MaxPoint.Y;
+                    Point = Point.Displacement(Vector3d.XAxis, UniqueDisplacement);
                     WipeoutEntVertices.Add(Point);
                 }
             }
@@ -195,7 +198,8 @@ namespace SioForgeCAD.Functions
                 }
 
                 WipeoutPoly.Closed = true;
-                var jig = new PolyGripJig(WipeoutPoly, Point, new Point3dCollection() { Point });
+
+                var jig = new PolyGripJig(WipeoutPoly, Point, BasePoint, new Point3dCollection() {Point });
                 var JigResult = jig.Drag();
                 if (JigResult?.Status == PromptStatus.OK)
                 {
@@ -204,7 +208,7 @@ namespace SioForgeCAD.Functions
                     {
                         if (WipeoutEntVertice.IsEqualTo(Point, Generic.MediumTolerance))
                         {
-                            pts.Add(JigResult.Value.ToPoint2d());
+                            pts.Add(Points.GetFromPromptPointResult(JigResult).SCG.ToPoint2d());
                         }
                         else
                         {
