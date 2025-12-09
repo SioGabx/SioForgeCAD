@@ -295,7 +295,7 @@ namespace SioForgeCAD.Functions
                         jigPoly.AddVertex(origVerts[i]);
                     }
 
-                    var jig = new PolyGripJig(jigPoly, gripPt, new Point3dCollection { gripPt });
+                    var jig = new PolyGripJig(jigPoly, gripPt,gripPt, new Point3dCollection { gripPt });
                     var jigRes = jig.Drag();
                     if (jigRes?.Status != PromptStatus.OK)
                     {
