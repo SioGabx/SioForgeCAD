@@ -7,6 +7,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
+using SioForgeCAD.Functions;
 using System;
 using System.Collections.Generic;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -798,9 +799,19 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]
         public static void VEGBLOCSCATTER()
         {
-            var sim = new Functions.VEGBLOCSCATTER.CircleSimulation();
-            sim.Start();
+            // On garde une instance statique pour pouvoir l'arrêter si on relance la commande
+            if (_sim != null)
+            {
+                _sim.Dispose();
+                _sim = null;
+            }
+
+            _sim = new VEGBLOCSCATTER.CircleSimulation();
+            _sim.Execute();
         }
+
+        private static VEGBLOCSCATTER.CircleSimulation _sim;
+        
 
 
         //TODO : Auto add area
