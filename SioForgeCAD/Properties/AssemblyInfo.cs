@@ -37,9 +37,9 @@ using System.Runtime.InteropServices;
 //Presence of * in the version means that the compiler generates a new version every build based on the current time.
 //The build then produces non-reproducible, non-deterministic outputs
 #if DEBUG
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
 #else
-[assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.1.*")]
 #endif
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 [assembly: NeutralResourcesLanguage("")]
