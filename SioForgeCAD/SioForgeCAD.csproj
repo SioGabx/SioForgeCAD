@@ -305,7 +305,6 @@
     <Compile Include="Functions\TBLK.cs" />
     <Compile Include="Functions\TEST.cs" />
     <Compile Include="Functions\TLENS.cs" />
-    <Compile Include="Functions\TLENSBLKATTR.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />

@@ -379,22 +379,15 @@ namespace SioForgeCAD
             Functions.TBLK.Compute();
         }
 
-        [CommandMethod("SIOFORGECAD", "TBLKDETAILED", CommandFlags.Redraw)]
-        public static void TBLKDETAILED()
+        [CommandMethod("SIOFORGECAD", "TBLKATTR", CommandFlags.Redraw)]
+        public static void TBLKATTR()
+        {
+            Functions.TBLK.ComputeCumulativeAttributes();
+        }
+        [CommandMethod("SIOFORGECAD", "TBLKATTRDETAILED", CommandFlags.Redraw)]
+        public static void TBLKATTRDETAILED()
         {
             Functions.TBLK.ComputeDetailed();
-        }
-
-        [CommandMethod("SIOFORGECAD", "TLENSBLKCUMULATEDATTR", CommandFlags.Redraw)]
-        public static void TLENSBLKCUMULATEDATTR()
-        {
-            Functions.TLENSBLKATTR.ComputeCumulative();
-        }
-
-        [CommandMethod("SIOFORGECAD", "TLENSBLKDETAILEDATTR", CommandFlags.Redraw)]
-        public static void TLENSBLKDETAILEDATTR()
-        {
-            Functions.TLENSBLKATTR.ComputeDetailed();
         }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
@@ -823,9 +816,6 @@ namespace SioForgeCAD
         }
 
         private static VEGBLOCSCATTER.CircleSimulation _sim;
-        
-
-
         //TODO : Auto add area
         //TOTO : Transform perspective
         //TODO : Edit field formula

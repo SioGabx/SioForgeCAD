@@ -39,6 +39,9 @@ namespace SioForgeCAD.Commun.Extensions
             if (obj is SelectionSet selectionSet)
             {
                 return selectionSet.GetObjectIds();
+            } else            if (obj is IEnumerable<ObjectId> IEnumerableSelectionSet)
+            {
+                return IEnumerableSelectionSet.ToArray();
             }
             return System.Array.Empty<ObjectId>();
         }

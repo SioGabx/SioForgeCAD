@@ -54,7 +54,7 @@ namespace SioForgeCAD.Commun
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028')}\n");
+            ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n");
         }
 
         public static void LoadLispFromStringCommand(string lispCode)

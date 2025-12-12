@@ -111,8 +111,10 @@ namespace SioForgeCAD.Functions
                     Start();
 
                     // 5. Interaction pendant que ça bouge
-                    PromptPointOptions promptOpts = new PromptPointOptions("\nCliquez pour VALIDER et quitter, ou tapez 'R' pour REGÉNÉRER");
-                    promptOpts.AllowNone = true; // Permet 'Entrée'
+                    PromptPointOptions promptOpts = new PromptPointOptions("\nCliquez pour VALIDER et quitter, ou tapez 'R' pour REGÉNÉRER")
+                    {
+                        AllowNone = true // Permet 'Entrée'
+                    };
                     promptOpts.Keywords.Add("Regenerer");
 
                     PromptPointResult userAction = ed.GetPoint(promptOpts);
@@ -215,7 +217,6 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                bool hasMovedSignificant = false;
 
                 // 1. Attraction vers le centre
                 foreach (var p in particles)
@@ -234,7 +235,6 @@ namespace SioForgeCAD.Functions
                             move = toCenter * attractionStrength;
 
                         p.Position += move;
-                        hasMovedSignificant = true;
                     }
                 }
 
@@ -271,7 +271,6 @@ namespace SioForgeCAD.Functions
 
                                 p1.Position -= move;
                                 p2.Position += move;
-                                hasMovedSignificant = true;
                             }
                         }
                     }

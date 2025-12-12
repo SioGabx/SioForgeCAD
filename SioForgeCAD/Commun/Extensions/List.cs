@@ -48,7 +48,7 @@ namespace SioForgeCAD.Commun.Extensions
             return NewList;
         }
 
-        public static string SumNumeric(this List<object> values)
+        public static double SumNumeric(this List<object> values)
         {
             var doubles = values.ConvertAll(v =>
             {
@@ -57,7 +57,7 @@ namespace SioForgeCAD.Commun.Extensions
                 return 0.0;
             });
 
-            return doubles.Any() ? Generic.FormatNumberForPrint(doubles.Sum()).ToString() : "";
+            return doubles.Count != 0 ? doubles.Sum() : 0d;
         }
 
         public static bool HasTypeOf<T>(this List<T> list, Type type)
