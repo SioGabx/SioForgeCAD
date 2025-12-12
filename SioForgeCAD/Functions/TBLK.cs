@@ -14,13 +14,26 @@ namespace SioForgeCAD.Functions
         {
             public int Count;
             public string BlockName;
+            public List<BlkInstanceProperty> Properties = new List<BlkInstanceProperty>();
 
-            public BlkInstance(string blockname)
+            public BlkInstance(string blockName)
             {
                 Count = 0;
-                BlockName = blockname;
+                BlockName = blockName;
+            }
+
+            public class BlkInstanceProperty
+            {
+                public string PropertyName;
+                public List<object> PropertyValues = new List<object>();
+
+                public BlkInstanceProperty(string propertyName)
+                {
+                    PropertyName = propertyName;
+                }
             }
         }
+
         public static void Compute()
         {
             var ed = Generic.GetEditor();
@@ -41,7 +54,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (var allBlocObjid in SelectionBlkPSR.Value.GetSelectionSet())
+                foreach (var allBlocObjid in SelectedBlocObjIds.GetSelectionSet())
                 {
                     if (!allBlocObjid.IsDerivedFrom(typeof(BlockReference)))
                     {
@@ -58,12 +71,8 @@ namespace SioForgeCAD.Functions
                         instance = new BlkInstance(blockName);
                         BlkInstanceList.Add(instance);
                     }
-
-                    if (SelectedBlocObjIds.Contains(allBlocObjid))
-                    {
-                        ExtractedBlocObjIds.Add(allBlocObjid);
-                        instance.Count++;
-                    }
+                    ExtractedBlocObjIds.Add(allBlocObjid);
+                    instance.Count++;
                 }
 
                 var clipboardText = string.Join("\n", BlkInstanceList
@@ -77,5 +86,125 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
+
+
+        public static void ComputeDetailed()
+        {
+            var ed = Generic.GetEditor();
+            var db = Generic.GetDatabase();
+
+            SelectionFilter blkFilter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "INSERT") });
+            var selectionResult = ed.GetSelectionRedraw(null, false, false, blkFilter);
+
+            if (selectionResult.Status != PromptStatus.OK) return;
+
+            List<BlkInstance> blkList = new List<BlkInstance>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (var objId in selectionResult.Value.GetObjectIds())
+                {
+                    if (!objId.IsDerivedFrom(typeof(BlockReference))) continue;
+
+                    BlockReference blkRef = (BlockReference)tr.GetObject(objId, OpenMode.ForRead);
+                    if (blkRef?.IsXref() == true) continue;
+
+                    string blockName = blkRef.GetBlockReferenceName();
+                    var instance = blkList.FirstOrDefault(b => b.BlockName == blockName);
+                    if (instance == null)
+                    {
+                        instance = new BlkInstance(blockName);
+                        blkList.Add(instance);
+                    }
+
+                    instance.Count++;
+
+                    // --- Propriétés dynamiques ---
+                    foreach (DynamicBlockReferenceProperty dynProp in blkRef.DynamicBlockReferencePropertyCollection)
+                    {
+                        if (dynProp.ReadOnly || !dynProp.VisibleInCurrentVisibilityState) continue;
+
+                        var prop = instance.Properties.FirstOrDefault(p => p.PropertyName == dynProp.PropertyName);
+                        if (prop == null)
+                        {
+                            prop = new BlkInstance.BlkInstanceProperty(dynProp.PropertyName);
+                            instance.Properties.Add(prop);
+                        }
+                        prop.PropertyValues.Add(dynProp.Value);
+                    }
+
+                    // --- Attributs classiques ---
+                    foreach (ObjectId attId in blkRef.AttributeCollection)
+                    {
+                        AttributeReference attRef = attId.GetDBObject() as AttributeReference;
+                        if (attRef == null || string.IsNullOrWhiteSpace(attRef.TextString)) continue;
+
+                        var prop = instance.Properties.FirstOrDefault(p => p.PropertyName == attRef.Tag);
+                        if (prop == null)
+                        {
+                            prop = new BlkInstance.BlkInstanceProperty(attRef.Tag);
+                            instance.Properties.Add(prop);
+                        }
+                        prop.PropertyValues.Add(attRef.TextString);
+                    }
+                }
+
+                // --- Formatage du texte final ---
+                List<string> output = new List<string>();
+                foreach (var blk in blkList.OrderBy(b => b.BlockName))
+                {
+                    output.Add($"\n - {blk.BlockName} (x{blk.Count})");
+                    foreach (var prop in blk.Properties)
+                    {
+                        output.Add($"  - {prop.PropertyName.PadRight(10)} : {(prop.PropertyValues.HasTypeOf(typeof(double)) ? prop.PropertyValues.SumNumeric() : "")}");
+                        foreach (var valGroup in prop.PropertyValues.GroupBy(v => v))
+                        {
+                            output.Add($"    - {valGroup.Key} : {valGroup.Count()} fois");
+                        }
+                    }
+                }
+
+                string finalText = string.Join("\n", output);
+                Generic.WriteMessage(finalText);
+                Clipboard.SetText(finalText);
+
+                tr.Commit();
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

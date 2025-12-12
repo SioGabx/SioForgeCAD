@@ -379,10 +379,22 @@ namespace SioForgeCAD
             Functions.TBLK.Compute();
         }
 
-        [CommandMethod("SIOFORGECAD", "TLENSBLKATTR", CommandFlags.Redraw)]
-        public static void TLENSBLKATTR()
+        [CommandMethod("SIOFORGECAD", "TBLKDETAILED", CommandFlags.Redraw)]
+        public static void TBLKDETAILED()
         {
-            Functions.TLENSBLKATTR.Compute();
+            Functions.TBLK.ComputeDetailed();
+        }
+
+        [CommandMethod("SIOFORGECAD", "TLENSBLKCUMULATEDATTR", CommandFlags.Redraw)]
+        public static void TLENSBLKCUMULATEDATTR()
+        {
+            Functions.TLENSBLKATTR.ComputeCumulative();
+        }
+
+        [CommandMethod("SIOFORGECAD", "TLENSBLKDETAILEDATTR", CommandFlags.Redraw)]
+        public static void TLENSBLKDETAILEDATTR()
+        {
+            Functions.TLENSBLKATTR.ComputeDetailed();
         }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]

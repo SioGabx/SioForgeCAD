@@ -41,6 +41,16 @@ namespace SioForgeCAD.Commun
             short DisplayPrecision = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("LUPREC");
             return Math.Round(Number, DisplayPrecision);
         }
+        public static string TryFormatIfNumberForPrint(object obj)
+        {
+            if (double.TryParse(obj.ToString(), out double Number)){
+                return FormatNumberForPrint(Number).ToString();
+            }
+            else
+            {
+                return obj.ToString();
+            }
+        }
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();

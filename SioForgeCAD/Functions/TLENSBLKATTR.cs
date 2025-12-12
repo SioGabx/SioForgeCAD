@@ -16,7 +16,7 @@ namespace SioForgeCAD.Functions
             public class AttrProperty
             {
                 public string PropertyName;
-                public double PropertyCumulatedValue;
+                public List<double> PropertyValues;
                 public DynamicBlockReferencePropertyUnitsType PropertyUnitsType;
             }
 
@@ -26,26 +26,58 @@ namespace SioForgeCAD.Functions
 
             public override string ToString()
             {
+                return GetCumulativeReport();
+            }
+
+            public string GetCumulativeReport()
+            {
                 var result = $"{BlockName} (x{BlockCount})";
                 if (Properties.Count > 0)
                 {
                     int maxLength = Properties.Max(p => p.PropertyName.Length);
                     foreach (var prop in Properties)
                     {
-                        result += $"\n- {prop.PropertyName.PadRight(maxLength)} : {Generic.FormatNumberForPrint(prop.PropertyCumulatedValue)}"; 
+                        result += $"\n- {prop.PropertyName.PadRight(maxLength)} : {Generic.FormatNumberForPrint(prop.PropertyValues.Sum())}";
+                    }
+                }
+                return result.TrimEnd();
+            }
+
+            public string GetDetailedReport()
+            {
+                var result = $"{BlockName} (x{BlockCount})";
+
+                if (Properties.Count > 0)
+                {
+                    int PropertyNameMaxLength = Properties.Max(p => p.PropertyName.Length);
+
+                    foreach (var prop in Properties)
+                    {
+                        result += $"\n- {prop.PropertyName.PadRight(PropertyNameMaxLength)} : {Generic.FormatNumberForPrint(prop.PropertyValues.Sum())}";
+
+                        // Regroupe par valeur et compte les occurrences
+                        var groups = prop.PropertyValues.GroupBy(v => v).OrderBy(g => g.Key);
+
+                        int PropertyValuesMaxLength = groups.Max(p => Generic.FormatNumberForPrint(p.Key).ToString().Length);
+
+                        foreach (var g in groups)
+                        {
+                            string formattedValue = Generic.FormatNumberForPrint(g.Key).ToString();
+                            result += $"\n    - {formattedValue.PadRight(PropertyValuesMaxLength)} : {g.Count()} fois";
+                        }
                     }
                 }
                 return result.TrimEnd();
             }
         }
 
-        public static void Compute()
+        private static List<AttrResults> AquireBlkAttrResults(out object SelectionSet)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-
+            SelectionSet = null;
             var res = ed.GetSelectionRedraw();
-            if (res.Status != PromptStatus.OK) { return; }
+            if (res.Status != PromptStatus.OK) { return null; }
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 var AttrResults = new List<AttrResults>();
@@ -72,17 +104,45 @@ namespace SioForgeCAD.Functions
                     GetBlockReferenceDynamicProperties(blockRef, AttrResult);
                     GetBlockReferenceStandardProperties(blockRef, AttrResult);
                 }
-
-                StringBuilder stringBuilder = new StringBuilder();
-                foreach (var AttrResult in AttrResults)
-                {
-                    Generic.WriteMessage(AttrResult.ToString());
-                    stringBuilder.AppendLine($"{AttrResult}\n");
-                }
-                System.Windows.Clipboard.SetText(stringBuilder.ToString());
-                ed.SetImpliedSelection(res.Value.GetSelectionSet().ToArray());
                 tr.Commit();
+                return AttrResults;
             }
+        }
+
+        public static void ComputeCumulative()
+        {
+            Editor ed = Generic.GetEditor();
+
+            var AttrResults = AquireBlkAttrResults(out object res);
+            if (AttrResults == null) { return; }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (var AttrResult in AttrResults)
+            {
+                string CumulativeReport = AttrResult.GetCumulativeReport();
+                Generic.WriteMessage(CumulativeReport);
+                stringBuilder.AppendLine($"{CumulativeReport}\n");
+            }
+            System.Windows.Clipboard.SetText(stringBuilder.ToString());
+            ed.SetImpliedSelection(res.GetSelectionSet().ToArray());
+        }
+
+        public static void ComputeDetailed()
+        {
+            Editor ed = Generic.GetEditor();
+
+            var AttrResults = AquireBlkAttrResults(out object res);
+            if (AttrResults == null) { return; }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (var AttrResult in AttrResults)
+            {
+                string DetailedReport = AttrResult.GetDetailedReport();
+                Generic.WriteMessage(DetailedReport);
+                stringBuilder.AppendLine($"{DetailedReport}\n");
+            }
+            System.Windows.Clipboard.SetText(stringBuilder.ToString());
+            ed.SetImpliedSelection(res.GetSelectionSet().ToArray());
         }
 
         private static void GetBlockReferenceDynamicProperties(BlockReference blockRef, AttrResults AttrResult)
@@ -106,12 +166,13 @@ namespace SioForgeCAD.Functions
                     {
                         TlensBlkAttrResultProperty = new AttrResults.AttrProperty()
                         {
+                            PropertyValues = new List<double>(),
                             PropertyName = DynamicPropertyName,
                             PropertyUnitsType = DynamicPropertyUnitsType,
                         };
                         AttrResult.Properties.Add(TlensBlkAttrResultProperty);
                     }
-                    TlensBlkAttrResultProperty.PropertyCumulatedValue += DynamicPropertyDoubleValue;
+                    TlensBlkAttrResultProperty.PropertyValues.Add(DynamicPropertyDoubleValue);
                 }
             }
         }
@@ -139,13 +200,13 @@ namespace SioForgeCAD.Functions
                     AttrResult.Properties.Add(new AttrResults.AttrProperty
                     {
                         PropertyName = tag,
-                        PropertyCumulatedValue = value,
+                        PropertyValues = new List<double>() { value },
                         PropertyUnitsType = DynamicBlockReferencePropertyUnitsType.NoUnits
                     });
                 }
                 else
                 {
-                    prop.PropertyCumulatedValue += value;
+                    prop.PropertyValues.Add(value);
                 }
             }
         }

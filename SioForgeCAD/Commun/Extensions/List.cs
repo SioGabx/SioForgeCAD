@@ -47,5 +47,22 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return NewList;
         }
+
+        public static string SumNumeric(this List<object> values)
+        {
+            var doubles = values.ConvertAll(v =>
+            {
+                if (v is double d) return d;
+                if (double.TryParse(v.ToString(), out double res)) return res;
+                return 0.0;
+            });
+
+            return doubles.Any() ? Generic.FormatNumberForPrint(doubles.Sum()).ToString() : "";
+        }
+
+        public static bool HasTypeOf<T>(this List<T> list, Type type)
+        {
+            return list.Any(item => item != null && type.IsAssignableFrom(item.GetType()));
+        }
     }
 }

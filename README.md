@@ -73,7 +73,9 @@ Regex to get README command name : /`([^`]+?)`/g
 | `TAREA` | Calculate area of selected objects. |
 | `TLENS` | Compute total length of selected curves. |
 | `TBLK` | Analyzes the selected block references in the drawing, counts how many instances exist for each block name, and exports the results to the clipboard in a tab-separated list. |
-| `TLENSBLKATTR` | Compute total length of selected block reference attributes (standards + dynamics). |
+| `TBLKDETAILED` | Analyzes the selected block references in the drawing, counts all attribute values for each block, and copies the detailed attribute summary to the clipboard |
+| `TLENSBLKCUMULATEDATTR` | Computes the cumulative sum of all selected block attribute and dynamic property values and reports totals per property. |
+| `TLENSBLKDETAILEDATTR` | Lists each distinct attribute or dynamic property value found in the selected blocks along with the number of occurrences for each. |
 | `VEGBLOC` | Create VEGBLOC. |
 | `VEGBLOCEDIT` | Edit VEGBLOC. |
 | `VEGBLOCCOPYGRIP` | Enable VEGBLOC grip. |
