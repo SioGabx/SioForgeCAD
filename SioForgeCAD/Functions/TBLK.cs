@@ -114,10 +114,10 @@ namespace SioForgeCAD.Functions
                     sb.AppendLine($"  - {prop.PropertyName.PadRight(PropertyNamesMaxLength)} : {numericSum}");
 
                     var GroupedPropertyValues = prop.PropertyValues.GroupBy(v => v);
-                    int groupKeyMaxLength = GroupedPropertyValues.Max(p => p.Key.ToString().Length);
+                    int groupKeyMaxLength = GroupedPropertyValues.Max(p => Generic.TryFormatIfNumberForPrint(p.Key).Length);
                     foreach (var group in GroupedPropertyValues)
                     {
-                        sb.AppendLine($"    - {group.Key.ToString().PadRight(groupKeyMaxLength)} : {group.Count()} fois");
+                        sb.AppendLine($"    - {Generic.TryFormatIfNumberForPrint(group.Key).PadRight(groupKeyMaxLength)} : {group.Count()} fois");
                     }
                 }
             }
