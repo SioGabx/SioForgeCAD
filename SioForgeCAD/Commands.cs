@@ -396,10 +396,17 @@ namespace SioForgeCAD
             Functions.VEGBLOC.Create();
         }
 
+
         [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.UsePickSet)]
         public static void VEGBLOCEDIT()
         {
             Functions.VEGBLOCEDIT.Edit();
+        }
+
+        [CommandMethod("SIOFORGECAD", "VEGBLOCCOUNTFILL", CommandFlags.Redraw)]
+        public static void VEGBLOCCOUNTFILL()
+        {
+            Functions.VEGBLOCCOUNTFILL.CountFill();
         }
 
         [CommandMethod("SIOFORGECAD", "VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]

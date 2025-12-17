@@ -307,6 +307,7 @@
     <Compile Include="Functions\TLENS.cs" />
     <Compile Include="Functions\VEGBLOC.cs" />
     <Compile Include="Functions\VEGBLOCCOPYGRIP.cs" />
+    <Compile Include="Functions\VEGBLOCCOUNTFILL.cs" />
     <Compile Include="Functions\VEGBLOCEDIT.cs" />
     <Compile Include="Functions\VEGBLOCEXTRACT.cs" />
     <Compile Include="Functions\VEGBLOCLAYOUT.cs" />
