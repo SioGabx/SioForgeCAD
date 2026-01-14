@@ -108,7 +108,7 @@ namespace SioForgeCAD.Commun.Drawing
                     Name = BlockName,
                     Comments = Description,
                     Explodable = IsExplodable,
-                    Units = UnitsValue.Meters,
+                    Units = db.Insunits,
                     BlockScaling = BlockScaling,
                 };
                 if (Origin != Points.Null)
@@ -157,24 +157,26 @@ namespace SioForgeCAD.Commun.Drawing
                     try
                     {
                         MemoryDatabase.WblockCloneObjects(SelectedIds, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
-                        var DisplacementVector = Matrix3d.Displacement(Origin.SCG.Flatten().GetVectorTo(new Point3d(0, 0, Origin.SCG.Z)));
-                        foreach (IdPair idPair in acIdMap)
-                        {
-                            if (idPair.Value.IsValid)
-                            {
-                                DBObject obj = idPair.Value.GetObject(OpenMode.ForWrite);
-                                if (obj is Entity ent)
-                                {
-                                    ent.TransformBy(DisplacementVector);
-                                }
-                            }
-                        }
+                       
                     }
                     catch (Exception ex)
                     {
                         Debug.WriteLine(ex);
                         return ObjectId.Null;
                     }
+                    var DisplacementVector = Matrix3d.Displacement(Origin.SCG.Flatten().GetVectorTo(new Point3d(0, 0, Origin.SCG.Z)));
+                    foreach (ObjectId objId in acBlkTblRecNewDoc)
+                    {
+                        if (objId.IsValid)
+                        {
+                            DBObject obj = objId.GetObject(OpenMode.ForWrite);
+                            if (obj is Entity ent)
+                            {
+                                ent.TransformBy(DisplacementVector);
+                            }
+                        }
+                    }
+
                     MemoryTransaction.Commit();
                 }
 
@@ -185,6 +187,7 @@ namespace SioForgeCAD.Commun.Drawing
                 blockDef.Comments = Description;
                 blockDef.Explodable = IsExplodable;
                 blockDef.BlockScaling = BlockScaling;
+                blockDef.Units = db.Insunits;
 
                 if (EraseOld)
                 {

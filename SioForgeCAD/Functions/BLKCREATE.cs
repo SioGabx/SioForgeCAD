@@ -8,10 +8,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
-    public static class BLKCREATEANONYMOUS
+    public static class BLKCREATE
     {
         public static void Create()
         {
@@ -20,14 +21,39 @@ namespace SioForgeCAD.Functions
 
             var selResult = ed.GetSelectionRedraw();
             if (selResult.Status != PromptStatus.OK) { return; }
-            PromptPointOptions ptOptions = new PromptPointOptions("Selectionnez le point de base")
-            {
-                AllowNone = true
-            };
-            var ptResult = ed.GetPoint(ptOptions);
+
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                PromptPointOptions ptOptions = new PromptPointOptions("Selectionnez le point de base")
+                {
+                    AllowNone = true
+                };
+                var ptResult = ed.GetPoint(ptOptions);
+
+                string BlkName = string.Empty;
+                do
+                {
+                    Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
+                    dialogBox.SetUserInputPlaceholder(BlkName);
+                    dialogBox.SetPrompt($"Indiquez un nom pour le bloc");
+                    dialogBox.SetCursorAtEnd();
+                    DialogResult dialogResult = dialogBox.ShowDialog();
+                    if (dialogResult != DialogResult.OK)
+                    {
+                        return;
+                    }
+                    BlkName = dialogBox.GetUserInput();
+                    if (string.IsNullOrWhiteSpace(BlkName))
+                    {
+                        BlkName = "BLK_" + DateTime.Now.Ticks.ToString();
+                        continue;
+                    }
+
+                    BlkName = SymbolUtilityServices.RepairSymbolName(BlkName, false);
+                }
+                while (BlockReferences.IsBlockExist(BlkName));
+
                 var BlockReferencesCollection = new DBObjectCollection();
 
                 var modelSpace = SymbolUtilityServices.GetBlockModelSpaceId(db).GetObject(OpenMode.ForRead) as BlockTableRecord;
@@ -36,12 +62,12 @@ namespace SioForgeCAD.Functions
                 var orderedIds = drawOrderTable.GetFullDrawOrder(0)
                     .Cast<ObjectId>()
                     .Where(id => selectedIds.Contains(id)).ToObjectIdCollection();
-                //AddToNewDrawing(orderedIds.ToObjectIdCollection());
+             
                 var InsPoint = Points.GetFromPromptPointResult(ptResult);
-                var BlkDefId = BlockReferences.CreateFromExistingEnts("*U", "", orderedIds, InsPoint, true, BlockScaling.Any, true);
+                var BlkDefId = BlockReferences.CreateFromExistingEnts(BlkName, "", orderedIds, InsPoint, true, BlockScaling.Any, true);
                 if (!BlkDefId.IsValid) { tr.Commit(); return; }
                 var BlkRef = new BlockReference(InsPoint.SCG, BlkDefId);
-                
+
                 BlkRef.AddToDrawing();
                 tr.Commit();
             }

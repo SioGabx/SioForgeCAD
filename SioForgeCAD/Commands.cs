@@ -157,6 +157,13 @@ namespace SioForgeCAD
             Functions.BLKTOSTATICBLOCK.Convert();
         }
 
+        [CommandMethod("SIOFORGECAD", "BLKCREATE", CommandFlags.Redraw)]
+        //Create  block reference from selection
+        public static void BLKCREATE()
+        {
+            Functions.BLKCREATE.Create();
+        }
+
         [CommandMethod("SIOFORGECAD", "BLKCREATEANONYMOUS", CommandFlags.Redraw)]
         //Create anonymous block reference from selection
         public static void BLKCREATEANONYMOUS()
