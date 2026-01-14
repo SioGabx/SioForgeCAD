@@ -130,6 +130,77 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
+        public static ObjectId CreateFromExistingEnts(string Name, string Description, ObjectIdCollection SelectedIds, Points Origin, bool IsExplodable = true, BlockScaling BlockScaling = BlockScaling.Any, bool EraseOld = false)
+        {
+            //This method offer the avantage to keep associative hatch
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
+                string BlockName = Name;
+
+                if (BlockName != "*U") //creating an anonymous block
+                {
+                    BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
+                }
+                if (bt.Has(BlockName))
+                {
+                    Generic.WriteMessage($"Le bloc {Name} existe déja dans le dessin");
+                }
+
+                Database MemoryDatabase = new Database(true, false);
+                IdMapping acIdMap = new IdMapping();
+                using (Transaction MemoryTransaction = MemoryDatabase.TransactionManager.StartTransaction())
+                {
+                    BlockTable acBlkTblNewDoc = MemoryTransaction.GetObject(MemoryDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
+                    BlockTableRecord acBlkTblRecNewDoc = MemoryTransaction.GetObject(acBlkTblNewDoc[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
+                    try
+                    {
+                        MemoryDatabase.WblockCloneObjects(SelectedIds, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
+                        var DisplacementVector = Matrix3d.Displacement(Origin.SCG.Flatten().GetVectorTo(new Point3d(0, 0, Origin.SCG.Z)));
+                        foreach (IdPair idPair in acIdMap)
+                        {
+                            if (idPair.Value.IsValid)
+                            {
+                                DBObject obj = idPair.Value.GetObject(OpenMode.ForWrite);
+                                if (obj is Entity ent)
+                                {
+                                    ent.TransformBy(DisplacementVector);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex);
+                        return ObjectId.Null;
+                    }
+                    MemoryTransaction.Commit();
+                }
+
+
+                var Id = db.Insert(BlockName, MemoryDatabase, false);
+
+                BlockTableRecord blockDef = Id.GetObject(OpenMode.ForWrite) as BlockTableRecord;
+                blockDef.Comments = Description;
+                blockDef.Explodable = IsExplodable;
+                blockDef.BlockScaling = BlockScaling;
+
+                if (EraseOld)
+                {
+                    foreach (ObjectId oldent in SelectedIds)
+                    {
+                        oldent.EraseObject();
+                    }
+                }
+
+                tr.Commit();
+                return Id;
+            }
+        
+        }
+
+
         public static ObjectId RenameBlockAndInsert(ObjectId BlockReferenceObjectId, string OldName, string NewName)
         {
             if (!BlockReferenceObjectId.IsValid)
@@ -438,45 +509,45 @@ namespace SioForgeCAD.Commun.Drawing
         }
 
         private enum DwgDataType : short
-        {
-            Null = 0,
-            Real = 1,
-            Int32 = 2,
-            Int16 = 3,
-            Int8 = 4,
-            Text = 5,
-            BChunk = 6,
-            Handle = 7,
-            HardOwnershipId = 8,
-            SoftOwnershipId = 9,
-            HardPointerId = 10,
-            SoftPointerId = 11,
-            Dwg3Real = 12,
-            Int64 = 13,
-            NotRecognized = 19
-        }
-
-        private static object ConvertValueToProperty(DwgDataType dataType, string valueToConvert)
-        {
-            switch (dataType)
-            {
-                case DwgDataType.Real:
-                    if (double.TryParse(valueToConvert, out double convertedValueDouble))
-                    {
-                        return convertedValueDouble;
-                    }
-                    break;
-                case DwgDataType.Int16:
-                case DwgDataType.Int32:
-                    if (int.TryParse(valueToConvert, out int convertedValueInt))
-                    {
-                        return convertedValueInt;
-                    }
-                    break;
-                case DwgDataType.Text:
-                    return valueToConvert;
-            }
-            return null;
-        }
+    {
+        Null = 0,
+        Real = 1,
+        Int32 = 2,
+        Int16 = 3,
+        Int8 = 4,
+        Text = 5,
+        BChunk = 6,
+        Handle = 7,
+        HardOwnershipId = 8,
+        SoftOwnershipId = 9,
+        HardPointerId = 10,
+        SoftPointerId = 11,
+        Dwg3Real = 12,
+        Int64 = 13,
+        NotRecognized = 19
     }
+
+    private static object ConvertValueToProperty(DwgDataType dataType, string valueToConvert)
+    {
+        switch (dataType)
+        {
+            case DwgDataType.Real:
+                if (double.TryParse(valueToConvert, out double convertedValueDouble))
+                {
+                    return convertedValueDouble;
+                }
+                break;
+            case DwgDataType.Int16:
+            case DwgDataType.Int32:
+                if (int.TryParse(valueToConvert, out int convertedValueInt))
+                {
+                    return convertedValueInt;
+                }
+                break;
+            case DwgDataType.Text:
+                return valueToConvert;
+        }
+        return null;
+    }
+}
 }

@@ -39,9 +39,19 @@ namespace SioForgeCAD.Commun.Extensions
             if (obj is SelectionSet selectionSet)
             {
                 return selectionSet.GetObjectIds();
-            } else            if (obj is IEnumerable<ObjectId> IEnumerableSelectionSet)
+            }
+            else if (obj is IEnumerable<ObjectId> IEnumerableSelectionSet)
             {
                 return IEnumerableSelectionSet.ToArray();
+            }
+            else if (obj is IEnumerable<DBObject> collection)
+            {
+                return collection.Select(ent => ent.ObjectId).ToArray();
+            }
+            else if (obj is DBObjectCollection DbObjectCollection)
+            {
+                var ObjIds = (from DBObject item in DbObjectCollection
+                              select item.ObjectId).ToList();
             }
             return System.Array.Empty<ObjectId>();
         }

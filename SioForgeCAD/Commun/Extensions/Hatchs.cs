@@ -207,5 +207,13 @@ namespace SioForgeCAD.Commun.Extensions
             hatch.EvaluateHatch(true);
             return hatch;
         }
+
+        public static void RemoveAllLoops(this Hatch hatch)
+        {
+            for (int i = 0; i < hatch.NumberOfLoops; i++)
+            {
+                hatch.RemoveLoopAt(i);
+            }
+        }
     }
 }
