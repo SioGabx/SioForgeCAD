@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Mist;
 
 namespace SioForgeCAD.Functions
 {
+    //https://www.codeproject.com/articles/Manipulating-colors-in-NET-Part-1#hsb
     public static class SETSELECTEDENTITIESBRIGHTNESS
     {
         static double LastBrightnessValue = 100;

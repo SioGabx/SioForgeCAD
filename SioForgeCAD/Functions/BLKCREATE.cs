@@ -66,8 +66,10 @@ namespace SioForgeCAD.Functions
                 var InsPoint = Points.GetFromPromptPointResult(ptResult);
                 var BlkDefId = BlockReferences.CreateFromExistingEnts(BlkName, "", orderedIds, InsPoint, true, BlockScaling.Any, true);
                 if (!BlkDefId.IsValid) { tr.Commit(); return; }
-                var BlkRef = new BlockReference(InsPoint.SCG, BlkDefId);
-
+                var BlkRef = new BlockReference(InsPoint.SCG, BlkDefId)
+                {
+                    Rotation = Vector3d.XAxis.GetAngleTo(ed.CurrentUserCoordinateSystem.CoordinateSystem3d.Xaxis, Vector3d.ZAxis)
+                };
                 BlkRef.AddToDrawing();
                 tr.Commit();
             }

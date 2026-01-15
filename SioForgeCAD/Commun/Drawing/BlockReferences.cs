@@ -133,6 +133,7 @@ namespace SioForgeCAD.Commun.Drawing
         public static ObjectId CreateFromExistingEnts(string Name, string Description, ObjectIdCollection SelectedIds, Points Origin, bool IsExplodable = true, BlockScaling BlockScaling = BlockScaling.Any, bool EraseOld = false)
         {
             //This method offer the avantage to keep associative hatch
+            Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -157,14 +158,17 @@ namespace SioForgeCAD.Commun.Drawing
                     try
                     {
                         MemoryDatabase.WblockCloneObjects(SelectedIds, acBlkTblRecNewDoc.ObjectId, acIdMap, DuplicateRecordCloning.Replace, false);
-                       
+
                     }
                     catch (Exception ex)
                     {
                         Debug.WriteLine(ex);
                         return ObjectId.Null;
                     }
-                    var DisplacementVector = Matrix3d.Displacement(Origin.SCG.Flatten().GetVectorTo(new Point3d(0, 0, Origin.SCG.Z)));
+                    double UcsRotation = Vector3d.XAxis.GetAngleTo(ed.CurrentUserCoordinateSystem.CoordinateSystem3d.Xaxis, Vector3d.ZAxis);
+                    Matrix3d CounterRotation = Matrix3d.Rotation(-UcsRotation, Vector3d.ZAxis, new Point3d(0, 0, Origin.SCG.Z));
+                    Matrix3d DisplacementVector = Matrix3d.Displacement(Origin.SCG.Flatten().GetVectorTo(new Point3d(0, 0, Origin.SCG.Z)));
+
                     foreach (ObjectId objId in acBlkTblRecNewDoc)
                     {
                         if (objId.IsValid)
@@ -172,7 +176,7 @@ namespace SioForgeCAD.Commun.Drawing
                             DBObject obj = objId.GetObject(OpenMode.ForWrite);
                             if (obj is Entity ent)
                             {
-                                ent.TransformBy(DisplacementVector);
+                                ent.TransformBy(CounterRotation * DisplacementVector);
                             }
                         }
                     }
@@ -200,7 +204,7 @@ namespace SioForgeCAD.Commun.Drawing
                 tr.Commit();
                 return Id;
             }
-        
+
         }
 
 
@@ -512,45 +516,45 @@ namespace SioForgeCAD.Commun.Drawing
         }
 
         private enum DwgDataType : short
-    {
-        Null = 0,
-        Real = 1,
-        Int32 = 2,
-        Int16 = 3,
-        Int8 = 4,
-        Text = 5,
-        BChunk = 6,
-        Handle = 7,
-        HardOwnershipId = 8,
-        SoftOwnershipId = 9,
-        HardPointerId = 10,
-        SoftPointerId = 11,
-        Dwg3Real = 12,
-        Int64 = 13,
-        NotRecognized = 19
-    }
-
-    private static object ConvertValueToProperty(DwgDataType dataType, string valueToConvert)
-    {
-        switch (dataType)
         {
-            case DwgDataType.Real:
-                if (double.TryParse(valueToConvert, out double convertedValueDouble))
-                {
-                    return convertedValueDouble;
-                }
-                break;
-            case DwgDataType.Int16:
-            case DwgDataType.Int32:
-                if (int.TryParse(valueToConvert, out int convertedValueInt))
-                {
-                    return convertedValueInt;
-                }
-                break;
-            case DwgDataType.Text:
-                return valueToConvert;
+            Null = 0,
+            Real = 1,
+            Int32 = 2,
+            Int16 = 3,
+            Int8 = 4,
+            Text = 5,
+            BChunk = 6,
+            Handle = 7,
+            HardOwnershipId = 8,
+            SoftOwnershipId = 9,
+            HardPointerId = 10,
+            SoftPointerId = 11,
+            Dwg3Real = 12,
+            Int64 = 13,
+            NotRecognized = 19
         }
-        return null;
+
+        private static object ConvertValueToProperty(DwgDataType dataType, string valueToConvert)
+        {
+            switch (dataType)
+            {
+                case DwgDataType.Real:
+                    if (double.TryParse(valueToConvert, out double convertedValueDouble))
+                    {
+                        return convertedValueDouble;
+                    }
+                    break;
+                case DwgDataType.Int16:
+                case DwgDataType.Int32:
+                    if (int.TryParse(valueToConvert, out int convertedValueInt))
+                    {
+                        return convertedValueInt;
+                    }
+                    break;
+                case DwgDataType.Text:
+                    return valueToConvert;
+            }
+            return null;
+        }
     }
-}
 }
