@@ -30,26 +30,29 @@ namespace SioForgeCAD.Functions
             {
                 ObjectId BlockRefObjId = ObjectIds.First();
                 BlockReference BlockRef = BlockRefObjId.GetDBObject(OpenMode.ForWrite) as BlockReference;
-               
-                    var SelectedIds = Selection.Value.GetObjectIds();
-                    if (BlockRef.IsXref())
-                    {
-                        AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
-                    }
-                    else
-                    {
-                        // Modifier le bloc dans le dessin courant
-                        AddEntitiesToBlock(BlockRef, SelectedIds, tr);
-                        tr.Commit();
-                    }
-               
-                BlockRef.RegenAllBlkDefinition();
+
+                var SelectedIds = Selection.Value.GetObjectIds();
+                if (BlockRef.IsXref())
+                {
+                    AddEntitiesToXref(BlockRefObjId, BlockRef, SelectedIds, tr);
+                    BlockRef.RegenAllBlkDefinition();
+                }
+                else
+                {
+                    // Modifier le bloc dans le dessin courant
+                    AddEntitiesToBlock(BlockRef, SelectedIds, tr);
+                    BlockRef.RegenAllBlkDefinition();
+                    tr.Commit();
+                }
+
+
+                
             }
         }
 
         private static void AddEntitiesToBlock(BlockReference BlockRef, ObjectId[] selectedIds, Transaction tr)
         {
-            BlockTableRecord BlockDef = BlockRef.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+            BlockTableRecord BlockDef = BlockRef.GetBlocDefinition(OpenMode.ForWrite) as BlockTableRecord;
             Matrix3d blockTransform = BlockRef.BlockTransform;
             Matrix3d inverseTransform = blockTransform.Inverse();
 

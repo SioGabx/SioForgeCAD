@@ -305,7 +305,7 @@ namespace SioForgeCAD.Commun.Drawing
                         foreach (ObjectId anonymousBtrId in anonymousIds)
                         {
                             BlockTableRecord anonymousBtr = (BlockTableRecord)trans.GetObject(anonymousBtrId, OpenMode.ForRead);
-                            ObjectIdCollection blockRefIds = anonymousBtr.GetBlockReferenceIds(true, true);
+                            ObjectIdCollection blockRefIds = anonymousBtr.GetBlockReferenceIds(false, true);
                             dynBlockRefs.Join(blockRefIds);
                         }
 

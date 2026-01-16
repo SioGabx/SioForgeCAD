@@ -1,8 +1,10 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,33 @@ namespace SioForgeCAD.Functions
 {
     public static class BLKAPPLYSCALE
     {
+
+        public static void RegenAllBlkDefinition2(this BlockReference BlockRef)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                var BlkDef = BlockRef.GetBlocDefinition();
+                ObjectIdCollection DynamicBlkRefs = BlockReferences.GetDynamicBlockReferences(BlockRef.GetBlockReferenceName());
+                ObjectIdCollection ClassicBlkRefs = BlkDef.GetBlockReferenceIds(false, false);
+                ObjectIdCollection AllBlkRefs = new ObjectIdCollection();
+                AllBlkRefs.Join(DynamicBlkRefs);
+                AllBlkRefs.Join(ClassicBlkRefs);
+
+                foreach (ObjectId entId in AllBlkRefs)
+                {
+                    if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
+                    {
+                        otherBlockRef.RecordGraphicsModified(true);
+                        
+                    }
+                }
+                BlkDef.UpdateAnonymousBlocks();
+                tr.Commit();
+            }
+        }
+
+
         public static void ApplyBlockScale()
         {
             Database db = Generic.GetDatabase();
@@ -26,10 +55,33 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                if (!(perObjId.GetDBObject(OpenMode.ForRead) is BlockReference blockRef))
+                {
+                    return;
+                }
+                var BlkDef = blockRef.GetBlocDefinition(OpenMode.ForWrite);
+
+                var SelectedEntClone = new Circle(Point3d.Origin, Vector3d.ZAxis, 1);
+                SelectedEntClone.ColorIndex = 1;
+                BlkDef.AppendEntity(SelectedEntClone);
+                tr.AddNewlyCreatedDBObject(SelectedEntClone, true);RegenAllBlkDefinition2(blockRef);
+                tr.Commit();
+                
+                return;
+
+
+
+
+
+
+
+
+                //PPPPPPPPPPPPPPPPPPPPPPP
                 if (!(perObjId.GetDBObject(OpenMode.ForWrite) is BlockReference br))
                 {
                     return;
                 }
+
 
                 if (!IsUniformScaleAllowNegative(br))
                 {
@@ -38,7 +90,8 @@ namespace SioForgeCAD.Functions
                 }
 
                 double refScale = Math.Abs(br.ScaleFactors.X);
-                BlockTableRecord btr = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                
+                BlockTableRecord btr = br.GetBlocDefinition(OpenMode.ForWrite);
 
                 if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
                 {
@@ -50,19 +103,39 @@ namespace SioForgeCAD.Functions
                 {
                     btr.Units = db.Insunits;
                 }
+                var Blkname = br.GetBlockReferenceName();
 
-
-                Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
-                foreach (ObjectId entId in btr)
+                if (true)
                 {
-                    Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
-                    ent?.TransformBy(scaleMatrix);
+                    Generic.WriteMessage("Opération sur des blocks dynamique");
+                    
+                    Generic.Command("_-BEDIT", Blkname);
+                    PromptSelectionResult selRes = ed.SelectAll();
+                    if (selRes.Status == PromptStatus.OK)
+                    {
+                        foreach (var item in selRes.GetObjectIds())
+                        {
+                            Generic.Command("_SCALE", item, Point3d.Origin, refScale);
+                        }
+                    }
+                    Generic.Command("_BCLOSE", "_Save");
+
+                }
+                else
+                {
+                    Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
+                    foreach (ObjectId entId in btr)
+                    {
+                        Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
+                        ent?.TransformBy(scaleMatrix);
+                    }
                 }
 
-
-
                 // Fix all ref blk
-                ObjectIdCollection refIds = btr.GetBlockReferenceIds(true, true); // get all including nested
+
+                ObjectIdCollection refIds = BlockReferences.GetDynamicBlockReferences(Blkname);
+                BlockTableRecord BlockDef = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                refIds.Join(BlockDef.GetBlockReferenceIds(false, false));
 
                 bool differentScalesFound = false;
 

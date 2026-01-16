@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -251,17 +252,22 @@ namespace SioForgeCAD.Commun.Extensions
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                ObjectIdCollection iter = BlockReferences.GetDynamicBlockReferences(BlockRef.GetBlockReferenceName());
-                BlockTableRecord BlockDef = BlockRef.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
-                iter.Join(BlockDef.GetBlockReferenceIds(true, false));
+                var BlkDef = BlockRef.GetBlocDefinition();
+                ObjectIdCollection DynamicBlkRefs = BlockReferences.GetDynamicBlockReferences(BlockRef.GetBlockReferenceName());
+                ObjectIdCollection ClassicBlkRefs = BlkDef.GetBlockReferenceIds(false, false);
+                ObjectIdCollection AllBlkRefs = new ObjectIdCollection();
+                AllBlkRefs.Join(DynamicBlkRefs);
+                AllBlkRefs.Join(ClassicBlkRefs);
 
-                foreach (ObjectId entId in iter)
+                foreach (ObjectId entId in AllBlkRefs)
                 {
                     if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
                     {
                         otherBlockRef.RecordGraphicsModified(true);
+
                     }
                 }
+                BlkDef.UpdateAnonymousBlocks();
                 tr.Commit();
             }
         }
@@ -278,52 +284,84 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        private static void RegenParents(ObjectId childDefId, HashSet<ObjectId> visited, Transaction tr)
+       
+
+        private static void RegenParents(ObjectId childBtrId, HashSet<ObjectId> visited, Transaction tr)
         {
-            if (visited.Contains(childDefId))
+            if (!visited.Add(childBtrId))
             {
                 return;
             }
 
-            visited.Add(childDefId);
+            BlockTableRecord childBtr = childBtrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
 
-            Database db = Generic.GetDatabase();
-            foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+            if (childBtr == null)
             {
-                BlockTableRecord parentBtr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
-
-                if (parentBtr.IsLayout)
-                {
-                    continue;
-                }
-
-                bool containsChild = false;
-
-                foreach (ObjectId entId in parentBtr)
-                {
-                    if (entId.GetDBObject(OpenMode.ForRead) is BlockReference br && br.BlockTableRecord == childDefId)
-                    {
-                        containsChild = true;
-                        break;
-                    }
-                }
-
-                if (!containsChild)
-                {
-                    continue;
-                }
-
-                foreach (ObjectId refId in parentBtr.GetBlockReferenceIds(true, true))
-                {
-                    if (refId.GetDBObject(OpenMode.ForWrite) is BlockReference parentRef)
-                    {
-                        parentRef.RecordGraphicsModified(true);
-                    }
-                }
-
-                // Récursivement
-                RegenParents(parentBtr.ObjectId, visited, tr);
+                return;
             }
+
+            foreach (ObjectId refId in childBtr.GetBlockReferenceIds(false, true))
+            {
+                if (!(refId.GetDBObject(OpenMode.ForWrite) is BlockReference br))
+                {
+                    continue;
+                }
+
+                br.RecordGraphicsModified(true);
+
+                // Remonter au parent
+                BlockTableRecord parentBtr = br.OwnerId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                if (parentBtr?.IsLayout == false)
+                {
+                    RegenParents(parentBtr.ObjectId, visited, tr);
+                }
+            }
+
+            //if (visited.Contains(childBtrId))
+            //{
+            //    return;
+            //}
+
+            //visited.Add(childBtrId);
+
+            //Database db = Generic.GetDatabase();
+            //foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+            //{
+            //    BlockTableRecord parentBtr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+            //    if (parentBtr.IsLayout)
+            //    {
+            //        continue;
+            //    }
+
+            //    bool containsChild = false;
+
+            //    foreach (ObjectId entId in parentBtr)
+            //    {
+            //        if (entId.GetDBObject(OpenMode.ForRead) is BlockReference br && br.BlockTableRecord == childBtrId)
+            //        {
+            //            containsChild = true;
+            //            break;
+            //        }
+            //    }
+
+            //    if (!containsChild)
+            //    {
+            //        continue;
+            //    }
+
+            //    foreach (ObjectId refId in parentBtr.GetBlockReferenceIds(true, true))
+            //    {
+            //        if (refId.GetDBObject(OpenMode.ForWrite) is BlockReference parentRef)
+            //        {
+            //            parentRef.RecordGraphicsModified(true);
+            //        }
+            //    }
+
+            //    // Récursivement
+            //    RegenParents(parentBtr.ObjectId, visited, tr);
+            //}
         }
     }
 }
