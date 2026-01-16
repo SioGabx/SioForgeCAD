@@ -223,6 +223,7 @@
     <Compile Include="Functions\AREATOFIELD.cs" />
     <Compile Include="Functions\BATTLEMENTS.cs" />
     <Compile Include="Functions\BLKADDENTITIES.cs" />
+    <Compile Include="Functions\BLKAPPLYSCALE.cs" />
     <Compile Include="Functions\BLKCREATE.cs" />
     <Compile Include="Functions\BLKCREATEANONYMOUS.cs" />
     <Compile Include="Functions\BLKINSEDIT.cs" />

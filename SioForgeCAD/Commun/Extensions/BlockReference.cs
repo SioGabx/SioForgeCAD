@@ -188,15 +188,11 @@ namespace SioForgeCAD.Commun.Extensions
 
             using (Transaction transaction = db.TransactionManager.StartTransaction())
             {
-                // Ouvrez la référence externe (Xref) en mode de lecture
                 BlockReference xrefBlockReference = transaction.GetObject(xrefId, OpenMode.ForRead) as BlockReference;
 
                 if (xrefBlockReference != null)
                 {
-                    // Obtenez la matrice de transformation complète de la référence externe (Xref)
                     Matrix3d xrefTransform = xrefBlockReference.BlockTransform;
-
-                    // Transformez le point dans la référence externe vers l'espace monde
                     Point3d worldPoint = pointInXref.TransformBy(xrefTransform);
                     transaction.Commit();
 
@@ -270,34 +266,64 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        //public static void Test(this BlockReference blockReference)
-        //{
-        //    using (Transaction tr = Generic.GetDatabase().TransactionManager.StartTransaction())
-        //    {
-        //        if (!blockReference.IsWriteEnabled)
-        //        {
-        //            blockReference.UpgradeOpen();
-        //        }
-        //        // Loop through the attributes of the block reference
+        public static void RegenParentBlocksRecursive(this BlockReference blockRef)
+        {
+            Database db = Generic.GetDatabase();
 
-        //        foreach (var attId in blockReference.AttributeCollection)
-        //        {
-        //            if (attId is AttributeReference AttributeElement)
-        //            {
-        //                string AttributeDefinitionName = AttributeElement.Tag.ToUpperInvariant();
-        //                if (Values?.ContainsKey(AttributeDefinitionName) == true)
-        //                {
-        //                    if (Values.TryGetValue(AttributeDefinitionName, out string AttributeDefinitionTargetValue))
-        //                    {
-        //                        AttributeElement.TextString = AttributeDefinitionTargetValue;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        tr.Commit();
-        //    }
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                HashSet<ObjectId> visited = new HashSet<ObjectId>();
+                RegenParents(blockRef.BlockTableRecord, visited, tr);
+                tr.Commit();
+            }
+        }
 
+        private static void RegenParents(ObjectId childDefId, HashSet<ObjectId> visited, Transaction tr)
+        {
+            if (visited.Contains(childDefId))
+            {
+                return;
+            }
 
-        //}
+            visited.Add(childDefId);
+
+            Database db = Generic.GetDatabase();
+            foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+            {
+                BlockTableRecord parentBtr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                if (parentBtr.IsLayout)
+                {
+                    continue;
+                }
+
+                bool containsChild = false;
+
+                foreach (ObjectId entId in parentBtr)
+                {
+                    if (entId.GetDBObject(OpenMode.ForRead) is BlockReference br && br.BlockTableRecord == childDefId)
+                    {
+                        containsChild = true;
+                        break;
+                    }
+                }
+
+                if (!containsChild)
+                {
+                    continue;
+                }
+
+                foreach (ObjectId refId in parentBtr.GetBlockReferenceIds(true, true))
+                {
+                    if (refId.GetDBObject(OpenMode.ForWrite) is BlockReference parentRef)
+                    {
+                        parentRef.RecordGraphicsModified(true);
+                    }
+                }
+
+                // Récursivement
+                RegenParents(parentBtr.ObjectId, visited, tr);
+            }
+        }
     }
 }

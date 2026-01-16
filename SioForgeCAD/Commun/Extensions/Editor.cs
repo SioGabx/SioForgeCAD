@@ -91,7 +91,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Viewport GetViewport(this Editor ed)
         {
-            Database db = ed.Document.Database;
+            Database db = Generic.GetDatabase();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -180,7 +180,6 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 AllowObjectOnLockedLayer = RejectObjectsOnLockedLayers,
                 AllowNone = false,
-
             };
 
             while (true)
