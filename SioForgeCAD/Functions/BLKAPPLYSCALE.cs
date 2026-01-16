@@ -31,13 +31,13 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                if (!IsUniformScale(br))
+                if (!IsUniformScaleAllowNegative(br))
                 {
                     Generic.WriteMessage("Le bloc n'a pas une échelle uniforme.");
                     return;
                 }
 
-                double refScale = br.ScaleFactors.X;
+                double refScale = Math.Abs(br.ScaleFactors.X);
                 BlockTableRecord btr = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
 
                 if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
@@ -59,6 +59,8 @@ namespace SioForgeCAD.Functions
                     ent?.TransformBy(scaleMatrix);
                 }
 
+
+
                 // Fix all ref blk
                 ObjectIdCollection refIds = btr.GetBlockReferenceIds(true, true); // get all including nested
 
@@ -71,7 +73,7 @@ namespace SioForgeCAD.Functions
                         continue;
                     }
 
-                    if (!IsUniformScale(otherBr))
+                    if (!IsUniformScaleAllowNegative(otherBr))
                     {
                         continue;
                     }
@@ -84,8 +86,17 @@ namespace SioForgeCAD.Functions
                         differentScalesFound = true;
                     }
 
-                    otherBr.ScaleFactors = new Scale3d(newScale);
+                    double signX = Math.Sign(otherBr.ScaleFactors.X);
+                    double signY = Math.Sign(otherBr.ScaleFactors.Y);
+                    double signZ = Math.Sign(otherBr.ScaleFactors.Z);
+
+                    double oldAbsScale = Math.Abs(otherBr.ScaleFactors.X);
+                    double newAbsScale = oldAbsScale / refScale;
+
+                    otherBr.ScaleFactors = new Scale3d(signX * newAbsScale, signY * newAbsScale, signZ * newAbsScale);
                 }
+
+                br.ScaleFactors = new Scale3d(Math.Sign(br.ScaleFactors.X), Math.Sign(br.ScaleFactors.Y), Math.Sign(br.ScaleFactors.Z));
 
                 if (differentScalesFound)
                 {
@@ -97,10 +108,10 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static bool IsUniformScale(BlockReference br)
+        private static bool IsUniformScaleAllowNegative(BlockReference br)
         {
-            return Math.Abs(br.ScaleFactors.X - br.ScaleFactors.Y) < Generic.LowTolerance.EqualVector &&
-                   Math.Abs(br.ScaleFactors.X - br.ScaleFactors.Z) < Generic.LowTolerance.EqualVector;
+            return Math.Abs(Math.Abs(br.ScaleFactors.X) - Math.Abs(br.ScaleFactors.Y)) < Generic.LowTolerance.EqualVector &&
+                   Math.Abs(Math.Abs(br.ScaleFactors.X) - Math.Abs(br.ScaleFactors.Z)) < Generic.LowTolerance.EqualVector;
         }
     }
 }
