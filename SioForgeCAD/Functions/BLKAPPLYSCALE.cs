@@ -38,14 +38,19 @@ namespace SioForgeCAD.Functions
                 }
 
                 double refScale = br.ScaleFactors.X;
+                BlockTableRecord btr = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
 
-                if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector)
+                if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
                 {
                     Generic.WriteMessage("Le bloc est déjà à l'échelle 1.");
                     return;
                 }
 
-                BlockTableRecord btr = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                if (btr.Units != db.Insunits)
+                {
+                    btr.Units = db.Insunits;
+                }
+
 
                 Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
                 foreach (ObjectId entId in btr)
