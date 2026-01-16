@@ -17,31 +17,7 @@ namespace SioForgeCAD.Functions
     public static class BLKAPPLYSCALE
     {
 
-        public static void RegenAllBlkDefinition2(this BlockReference BlockRef)
-        {
-            Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                var BlkDef = BlockRef.GetBlocDefinition();
-                ObjectIdCollection DynamicBlkRefs = BlockReferences.GetDynamicBlockReferences(BlockRef.GetBlockReferenceName());
-                ObjectIdCollection ClassicBlkRefs = BlkDef.GetBlockReferenceIds(false, false);
-                ObjectIdCollection AllBlkRefs = new ObjectIdCollection();
-                AllBlkRefs.Join(DynamicBlkRefs);
-                AllBlkRefs.Join(ClassicBlkRefs);
-
-                foreach (ObjectId entId in AllBlkRefs)
-                {
-                    if (entId.GetDBObject(OpenMode.ForWrite) is BlockReference otherBlockRef)
-                    {
-                        otherBlockRef.RecordGraphicsModified(true);
-                        
-                    }
-                }
-                BlkDef.UpdateAnonymousBlocks();
-                tr.Commit();
-            }
-        }
-
+       
 
         public static void ApplyBlockScale()
         {
@@ -64,7 +40,8 @@ namespace SioForgeCAD.Functions
                 var SelectedEntClone = new Circle(Point3d.Origin, Vector3d.ZAxis, 1);
                 SelectedEntClone.ColorIndex = 1;
                 BlkDef.AppendEntity(SelectedEntClone);
-                tr.AddNewlyCreatedDBObject(SelectedEntClone, true);RegenAllBlkDefinition2(blockRef);
+                tr.AddNewlyCreatedDBObject(SelectedEntClone, true);
+                blockRef.RegenAllBlkDefinition();
                 tr.Commit();
                 
                 return;
