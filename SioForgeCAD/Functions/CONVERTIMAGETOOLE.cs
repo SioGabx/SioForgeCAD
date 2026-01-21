@@ -91,7 +91,7 @@ namespace SioForgeCAD.Functions
                             }
                             JoinedMessage += $"\nVoullez-vous utiliser un fond de la couleur de l'object raster ? ({rasterImageColor.R},{rasterImageColor.G},{rasterImageColor.B}). Un fond blanc sera appliqué dans le cas contraire";
                             var AskContinue = MessageBox.Show(JoinedMessage, Generic.GetExtensionDLLName(), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
-                            if (AskContinue != DialogResult.Cancel)
+                            if (AskContinue == DialogResult.Cancel)
                             {
                                 return;
                             }

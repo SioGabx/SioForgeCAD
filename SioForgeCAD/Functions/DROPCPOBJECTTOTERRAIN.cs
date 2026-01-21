@@ -13,22 +13,19 @@ namespace SioForgeCAD.Functions
         public static void Project()
         {
             Editor ed = Generic.GetEditor();
+            var promptOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "Sélectionnez les entités à projeter sur le terrain via l'UCS courant"
+            };
 
+            var selectedObjects = ed.GetSelection(promptOptions);
+            if (selectedObjects.Status != PromptStatus.OK) { return; }
             using (Polyline terrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain"))
             {
                 if (terrainBasePolyline == null)
                 {
                     return;
                 }
-
-                var promptOptions = new PromptSelectionOptions
-                {
-                    MessageForAdding = "Sélectionnez les entités à projeter sur le terrain via l'UCS courant"
-                };
-
-                var selectedObjects = ed.GetSelection(promptOptions);
-                if (selectedObjects.Status != PromptStatus.OK) { return; }
-
                 ObjectId[] objectIds = selectedObjects.Value.GetObjectIds();
                 TransformAlign(objectIds, terrainBasePolyline, false);
 

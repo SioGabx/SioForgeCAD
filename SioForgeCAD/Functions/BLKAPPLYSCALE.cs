@@ -17,10 +17,13 @@ namespace SioForgeCAD.Functions
     public static class BLKAPPLYSCALE
     {
 
-       
+
 
         public static void ApplyBlockScale()
         {
+            throw new NotImplementedException();
+
+
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
@@ -41,12 +44,41 @@ namespace SioForgeCAD.Functions
                 SelectedEntClone.ColorIndex = 1;
                 BlkDef.AppendEntity(SelectedEntClone);
                 tr.AddNewlyCreatedDBObject(SelectedEntClone, true);
+                var blks = blockRef.GetAllBlkDefinition();
+                foreach (ObjectId item in blks)
+                {
+                    BlockReference ent = item.GetDBObject(OpenMode.ForWrite) as BlockReference;
+                    double constant = 0.11;
+                    
+
+                    if (ent.ScaleFactors.X % constant != 0)
+                    {
+                        ent.ScaleFactors = new Scale3d(constant);
+                    }
+                    else if (ent.ScaleFactors.X == constant)
+                    {
+                        ent.ScaleFactors = new Scale3d(constant * 2);
+                    }
+                    else if (ent.ScaleFactors.X == constant * 2)
+                    {
+                        ent.ScaleFactors = new Scale3d(constant * 3);
+                    }
+                    else if (ent.ScaleFactors.X == constant * 3)
+                    {
+                        ent.ScaleFactors = new Scale3d(constant * 4);
+                    }
+
+
+
+                }
+
                 blockRef.RegenAllBlkDefinition();
-                tr.Commit();
                 
+                tr.Commit();
+
                 return;
 
-
+                ///TO CONIT?UE
 
 
 
@@ -67,7 +99,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 double refScale = Math.Abs(br.ScaleFactors.X);
-                
+
                 BlockTableRecord btr = br.GetBlocDefinition(OpenMode.ForWrite);
 
                 if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
@@ -85,7 +117,7 @@ namespace SioForgeCAD.Functions
                 if (true)
                 {
                     Generic.WriteMessage("Opération sur des blocks dynamique");
-                    
+
                     Generic.Command("_-BEDIT", Blkname);
                     PromptSelectionResult selRes = ed.SelectAll();
                     if (selRes.Status == PromptStatus.OK)
@@ -153,7 +185,6 @@ namespace SioForgeCAD.Functions
                     Generic.WriteMessage("⚠ Certaines références avaient une échelle différente. Les proportions ont été conservées.");
                 }
                 br.RegenAllBlkDefinition();
-                br.RegenParentBlocksRecursive();
                 tr.Commit();
             }
         }

@@ -29,7 +29,9 @@ namespace SioForgeCAD.Commun.Drawing
 
                     // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
                     if (btr.IsAnonymous || (!btr.IsLayout && !btr.IsFromExternalReference))
+                    {
                         continue;
+                    }
 
                     foreach (ObjectId entId in btr)
                     {
@@ -77,8 +79,9 @@ namespace SioForgeCAD.Commun.Drawing
                         newBr.Color = br.Color;
 
                         if (!br.IsErased)
+                        {
                             br.Erase(true);
-
+                        }
                     }
                 }
                 tr.Commit();
@@ -284,40 +287,44 @@ namespace SioForgeCAD.Commun.Drawing
                 return bt.Has(BlocName);
             }
         }
+
+
+
         public static ObjectIdCollection GetDynamicBlockReferences(string BlockName)
         {
-            Database db = Generic.GetDatabase();
-            using (Transaction trans = db.TransactionManager.StartTransaction())
+            if (string.IsNullOrEmpty(BlockName))
             {
-                BlockTable bt = (BlockTable)trans.GetObject(db.BlockTableId, OpenMode.ForRead);
-                foreach (ObjectId btrId in bt)
-                {
-                    BlockTableRecord btr = (BlockTableRecord)trans.GetObject(btrId, OpenMode.ForRead);
-                    if (btr.Name != BlockName)
-                    {
-                        continue;
-                    }
-                    if (btr.IsDynamicBlock)
-                    {
-                        //get all anonymous blocks from this dynamic block
-                        ObjectIdCollection anonymousIds = btr.GetAnonymousBlockIds();
-                        ObjectIdCollection dynBlockRefs = new ObjectIdCollection();
-                        foreach (ObjectId anonymousBtrId in anonymousIds)
-                        {
-                            BlockTableRecord anonymousBtr = (BlockTableRecord)trans.GetObject(anonymousBtrId, OpenMode.ForRead);
-                            ObjectIdCollection blockRefIds = anonymousBtr.GetBlockReferenceIds(false, true);
-                            dynBlockRefs.Join(blockRefIds);
-                        }
-
-                        Debug.WriteLine(String.Format("Dynamic block \"{0}\" found with {1} anonymous block and {2} block references\n", btr.Name, anonymousIds.Count, dynBlockRefs.Count));
-
-                        //anonymousIds is block where attributes ares edited
-                        //dynBlockRefs contain all ref
-                        return dynBlockRefs;
-                    }
-                }
+                return new ObjectIdCollection();
             }
-            return new ObjectIdCollection();
+
+            Database db = Generic.GetDatabase();
+            ObjectIdCollection result = new ObjectIdCollection();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                if (!bt.Has(BlockName))
+                {
+                    return result;
+                }
+
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockName], OpenMode.ForRead);
+
+                if (!btr.IsDynamicBlock)
+                {
+                    return result;
+                }
+
+                foreach (ObjectId anonBtrId in btr.GetAnonymousBlockIds())
+                {
+                    BlockTableRecord anonBtr = (BlockTableRecord)tr.GetObject(anonBtrId, OpenMode.ForRead);
+                    result.Join(anonBtr.GetBlockReferenceIds(true, true));
+                }
+
+                tr.Commit();
+            }
+
+            return result;
         }
 
         public static BlockReference GetBlockReference(string BlocName, Point3d PositionSCG)

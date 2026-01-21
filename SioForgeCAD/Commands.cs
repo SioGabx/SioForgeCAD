@@ -368,6 +368,12 @@ namespace SioForgeCAD
             Functions.FRAMESELECTED.FrameEntitiesToView();
         }
 
+        [CommandMethod("SIOFORGECAD", "VOLUMETOFIELD", CommandFlags.Redraw)]
+        public static void VOLUMETOFIELD()
+        {
+            Functions.VOLUMETOFIELD.Compute();
+        }
+
         [CommandMethod("SIOFORGECAD", "AREATOFIELD", CommandFlags.Redraw)]
         public static void AREATOFIELD()
         {
@@ -784,6 +790,12 @@ namespace SioForgeCAD
         public static void IMPORT3DGEOMETRYFROMOBJFILE()
         {
             Functions.IMPORT3DGEOMETRYFROMOBJFILE.Menu();
+        }
+
+        [CommandMethod("SIOFORGECAD", "UPDATEXREFS", CommandFlags.UsePickSet)]
+        public static void UPDATEXREFS()
+        {
+            Functions.UPDATEXREFS.Update();
         }
 
 

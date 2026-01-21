@@ -65,12 +65,10 @@ namespace SioForgeCAD.Functions
                 {
                     DynSumMtext.TextHeight = .1;
                     DynSumMtext.Location = Point3d.Origin;
+                    DynSumMtext.Rotation = 0;
                     Field field = new Field("Aire : " + FieldValue);
                     field.Evaluate();
                     DynSumMtext.SetField(field);
-
-
-
 
                     using (var GetPointJig = new GetPointJig()
                     {
@@ -83,7 +81,8 @@ namespace SioForgeCAD.Functions
 
                         if (GetPointTransientResult.Point != null && GetPointTransientResult.PromptPointResult.Status == PromptStatus.OK)
                         {
-                            DynSumMtext.Location = GetPointTransientResult.Point.SCU;
+                            DynSumMtext.Location = GetPointTransientResult.Point.SCG;
+                            
                             DynSumMtext.AddToDrawing();
                         }
                     }

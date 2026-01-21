@@ -49,22 +49,22 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
+
+            TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
+            SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
+            PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "\nSelectionnez des côtes à projeter",
+                RejectObjectsOnLockedLayers = false
+            };
+            var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
+            if (BlockRefSelection.Status != PromptStatus.OK) { return; }
             using (Polyline TerrainBasePolyline = ed.GetPolyline("\nSélectionnez une polyligne comme base de terrain", false))
             {
                 if (TerrainBasePolyline == null)
                 {
                     return;
                 }
-                TypedValue[] EntitiesGroupCodesList = new TypedValue[1] { new TypedValue((int)DxfCode.Start, "INSERT") };
-                SelectionFilter SelectionEntitiesFilter = new SelectionFilter(EntitiesGroupCodesList);
-                PromptSelectionOptions PromptBlocSelectionOptions = new PromptSelectionOptions
-                {
-                    MessageForAdding = "\nSelectionnez des côtes à projeter",
-                    RejectObjectsOnLockedLayers = false
-                };
-                var BlockRefSelection = ed.GetSelection(PromptBlocSelectionOptions, SelectionEntitiesFilter);
-                if (BlockRefSelection.Status != PromptStatus.OK) { return; }
-
                 using (Transaction trans = db.TransactionManager.StartTransaction())
                 {
                     ObjectId[] SelectedCoteBloc = BlockRefSelection.Value.GetObjectIds();

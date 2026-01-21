@@ -44,6 +44,9 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
             //Generic.SetSystemVariable("DYNMODE", 0); //Turns Dynamic Input features on and off. : 0=All Dynamic Input features, including dynamic prompts, off 
             Generic.SetSystemVariable("DYNMODE", 3); //Turns Dynamic Input features on and off. 3 = Both pointer input and dimensional input on https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-1ED138FF-2679-45C4-9C2C-332A821C9D12
+            
+            Generic.SetSystemVariable("EPDFSHX", 0); 
+            Generic.SetSystemVariable("PDFSHX", 0); //
 
             Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
             Generic.Command("_SNAP", "_OFF");
