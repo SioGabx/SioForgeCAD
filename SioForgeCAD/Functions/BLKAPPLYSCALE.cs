@@ -16,13 +16,8 @@ namespace SioForgeCAD.Functions
 {
     public static class BLKAPPLYSCALE
     {
-
-
-
         public static void ApplyBlockScale()
         {
-            throw new NotImplementedException();
-
 
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -38,69 +33,16 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                var BlkDef = blockRef.GetBlocDefinition(OpenMode.ForWrite);
 
-                var SelectedEntClone = new Circle(Point3d.Origin, Vector3d.ZAxis, 1);
-                SelectedEntClone.ColorIndex = 1;
-                BlkDef.AppendEntity(SelectedEntClone);
-                tr.AddNewlyCreatedDBObject(SelectedEntClone, true);
-                var blks = blockRef.GetAllBlkDefinition();
-                foreach (ObjectId item in blks)
-                {
-                    BlockReference ent = item.GetDBObject(OpenMode.ForWrite) as BlockReference;
-                    double constant = 0.11;
-                    
-
-                    if (ent.ScaleFactors.X % constant != 0)
-                    {
-                        ent.ScaleFactors = new Scale3d(constant);
-                    }
-                    else if (ent.ScaleFactors.X == constant)
-                    {
-                        ent.ScaleFactors = new Scale3d(constant * 2);
-                    }
-                    else if (ent.ScaleFactors.X == constant * 2)
-                    {
-                        ent.ScaleFactors = new Scale3d(constant * 3);
-                    }
-                    else if (ent.ScaleFactors.X == constant * 3)
-                    {
-                        ent.ScaleFactors = new Scale3d(constant * 4);
-                    }
-
-
-
-                }
-
-                blockRef.RegenAllBlkDefinition();
-                
-                tr.Commit();
-
-                return;
-
-                ///TO CONIT?UE
-
-
-
-
-
-
-                //PPPPPPPPPPPPPPPPPPPPPPP
-                if (!(perObjId.GetDBObject(OpenMode.ForWrite) is BlockReference br))
-                {
-                    return;
-                }
-
-
-                if (!IsUniformScaleAllowNegative(br))
+                if (!IsUniformScaleAllowNegative(blockRef))
                 {
                     Generic.WriteMessage("Le bloc n'a pas une échelle uniforme.");
                     return;
                 }
 
-                double refScale = Math.Abs(br.ScaleFactors.X);
+                double refScale = Math.Abs(blockRef.ScaleFactors.X);
 
-                BlockTableRecord btr = br.GetBlocDefinition(OpenMode.ForWrite);
+                BlockTableRecord btr = blockRef.GetBlocDefinition(OpenMode.ForWrite);
 
                 if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
                 {
@@ -112,79 +54,44 @@ namespace SioForgeCAD.Functions
                 {
                     btr.Units = db.Insunits;
                 }
-                var Blkname = br.GetBlockReferenceName();
 
-                if (true)
+                Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
+                foreach (ObjectId entId in btr)
                 {
-                    Generic.WriteMessage("Opération sur des blocks dynamique");
-
-                    Generic.Command("_-BEDIT", Blkname);
-                    PromptSelectionResult selRes = ed.SelectAll();
-                    if (selRes.Status == PromptStatus.OK)
-                    {
-                        foreach (var item in selRes.GetObjectIds())
-                        {
-                            Generic.Command("_SCALE", item, Point3d.Origin, refScale);
-                        }
-                    }
-                    Generic.Command("_BCLOSE", "_Save");
-
+                    Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
+                    ent?.TransformBy(scaleMatrix);
                 }
-                else
-                {
-                    Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
-                    foreach (ObjectId entId in btr)
-                    {
-                        Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
-                        ent?.TransformBy(scaleMatrix);
-                    }
-                }
+
+
 
                 // Fix all ref blk
-
-                ObjectIdCollection refIds = BlockReferences.GetDynamicBlockReferences(Blkname);
-                BlockTableRecord BlockDef = br.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
-                refIds.Join(BlockDef.GetBlockReferenceIds(false, false));
-
                 bool differentScalesFound = false;
-
-                foreach (ObjectId id in refIds)
+                foreach (ObjectId item in blockRef.GetAllBlkDefinition())
                 {
-                    if (!(id.GetDBObject(OpenMode.ForWrite) is BlockReference otherBr))
-                    {
-                        continue;
-                    }
+                    BlockReference ent = item.GetDBObject(OpenMode.ForWrite) as BlockReference;
 
-                    if (!IsUniformScaleAllowNegative(otherBr))
-                    {
-                        continue;
-                    }
+                    var oldScale = ent.ScaleFactors;
 
-                    double oldScale = otherBr.ScaleFactors.X;
-                    double newScale = oldScale / refScale;
-
-                    if (Math.Abs(oldScale - refScale) > Generic.LowTolerance.EqualVector)
+                    if (Math.Abs(oldScale.X - refScale) > Generic.LowTolerance.EqualVector)
                     {
                         differentScalesFound = true;
                     }
 
-                    double signX = Math.Sign(otherBr.ScaleFactors.X);
-                    double signY = Math.Sign(otherBr.ScaleFactors.Y);
-                    double signZ = Math.Sign(otherBr.ScaleFactors.Z);
+                    double scaleFactor = 1.0 / refScale;
 
-                    double oldAbsScale = Math.Abs(otherBr.ScaleFactors.X);
-                    double newAbsScale = oldAbsScale / refScale;
-
-                    otherBr.ScaleFactors = new Scale3d(signX * newAbsScale, signY * newAbsScale, signZ * newAbsScale);
+                    ent.ScaleFactors = new Scale3d(
+                        oldScale.X * scaleFactor,
+                        oldScale.Y * scaleFactor,
+                        oldScale.Z * scaleFactor
+                    );
                 }
-
-                br.ScaleFactors = new Scale3d(Math.Sign(br.ScaleFactors.X), Math.Sign(br.ScaleFactors.Y), Math.Sign(br.ScaleFactors.Z));
 
                 if (differentScalesFound)
                 {
                     Generic.WriteMessage("⚠ Certaines références avaient une échelle différente. Les proportions ont été conservées.");
                 }
-                br.RegenAllBlkDefinition();
+                blockRef.RegenAllBlkDefinition();
+                
                 tr.Commit();
             }
         }

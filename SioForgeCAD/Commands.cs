@@ -710,33 +710,6 @@ namespace SioForgeCAD
             Functions.FIXDRAWING.Fix();
         }
 
-        [CommandMethod("SIOFORGECAD", "PREVIEWPRINT", CommandFlags.Modal)]
-        public static void PREVIEWPRINT()
-        {
-            var ed = Generic.GetEditor();
-            PromptKeywordOptions promptKeywordOptions = new PromptKeywordOptions("Veuillez selectionner une option")
-            {
-                AppendKeywordsToMessage = true
-            };
-
-            const string ACTIVE = "Activé";
-            const string DESACTIVE = "Désactiver";
-            promptKeywordOptions.Keywords.Add(ACTIVE);
-            promptKeywordOptions.Keywords.Add(DESACTIVE);
-            var result = ed.GetKeywords(promptKeywordOptions);
-            switch (result.StringResult)
-            {
-                case ACTIVE:
-                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("ROLLOVERTIPS", 0);
-                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("XDWGFADECTL", 0);
-                    break;
-                case DESACTIVE:
-                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("ROLLOVERTIPS", 0);
-                    Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("XDWGFADECTL", 50);
-                    break;
-            }
-        }
-
         [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]
         public static void WIPEOUTGRIP()
         {
@@ -748,7 +721,6 @@ namespace SioForgeCAD
         {
             Functions.SAVEFILEATCLOSE.Toggle();
         }
-
 
         [CommandMethod("SIOFORGECAD", "REMOVEALLPROXIES", CommandFlags.Redraw)]
         public static void REMOVEALLPROXIES()
@@ -811,44 +783,10 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            //var val = Generic.GetEditor().GetEntity("kk");
-            //if (val.Status == PromptStatus.OK)
-            //{
-            //    var db = Generic.GetDatabase();
-            //    using (var tr = db.TransactionManager.StartTransaction())
-            //    {
-            //        var t = val.ObjectId.GetDBObject(OpenMode.ForWrite);
-            //        (t as Entity).Visible = false;
-
-            //        Generic.WriteMessage("test");
-            //        tr.Commit();
-            //    }
-            //}
 
         }
 
-        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
-        public static void TEST2()
-        {
-            new RenameDialog().Show();
-        }
-
-        [CommandMethod("DEBUG", "VEGBLOCSCATTER", CommandFlags.Redraw)]
-        public static void VEGBLOCSCATTER()
-        {
-            // On garde une instance statique pour pouvoir l'arrêter si on relance la commande
-            if (_sim != null)
-            {
-                _sim.Dispose();
-                _sim = null;
-            }
-
-            _sim = new VEGBLOCSCATTER.CircleSimulation();
-            _sim.Execute();
-        }
-
-        private static VEGBLOCSCATTER.CircleSimulation _sim;
-        //TODO : Auto add area
+    
         //TOTO : Transform perspective
         //TODO : Edit field formula
 
