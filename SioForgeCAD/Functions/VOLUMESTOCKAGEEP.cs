@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
-    public static class VOLUMETOFIELD
+    public static class VOLUMESTOCKAGEEP
     {
         /*
         Function: Compute the volume between two closed polylines at different elevations.

@@ -368,10 +368,10 @@ namespace SioForgeCAD
             Functions.FRAMESELECTED.FrameEntitiesToView();
         }
 
-        [CommandMethod("SIOFORGECAD", "VOLUMETOFIELD", CommandFlags.Redraw)]
-        public static void VOLUMETOFIELD()
+        [CommandMethod("SIOFORGECAD", "VOLUMESTOCKAGEEP", CommandFlags.Redraw)]
+        public static void VOLUMESTOCKAGEEP()
         {
-            Functions.VOLUMETOFIELD.Compute();
+            Functions.VOLUMESTOCKAGEEP.Compute();
         }
 
         [CommandMethod("SIOFORGECAD", "AREATOFIELD", CommandFlags.Redraw)]
