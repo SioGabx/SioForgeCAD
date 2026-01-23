@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,76 +23,95 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            if (!ed.GetBlock(out ObjectId perObjId))
+            if (!ed.GetBlocks(out ObjectId[] perObjIds))
             {
                 return;
             }
 
+            HashSet<string> AlreadyAppliedScale = new HashSet<string>();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (!(perObjId.GetDBObject(OpenMode.ForRead) is BlockReference blockRef))
+                foreach (var perObjId in perObjIds)
                 {
-                    return;
-                }
-
-                if (!IsUniformScaleAllowNegative(blockRef))
-                {
-                    Generic.WriteMessage("Le bloc n'a pas une échelle uniforme.");
-                    return;
-                }
-
-                double refScale = Math.Abs(blockRef.ScaleFactors.X);
-
-                BlockTableRecord btr = blockRef.GetBlocDefinition(OpenMode.ForWrite);
-
-                if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
-                {
-                    Generic.WriteMessage("Le bloc est déjà à l'échelle 1.");
-                    return;
-                }
-
-                if (btr.Units != db.Insunits)
-                {
-                    btr.Units = db.Insunits;
-                }
-
-                Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
-                foreach (ObjectId entId in btr)
-                {
-                    Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
-                    ent?.TransformBy(scaleMatrix);
-                }
-
-
-
-                // Fix all ref blk
-                bool differentScalesFound = false;
-                foreach (ObjectId item in blockRef.GetAllBlkDefinition())
-                {
-                    BlockReference ent = item.GetDBObject(OpenMode.ForWrite) as BlockReference;
-
-                    var oldScale = ent.ScaleFactors;
-
-                    if (Math.Abs(oldScale.X - refScale) > Generic.LowTolerance.EqualVector)
+                    if (!(perObjId.GetDBObject(OpenMode.ForRead) is BlockReference blockRef))
                     {
-                        differentScalesFound = true;
+                        continue;
                     }
 
-                    double scaleFactor = 1.0 / refScale;
+                    var BlkName = blockRef.GetBlockReferenceName();
 
-                    ent.ScaleFactors = new Scale3d(
-                        oldScale.X * scaleFactor,
-                        oldScale.Y * scaleFactor,
-                        oldScale.Z * scaleFactor
-                    );
-                }
+                    if (AlreadyAppliedScale.Contains(BlkName))
+                    {
+                        //We have multiple instances of the blk in the array, ignore if already parsed
+                        continue;
+                    }
 
-                if (differentScalesFound)
-                {
-                    Generic.WriteMessage("⚠ Certaines références avaient une échelle différente. Les proportions ont été conservées.");
+                    if (!IsUniformScaleAllowNegative(blockRef))
+                    {
+                        Generic.WriteMessage($"Le bloc \"{BlkName}\" n'a pas une échelle uniforme.");
+                        continue;
+                    }
+                    AlreadyAppliedScale.Add(BlkName);
+
+                    double refScale = Math.Abs(blockRef.ScaleFactors.X);
+
+                    BlockTableRecord btr = blockRef.GetBlocDefinition(OpenMode.ForWrite);
+
+                    if (Math.Abs(refScale - 1.0) < Generic.LowTolerance.EqualVector && btr.Units == db.Insunits)
+                    {
+                        Generic.WriteMessage($"Le bloc \"{BlkName}\" est déjà à l'échelle 1.");
+                        continue;
+                    }
+
+                    if (btr.Units != db.Insunits)
+                    {
+                        btr.Units = db.Insunits;
+                    }
+
+                    Matrix3d scaleMatrix = Matrix3d.Scaling(refScale, Point3d.Origin);
+                    foreach (ObjectId entId in btr)
+                    {
+                        try
+                        {
+                            Entity ent = entId.GetDBObject(OpenMode.ForWrite) as Entity;
+                            ent?.TransformBy(scaleMatrix);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+                    }
+
+
+
+                    // Fix all ref blk
+                    bool differentScalesFound = false;
+                    foreach (ObjectId item in blockRef.GetAllBlkDefinition())
+                    {
+                        BlockReference ent = item.GetDBObject(OpenMode.ForWrite) as BlockReference;
+
+                        var oldScale = ent.ScaleFactors;
+
+                        if (Math.Abs(oldScale.X - refScale) > Generic.LowTolerance.EqualVector)
+                        {
+                            differentScalesFound = true;
+                        }
+
+                        double scaleFactor = 1.0 / refScale;
+
+                        ent.ScaleFactors = new Scale3d(
+                            oldScale.X * scaleFactor,
+                            oldScale.Y * scaleFactor,
+                            oldScale.Z * scaleFactor
+                        );
+                    }
+
+                    if (differentScalesFound)
+                    {
+                        Generic.WriteMessage($"⚠ Certaines références du bloc \"{BlkName}\" avaient une échelle différente. Les proportions ont été conservées.");
+                    }
+                    blockRef.RegenAllBlkDefinition();
                 }
-                blockRef.RegenAllBlkDefinition();
-                
                 tr.Commit();
             }
         }
