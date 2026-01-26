@@ -530,7 +530,8 @@ namespace SioForgeCAD.Commun.Extensions
 
             IEnumerable<Polyline> InternalSmartOffset(Polyline InternalPoly)
             {
-                List<Polyline> OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
+                // UseOffsetGapTypeCurrentValue need to be 0 to avoid rouded corners
+                List<Polyline> OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance, UseOffsetGapTypeCurrentValue: false).Cast<Polyline>().ToList();
 
                 if (OffsetPolylineResult.Count == 0)
                 {
@@ -585,8 +586,8 @@ namespace SioForgeCAD.Commun.Extensions
 
                     //Cleanup the line (NEEDED ! if not in futur please explain why)
                     InternalPoly.Cleanup();
-
-                    OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance).Cast<Polyline>().ToList();
+                    // UseOffsetGapTypeCurrentValue need to be 0 to avoid rouded corners
+                    OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance, UseOffsetGapTypeCurrentValue:false).Cast<Polyline>().ToList();
                 }
 
                 var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();

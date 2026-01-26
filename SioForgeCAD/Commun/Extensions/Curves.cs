@@ -107,28 +107,40 @@ namespace SioForgeCAD.Commun.Extensions
             return array;
         }
 
-        public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance)
+        public static List<Curve> OffsetPolyline(this IEnumerable<Curve> Curves, double OffsetDistance, bool UseOffsetGapTypeCurrentValue = true)
         {
             List<Curve> OffsetCurves = new List<Curve>();
 
             foreach (var ent in Curves)
             {
-                OffsetCurves.AddRange(OffsetPolyline(ent, OffsetDistance).ToList().Cast<Curve>());
+                OffsetCurves.AddRange(OffsetPolyline(ent, OffsetDistance, UseOffsetGapTypeCurrentValue).ToList().Cast<Curve>());
             }
             return OffsetCurves;
         }
 
-        public static DBObjectCollection OffsetPolyline(this Curve Curve, double OffsetDistance)
+        public static DBObjectCollection OffsetPolyline(this Curve Curve, double OffsetDistance, bool UseOffsetGapTypeCurrentValue = true)
         {
-            if (Curve is Polyline)
+            object OffsetGapType = Generic.GetSystemVariable("OFFSETGAPTYPE"); //Controls how potential gaps between segments are treated when polylines are offset. 
+            if (UseOffsetGapTypeCurrentValue)
             {
-                return Curve.GetOffsetCurves((Curve as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
+                Generic.SetSystemVariable("OFFSETGAPTYPE", 0, false); //Extends line segments to their projected intersections.
             }
-            else if (Curve is Ellipse || Curve is Circle)
+            try
             {
-                return Curve.GetOffsetCurves(OffsetDistance);
+                if (Curve is Polyline)
+                {
+                    return Curve.GetOffsetCurves((Curve as Polyline).GetArea() < 0.0 ? -OffsetDistance : OffsetDistance);
+                }
+                else if (Curve is Ellipse || Curve is Circle)
+                {
+                    return Curve.GetOffsetCurves(OffsetDistance);
+                }
+                return new DBObjectCollection();
             }
-            return new DBObjectCollection();
+            finally
+            {
+                Generic.SetSystemVariable("OFFSETGAPTYPE", OffsetGapType, false);
+            }
         }
 
         public static bool IsSelfIntersecting(this Curve poly, out Point3dCollection IntersectionFound)
