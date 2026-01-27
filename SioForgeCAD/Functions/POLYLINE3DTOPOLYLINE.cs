@@ -24,6 +24,7 @@ namespace SioForgeCAD.Functions
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = RXObject.GetClass(typeof(Polyline3d));
+                if (rxc is null) { return; }
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 

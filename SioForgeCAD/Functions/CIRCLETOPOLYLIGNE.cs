@@ -24,6 +24,7 @@ namespace SioForgeCAD.Functions
                 mi.Click += OnConvert;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = RXObject.GetClass(typeof(Circle));
+                if (rxc is null) { return; }
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 

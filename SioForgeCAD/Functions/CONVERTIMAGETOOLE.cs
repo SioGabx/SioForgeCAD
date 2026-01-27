@@ -29,6 +29,7 @@ namespace SioForgeCAD.Functions
                 mi.Click += OnExecute;
                 cme.MenuItems.Add(mi);
                 RXClass rxc = RXObject.GetClass(typeof(RasterImage));
+                if (rxc is null) { return; }
                 Application.AddObjectContextMenuExtension(rxc, cme);
             }
 
