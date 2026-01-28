@@ -70,6 +70,7 @@ namespace SioForgeCAD.Functions
                     case HatchSupport.Include:
                         SetEntityToByBloc(hatchEnt);
                         hatchEnt.BackgroundColor = Color.FromColorIndex(ColorMethod.ByBlock, 0);
+                        hatchEnt.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
                         return;
                     case HatchSupport.SetToWhite:
                         SetEntityToByBloc(hatchEnt);

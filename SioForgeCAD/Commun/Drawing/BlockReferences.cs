@@ -15,7 +15,6 @@ namespace SioForgeCAD.Commun.Drawing
         public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true)
         {
             Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -237,7 +236,10 @@ namespace SioForgeCAD.Commun.Drawing
                     Debug.WriteLine(ex);
                     return ObjectId.Null;
                 }
-                BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(acBlkTblNewDoc[OldName], OpenMode.ForWrite);
+
+                ObjectId NewBlkRefObjectIdInMemoryDB = acIdMap[BlockReferenceObjectId].Value;
+                BlockReference NewBlkRef = MemoryTransaction.GetObject(NewBlkRefObjectIdInMemoryDB, OpenMode.ForRead) as BlockReference;
+                BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(NewBlkRef.BlockTableRecord, OpenMode.ForWrite);
                 btr.Name = NewName;
                 MemoryTransaction.Commit();
             }
@@ -270,11 +272,13 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
                 string newName = oldName;
+
+
                 for (int index = 1; bt.Has(newName); index++)
                 {
-                    newName = $"{oldName}_Copy{(index > 1 ? $" ({index})" : "")}";
+                    newName = SymbolUtilityServices.RepairSymbolName($"{oldName}_Copy{(index > 1 ? $" ({index})" : "")}", false);
                 }
-                return SymbolUtilityServices.RepairSymbolName(newName, false);
+                return newName;
             }
         }
 
