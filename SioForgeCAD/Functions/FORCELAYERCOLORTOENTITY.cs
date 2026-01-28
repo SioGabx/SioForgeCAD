@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions
 {
@@ -16,7 +17,7 @@ namespace SioForgeCAD.Functions
                 MessageForAdding = "Selectionnez les entités"
             };
 
-            var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
+            var AllSelectedObject = ed.GetSelectionRedraw(PromptSelectEntitiesOptions);
 
             if (AllSelectedObject.Status != PromptStatus.OK)
             {
@@ -30,6 +31,7 @@ namespace SioForgeCAD.Functions
                 {
                     ForceColor(ObjId);
                 }
+                ed.SetImpliedSelection(AllSelectedObjectIds);
                 tr.Commit();
             }
         }
