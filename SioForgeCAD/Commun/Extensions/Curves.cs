@@ -121,7 +121,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static DBObjectCollection OffsetPolyline(this Curve Curve, double OffsetDistance, bool UseOffsetGapTypeCurrentValue = true)
         {
             object OffsetGapType = Generic.GetSystemVariable("OFFSETGAPTYPE"); //Controls how potential gaps between segments are treated when polylines are offset. 
-            if (UseOffsetGapTypeCurrentValue)
+            if (!UseOffsetGapTypeCurrentValue)
             {
                 Generic.SetSystemVariable("OFFSETGAPTYPE", 0, false); //Extends line segments to their projected intersections.
             }

@@ -113,7 +113,7 @@ namespace SioForgeCAD.Functions
                 UseDefaultValue = true,
                 DefaultValue = OldValue
             };
-
+            
             PromptResult strRes = ed.GetString(strOpts);
             if (strRes.Status != PromptStatus.OK || string.IsNullOrWhiteSpace(strRes.StringResult))
             {
