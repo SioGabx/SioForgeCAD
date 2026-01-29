@@ -202,6 +202,12 @@ namespace SioForgeCAD
             Functions.BLKSETDEFINITIONTOSCALEUNIFORM.SetBlockScaleToUniform();
         }
 
+        [CommandMethod("SIOFORGECAD", "BLKSETDEFINITIONTOEXPLODABLE", CommandFlags.UsePickSet)]
+        public static void BLKSETDEFINITIONTOEXPLODABLE()
+        {
+            Functions.BLKSETDEFINITIONTOEXPLODABLE.SetExplodable();
+        }
+
         [CommandMethod("SIOFORGECAD", "BLKAPPLYSCALE", CommandFlags.UsePickSet)]
         public static void BLKAPPLYSCALE()
         {

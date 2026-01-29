@@ -228,6 +228,7 @@
     <Compile Include="Functions\BLKCREATEANONYMOUS.cs" />
     <Compile Include="Functions\BLKINSEDIT.cs" />
     <Compile Include="Functions\BLKREPLACE.cs" />
+    <Compile Include="Functions\BLKSETDEFINITIONTOEXPLODABLE.cs" />
     <Compile Include="Functions\BLKSETDEFINITIONTOSCALEUNIFORM.cs" />
     <Compile Include="Functions\BLKTOSTATICBLOCK.cs" />
     <Compile Include="Functions\BLKTOXREF.cs" />
