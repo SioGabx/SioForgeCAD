@@ -116,6 +116,7 @@ namespace SioForgeCAD.Functions
 
                 byte[] EPS = Encoding.ASCII.GetBytes(writer.ToString());
                 Debug.WriteLine(writer.ToString());
+                Generic.WriteMessage("Copié ! Vous pouvez maintenant coller la géométrie dans InDesign ou Illustrator");
                 Clipboard.Clear();
                 SioForgeCAD.Commun.Mist.ClipboardHelper.SetRawDataToClipboard("Encapsulated PostScript", EPS);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
@@ -139,10 +140,13 @@ namespace SioForgeCAD.Functions
 
         private static void WritePolyline(StringBuilder w, Polyline pl)
         {
-            var ReelNumOfVertices = pl.GetReelNumberOfVertices();
-            if (ReelNumOfVertices < 2)
+           
+            if (pl.NumberOfVertices < 2)
+            {
                 return;
+            }
 
+            var ReelNumOfVertices = pl.GetReelNumberOfVertices();
             for (int i = 0; i < ReelNumOfVertices; i++)
             {
                 Point2d p0 = pl.GetPoint2dAt(i);

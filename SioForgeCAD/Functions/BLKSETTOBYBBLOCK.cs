@@ -56,6 +56,7 @@ namespace SioForgeCAD.Functions
                 }
                 tr.Commit();
             }
+            ed.SetImpliedSelection(ObjectIds);
         }
 
 
