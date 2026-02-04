@@ -12,9 +12,11 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-            //using (Transaction tr = db.TransactionManager.StartTransaction())
+            //Settings :
+            Generic.Command("_-PLOTSTAMP", "_LOG", "_NO", "plot.log");
 
 
+            //Audit
             Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
 
             //Save current layout
