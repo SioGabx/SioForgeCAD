@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
@@ -9,8 +10,46 @@ namespace SioForgeCAD.Functions
     {
         public static void Fix()
         {
+            Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
+            //using (Transaction tr = db.TransactionManager.StartTransaction())
+
+
             Generic.Command("_AUDIT", "_YES"); //Evaluates the integrity of a drawing and corrects some errors.
+
+            //Save current layout
+            LayoutManager lm = LayoutManager.Current;
+            var SavedCurrentLayout = lm.CurrentLayout;
+
+            //ModelSpace
+            Generic.WriteMessage($"Modification des variables dans l'espace object...");
+            lm.SetCurrentLayoutId(ed.GetModelLayout().ObjectId);
+            ApplyPreferedSystemVariable();
+
+            Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
+            Generic.Command("_SNAP", "_OFF");
+            Generic.Command("_INSUNITS", 6); //6 == Meters //Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
+            Generic.Command("_-UNITS", 2, 4, 1, 4, 0, "_NO");
+            Generic.Command("_INSBASE", Point3d.Origin);
+
+            db.SetAnnotativeScale("1:1", 1, 1);
+
+
+            //Layouts (for variables like PSLTSCALE
+            foreach (Layout layout in ed.GetAllLayout())
+            {
+                Generic.WriteMessage($"Modification des variables sur la présentation \"{layout.LayoutName}\"...");
+                lm.CurrentLayout = layout.LayoutName;
+                ApplyPreferedSystemVariable();
+            }
+
+            //Reset current layout
+            lm.CurrentLayout = SavedCurrentLayout;
+        }
+
+
+        public static void ApplyPreferedSystemVariable()
+        {
             Generic.SetSystemVariable("UCSFOLLOW", 0); //Generates a plan view whenever you change from one UCS to another.  
             Generic.SetSystemVariable("UCSDETECT", 0);
             Generic.SetSystemVariable("ROLLOVERTIPS", 0);
@@ -44,17 +83,9 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("FILEDIA", 1); //display of file navigation dialog boxes. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-99736BD7-E60E-4F4A-83F7-436B6F9C67A1
             //Generic.SetSystemVariable("DYNMODE", 0); //Turns Dynamic Input features on and off. : 0=All Dynamic Input features, including dynamic prompts, off 
             Generic.SetSystemVariable("DYNMODE", 3); //Turns Dynamic Input features on and off. 3 = Both pointer input and dimensional input on https://help.autodesk.com/view/ACD/2025/ENU/?guid=GUID-1ED138FF-2679-45C4-9C2C-332A821C9D12
-            
-            Generic.SetSystemVariable("EPDFSHX", 0); 
+
+            Generic.SetSystemVariable("EPDFSHX", 0);
             Generic.SetSystemVariable("PDFSHX", 0); //
-
-            Generic.Command("_BASE", new Point3d(0, 0, 0)); //Sets the insertion base point for the current drawing.
-            Generic.Command("_SNAP", "_OFF");
-            Generic.Command("_INSUNITS", 6); //6 == Meters //Specifies a drawing-units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing. https://help.autodesk.com/view/ACD/2024/ENU/?guid=GUID-A58A87BB-482B-4042-A00A-EEF55A2B4FD8
-            Generic.Command("_-UNITS", 2, 4, 1, 4, 0, "_NO");
-            Generic.Command("_INSBASE", Point3d.Origin);
-
-            db.SetAnnotativeScale("1:1", 1, 1);
         }
     }
 }

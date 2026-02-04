@@ -145,7 +145,6 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
                 }
                 return;
             }
-
             base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
         }
 

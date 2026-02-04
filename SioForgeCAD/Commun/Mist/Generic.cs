@@ -57,6 +57,15 @@ namespace SioForgeCAD.Commun
             ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n");
         }
 
+        public static void WriteInfoCenterBalloonMessage(object message)
+        {
+            var infoCenterManager = new Autodesk.AutoCAD.AcInfoCenterConn.InfoCenterManager();
+            var resultItem = new Autodesk.Internal.InfoCenter.ResultItem();
+            resultItem.Category = Generic.GetExtensionDLLName();
+            resultItem.Title = message.ToString();
+            infoCenterManager.PaletteManager.ShowBalloon(resultItem);
+        }
+
         public static void LoadLispFromStringCommand(string lispCode)
         {
             Document doc = GetDocument();
@@ -172,7 +181,12 @@ namespace SioForgeCAD.Commun
         public static void SetSystemVariable(string Name, object Value, bool EchoChanges = true)
         {
             var OldValue = GetSystemVariable(Name);
-            if (OldValue.ToString() != Value.ToString())
+            if (OldValue is null)
+            {
+                Debug.WriteLine($"La variable {Name} n'existe pas !");
+                return;
+            }
+            if (OldValue?.ToString() != Value?.ToString())
             {
                 if (EchoChanges) { WriteMessage($"Changement de la variable {Name} de {OldValue} à {Value}."); }
                 Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable(Name, Value);

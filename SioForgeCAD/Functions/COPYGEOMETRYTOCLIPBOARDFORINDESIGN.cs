@@ -6,6 +6,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -106,14 +107,19 @@ namespace SioForgeCAD.Functions
                         writer.AppendLine($"{GetColor(ent)} setrgbcolor");
                         writer.AppendLine("stroke");
                         //writer.AppendLine("fill");
+                        ent.Dispose();
                     }
                     writer.AppendLine("showpage");
+
                     tr.Commit();
                 }
+
                 byte[] EPS = Encoding.ASCII.GetBytes(writer.ToString());
+                Debug.WriteLine(writer.ToString());
                 Clipboard.Clear();
                 SioForgeCAD.Commun.Mist.ClipboardHelper.SetRawDataToClipboard("Encapsulated PostScript", EPS);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
+               
             }
         }
 
@@ -133,10 +139,11 @@ namespace SioForgeCAD.Functions
 
         private static void WritePolyline(StringBuilder w, Polyline pl)
         {
-            if (pl.NumberOfVertices < 2)
+            var ReelNumOfVertices = pl.GetReelNumberOfVertices();
+            if (ReelNumOfVertices < 2)
                 return;
 
-            for (int i = 0; i < pl.NumberOfVertices; i++)
+            for (int i = 0; i < ReelNumOfVertices; i++)
             {
                 Point2d p0 = pl.GetPoint2dAt(i);
                 Point2d p1 = pl.GetPoint2dAt((i + 1) % pl.NumberOfVertices);
@@ -160,7 +167,15 @@ namespace SioForgeCAD.Functions
 
             try
             {
-                if (pl.Closed || (pl.NumberOfVertices > 2 && pl.GetPoint2dAt(0).IsEqualTo(pl.GetPoint2dAt(pl.NumberOfVertices))))
+                bool isClosed = pl.Closed; 
+                bool hasMoreThanTwoPoints = ReelNumOfVertices > 2;
+
+                var StartPoint = pl.GetPoint2dAt(0);
+                var EndPoint = pl.GetPoint2dAt(pl.NumberOfVertices - 1);
+
+                bool startPointIsEqualToEndPoint = StartPoint.IsEqualTo(EndPoint);
+                
+                if (isClosed || (hasMoreThanTwoPoints && startPointIsEqualToEndPoint))
                 {
                     w.AppendLine("closepath");
                 }

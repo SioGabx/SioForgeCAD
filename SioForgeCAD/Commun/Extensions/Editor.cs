@@ -59,20 +59,53 @@ namespace SioForgeCAD.Commun.Extensions
             Database db = Generic.GetDatabase();
             List<Layout> AllLayout = new List<Layout>();
 
-            foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
-
-                if (btr.IsLayout && btr.Name != BlockTableRecord.ModelSpace)
+                foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
                 {
-                    Layout layout = btr.LayoutId.GetDBObject(OpenMode.ForRead) as Layout;
-                    if (!layout.ModelType)
+                    BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                    if (btr.IsLayout && !btr.Name.Equals(BlockTableRecord.ModelSpace, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        AllLayout.Add(layout);
+                        Layout layout = btr.LayoutId.GetDBObject(OpenMode.ForRead) as Layout;
+                        if (!layout.ModelType)
+                        {
+                            AllLayout.Add(layout);
+                        }
                     }
                 }
+                tr.Commit();
             }
             return AllLayout;
+        }
+
+        public static Layout GetModelLayout(this Editor _)
+        {
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                try
+                {
+                    foreach (ObjectId btrId in db.BlockTableId.GetDBObject(OpenMode.ForRead) as BlockTable)
+                    {
+                        BlockTableRecord btr = btrId.GetDBObject(OpenMode.ForRead) as BlockTableRecord;
+
+                        if (btr.Name.Equals(BlockTableRecord.ModelSpace, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            Layout layout = btr.LayoutId.GetDBObject(OpenMode.ForRead) as Layout;
+                            if (layout.ModelType)
+                            {
+                                return layout;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
+                }
+            }
+            return null;
         }
 
 
@@ -81,7 +114,7 @@ namespace SioForgeCAD.Commun.Extensions
             var Layouts = GetAllLayout(_);
             foreach (Layout item in Layouts)
             {
-                if (item.LayoutName == Name)
+                if (item.LayoutName.Equals(Name, StringComparison.InvariantCultureIgnoreCase))
                 {
                     return item;
                 }

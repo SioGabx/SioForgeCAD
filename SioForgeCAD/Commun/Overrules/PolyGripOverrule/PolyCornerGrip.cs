@@ -72,6 +72,8 @@ namespace SioForgeCAD.Commun.Overrules
             {
                 OnHotGripAction(entityId, this);
             }
+            // A little hack to help ensure the entity and grips are regenerated.
+            Autodesk.AutoCAD.Internal.Utils.RegenEntity(entityId);
             return ReturnValue.GetNewGripPoints;
         }
 

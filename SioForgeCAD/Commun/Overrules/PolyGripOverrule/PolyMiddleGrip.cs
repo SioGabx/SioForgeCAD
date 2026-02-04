@@ -75,6 +75,7 @@ namespace SioForgeCAD.Commun.Overrules
             {
                 OnHotGripAction(entityId, this);
             }
+            Autodesk.AutoCAD.Internal.Utils.RegenEntity(entityId);
             return ReturnValue.GetNewGripPoints;
         }
 
