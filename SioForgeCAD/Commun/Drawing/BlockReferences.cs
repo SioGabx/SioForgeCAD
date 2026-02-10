@@ -239,8 +239,18 @@ namespace SioForgeCAD.Commun.Drawing
 
                 ObjectId NewBlkRefObjectIdInMemoryDB = acIdMap[BlockReferenceObjectId].Value;
                 BlockReference NewBlkRef = MemoryTransaction.GetObject(NewBlkRefObjectIdInMemoryDB, OpenMode.ForRead) as BlockReference;
-                BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(NewBlkRef.BlockTableRecord, OpenMode.ForWrite);
-                btr.Name = NewName;
+
+                if (NewBlkRef.IsDynamicBlock)
+                {
+                    BlockTableRecord dynbtr = (BlockTableRecord)MemoryTransaction.GetObject(NewBlkRef.DynamicBlockTableRecord, OpenMode.ForWrite);
+                    dynbtr.Name = NewName;
+                }
+                else
+                {
+                    BlockTableRecord btr = (BlockTableRecord)MemoryTransaction.GetObject(NewBlkRef.BlockTableRecord, OpenMode.ForWrite);
+                    btr.Name = NewName;
+                }
+
                 MemoryTransaction.Commit();
             }
 

@@ -792,9 +792,47 @@ namespace SioForgeCAD
 
         }
 
-    
+        //TODO : BLKSETTOBYLAYER
+        //TODO : Overrule for XCLIP
         //TOTO : Transform perspective
         //TODO : Edit field formula
+
+
+
+        //https://keanw.com/2014/06/iterating-autocad-system-variables-using-net-part-2.html
+
+
+        /*
+         * // <snip>
+        //https://github.com/huypham0808/Autopublish_AutoCAD_Plug-in/blob/f2f059f795bb26f7b654a05e64de68557f34f950/Command.cs#L165
+        //https://github.com/ADN-DevTech/MgdDbg/blob/master/Reactors/Events/PlotEvents.cs
+        protected override void
+        EnableEventsImp()
+        {
+            Utils.AcadUi.PrintToCmdLine("\nPlot Events Turned On ...\n");
+
+            AcPl.PlotReactorManager plot = new AcPl.PlotReactorManager();
+
+            plot.BeginDocument += new Autodesk.AutoCAD.PlottingServices.BeginDocumentEventHandler(event_BeginDocument);
+            plot.BeginPage += new Autodesk.AutoCAD.PlottingServices.BeginPageEventHandler(event_BeginPage);
+            plot.BeginPlot += new Autodesk.AutoCAD.PlottingServices.BeginPlotEventHandler(event_BeginPlot);
+            plot.EndDocument += new Autodesk.AutoCAD.PlottingServices.EndDocumentEventHandler(event_EndDocument);
+            plot.EndPage += new Autodesk.AutoCAD.PlottingServices.EndPageEventHandler(event_EndPage);
+            plot.EndPlot += new Autodesk.AutoCAD.PlottingServices.EndPlotEventHandler(event_EndPlot);
+            plot.PageCancelled += new Autodesk.AutoCAD.PlottingServices.PageCancelledEventHandler(event_PageCancelled);
+            plot.PlotCancelled += new Autodesk.AutoCAD.PlottingServices.PlotCancelledEventHandler(event_PlotCancelled);
+        }
+
+// <snip>
+
+        private void
+        event_BeginPlot(object sender, Autodesk.AutoCAD.PlottingServices.BeginPlotEventArgs e)
+        {
+            // <-- do something useful
+        }
+
+// <snip>
+         */
 
 
 
