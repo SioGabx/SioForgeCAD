@@ -83,7 +83,7 @@ namespace SioForgeCAD.Functions
                             EntitiesObjectIdCollection.Add(ent.AddToDrawing());
                             ent.Dispose();
                         }
-                        Groups.Create("CPTERRAIN", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
+                        Groups.Create(typeof(DRAWCPTERRAIN).Name, $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", EntitiesObjectIdCollection);
                     }
                     insertionTransientPoints.Dispose();
                     HightLighter.UnhighlightAll(SelectedCoteBloc);

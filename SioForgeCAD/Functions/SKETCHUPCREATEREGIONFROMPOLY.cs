@@ -9,7 +9,7 @@ using Region = Autodesk.AutoCAD.DatabaseServices.Region;
 
 namespace SioForgeCAD.Functions
 {
-    public static class REGIONFORSKETCHUP
+    public static class SKETCHUPCREATEREGIONFROMPOLY
     {
         public static void GenerateRegionFromBoundaries()
         {

@@ -734,10 +734,16 @@ namespace SioForgeCAD
             Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
         }
 
-        [CommandMethod("SIOFORGECAD", "REGIONFORSKETCHUP", CommandFlags.Redraw)]
-        public static void REGIONFORSKETCHUP()
+        [CommandMethod("SIOFORGECAD", "SKETCHUPCREATEREGIONFROMPOLY", CommandFlags.Redraw)]
+        public static void SKETCHUPCREATEREGIONFROMPOLY()
         {
-            Functions.REGIONFORSKETCHUP.GenerateRegionFromBoundaries();
+            Functions.SKETCHUPCREATEREGIONFROMPOLY.GenerateRegionFromBoundaries();
+        }
+
+        [CommandMethod("SIOFORGECAD", "SKETCHUPCREATEPOINTSFROMALT", CommandFlags.Redraw)]
+        public static void SKETCHUPCREATEPOINTSFROMALT()
+        {
+            Functions.SKETCHUPCREATEPOINTSFROMALT.GeneratePointsFromAlt();
         }
 
         [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
@@ -797,7 +803,7 @@ namespace SioForgeCAD
         //TOTO : Transform perspective
         //TODO : Edit field formula
 
-
+        //https://aps.autodesk.com/blog/explode-dbtext-geometry-using-design-automation-api-6
 
         //https://keanw.com/2014/06/iterating-autocad-system-variables-using-net-part-2.html
 

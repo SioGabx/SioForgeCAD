@@ -141,7 +141,7 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
                 string BlockName = Name;
-
+                if (BlockName == "") { BlockName = "*U"; };
                 if (BlockName != "*U") //creating an anonymous block
                 {
                     BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);

@@ -380,8 +380,9 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void AddVertex(this Polyline3d Poly, Point3d point)
         {
-            var Vertex = new PolylineVertex3d(point);
-            Poly.AppendVertex(Vertex);
+            using (var Vertex = new PolylineVertex3d(point)) { 
+                Poly.AppendVertex(Vertex);
+            }
         }
 
         public static void AddVertexIfNotExist(this Polyline Poly, Point3d point, double bulge = 0, double startWidth = 0, double endWidth = 0)
@@ -452,9 +453,8 @@ namespace SioForgeCAD.Commun.Extensions
             if (poly3d.PolyType == Poly3dType.SimplePoly)
             {
                 Polyline poly2d = new Polyline();
-                foreach (ObjectId vertexId in poly3d)
+                foreach (PolylineVertex3d vertex in poly3d)
                 {
-                    PolylineVertex3d vertex = vertexId.GetDBObject() as PolylineVertex3d;
                     if (vertex != null)
                     {
                         Point2d point = new Point2d(vertex.Position.X, vertex.Position.Y);
