@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
-    public static class SKETCHUPCREATEPOINTSFROMALT
+    public static class SKETCHUPCREATETERRAINFROMPOINTS
     {
         public static void GeneratePointsFromAlt()
         {
@@ -28,21 +28,20 @@ namespace SioForgeCAD.Functions
             if (!selRes) return;
 
 
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
                 List<ObjectId> createdEntities = new List<ObjectId>();
+                List<DBPoint> PointsSet = new List<DBPoint>();
                 foreach (var selObj in ObjIds)
                 {
                     if (!(tr.GetObject(selObj, OpenMode.ForRead) is BlockReference blockRef)) continue;
 
                     foreach (ObjectId attId in blockRef.AttributeCollection)
                     {
-                        AttributeReference attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
-                        if (attRef == null) continue;
+                        if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef)) continue;
 
                         string text = attRef.TextString;
 
@@ -53,27 +52,36 @@ namespace SioForgeCAD.Functions
 
                             // Création du point à l'altitude Z
                             DBPoint point = new DBPoint(new Point3d(blockRef.Position.X, blockRef.Position.Y, z));
-                            btr.AppendEntity(point);
-                            tr.AddNewlyCreatedDBObject(point, true);
-                            createdEntities.Add(point.ObjectId);
+                            createdEntities.Add(point.AddToDrawing());
 
-                            // Création ligne de 0 à Z
-                            Line line = new Line(
-                                new Point3d(blockRef.Position.X, blockRef.Position.Y, 0),
-                                new Point3d(blockRef.Position.X, blockRef.Position.Y, z)
-                            );
-
-                            btr.AppendEntity(line);
-                            tr.AddNewlyCreatedDBObject(line, true);
-                            createdEntities.Add(line.ObjectId);
+                            PointsSet.Add(point);
+                            break;
                         }
                     }
                 }
 
+                if (PointsSet.Count < 3)
+                {
+                    Generic.WriteMessage("Vous devez selectionner au moins 3 points");
+                    tr.Abort();
+                    ed.SetImpliedSelection(ObjIds);
+                    return;
+                }
+
+
+                using (var Poly3D = DelaunayTriangulate.Triangulate(PointsSet).ToDBObjectCollection())
+                using (var Poly3DRegions = Region.CreateFromCurves(Poly3D))
+                {
+                    foreach (Region reg in Poly3DRegions)
+                    {
+                        createdEntities.Add(reg.AddToDrawing());
+                    }
+                }
+                // circle has 32 edges
                 if (createdEntities.Count > 0)
                 {
-                    var BlkDefId = BlockReferences.CreateFromExistingEnts("", $"Terrain généré à partir de {Generic.GetExtensionDLLName()}.", createdEntities.ToObjectIdCollection(), Points.Empty, true, BlockScaling.Uniform, true);
-                    
+                    var BlkDefId = BlockReferences.CreateFromExistingEnts(typeof(SKETCHUPCREATETERRAINFROMPOINTS).Name + "_" + DateTime.Now.Ticks, $"Terrain généré à partir de {Generic.GetExtensionDLLName()} pour SketchUp.", createdEntities.ToObjectIdCollection(), Points.Empty, true, BlockScaling.Uniform, true);
+
                     if (!BlkDefId.IsValid) { tr.Commit(); return; }
                     var BlkRef = new BlockReference(Points.Empty.SCG, BlkDefId);
                     BlkRef.AddToDrawing();

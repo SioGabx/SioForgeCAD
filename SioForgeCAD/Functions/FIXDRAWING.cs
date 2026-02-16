@@ -13,7 +13,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
             //Settings :
-            Generic.Command("_-PLOTSTAMP", "_LOG", "_NO", "plot.log");
+            Generic.Command("_-PLOTSTAMP", "_LOG", "_NO", "plot.log", "");
 
 
             //Audit
@@ -24,7 +24,7 @@ namespace SioForgeCAD.Functions
             var SavedCurrentLayout = lm.CurrentLayout;
 
             //ModelSpace
-            Generic.WriteMessage($"Modification des variables dans l'espace object...");
+            Generic.WriteMessage("Modification des variables dans l'espace object...");
             lm.SetCurrentLayoutId(ed.GetModelLayout().ObjectId);
             ApplyPreferedSystemVariable();
 
@@ -73,6 +73,8 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("HIDEXREFSCALES", 1);
             Generic.SetSystemVariable("INDEXCTL", 0);
             Generic.SetSystemVariable("LOCKUI", 0);
+
+            Generic.SetSystemVariable("TRIMEXTENDMODE", 1); //Controls whether the TRIM and EXTEND commands use streamlined inputs. 0 = Standard operation https://help.autodesk.com/view/CIV3D/2024/ENU/?guid=GUID-52B3803E-FADC-4D7B-9BF2-A176C7FB7535
             Generic.SetSystemVariable("EDGEMODE", 1);
             Generic.SetSystemVariable("PSLTSCALE", 0); //Controls the linetype scaling of objects displayed in paper space viewports. 
             Generic.SetSystemVariable("LTSCALE", 1); //Sets the global linetype scale factor. Use LTSCALE to change the scale factor of linetypes for all objects in a drawing

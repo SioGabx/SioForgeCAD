@@ -5,6 +5,9 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows.Controls;
 
 namespace SioForgeCAD.Commun
 {
@@ -33,12 +36,35 @@ namespace SioForgeCAD.Commun
                 return;
             }
 
-            SelectionSet pointSelectionSet = pointSelectionResult.Value;
-            int numberOfPoints = pointSelectionSet.Count;
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                List<DBPoint> PointsSet = new List<DBPoint>();
+                foreach (var PointSelectionSet in pointSelectionResult.Value.GetObjectIds())
+                {
+                    PointsSet.Add(PointSelectionSet.GetDBObject(OpenMode.ForRead) as DBPoint);
+                }
+
+                foreach (var poly in Triangulate(PointsSet))
+                {
+                    poly.AddToDrawing();
+                }
+                tr.Commit();
+            }
+            Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
+        }
+
+
+        public static List<Polyline3d> Triangulate(List<DBPoint> PointsSet)
+        {
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+            List<Polyline3d> Result = new List<Polyline3d>();
+
+            int numberOfPoints = PointsSet.Count;
             if (numberOfPoints < 3)
             {
                 ed.WriteMessage("Minimum 3 points must be selected!");
-                return;
+                return Result;
             }
             int PtsIndex, j, k, numberOfTriangles, numberOfEdges, thinTriangleFoundCount = 0, IgnoredPointWithSameCoordinatesCount = 0;
 
@@ -57,15 +83,14 @@ namespace SioForgeCAD.Commun
             double xMin, yMin, xMax, yMax, deltaX, deltaY, xMid, yMid;
             int[] edge1 = new int[(numberOfPoints * 2) + 1];
             int[] edge2 = new int[(numberOfPoints * 2) + 1];
-            ObjectId[] idArray = pointSelectionSet.GetObjectIds();
-            Transaction tr = db.TransactionManager.StartTransaction();
-            using (tr)
+            Transaction tr;
+            using (tr = db.TransactionManager.StartTransaction())
             {
                 DBPoint PointElement;
                 k = 0;
                 for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
                 {
-                    PointElement = (DBPoint)tr.GetObject(idArray[k], OpenMode.ForRead, false);
+                    PointElement = (DBPoint)PointsSet[k];
                     xCoordinates[PtsIndex] = PointElement.Position[0];
                     yCoordinates[PtsIndex] = PointElement.Position[1];
                     zCoordinates[PtsIndex] = PointElement.Position[2];
@@ -213,8 +238,8 @@ namespace SioForgeCAD.Commun
                 }
                 PtsIndex++;
             }
-            tr = db.TransactionManager.StartTransaction();
-            using (tr)
+
+            using (tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt =
                   (BlockTable)tr.GetObject(
@@ -223,30 +248,7 @@ namespace SioForgeCAD.Commun
                     false
                   );
                 BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
-                //PolyFaceMesh pfm = new PolyFaceMesh();
-                //btr.AppendEntity(pfm);
-                //tr.AddNewlyCreatedDBObject(pfm, true);
-                //for (i = 0; i < npts; i++)
-                //{
-                //    PolyFaceMeshVertex vert =
-                //      new PolyFaceMeshVertex(
-                //        new Point3d(ptx[i], pty[i], ptz[i])
-                //      );
-                //    pfm.AppendVertex(vert);
-                //    tr.AddNewlyCreatedDBObject(vert, true);
-                //}
-                //for (i = 0; i < ntri; i++)
-                //{
-                //    FaceRecord face =
-                //      new FaceRecord(
-                //        (short)(pt1[i] + 1),
-                //        (short)(pt2[i] + 1),
-                //        (short)(pt3[i] + 1),
-                //        0
-                //      );
-                //    pfm.AppendFaceRecord(face);
-                //    tr.AddNewlyCreatedDBObject(face, true);
-                //}
+
                 for (PtsIndex = 0; PtsIndex < numberOfTriangles; PtsIndex++)
                 {
                     Point3d vertex1 = new Point3d(xCoordinates[vertexPoint1[PtsIndex]], yCoordinates[vertexPoint1[PtsIndex]], zCoordinates[vertexPoint1[PtsIndex]]);
@@ -259,33 +261,18 @@ namespace SioForgeCAD.Commun
                         poly.AddVertex(vertex2);
                         poly.AddVertex(vertex3);
                         poly.Closed = true;
+                        Result.Add(poly.Clone() as Polyline3d);
+                        poly.Erase();
                     }
-
-                    //Line line1 = new Line(vertex1, vertex2);
-                    //Line line2 = new Line(vertex2, vertex3);
-                    //Line line3 = new Line(vertex3, vertex1);
-
-                    //btr.AppendEntity(line1);
-                    //btr.AppendEntity(line2);
-                    //btr.AppendEntity(line3);
-
-                    //tr.AddNewlyCreatedDBObject(line1, true);
-                    //tr.AddNewlyCreatedDBObject(line2, true);
-                    //tr.AddNewlyCreatedDBObject(line3, true);
                 }
 
                 tr.Commit();
             }
             if (thinTriangleFoundCount > 0)
             {
-                ed.WriteMessage(
-                  "\nWarning! {0} thin triangle(s) found!" +
-                  " Wrong result possible!",
-                  thinTriangleFoundCount
-                );
+                Debug.WriteLine($"Warning! {thinTriangleFoundCount} thin triangle(s) found! Wrong result possible!");
             }
-
-            Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
+            return Result;
         }
 
         public static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)

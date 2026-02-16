@@ -740,10 +740,10 @@ namespace SioForgeCAD
             Functions.SKETCHUPCREATEREGIONFROMPOLY.GenerateRegionFromBoundaries();
         }
 
-        [CommandMethod("SIOFORGECAD", "SKETCHUPCREATEPOINTSFROMALT", CommandFlags.Redraw)]
-        public static void SKETCHUPCREATEPOINTSFROMALT()
+        [CommandMethod("SIOFORGECAD", "SKETCHUPCREATETERRAINFROMPOINTS", CommandFlags.Redraw)]
+        public static void SKETCHUPCREATETERRAINFROMPOINTS()
         {
-            Functions.SKETCHUPCREATEPOINTSFROMALT.GeneratePointsFromAlt();
+            Functions.SKETCHUPCREATETERRAINFROMPOINTS.GeneratePointsFromAlt();
         }
 
         [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
@@ -846,6 +846,12 @@ namespace SioForgeCAD
         public static void TRIANGLECC()
         {
             DelaunayTriangulate.TriangulateCommand();
+        }
+
+        [CommandMethod("DEBUG", "TRIANGLECCCONTRAINED", CommandFlags.UsePickSet)]
+        public static void TRIANGLECCCONTRAINED()
+        {
+            DelaunayTriangulateConstrained.TriangulateCommand();
         }
 
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]

@@ -42,8 +42,7 @@ namespace SioForgeCAD.Functions
                     if (ent is Curve)
                     {
                         // Clone l'entité sélectionnée pour ne pas modifier l'original
-                        Entity tempEnt = ent.Clone() as Entity;
-                        if (tempEnt == null) continue;
+                        if (!(ent.Clone() is Entity tempEnt)) continue;
                         tempEnt.Flatten();
                         DBObjectCollection curves = new DBObjectCollection { tempEnt };
                         DBObjectCollection regions = null;
@@ -101,7 +100,7 @@ namespace SioForgeCAD.Functions
                     using (Transaction newTr = newDb.TransactionManager.StartTransaction())
                     {
                         BlockTable newBt = newTr.GetObject(newDb.BlockTableId, OpenMode.ForRead) as BlockTable;
-                        BlockTableRecord newBtr = newTr.GetObject(newBt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                        BlockTableRecord newBtr = newTr.GetObject(newBt[BlockTableRecord.ModelSpace], OpenMode.ForWrite, true, true) as BlockTableRecord;
 
                         IdMapping mapping = new IdMapping();
                         ObjectIdCollection toClone = new ObjectIdCollection(ForSketchupEntities.ToArray());
@@ -122,7 +121,7 @@ namespace SioForgeCAD.Functions
                             if (mapping.Contains(id))
                             {
                                 ObjectId newId = mapping[id].Value;
-                                Entity e = newTr.GetObject(newId, OpenMode.ForWrite) as Entity;
+                                Entity e = newTr.GetObject(newId, OpenMode.ForWrite,true, true) as Entity;
                                 if (e != null)
                                     clonedRegions.Add(e);
                             }
