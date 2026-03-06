@@ -839,19 +839,121 @@ namespace SioForgeCAD
 
 // <snip>
          */
+        [CommandMethod("DEBUG", "MERGECAVALIERCONTOURS", CommandFlags.UsePickSet)]
+        public static void MERGECAVALIERCONTOURS()
+        {
+            Editor ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
+                {
+                    return;
+                }
+
+                FirstHachure.RegisterHighlight();
+                bool Reselect = true;
+                Hatch SecondHachure = null;
+                try
+                {
+                    while (Reselect)
+                    {
+                        ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
+                        Reselect = false;
+                        if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
+                        {
+                            return;
+                        }
+                        if (SecondHachure == FirstHachure)
+                        {
+                            Reselect = true;
+                        }
+                    }
+                }
+                finally
+                {
+                    FirstHachure.RegisterUnhighlight();
+                }
+
+                Entity ExistingBoundaryStyle = FirstHachure;
+                if (FirstHachure.Associative)
+                {
+                    FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
+                    ExistingBoundaryStyle = AssociatedBoundary;
+                }
+
+                if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
+                {
+                    return;
+                }
+
+                var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
+                var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
+
+                var (union, _) = Poly1.BooleanOperation(Poly2, CavalierContoursSharp.BooleanOp.Or);
+
+                foreach (var item in union)
+                {
+
+                    ConvertCavToPoly(item).AddToDrawing();
+
+                    foreach (var item2 in item.ParallelOffset(5, null))
+                    {
+                        ConvertCavToPoly(item2).AddToDrawing();
+                    }
+
+
+                }
+
+                tr.Commit();
+            }
 
 
 
-        [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
+            CavalierContoursSharp.Polyline ConvertToCavPoly(Polyline poly)
+            {
+                CavalierContoursSharp.Polyline CavPoly = new CavalierContoursSharp.Polyline();
+                for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
+                {
+                    var AutoCadBulge = poly.GetBulgeAt(i);
+                    var AutoCadVertex = poly.GetPoint2dAt(i);
+                    CavPoly.AddVertex(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
+                    
+
+                }
+                CavPoly.IsClosed = poly.Closed;
+                return CavPoly;
+
+            }
+
+            Polyline ConvertCavToPoly(CavalierContoursSharp.Polyline poly)
+            {
+                Polyline Poly = new Polyline();
+
+                foreach (CavalierContoursSharp.CavcVertex item in poly)
+                {
+                    Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
+                }
+                Poly.Closed = poly.IsClosed;
+                return Poly;
+
+
+            }
+
+
+
+
+
+
+
+            }
+
+
+
+            [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
         {
             DelaunayTriangulate.TriangulateCommand();
-        }
-
-        [CommandMethod("DEBUG", "TRIANGLECCCONTRAINED", CommandFlags.UsePickSet)]
-        public static void TRIANGLECCCONTRAINED()
-        {
-            DelaunayTriangulateConstrained.TriangulateCommand();
         }
 
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]

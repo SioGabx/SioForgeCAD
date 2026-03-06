@@ -73,6 +73,7 @@ namespace SioForgeCAD.Functions
             Generic.SetSystemVariable("HIDEXREFSCALES", 1);
             Generic.SetSystemVariable("INDEXCTL", 0);
             Generic.SetSystemVariable("LOCKUI", 0);
+            Generic.SetSystemVariable("UCSDETECT", 0);
 
             Generic.SetSystemVariable("TRIMEXTENDMODE", 1); //Controls whether the TRIM and EXTEND commands use streamlined inputs. 0 = Standard operation https://help.autodesk.com/view/CIV3D/2024/ENU/?guid=GUID-52B3803E-FADC-4D7B-9BF2-A176C7FB7535
             Generic.SetSystemVariable("EDGEMODE", 1);

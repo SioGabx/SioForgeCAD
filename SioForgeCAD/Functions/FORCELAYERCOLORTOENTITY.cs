@@ -38,6 +38,7 @@ namespace SioForgeCAD.Functions
 
         public static void ForceColor(ObjectId SelectedObjects)
         {
+            if (SelectedObjects.IsErased) { return; }
             Entity SelectedEntity = SelectedObjects.GetEntity(OpenMode.ForWrite);
             string EntityLayer = SelectedEntity.Layer;
             ObjectId LayerTableRecordObjId = Layers.GetLayerIdByName(EntityLayer);

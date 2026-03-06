@@ -58,75 +58,6 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return;
             }
-            if (Origin.GetType() == Target.GetType())
-            {
-                if (Origin is Hatch OriginHatch)
-                {
-                    Hatch TargetHatch = Target as Hatch;
-                    if (OriginHatch.IsGradient)
-                    {
-                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
-                        TargetHatch.SetGradient(OriginHatch.GradientType, OriginHatch.GradientName);
-                        TargetHatch.GradientOneColorMode = OriginHatch.GradientOneColorMode;
-                        TargetHatch.GradientShift = OriginHatch.GradientShift;
-                        TargetHatch.GradientAngle = OriginHatch.GradientAngle;
-                        TargetHatch.SetGradientColors(OriginHatch.GetGradientColors());
-                    }
-                    if (OriginHatch.IsHatch)
-                    {
-                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
-                        TargetHatch.HatchStyle = OriginHatch.HatchStyle;
-                        TargetHatch.PatternSpace = OriginHatch.PatternSpace;
-                        TargetHatch.PatternAngle = OriginHatch.PatternAngle;
-                        TargetHatch.PatternDouble = OriginHatch.PatternDouble;
-                    }
-                    TargetHatch.ShadeTintValue = OriginHatch.ShadeTintValue;
-                    TargetHatch.HatchObjectType = OriginHatch.HatchObjectType;
-                    TargetHatch.BackgroundColor = OriginHatch.BackgroundColor;
-                    TargetHatch.Normal = OriginHatch.Normal;
-                    TargetHatch.Origin = OriginHatch.Origin;
-                    TargetHatch.Elevation = OriginHatch.Elevation;
-                }
-
-                if (Origin is BlockReference OriginBlkRef)
-                {
-                    BlockReference TargetBlockReference = Target as BlockReference;
-                    TargetBlockReference.Rotation = OriginBlkRef.Rotation;
-                    TargetBlockReference.ScaleFactors = OriginBlkRef.ScaleFactors;
-                }
-
-                if (Origin is Polyline OriginPolyline)
-                {
-                    Polyline TargetPolyline = Target as Polyline;
-                    TargetPolyline.Elevation = OriginPolyline.Elevation;
-                    try
-                    {
-                        TargetPolyline.ConstantWidth = OriginPolyline.ConstantWidth;
-                    }
-                    catch (Autodesk.AutoCAD.Runtime.Exception)
-                    {
-                        //eInvalidInput
-                        TargetPolyline.ConstantWidth = 0;
-                    }
-                    TargetPolyline.Thickness = OriginPolyline.Thickness;
-                }
-                if (Origin is Polyline2d OriginPolyline2d)
-                {
-                    Polyline TargetPolyline = Target as Polyline;
-                    TargetPolyline.Elevation = OriginPolyline2d.Elevation;
-                }
-
-                if (Origin is Ole2Frame OriginOle2Frame)
-                {
-                    Ole2Frame TargetOle2Frame = Target as Ole2Frame;
-                    TargetOle2Frame.AutoOutputQuality = OriginOle2Frame.AutoOutputQuality;
-                    TargetOle2Frame.LockAspect = OriginOle2Frame.LockAspect;
-                    TargetOle2Frame.WcsHeight = OriginOle2Frame.WcsHeight;
-                    TargetOle2Frame.WcsWidth = OriginOle2Frame.WcsWidth;
-                    TargetOle2Frame.ScaleHeight = OriginOle2Frame.ScaleHeight;
-                    TargetOle2Frame.ScaleWidth = OriginOle2Frame.ScaleWidth;
-                }
-            }
 
             //Default for each Entities
             if (Origin.EntityColor.IsNone)
@@ -178,6 +109,107 @@ namespace SioForgeCAD.Commun.Extensions
             //Target.FaceStyleId = Origin.FaceStyleId;
             //Target.EdgeStyleId = Origin.EdgeStyleId;
             //Target.DrawStream = Origin.DrawStream;
+
+
+
+
+            if (Origin.GetType() == Target.GetType())
+            {
+                if (Origin is Hatch OriginHatch)
+                {
+                    Hatch TargetHatch = Target as Hatch;
+                    if (OriginHatch.IsGradient)
+                    {
+                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
+                        TargetHatch.SetGradient(OriginHatch.GradientType, OriginHatch.GradientName);
+                        TargetHatch.GradientOneColorMode = OriginHatch.GradientOneColorMode;
+                        TargetHatch.GradientShift = OriginHatch.GradientShift;
+                        TargetHatch.GradientAngle = OriginHatch.GradientAngle;
+                        TargetHatch.SetGradientColors(OriginHatch.GetGradientColors());
+                    }
+                    if (OriginHatch.IsHatch)
+                    {
+                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
+                        TargetHatch.HatchStyle = OriginHatch.HatchStyle;
+                        TargetHatch.PatternSpace = OriginHatch.PatternSpace;
+                        TargetHatch.PatternAngle = OriginHatch.PatternAngle;
+                        TargetHatch.PatternDouble = OriginHatch.PatternDouble;
+                    }
+                    TargetHatch.ShadeTintValue = OriginHatch.ShadeTintValue;
+                    TargetHatch.HatchObjectType = OriginHatch.HatchObjectType;
+                    TargetHatch.BackgroundColor = OriginHatch.BackgroundColor;
+                    TargetHatch.Normal = OriginHatch.Normal;
+                    TargetHatch.Origin = OriginHatch.Origin;
+                    TargetHatch.Elevation = OriginHatch.Elevation;
+
+
+                    if (OriginHatch.NumberOfPatternDefinitions >= 1 && TargetHatch.NumberOfPatternDefinitions >= 1)
+                    {
+                      
+                        var OriginHatchPatternDefinition = OriginHatch.GetPatternDefinitionAt(0);
+                        var TargetHatchPatternDefinition = TargetHatch.GetPatternDefinitionAt(0);
+
+                        double angleA = OriginHatchPatternDefinition.Angle; // objet 1
+                        double angleB = TargetHatchPatternDefinition.Angle; // objet 2
+                        double compensation = angleA - angleB;
+                        TargetHatch.PatternAngle += compensation;
+
+
+                        //// 3. rotation du point de base
+                        //double x = OriginHatchPatternDefinition.BaseX + OriginHatch.Origin.X + OriginHatchPatternDefinition.OffsetX;
+                        //double y = OriginHatchPatternDefinition.BaseY + OriginHatch.Origin.Y + OriginHatchPatternDefinition.OffsetY;
+
+                        //double cos = Math.Cos(compensation);
+                        //double sin = Math.Sin(compensation);
+
+                        //double newX = x * cos - y * sin;
+                        //double newY = x * sin + y * cos;
+                        ////TargetHatch.Origin = new Point2d(newX, newY);
+                        //Generic.WriteMessage(TargetHatch.Origin);
+                    }
+
+                }
+
+                if (Origin is BlockReference OriginBlkRef)
+                {
+                    BlockReference TargetBlockReference = Target as BlockReference;
+                    TargetBlockReference.Rotation = OriginBlkRef.Rotation;
+                    TargetBlockReference.ScaleFactors = OriginBlkRef.ScaleFactors;
+                }
+
+                if (Origin is Polyline OriginPolyline)
+                {
+                    Polyline TargetPolyline = Target as Polyline;
+                    TargetPolyline.Elevation = OriginPolyline.Elevation;
+                    try
+                    {
+                        TargetPolyline.ConstantWidth = OriginPolyline.ConstantWidth;
+                    }
+                    catch (Autodesk.AutoCAD.Runtime.Exception)
+                    {
+                        //eInvalidInput
+                        TargetPolyline.ConstantWidth = 0;
+                    }
+                    TargetPolyline.Thickness = OriginPolyline.Thickness;
+                }
+                if (Origin is Polyline2d OriginPolyline2d)
+                {
+                    Polyline TargetPolyline = Target as Polyline;
+                    TargetPolyline.Elevation = OriginPolyline2d.Elevation;
+                }
+
+                if (Origin is Ole2Frame OriginOle2Frame)
+                {
+                    Ole2Frame TargetOle2Frame = Target as Ole2Frame;
+                    TargetOle2Frame.AutoOutputQuality = OriginOle2Frame.AutoOutputQuality;
+                    TargetOle2Frame.LockAspect = OriginOle2Frame.LockAspect;
+                    TargetOle2Frame.WcsHeight = OriginOle2Frame.WcsHeight;
+                    TargetOle2Frame.WcsWidth = OriginOle2Frame.WcsWidth;
+                    TargetOle2Frame.ScaleHeight = OriginOle2Frame.ScaleHeight;
+                    TargetOle2Frame.ScaleWidth = OriginOle2Frame.ScaleWidth;
+                }
+            }
+
 
         }
 

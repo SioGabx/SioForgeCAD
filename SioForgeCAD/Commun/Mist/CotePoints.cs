@@ -137,7 +137,7 @@ namespace SioForgeCAD.Commun
 
             foreach (ObjectId AttributeObjectId in blkRef.AttributeCollection)
             {
-                AttributeReference Attribute = (AttributeReference)tr.GetObject(AttributeObjectId, OpenMode.ForRead);
+                AttributeReference Attribute = (AttributeReference)tr.GetObject(AttributeObjectId, OpenMode.ForRead, true);
                 if (Attribute.TextString.Contains("."))
                 {
                     bool IsDouble = double.TryParse(Attribute.TextString.Trim(), out double Altimetrie);

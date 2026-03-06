@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Concurrent;
@@ -41,7 +42,8 @@ namespace SioForgeCAD.Commun
             }
 
             ConcurrentBag<(HashSet<Polyline> Splitted, Polyline GeometryOrigin)> SplittedCurvesOrigin = GetSplittedCurves(PolyHoleList.GetBoundaries());
-            //SplittedCurvesOrigin.ForEach(curve => curve.Splitted.AddToDrawing(5, true));
+           
+           // SplittedCurvesOrigin.ForEach(curve => curve.Splitted.ForEach(ent => ent.AddToDrawing(5)));
 
             //Check if Cutted line IsInside -> if true remove
             List<Polyline> GlobalSplittedCurves = RemoveInsideCutLine(PolyHoleList, SplittedCurvesOrigin);

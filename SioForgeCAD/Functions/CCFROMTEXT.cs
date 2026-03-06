@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
                             //MULTIPLES
                             SelectionFilter filterList = new SelectionFilter(new TypedValue[] {
                                 new TypedValue((int)DxfCode.Operator, "<or"),
-                                new TypedValue((int)DxfCode.Start, "DBTEXT"),
+                                new TypedValue((int)DxfCode.Start, "TEXT"),//DBTEXT
                                 new TypedValue((int)DxfCode.Start, "MTEXT"),
                                 new TypedValue((int)DxfCode.Start, "ATTDEF"),
                                 new TypedValue((int)DxfCode.Operator, "or>"),

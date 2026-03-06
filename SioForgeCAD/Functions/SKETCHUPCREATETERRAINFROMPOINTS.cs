@@ -7,6 +7,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -27,7 +28,7 @@ namespace SioForgeCAD.Functions
 
             if (!selRes) return;
 
-
+            using (Generic.GetLock())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
@@ -52,7 +53,7 @@ namespace SioForgeCAD.Functions
 
                             // Création du point à l'altitude Z
                             DBPoint point = new DBPoint(new Point3d(blockRef.Position.X, blockRef.Position.Y, z));
-                            createdEntities.Add(point.AddToDrawing());
+                            //createdEntities.Add(point.AddToDrawing());
 
                             PointsSet.Add(point);
                             break;
@@ -69,14 +70,33 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                using (var Poly3D = DelaunayTriangulate.Triangulate(PointsSet).ToDBObjectCollection())
-                using (var Poly3DRegions = Region.CreateFromCurves(Poly3D))
+                using (var Polys3D = DelaunayTriangulate.Triangulate(PointsSet).ToDBObjectCollection())
                 {
-                    foreach (Region reg in Poly3DRegions)
+                    foreach (Entity Poly3D in Polys3D)
                     {
-                        createdEntities.Add(reg.AddToDrawing());
+                        using (var Surf = new DBObjectCollection { Poly3D })
+                        {
+                            try
+                            {
+                                using (var Poly3DRegions = Region.CreateFromCurves(Surf))
+                                {
+                                    foreach (Region reg in Poly3DRegions)
+                                    {
+                                        createdEntities.Add(reg.AddToDrawing());
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine(ex.Message);
+                            }
+                        }
+                        Poly3D.Dispose();
                     }
                 }
+
+
+
                 // circle has 32 edges
                 if (createdEntities.Count > 0)
                 {
