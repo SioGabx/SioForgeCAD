@@ -139,19 +139,16 @@
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
-    <Compile Include="Commun\Mist\Arythmetique.cs" />
-    <Compile Include="Commun\Mist\ClipboardHelper.cs" />
-    <Compile Include="Commun\Mist\Colors.cs" />
-    <Compile Include="Commun\Mist\CUI.cs" />
-    <Compile Include="Commun\Mist\DelaunayTriangulate.cs" />
+    <Compile Include="Commun\Mist\Geometry\Arythmetique.cs" />
+    <Compile Include="Commun\Mist\Helpers\ClipboardHelper.cs" />
+    <Compile Include="Commun\Mist\Helpers\Colors.cs" />
+    <Compile Include="Commun\Mist\UI\CUI.cs" />
+    <Compile Include="Commun\Mist\Geometry\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
-    <Compile Include="Commun\Drawing\Circles.cs" />
     <Compile Include="Commun\Extensions\Colors.cs" />
     <Compile Include="Commun\Drawing\Entities.cs" />
     <Compile Include="Commun\Drawing\Groups.cs" />
     <Compile Include="Commun\Drawing\Leaders.cs" />
-    <Compile Include="Commun\Drawing\Lines.cs" />
-    <Compile Include="Commun\Drawing\Polylines.cs" />
     <Compile Include="Commun\Extensions\Arcs.cs" />
     <Compile Include="Commun\Extensions\BlockReference.cs" />
     <Compile Include="Commun\Extensions\Circles.cs" />
@@ -175,31 +172,31 @@
     <Compile Include="Commun\Extensions\Polylines.cs" />
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
-    <Compile Include="Commun\Mist\CsvReader.cs" />
-    <Compile Include="Commun\Mist\DrawJigs\GetPointJig.cs" />
-    <Compile Include="Commun\Mist\DWGDataStorage.cs" />
-    <Compile Include="Commun\Mist\Files.cs" />
-    <Compile Include="Commun\Mist\GetPointTransient.cs" />
-    <Compile Include="Commun\Mist\HightLighter.cs" />
+    <Compile Include="Commun\Mist\Helpers\TextParsers\CommaSeparatedValues\Reader.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\DrawJigs\GetPointJig.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\DWGDataStorage.cs" />
+    <Compile Include="Commun\Mist\Helpers\Files.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\GetPointTransient.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\HightLighter.cs" />
     <Compile Include="Commun\Extensions\ObjectId.cs" />
     <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Mist\Generic.cs" />
-    <Compile Include="Commun\Mist\Layers.cs" />
-    <Compile Include="Commun\Mist\Json\JSONParser.cs" />
-    <Compile Include="Commun\Mist\Json\JSONWriter.cs" />
-    <Compile Include="Commun\Mist\LongOperationProcess.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\InnerCentroid.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\Intersection.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\PolyHole.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\Substraction.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\Union.cs" />
-    <Compile Include="Commun\Mist\User32PInvoke.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\Layers.cs" />
+    <Compile Include="Commun\Mist\Helpers\TextParsers\Json\Parser.cs" />
+    <Compile Include="Commun\Mist\Helpers\TextParsers\Json\Writer.cs" />
+    <Compile Include="Commun\Mist\Helpers\LongOperationProcess.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\InnerCentroid.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\Intersection.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\PolyHole.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\Substraction.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\Union.cs" />
+    <Compile Include="Commun\Mist\Interop\User32PInvoke.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
-    <Compile Include="Commun\Mist\PerpendicularPoint.cs" />
-    <Compile Include="Commun\Mist\PluginRegister.cs" />
-    <Compile Include="Commun\Mist\SelectInXref.cs" />
-    <Compile Include="Commun\Mist\PolygonOperations\Slice.cs" />
+    <Compile Include="Commun\Mist\Geometry\PerpendicularPoint.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\PluginRegister.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\SelectInXref.cs" />
+    <Compile Include="Commun\Mist\Geometry\PolygonOperations\Slice.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGrip.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripMenu.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
@@ -247,8 +244,8 @@
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />
-    <Compile Include="Commun\Mist\CotePoints.cs" />
-    <Compile Include="Commun\Mist\Points.cs" />
+    <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
+    <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />
@@ -360,15 +357,16 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="..\.editorconfig">
       <Link>.editorconfig</Link>
     </None>
     <None Include="app.config" />
-    <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Altimetries.dwg" />
-    <EmbeddedResource Include="Commun\Blocks\_APUd_COTATIONS_Pentes.dwg" />
-    <EmbeddedResource Include="Commun\Blocks\_APUd_CP_Altimetries.dwg" />
+    <EmbeddedResource Include="Ressources\Blocks\_APUd_COTATIONS_Altimetries.dwg" />
+    <EmbeddedResource Include="Ressources\Blocks\_APUd_COTATIONS_Pentes.dwg" />
+    <EmbeddedResource Include="Ressources\Blocks\_APUd_CP_Altimetries.dwg" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -377,15 +375,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
-    <None Include="Ressources\VEGBLOC_Validate.png" />
-    <None Include="Ressources\VEGBLOC_ColorRamp.png" />
-    <None Include="Ressources\PICKSTYLETRAY_Icon_OFF.png" />
-    <None Include="Ressources\PICKSTYLETRAY_Icon_ON.png" />
+    <None Include="Ressources\Images\VEGBLOC_ColorRamp_HotToCold.png" />
+    <None Include="Ressources\Images\VEGBLOC_Validate.png" />
+    <None Include="Ressources\Images\VEGBLOC_ColorRamp_ColdToHot.png" />
+    <None Include="Ressources\Images\PICKSTYLETRAY_Icon_OFF.png" />
+    <None Include="Ressources\Images\PICKSTYLETRAY_Icon_ON.png" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

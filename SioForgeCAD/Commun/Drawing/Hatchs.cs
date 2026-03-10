@@ -33,11 +33,9 @@ namespace SioForgeCAD.Commun.Drawing
                         ed.CurrentUserCoordinateSystem = Matrix3d.AlignCoordinateSystem(Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis, oHatchOrigin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis);
                     }
                 }
-            
+
                 try
                 {
-
-
                     BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
                     DrawOrderTable orderTable = tr.GetObject(btr.DrawOrderTableId, OpenMode.ForWrite) as DrawOrderTable;
                     ObjectIdCollection DrawOrderCollection = new ObjectIdCollection();

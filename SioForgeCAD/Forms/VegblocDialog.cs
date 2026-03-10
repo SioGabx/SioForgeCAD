@@ -264,7 +264,7 @@ namespace SioForgeCAD.Forms
         public static string[][] ParseCSV(string input, string delimiter = "\t")
         {
             var csvStream = new MemoryStream(Encoding.UTF8.GetBytes(input));
-            var csvReader = new Commun.Mist.CsvReader(new StreamReader(csvStream), delimiter);
+            var csvReader = new Commun.Mist.Reader(new StreamReader(csvStream), delimiter);
             var Lines = new List<string[]>();
             while (csvReader.Read())
             {

@@ -82,7 +82,7 @@ namespace SioForgeCAD.Functions
                                 {
                                     foreach (Region reg in Poly3DRegions)
                                     {
-                                        createdEntities.Add(reg.AddToDrawing());
+                                        createdEntities.Add(reg.AddToDrawingCurrentTransaction());
                                     }
                                 }
                             }
@@ -104,7 +104,7 @@ namespace SioForgeCAD.Functions
 
                     if (!BlkDefId.IsValid) { tr.Commit(); return; }
                     var BlkRef = new BlockReference(Points.Empty.SCG, BlkDefId);
-                    BlkRef.AddToDrawing();
+                    BlkRef.AddToDrawingCurrentTransaction();
 
                     ed.SetImpliedSelection(new ObjectId[1] { BlkRef.ObjectId });
                 }

@@ -42,6 +42,7 @@ namespace SioForgeCAD.Commun
             }
             return true;
         }
+
         public static bool IsLayerLocked(string Name)
         {
             Database db = Generic.GetDatabase();

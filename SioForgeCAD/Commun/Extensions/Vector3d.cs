@@ -7,11 +7,14 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class Vector3dExtensions
     {
-        public static void DrawVector(this Vector3d vector3d, Point3d startPoint, int ColorIndex = 0)
+        public static ObjectId DrawVector(this Vector3d vector3d, Point3d startPoint, int ColorIndex = 0)
         {
             Point3d vectorEndPoint = startPoint.Add(vector3d);
-            Line vectorLine = new Line(startPoint, vectorEndPoint);
-            Lines.Draw(vectorLine, ColorIndex);
+            Line vectorLine = new Line(startPoint, vectorEndPoint)
+            {
+                ColorIndex = ColorIndex
+            };
+            return vectorLine.AddToDrawing();
         }
 
         public static Vector3d SetLength(this Vector3d vector3d, double Length)

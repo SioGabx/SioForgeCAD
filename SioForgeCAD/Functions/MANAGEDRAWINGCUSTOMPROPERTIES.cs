@@ -1,7 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using SioForgeCAD.JSONParser;
+using SioForgeCAD.Commun.Mist.JSONParser;
 using System.Collections.Generic;
 using System.Windows;
 

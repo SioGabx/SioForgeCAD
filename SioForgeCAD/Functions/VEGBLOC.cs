@@ -7,8 +7,8 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Commun.Mist.JSONParser;
 using SioForgeCAD.Forms;
-using SioForgeCAD.JSONParser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -210,16 +210,18 @@ namespace SioForgeCAD.Functions
 
         private static Color GetColorFromHeight(double HeightInMeters)
         {
-            Bitmap ColorRamp = Properties.Resources.VEGBLOC_ColorRamp;
+            // Bitmap ColorRamp = (Bitmap)Properties.Resources.ResourceManager.GetObject("VEGBLOC_ColorRamp_HotToCold", Properties.Resources.Culture);
+            Bitmap ColorRamp = Properties.Resources.VEGBLOC_ColorRamp_HotToCold;
+
             int HeightInPixel = (int)Math.Floor(HeightInMeters * 100);
             System.Drawing.Color couleurPixel = ColorRamp.GetPixel(Math.Min(HeightInPixel + 1, ColorRamp.Width - 1), 0);
 
-            byte rouge = couleurPixel.R;
-            byte vert = couleurPixel.G;
-            byte bleu = couleurPixel.B;
+            byte R = couleurPixel.R;
+            byte G = couleurPixel.G;
+            byte B = couleurPixel.B;
 
-            Debug.WriteLine($"Pixel à la position ({HeightInPixel}) - R:{rouge}, G:{vert}, B:{bleu}");
-            return Color.FromRgb(rouge, vert, bleu);
+            Debug.WriteLine($"Pixel à la position ({HeightInPixel}) - R:{R}, G:{G}, B:{B}");
+            return Color.FromRgb(R, G, B);
         }
 
         private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, string ShortType, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)

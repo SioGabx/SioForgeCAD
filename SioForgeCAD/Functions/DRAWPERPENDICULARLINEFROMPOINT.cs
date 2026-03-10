@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
                     if (ListOfPerpendicularLines.Count > 0)
                     {
                         Line NearestPointPerpendicularLine = ListOfPerpendicularLines.FirstOrDefault();
-                        Lines.Draw(NearestPointPerpendicularLine, null);
+                        NearestPointPerpendicularLine.AddToDrawing();
                     }
                     ListOfPerpendicularLines.DeepDispose();
                     trans.Commit();

@@ -87,7 +87,6 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-
         public static ObjectId Create(string Name, string Description, DBObjectCollection EntitiesDbObjectCollection, Points Origin, bool IsExplodable = true, BlockScaling BlockScaling = BlockScaling.Any)
         {
             Database db = Generic.GetDatabase();
@@ -142,7 +141,7 @@ namespace SioForgeCAD.Commun.Drawing
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
                 string BlockName = Name;
                 if (BlockName == "") { BlockName = "*U"; };
-                if (BlockName != "*U") //creating an anonymous block
+                if (BlockName != "*U") //if we dont create an anonymous block
                 {
                     BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
                 }

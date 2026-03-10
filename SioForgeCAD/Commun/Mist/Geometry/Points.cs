@@ -29,8 +29,7 @@ namespace SioForgeCAD.Commun
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)
         {
-            Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
+           var ed = Generic.GetEditor();
             Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem);
             return ConvertedPoint;
         }
@@ -82,6 +81,11 @@ namespace SioForgeCAD.Commun
         public static Points Flatten(this Points point)
         {
             return new Points(point.SCG.Flatten());
+        }
+
+        public static double DistanceTo(this Points PointA, Points PointB)
+        {
+            return PointA.SCG.DistanceTo(PointB.SCG);
         }
     }
 }

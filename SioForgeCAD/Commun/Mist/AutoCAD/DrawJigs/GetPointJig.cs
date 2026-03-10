@@ -20,6 +20,7 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
         public DBObjectCollection StaticEntities { get; set; }
 
         public Func<Points, GetPointJig, bool> UpdateFunction;
+
         public Points BasePoint = Points.Null;
         private bool disposedValue;
 

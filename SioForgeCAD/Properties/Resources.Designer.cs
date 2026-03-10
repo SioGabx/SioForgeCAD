@@ -113,9 +113,19 @@ namespace SioForgeCAD.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap VEGBLOC_ColorRamp {
+        internal static System.Drawing.Bitmap VEGBLOC_ColorRamp_ColdToHot {
             get {
-                object obj = ResourceManager.GetObject("VEGBLOC_ColorRamp", resourceCulture);
+                object obj = ResourceManager.GetObject("VEGBLOC_ColorRamp_ColdToHot", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap VEGBLOC_ColorRamp_HotToCold {
+            get {
+                object obj = ResourceManager.GetObject("VEGBLOC_ColorRamp_HotToCold", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -115,7 +115,7 @@ namespace SioForgeCAD.Functions
                     StartPoint = BlkRefOnTerrainPosition,
                     Block = BlkRef,
                     Altitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId) ?? 0,
-                    DistanceFromTerrainStart = Lines.GetLength(TerrainBasePolyline.StartPoint.Flatten(), BlkRefOnTerrainPosition.SCG.Flatten())
+                    DistanceFromTerrainStart = TerrainBasePolyline.StartPoint.Flatten().DistanceTo(BlkRefOnTerrainPosition.SCG.Flatten())
                 };
                 terrainPoints.Add(TerrainPoint);
             }
@@ -197,7 +197,7 @@ namespace SioForgeCAD.Functions
                 terrainPoint.Vector3D = PerpendicularTerrainBaseLineVector.MultiplyBy(terrainPoint.Length);
                 terrainPoint.EndPoint = GetEndPoint(terrainPoint.StartPoint, terrainPoint.Vector3D);
                 TerrainPointsToConnect.Add(terrainPoint.EndPoint);
-                TerrainEntity.Add(Lines.GetFromPoints(terrainPoint.StartPoint, terrainPoint.EndPoint));
+                TerrainEntity.Add(new Line(terrainPoint.StartPoint.SCG, terrainPoint.EndPoint.SCG));
 
                 if (TerrainPoints.Count > 2 && (i == 0 || i == TerrainPoints.Count - 1)) { continue; } //don't draw first and last cotation
 
@@ -209,7 +209,7 @@ namespace SioForgeCAD.Functions
                 TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
                 CotationBlockRefObjectId.EraseObject();
             }
-            Polyline MainTerrainPolyline = Polylines.GetPolylineFromPoints(TerrainPointsToConnect);
+            Polyline MainTerrainPolyline = TerrainPointsToConnect.GetPolylineFromPoints();
             MainTerrainPolyline.Cleanup();
             TerrainEntity.Add(MainTerrainPolyline);
             return TerrainEntity;

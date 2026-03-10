@@ -49,6 +49,7 @@ namespace SioForgeCAD.Functions
 
                 Generic.WriteMessage(Message);
                 Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog(Message);
+                System.Windows.Clipboard.Clear();
                 System.Windows.Clipboard.SetText(TotalArea.ToString());
                 var AllValidAreaObjectIds = AllSelectedObjectIds.RemoveCommun(NoAreaObjects);
                 ed.SetImpliedSelection(AllValidAreaObjectIds.ToArray());

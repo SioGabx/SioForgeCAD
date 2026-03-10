@@ -266,7 +266,7 @@ namespace SioForgeCAD.Functions
             using (var GetPointJig = new GetPointJig()
             {
                 Entities = new DBObjectCollection(),
-                StaticEntities = new DBObjectCollection() { Polylines.GetPolylineFromPoints(StartPoint, StartPoint) },
+                StaticEntities = new DBObjectCollection() { new Points[] { StartPoint , StartPoint }.GetPolylineFromPoints() },
                 UpdateFunction = UpdateFunction,
                 BasePoint = StartPoint
             })

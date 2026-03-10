@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace SioForgeCAD.JSONParser
+namespace SioForgeCAD.Commun.Mist.JSONParser
 {
     // Really simple JSON parser in ~300 lines
     // - Attempts to parse JSON files with minimal GC allocation
@@ -25,7 +25,7 @@ namespace SioForgeCAD.JSONParser
     // - No JIT Emit support to parse structures quickly
     // - Limited to parsing <2GB JSON files (due to int.MaxValue)
     // - Parsing of abstract classes or interfaces is NOT supported and will throw an exception.
-    public static class JSONParser
+    public static class Parser
     {
         [ThreadStatic] static Stack<List<string>> splitArrayPool;
         [ThreadStatic] static StringBuilder stringBuilder;

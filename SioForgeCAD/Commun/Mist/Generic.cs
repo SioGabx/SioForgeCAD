@@ -60,9 +60,11 @@ namespace SioForgeCAD.Commun
         public static void WriteInfoCenterBalloonMessage(object message)
         {
             var infoCenterManager = new Autodesk.AutoCAD.AcInfoCenterConn.InfoCenterManager();
-            var resultItem = new Autodesk.Internal.InfoCenter.ResultItem();
-            resultItem.Category = Generic.GetExtensionDLLName();
-            resultItem.Title = message.ToString();
+            var resultItem = new Autodesk.Internal.InfoCenter.ResultItem
+            {
+                Category = Generic.GetExtensionDLLName(),
+                Title = message.ToString()
+            };
             infoCenterManager.PaletteManager.ShowBalloon(resultItem);
         }
 

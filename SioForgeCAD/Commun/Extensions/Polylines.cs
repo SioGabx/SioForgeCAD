@@ -22,7 +22,59 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return NumberOfVertices;
         }
+        public static Polyline GetPolylineFromPoints(this IEnumerable<Points> listOfPoints)
+        {
+            Polyline polyline = new Polyline();
+            foreach (Points point in listOfPoints)
+            {
+                polyline.AddVertexAt(polyline.NumberOfVertices, point.SCG.ToPoint2d(), 0, 0, 0);
+            }
+            return polyline;
+        }
 
+        public enum PolylineSide
+        {
+            Right,
+            Left,
+            Collinear
+        }
+
+        public static PolylineSide CheckPointSide(this Polyline BasePolyline, Point3d TargetPoint)
+        {
+            for (int segmentIndex = 0; segmentIndex < BasePolyline.NumberOfVertices - 1; segmentIndex++)
+            {
+                Point3d startPoint = BasePolyline.GetPoint3dAt(segmentIndex);
+                Point3d endPoint = BasePolyline.GetPoint3dAt(segmentIndex + 1);
+
+                Vector2d polylineVector = new Vector2d(endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
+                Vector2d pointVector = new Vector2d(TargetPoint.X - startPoint.X, TargetPoint.Y - startPoint.Y);
+
+                //cross product
+                double crossProduct = (polylineVector.X * pointVector.Y) - (polylineVector.Y * pointVector.X);
+
+                if (crossProduct < 0)
+                {
+                    //left
+                    return PolylineSide.Left;
+                }
+                else if (crossProduct > 0)
+                {
+                    // Right
+                    return PolylineSide.Right;
+                }
+            }
+            //collinear
+            return PolylineSide.Collinear;
+        }
+
+        public static bool IsAtLeftSide(this Polyline BasePolyline, Point3d TargetPoint)
+        {
+            return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Left;
+        }
+        public static bool IsAtRightSide(this Polyline BasePolyline, Point3d TargetPoint)
+        {
+            return CheckPointSide(BasePolyline, TargetPoint) == PolylineSide.Right;
+        }
 
         public static bool FixNormals(this Polyline polyline)
         {

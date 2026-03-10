@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace SioForgeCAD.JSONParser
+namespace SioForgeCAD.Commun.Mist.JSONParser
 {
     //Really simple JSON writer
     //- Outputs JSON structures from an object
     //- Really simple API (new List<int> { 1, 2, 3 }).ToJson() == "[1,2,3]"
     //- Will only output public fields and property getters on objects
-    public static class JSONWriter
+    public static class Writer
     {
         public static string ToJson(this object item)
         {

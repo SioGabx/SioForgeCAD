@@ -5,7 +5,6 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
-
         public static string FormatFileSizeFromByte(Int64 ovalue, int odecimalPlaces = 1)
         {
             string[] SizeSuffixes =

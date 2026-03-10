@@ -61,8 +61,8 @@ namespace SioForgeCAD.Functions
 
             Generic.WriteMessage($"Les métrés des blocs sélectionnés ont été copiés dans le presse-papiers.\nNombre de blocks : {blkList.Count(b => b.Count > 0)}");
             Generic.WriteMessage(ConsoleValue);
-            
-            
+
+            System.Windows.Clipboard.Clear();
             Clipboard.SetText(ClipBoardValue.ToString());
             ed.SetImpliedSelection(selectionSet.ToArray());
         }
@@ -90,6 +90,7 @@ namespace SioForgeCAD.Functions
 
             string finalText = sb.ToString();
             Generic.WriteMessage(finalText);
+            System.Windows.Clipboard.Clear();
             Clipboard.SetText(finalText);
             ed.SetImpliedSelection(selectionSet.ToArray());
         }
@@ -124,6 +125,7 @@ namespace SioForgeCAD.Functions
 
             string finalText = sb.ToString().Trim();
             Generic.WriteMessage(finalText);
+            System.Windows.Clipboard.Clear();
             Clipboard.SetText(finalText);
             ed.SetImpliedSelection(selectionSet.ToArray());
         }

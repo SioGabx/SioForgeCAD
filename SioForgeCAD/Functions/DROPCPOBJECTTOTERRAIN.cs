@@ -70,12 +70,12 @@ namespace SioForgeCAD.Functions
             {
                 var segment = terrain.GetSegmentAt(i);
                 Vector3d perpendicularVector = GetUCSPerpendicularVector(terrain);
-                Vector3d offsetVector = perpendicularVector.MultiplyBy(Lines.GetLength(segment.StartPoint, blkRef.Position));
+                Vector3d offsetVector = perpendicularVector.MultiplyBy(segment.StartPoint.DistanceTo(blkRef.Position));
 
                 using (Line segmentLine = new Line(segment.StartPoint.Flatten(), segment.EndPoint.Flatten()))
                 using (Line perpendicularLine = new Line(blkRef.Position.Add(-offsetVector).Flatten(), blkRef.Position.Add(offsetVector).Flatten()))
                 {
-                    if (Lines.AreLinesCutting(segmentLine, perpendicularLine, out Point3dCollection intersectionPoints))
+                    if (segmentLine.IsCutting(perpendicularLine, out Point3dCollection intersectionPoints))
                     {
                         intersections.Add((intersectionPoints[0], segment.StartPoint.GetVectorTo(segment.EndPoint), offsetVector));
                     }
@@ -101,7 +101,7 @@ namespace SioForgeCAD.Functions
 
             foreach (var intersection in intersections)
             {
-                double distance = Lines.GetLength(intersection.Point, referencePoint);
+                double distance = intersection.Point.DistanceTo(referencePoint);
                 if (distance < minDistance)
                 {
                     minDistance = distance;

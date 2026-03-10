@@ -64,7 +64,7 @@ namespace SioForgeCAD.Functions
                             }
                             jig.StaticEntities = new DBObjectCollection();
 
-                            var Pe = Polylines.GetPolylineFromPoints(FirstPointCote.Points, CurrentPoint, SecondPointCote.Points);
+                            var Pe = new Points[] { FirstPointCote.Points, CurrentPoint, SecondPointCote.Points }.GetPolylineFromPoints();
                             Pe.Color = Colors.GetTransGraphicsColor(null, true);
                             jig.StaticEntities.Add(Pe);
                             var Center = Arythmetique.FindDistanceToAltitudeBetweenTwoPoint(FirstPointCote, SecondPointCote, Convert.ToDouble(Values["ALTIMETRIE"]));
@@ -108,6 +108,12 @@ namespace SioForgeCAD.Functions
                 } while (isMultipleIndermediairePlacement);
             }
         }
+
+        public static Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity _, bool IsPrimary)
+        {
+            return Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, !IsPrimary ? (short)Settings.TransientSecondaryColorIndex : (short)Settings.TransientPrimaryColorIndex);
+        }
+
 
         private static DBObjectCollection GetScale(Points center, Line baseLine, double segmentSpacing, int nbSegments)
         {

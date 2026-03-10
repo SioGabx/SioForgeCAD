@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,13 @@ namespace SioForgeCAD.Functions
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
                 SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
-                ObjectId Line = Commun.Drawing.Lines.Draw(FirstPointCote.Points, SecondPointCote.Points, 252);
+
+                ObjectId Line = ObjectId.Null;
+                using (Line acLine = new Line(FirstPointCote.Points.SCG, SecondPointCote.Points.SCG))
+                {
+                    acLine.ColorIndex = 252;
+                    Line = acLine.AddToDrawing();
+                }
 
                 var Values = ComputeValue();
                 DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNamePente, Values);

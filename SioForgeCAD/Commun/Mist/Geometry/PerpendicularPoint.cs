@@ -82,7 +82,7 @@ namespace SioForgeCAD.Commun
                 var PolylineSegment = TargetPolyline.GetSegmentAt(PolylineSegmentIndex);
                 using (Line SegmentLineIntersectTest = new Line(PolylineSegment.StartPoint, PolylineSegment.EndPoint))
                 {
-                    return Lines.AreLinesCutting(SegmentLineIntersectTest, PerpendicularLine);
+                    return SegmentLineIntersectTest.IsCutting(PerpendicularLine);
                 }
             }
             return false;

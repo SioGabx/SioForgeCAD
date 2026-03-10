@@ -20,7 +20,7 @@ namespace SioForgeCAD.Commun.Mist
     /// Fast and memory efficient implementation of CSV reader (3x times faster than CsvHelper).
     /// </summary>
     /// <remarks>API is similar to CSVHelper CsvReader.</remarks>
-    public class CsvReader
+    public class Reader
     {
         public string Delimiter { get; }
         readonly int delimLength;
@@ -38,11 +38,11 @@ namespace SioForgeCAD.Commun.Mist
 
         readonly TextReader rdr;
 
-        public CsvReader(TextReader rdr) : this(rdr, ",")
+        public Reader(TextReader rdr) : this(rdr, ",")
         {
         }
 
-        public CsvReader(TextReader rdr, string delimiter)
+        public Reader(TextReader rdr, string delimiter)
         {
             this.rdr = rdr;
             Delimiter = delimiter;
