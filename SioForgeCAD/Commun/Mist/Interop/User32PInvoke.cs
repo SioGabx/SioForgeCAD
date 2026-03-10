@@ -29,7 +29,7 @@ namespace SioForgeCAD.Commun.Mist
         [DllImport("user32.dll")]
         internal static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         internal static extern uint RegisterClipboardFormat(string lpszFormat);
 
         [DllImport("kernel32.dll")]

@@ -253,7 +253,7 @@ namespace SioForgeCAD.Functions
             selectionOptions.Keywords.Add(NewLineKeyWord);
             string kws = selectionOptions.Keywords.GetDisplayString(true);
             selectionOptions.MessageForAdding = "Selectionnez un polyline qui coupe la hachure ou " + kws;
-            selectionOptions.KeywordInput += (object sender, SelectionTextInputEventArgs e) => throw new Exception("Keyword");
+            selectionOptions.KeywordInput += (sender, e) => throw new Exception("Keyword");
 
             try
             {

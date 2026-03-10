@@ -157,7 +157,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
             for (int i = 1; i < last; i++)
             {
-                area += Point3dExtensions.GetArea(p0, pline.GetPoint2dAt(i), pline.GetPoint2dAt(i + 1));
+                area += p0.GetArea(pline.GetPoint2dAt(i), pline.GetPoint2dAt(i + 1));
                 if (pline.GetBulgeAt(i) != 0.0)
                 {
                     area += pline.GetArcSegment2dAt(i).GetArea();
@@ -432,7 +432,8 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void AddVertex(this Polyline3d Poly, Point3d point)
         {
-            using (var Vertex = new PolylineVertex3d(point)) { 
+            using (var Vertex = new PolylineVertex3d(point))
+            {
                 Poly.AppendVertex(Vertex);
             }
         }
@@ -447,19 +448,6 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             AddVertex(Poly, point, bulge, startWidth, endWidth);
-        }
-
-        [Obsolete]
-        public static bool IsClockwiseOld(this Polyline poly)
-        {
-            double sum = 0;
-            for (var i = 0; i < poly.NumberOfVertices - 1; i++)
-            {
-                var cur = poly.GetPoint2dAt(i);
-                var next = poly.GetPoint2dAt(i + 1);
-                sum += (next.X - cur.X) * (next.Y + cur.Y);
-            }
-            return sum > 0;
         }
 
         public static bool IsClockwise(this Polyline poly)
@@ -639,7 +627,7 @@ namespace SioForgeCAD.Commun.Extensions
                     //Cleanup the line (NEEDED ! if not in futur please explain why)
                     InternalPoly.Cleanup();
                     // UseOffsetGapTypeCurrentValue need to be 0 to avoid rouded corners
-                    OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance, UseOffsetGapTypeCurrentValue:false).Cast<Polyline>().ToList();
+                    OffsetPolylineResult = InternalPoly.OffsetPolyline(ShrinkDistance, UseOffsetGapTypeCurrentValue: false).Cast<Polyline>().ToList();
                 }
 
                 var OffsetMergedPolylineResult = OffsetPolylineResult.JoinMerge();

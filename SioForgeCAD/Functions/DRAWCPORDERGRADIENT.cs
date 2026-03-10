@@ -60,7 +60,7 @@ namespace SioForgeCAD.Functions
 
                 foreach (var selObj in selSet)
                 {
-                    if ( selObj.IsNull) continue;
+                    if (selObj.IsNull) continue;
 
                     if (!(selObj.GetDBObject() is Entity ent) || ent.IsErased)
                     {

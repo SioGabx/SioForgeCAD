@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SioForgeCAD.Commun.Mist
 {
-    public static class ClipboardHelper
+    public static class Clipboard
     {
         private const uint GMEM_MOVEABLE = 0x0002;
 

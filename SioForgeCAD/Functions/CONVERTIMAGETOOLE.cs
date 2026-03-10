@@ -98,7 +98,8 @@ namespace SioForgeCAD.Functions
                             }
                             else if (AskContinue != DialogResult.No) { rasterImageColor = System.Drawing.Color.White; }
                         }
-                        Debug.WriteLine("Bitmap Size :" + bitmap.GetImageFileSize());
+                        string BitmapSize = bitmap.GetImageFileSize();
+                        Debug.WriteLine("Bitmap Size :" + BitmapSize);
                         var ClipBackup = System.Windows.Clipboard.GetDataObject();
                         using (var RotatedImage = bitmap.RotateImage(rasterImage.Rotation, rasterImageColor))
                         {
@@ -106,6 +107,8 @@ namespace SioForgeCAD.Functions
                             {
                                 System.Windows.Clipboard.Clear();
                                 System.Windows.Clipboard.SetImage(RotatedImage.ToBitmapSource());
+                                
+                                Generic.WriteMessage($"Conversion de l'image en OLE. Taille de l'image : {RotatedImage.GetImageFileSize()}");
                             }
                             catch (Autodesk.AutoCAD.Runtime.Exception ex)
                             {
@@ -113,6 +116,8 @@ namespace SioForgeCAD.Functions
                                 continue;
                             }
                         }
+
+
                         var RasterImagePosition = rasterImage.Position;
                         //Paste into the drawing because we cannot create a Ole2Frame in NET
                         Generic.Command("_pasteclip", RasterImagePosition);

@@ -82,7 +82,7 @@ namespace SioForgeCAD.Functions
                         if (GetPointTransientResult.Point != null && GetPointTransientResult.PromptPointResult.Status == PromptStatus.OK)
                         {
                             DynSumMtext.Location = GetPointTransientResult.Point.SCG;
-                            
+
                             DynSumMtext.AddToDrawing();
                         }
                     }

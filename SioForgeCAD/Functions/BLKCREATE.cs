@@ -6,7 +6,6 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -62,7 +61,7 @@ namespace SioForgeCAD.Functions
                 var orderedIds = drawOrderTable.GetFullDrawOrder(0)
                     .Cast<ObjectId>()
                     .Where(id => selectedIds.Contains(id)).ToObjectIdCollection();
-             
+
                 var InsPoint = Points.GetFromPromptPointResult(ptResult);
                 var BlkDefId = BlockReferences.CreateFromExistingEnts(BlkName, "", orderedIds, InsPoint, true, BlockScaling.Any, true);
                 if (!BlkDefId.IsValid) { tr.Commit(); return; }

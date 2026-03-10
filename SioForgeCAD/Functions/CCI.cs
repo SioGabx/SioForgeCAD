@@ -58,10 +58,7 @@ namespace SioForgeCAD.Functions
                                     blkRef.SetAttributeValues(Values);
                                 }
                             }
-                            if (jig.StaticEntities != null)
-                            {
-                                jig.StaticEntities.DeepDispose();
-                            }
+                            jig.StaticEntities?.DeepDispose();
                             jig.StaticEntities = new DBObjectCollection();
 
                             var Pe = new Points[] { FirstPointCote.Points, CurrentPoint, SecondPointCote.Points }.GetPolylineFromPoints();

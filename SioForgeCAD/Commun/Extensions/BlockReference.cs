@@ -4,7 +4,6 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions

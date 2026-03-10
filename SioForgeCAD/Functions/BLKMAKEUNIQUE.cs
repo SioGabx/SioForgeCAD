@@ -82,7 +82,7 @@ namespace SioForgeCAD.Functions
                                     do
                                     {
                                         index++;
-                                        newBtrId = BlockReferences.RenameBlockAndInsert(selectedBlockId, oldName, newName);
+                                        newBtrId = BlockReferences.RenameBlockAndInsert(selectedBlockId, newName);
                                         selectedBlockId.EraseObject();
                                         if (!newBtrId.IsNull)
                                         {

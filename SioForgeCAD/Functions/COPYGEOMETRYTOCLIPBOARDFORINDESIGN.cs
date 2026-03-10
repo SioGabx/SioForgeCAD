@@ -118,9 +118,9 @@ namespace SioForgeCAD.Functions
                 Debug.WriteLine(writer.ToString());
                 Generic.WriteMessage("Copié ! Vous pouvez maintenant coller la géométrie dans InDesign ou Illustrator");
                 Clipboard.Clear();
-                SioForgeCAD.Commun.Mist.ClipboardHelper.SetRawDataToClipboard("Encapsulated PostScript", EPS);
+                SioForgeCAD.Commun.Mist.Clipboard.SetRawDataToClipboard("Encapsulated PostScript", EPS);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
-               
+
             }
         }
 
@@ -140,7 +140,7 @@ namespace SioForgeCAD.Functions
 
         private static void WritePolyline(StringBuilder w, Polyline pl)
         {
-           
+
             if (pl.NumberOfVertices < 2)
             {
                 return;
@@ -171,14 +171,14 @@ namespace SioForgeCAD.Functions
 
             try
             {
-                bool isClosed = pl.Closed; 
+                bool isClosed = pl.Closed;
                 bool hasMoreThanTwoPoints = ReelNumOfVertices > 2;
 
                 var StartPoint = pl.GetPoint2dAt(0);
                 var EndPoint = pl.GetPoint2dAt(pl.NumberOfVertices - 1);
 
                 bool startPointIsEqualToEndPoint = StartPoint.IsEqualTo(EndPoint);
-                
+
                 if (isClosed || (hasMoreThanTwoPoints && startPointIsEqualToEndPoint))
                 {
                     w.AppendLine("closepath");

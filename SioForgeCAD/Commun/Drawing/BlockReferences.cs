@@ -140,7 +140,8 @@ namespace SioForgeCAD.Commun.Drawing
             {
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
                 string BlockName = Name;
-                if (BlockName == "") { BlockName = "*U"; };
+                if (string.IsNullOrWhiteSpace(BlockName)) { BlockName = "*U"; }
+                ;
                 if (BlockName != "*U") //if we dont create an anonymous block
                 {
                     BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
@@ -209,7 +210,7 @@ namespace SioForgeCAD.Commun.Drawing
         }
 
 
-        public static ObjectId RenameBlockAndInsert(ObjectId BlockReferenceObjectId, string OldName, string NewName)
+        public static ObjectId RenameBlockAndInsert(ObjectId BlockReferenceObjectId, string NewName)
         {
             if (!BlockReferenceObjectId.IsValid)
             {

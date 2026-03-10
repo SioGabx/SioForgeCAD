@@ -121,7 +121,7 @@ namespace SioForgeCAD.Functions
                             if (mapping.Contains(id))
                             {
                                 ObjectId newId = mapping[id].Value;
-                                Entity e = newTr.GetObject(newId, OpenMode.ForWrite,true, true) as Entity;
+                                Entity e = newTr.GetObject(newId, OpenMode.ForWrite, true, true) as Entity;
                                 if (e != null)
                                     clonedRegions.Add(e);
                             }

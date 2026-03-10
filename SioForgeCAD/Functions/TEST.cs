@@ -1,1 +1,4 @@
-﻿//TEST
+﻿namespace SioForgeCAD.Functions
+{
+    //TEST
+}

@@ -140,7 +140,7 @@
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
     <Compile Include="Commun\Mist\Geometry\Arythmetique.cs" />
-    <Compile Include="Commun\Mist\Helpers\ClipboardHelper.cs" />
+    <Compile Include="Commun\Mist\Helpers\Clipboard.cs" />
     <Compile Include="Commun\Mist\Helpers\Colors.cs" />
     <Compile Include="Commun\Mist\UI\CUI.cs" />
     <Compile Include="Commun\Mist\Geometry\DelaunayTriangulate.cs" />

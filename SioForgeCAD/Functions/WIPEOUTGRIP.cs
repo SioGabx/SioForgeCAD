@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                     }
                     else if (((int)polyGrip.CurrentModeId) == (int)PolyGripOverrule.ModeIdAction.Add)
                     {
-                        pts = AddStretchPoint(WipeoutEnt, polyGrip.GripPoint,polyGrip.PreviousPoint, PolyGripOverrule.ModeIdAction.Add);
+                        pts = AddStretchPoint(WipeoutEnt, polyGrip.GripPoint, polyGrip.PreviousPoint, PolyGripOverrule.ModeIdAction.Add);
                     }
                     RecreateWipeout(WipeoutEnt, pts);
                 }
@@ -199,7 +199,7 @@ namespace SioForgeCAD.Functions
 
                 WipeoutPoly.Closed = true;
 
-                var jig = new PolyGripJig(WipeoutPoly, Point, BasePoint, new Point3dCollection() {Point });
+                var jig = new PolyGripJig(WipeoutPoly, Point, BasePoint, new Point3dCollection() { Point });
                 var JigResult = jig.Drag();
                 if (JigResult?.Status == PromptStatus.OK)
                 {

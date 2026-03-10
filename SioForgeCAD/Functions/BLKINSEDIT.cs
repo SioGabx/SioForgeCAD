@@ -239,7 +239,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, oldName, newName);
+                insertedCopyBtrId = BlockReferences.RenameBlockAndInsert(insertedBtrId, newName);
                 if (insertedCopyBtrId == ObjectId.Null)
                 {
                     Generic.WriteMessage("Echec lors de l'opération");

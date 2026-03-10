@@ -43,7 +43,8 @@ namespace SioForgeCAD.Commun
         }
         public static string TryFormatIfNumberForPrint(object obj)
         {
-            if (double.TryParse(obj.ToString(), out double Number)){
+            if (double.TryParse(obj.ToString(), out double Number))
+            {
                 return FormatNumberForPrint(Number).ToString();
             }
             else

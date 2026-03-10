@@ -145,7 +145,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                     if (OriginHatch.NumberOfPatternDefinitions >= 1 && TargetHatch.NumberOfPatternDefinitions >= 1)
                     {
-                      
+
                         var OriginHatchPatternDefinition = OriginHatch.GetPatternDefinitionAt(0);
                         var TargetHatchPatternDefinition = TargetHatch.GetPatternDefinitionAt(0);
 

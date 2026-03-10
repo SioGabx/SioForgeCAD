@@ -111,7 +111,7 @@ namespace SioForgeCAD.Functions
                 BlocColor = Layers.GetLayerColor(BlocName);
                 string Description = GenerateDataStore(BlocName, CompleteName, Height, Width, Type);
                 var blkId = BlockReferences.Create(BlocName, Description, new DBObjectCollection(), Points.Empty, false, BlockScaling.Uniform);
-                PopulateBlocGeometry(blkId, ShortName, ShortType, Width, Height, BlocColor, HeightColorIndicator);
+                PopulateBlocGeometry(blkId, ShortName, Width, Height, BlocColor, HeightColorIndicator);
                 BlockData = Description;
                 WasSuccessfullyCreated = true;
             }
@@ -224,7 +224,7 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(R, G, B);
         }
 
-        private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, string ShortType, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
+        private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
         {
             var db = Generic.GetDatabase();
             using (var tr = db.TransactionManager.StartTransaction())
@@ -278,8 +278,8 @@ namespace SioForgeCAD.Functions
                 }
                 var VegblocTextStyle = GetVegblocTextStyle();
                 const double TextBlocDisplayNameSizeReduceRatios = 0.2;
-                var TextBlocDisplayNameMaxWidth = WidthDiameter - WidthDiameter * 0.2;
-                var TextBlocDisplayNameMaxHeight = WidthDiameter - WidthDiameter * 0.3;
+                var TextBlocDisplayNameMaxWidth = WidthDiameter - (WidthDiameter * 0.2);
+                var TextBlocDisplayNameMaxHeight = WidthDiameter - (WidthDiameter * 0.3);
 
                 var TextBlocDisplayName = new MText
                 {
@@ -544,7 +544,7 @@ namespace SioForgeCAD.Functions
                     int dr = color.Red - candidate.Red;
                     int dg = color.Green - candidate.Green;
                     int db = color.Blue - candidate.Blue;
-                    double distance = dr * dr + dg * dg + db * db; //avoid Math.Sqrt for performance
+                    double distance = (dr * dr) + (dg * dg) + (db * db); //avoid Math.Sqrt for performance
 
                     if (distance < minDistance)
                     {

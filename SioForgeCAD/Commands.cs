@@ -6,11 +6,10 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
-using SioForgeCAD.Forms;
-using SioForgeCAD.Functions;
 using System;
 using System.Collections.Generic;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -839,118 +838,226 @@ namespace SioForgeCAD
 
 // <snip>
          */
-        [CommandMethod("DEBUG", "MERGECAVALIERCONTOURS", CommandFlags.UsePickSet)]
-        public static void MERGECAVALIERCONTOURS()
-        {
-            Editor ed = Generic.GetEditor();
-            Database db = Generic.GetDatabase();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
-                {
-                    return;
-                }
+        
+        //[CommandMethod("DEBUG", "MERGECAVALIERCONTOURS", CommandFlags.UsePickSet)]
+       
+        /*
+         public static void MERGECAVALIERCONTOURS()
+         {
+             Editor ed = Generic.GetEditor();
+             Database db = Generic.GetDatabase();
+             using (Transaction tr = db.TransactionManager.StartTransaction())
+             {
+                 if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
+                 {
+                     return;
+                 }
 
-                FirstHachure.RegisterHighlight();
-                bool Reselect = true;
-                Hatch SecondHachure = null;
-                try
-                {
-                    while (Reselect)
-                    {
-                        ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
-                        Reselect = false;
-                        if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
-                        {
-                            return;
-                        }
-                        if (SecondHachure == FirstHachure)
-                        {
-                            Reselect = true;
-                        }
-                    }
-                }
-                finally
-                {
-                    FirstHachure.RegisterUnhighlight();
-                }
+                 FirstHachure.RegisterHighlight();
+                 bool Reselect = true;
+                 Hatch SecondHachure = null;
+                 try
+                 {
+                     while (Reselect)
+                     {
+                         ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
+                         Reselect = false;
+                         if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
+                         {
+                             return;
+                         }
+                         if (SecondHachure == FirstHachure)
+                         {
+                             Reselect = true;
+                         }
+                     }
+                 }
+                 finally
+                 {
+                     FirstHachure.RegisterUnhighlight();
+                 }
 
-                Entity ExistingBoundaryStyle = FirstHachure;
-                if (FirstHachure.Associative)
-                {
-                    FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
-                    ExistingBoundaryStyle = AssociatedBoundary;
-                }
+                 Entity ExistingBoundaryStyle = FirstHachure;
+                 if (FirstHachure.Associative)
+                 {
+                     FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
+                     ExistingBoundaryStyle = AssociatedBoundary;
+                 }
 
-                if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
-                {
-                    return;
-                }
+                 if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
+                 {
+                     return;
+                 }
 
-                var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
-                var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
+                 var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
+                 var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
 
-                var (union, _) = Poly1.BooleanOperation(Poly2, CavalierContoursSharp.BooleanOp.Or);
+                 var (union, _) = Poly1.BooleanOperation(Poly2, CavalierContoursSharp.BooleanOp.Or);
 
-                foreach (var item in union)
-                {
+                 foreach (var item in union)
+                 {
 
-                    ConvertCavToPoly(item).AddToDrawing();
+                     ConvertCavToPoly(item).AddToDrawing();
 
-                    foreach (var item2 in item.ParallelOffset(5, null))
-                    {
-                        ConvertCavToPoly(item2).AddToDrawing();
-                    }
-
-
-                }
-
-                tr.Commit();
-            }
+                     foreach (var item2 in item.ParallelOffset(5, null))
+                     {
+                         ConvertCavToPoly(item2).AddToDrawing();
+                     }
 
 
+                 }
 
-            CavalierContoursSharp.Polyline ConvertToCavPoly(Polyline poly)
-            {
-                CavalierContoursSharp.Polyline CavPoly = new CavalierContoursSharp.Polyline();
-                for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
-                {
-                    var AutoCadBulge = poly.GetBulgeAt(i);
-                    var AutoCadVertex = poly.GetPoint2dAt(i);
-                    CavPoly.AddVertex(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
-                    
-
-                }
-                CavPoly.IsClosed = poly.Closed;
-                return CavPoly;
-
-            }
-
-            Polyline ConvertCavToPoly(CavalierContoursSharp.Polyline poly)
-            {
-                Polyline Poly = new Polyline();
-
-                foreach (CavalierContoursSharp.CavcVertex item in poly)
-                {
-                    Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
-                }
-                Poly.Closed = poly.IsClosed;
-                return Poly;
-
-
-            }
+                 tr.Commit();
+             }
 
 
 
+             CavalierContoursSharp.Polyline ConvertToCavPoly(Polyline poly)
+             {
+                 CavalierContoursSharp.Polyline CavPoly = new CavalierContoursSharp.Polyline();
+                 for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
+                 {
+                     var AutoCadBulge = poly.GetBulgeAt(i);
+                     var AutoCadVertex = poly.GetPoint2dAt(i);
+                     CavPoly.AddVertex(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
+
+
+                 }
+                 CavPoly.IsClosed = poly.Closed;
+                 return CavPoly;
+
+             }
+
+             Polyline ConvertCavToPoly(CavalierContoursSharp.Polyline poly)
+             {
+                 Polyline Poly = new Polyline();
+
+                 foreach (CavalierContoursSharp.CavcVertex item in poly)
+                 {
+                     Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
+                 }
+                 Poly.Closed = poly.IsClosed;
+                 return Poly;
+
+
+             }
 
 
 
 
-            }
 
 
 
-            [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
+         }
+
+         public static void MERGECAVALIERCONTOURS()
+         {
+             Editor ed = Generic.GetEditor();
+             Database db = Generic.GetDatabase();
+             using (Transaction tr = db.TransactionManager.StartTransaction())
+             {
+                 if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
+                 {
+                     return;
+                 }
+
+                 FirstHachure.RegisterHighlight();
+                 bool Reselect = true;
+                 Hatch SecondHachure = null;
+                 try
+                 {
+                     while (Reselect)
+                     {
+                         ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
+                         Reselect = false;
+                         if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
+                         {
+                             return;
+                         }
+                         if (SecondHachure == FirstHachure)
+                         {
+                             Reselect = true;
+                         }
+                     }
+                 }
+                 finally
+                 {
+                     FirstHachure.RegisterUnhighlight();
+                 }
+
+                 Entity ExistingBoundaryStyle = FirstHachure;
+                 if (FirstHachure.Associative)
+                 {
+                     FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
+                     ExistingBoundaryStyle = AssociatedBoundary;
+                 }
+
+                 if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
+                 {
+                     return;
+                 }
+
+                 var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
+                 var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
+
+                 var ress = PlineBoolean.Compute(Poly1, Poly2, BooleanOp.Or);
+                 foreach (var item in ress.Pos)
+                 {
+
+                     ConvertCavToPoly(item.Pline).AddToDrawing();
+
+                     //foreach (var item2 in item.ParallelOffset(5, null))
+                     //{
+                     //    ConvertCavToPoly(item2).AddToDrawing();
+                     //}
+
+
+                 }
+
+                 tr.Commit();
+             }
+
+
+
+             CavalierContours.Polyline ConvertToCavPoly(Autodesk.AutoCAD.DatabaseServices.Polyline poly)
+             {
+                 CavalierContours.Polyline CavPoly = new CavalierContours.Polyline();
+                 for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
+                 {
+                     var AutoCadBulge = poly.GetBulgeAt(i);
+                     var AutoCadVertex = poly.GetPoint2dAt(i);
+                     CavPoly.Add(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
+
+
+                 }
+                 CavPoly.IsClosed = poly.Closed;
+                 return CavPoly;
+
+             }
+
+             Polyline ConvertCavToPoly(CavalierContours.Polyline poly)
+             {
+                 Polyline Poly = new Polyline();
+
+                 foreach (var item in poly.Vertexes)
+                 {
+                     Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
+                 }
+                 Poly.Closed = poly.IsClosed;
+                 return Poly;
+
+
+             }
+
+
+
+
+
+
+
+         }
+        */
+        [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC()
         {
             DelaunayTriangulate.TriangulateCommand();

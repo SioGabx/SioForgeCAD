@@ -65,7 +65,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-      
+
 
         public static void DrawExplodedExtends()
         {
