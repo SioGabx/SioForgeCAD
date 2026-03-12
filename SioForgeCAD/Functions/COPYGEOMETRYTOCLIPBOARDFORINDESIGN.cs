@@ -92,6 +92,10 @@ namespace SioForgeCAD.Functions
                                 WriteLine(writer, line.StartPoint, line.EndPoint);
                                 break;
 
+                            case Circle circle:
+                                WriteCircle(writer, circle);
+                                break;
+
                             case Arc arc:
                                 WriteArc(writer, arc);
                                 break;
@@ -121,6 +125,14 @@ namespace SioForgeCAD.Functions
                 SioForgeCAD.Commun.Mist.Clipboard.SetRawDataToClipboard("Encapsulated PostScript", EPS);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
 
+            }
+        }
+
+        private static void WriteCircle(StringBuilder writer, Circle circle)
+        {
+            using (var x = circle.ToPolyline4Pt())
+            {
+                WritePolyline(writer, x);
             }
         }
 
