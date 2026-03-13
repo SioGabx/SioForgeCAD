@@ -18,7 +18,7 @@ namespace SioForgeCAD
             if (doc != null)
             {
                 AcAp.Idle -= OnIdle;
-                doc.Editor.WriteMessage($"\n{Generic.GetExtensionDLLName()} - Copyright © HOFFMANN François / SioGabx - {DateTime.Now.Year}.\n");
+                doc.Editor.WriteMessage($"\n{Settings.CopyrightMessage}\n");
             }
             InitPlugin();
         }

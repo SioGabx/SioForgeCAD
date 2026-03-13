@@ -4,7 +4,6 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System;
@@ -41,7 +40,6 @@ namespace SioForgeCAD.Functions
             {
                 return;
             }
-            LastExtendDist = extensionValue;
             string currentMode = ExtendMode.BOTH; // Modes possibles : "START", "END", "BOTH"
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -106,6 +104,8 @@ namespace SioForgeCAD.Functions
                                         ExtendPolyline(poly, currentMode, extensionValue);
                                     }
                                 }
+                                //Save validate value
+                                LastExtendDist = extensionValue;
                                 break;
                             }
                             else if (status == PromptStatus.Keyword)

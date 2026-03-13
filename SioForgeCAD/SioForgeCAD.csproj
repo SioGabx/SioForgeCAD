@@ -44,6 +44,14 @@
   <PropertyGroup>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <!-- injecter la date actuelle lors de la compilation. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildDate</_Parameter1>
+      <_Parameter2>$([System.DateTime]::Now.ToString("DD/MM/yyyy"))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="AcCoreMgd, Version=24.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoCAD.NET.Core.24.3.0\lib\net47\AcCoreMgd.dll</HintPath>
@@ -247,6 +255,7 @@
     <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
     <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
+    <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />

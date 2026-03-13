@@ -29,7 +29,7 @@ namespace SioForgeCAD.Commun
         }
         public static Point3d ToSCGFromCurentSCU(Point3d OriginalPoint)
         {
-           var ed = Generic.GetEditor();
+            var ed = Generic.GetEditor();
             Point3d ConvertedPoint = OriginalPoint.TransformBy(ed.CurrentUserCoordinateSystem);
             return ConvertedPoint;
         }

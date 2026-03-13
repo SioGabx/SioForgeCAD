@@ -1,8 +1,13 @@
-﻿namespace SioForgeCAD
+﻿using SioForgeCAD.Commun;
+using System;
+
+namespace SioForgeCAD
 {
     public static class Settings
     {
         public static int MultithreadingMaxNumberOfThread = 1; // -1 to disable limits
+
+        public static string CopyrightMessage = $"{Generic.GetExtensionDLLName()} - Copyright © HOFFMANN François / SioGabx - {DateTime.Now.Year}.";
 
         public static string CADLayerPrefix = "_APUd_";
         public static string VegblocLayerPrefix = CADLayerPrefix + "VEG_";

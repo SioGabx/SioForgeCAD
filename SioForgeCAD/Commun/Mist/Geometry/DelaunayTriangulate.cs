@@ -7,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows.Controls;
 
 namespace SioForgeCAD.Commun
 {

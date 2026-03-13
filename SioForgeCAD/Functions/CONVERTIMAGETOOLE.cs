@@ -107,7 +107,7 @@ namespace SioForgeCAD.Functions
                             {
                                 System.Windows.Clipboard.Clear();
                                 System.Windows.Clipboard.SetImage(RotatedImage.ToBitmapSource());
-                                
+
                                 Generic.WriteMessage($"Conversion de l'image en OLE. Taille de l'image : {RotatedImage.GetImageFileSize()}");
                             }
                             catch (Autodesk.AutoCAD.Runtime.Exception ex)
