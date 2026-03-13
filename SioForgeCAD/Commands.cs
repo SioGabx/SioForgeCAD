@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
@@ -751,6 +752,12 @@ namespace SioForgeCAD
             Functions.OFFSETMULTIPLE.Execute();
         }
 
+        [CommandMethod("SIOFORGECAD", "EXTENDPOLY", CommandFlags.Redraw)]
+        public static void EXTENDPOLY()
+        {
+            Functions.EXTENDPOLY.Execute();
+        }
+
         [CommandMethod("SIOFORGECAD", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.Redraw)]
         public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN()
         {
@@ -794,7 +801,43 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            // Récupération du document courant (tu peux utiliser Generic.GetDocument() si tu préfères)
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
 
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                // Ouverture de l'espace courant (Objet ou Papier) en écriture
+                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+
+                double lineLength = 1.0;
+                double verticalSpacing = 0.2;
+
+                // Boucle sur les 255 couleurs indexées d'AutoCAD
+                for (short i = 1; i <= 255; i++)
+                {
+                    // Calcul de la hauteur Y (la première ligne sera à Y=0)
+                    double yPosition = (i - 1) * verticalSpacing;
+
+                    Point3d startPt = new Point3d(0, yPosition, 0);
+                    Point3d endPt = new Point3d(lineLength, yPosition, 0);
+
+                    // Création de la ligne
+                    Line colorLine = new Line(startPt, endPt);
+
+                    // Assignation de la couleur
+                    colorLine.ColorIndex = i;
+
+                    // Ajout à la base de données
+                    btr.AppendEntity(colorLine);
+                    tr.AddNewlyCreatedDBObject(colorLine, true);
+                }
+
+                tr.Commit();
+            }
+
+            // Message de confirmation
+            Generic.WriteMessage("\n255 lignes générées avec succès.");
         }
 
         //TODO : BLKSETTOBYLAYER
