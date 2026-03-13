@@ -1,5 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Microsoft.Win32;
+using System;
+using System.Diagnostics;
 using RegistryKey = Autodesk.AutoCAD.Runtime.RegistryKey;
 
 namespace SioForgeCAD.Commun
@@ -8,8 +10,10 @@ namespace SioForgeCAD.Commun
     {
         public static void Register()
         {
-            // Get the AutoCAD Applications key
-            string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+            try
+            {
+                // Get the AutoCAD Applications key
+                string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
             string sAppName = Generic.GetExtensionDLLName();
             RegistryKey regAcadProdKey = Autodesk.AutoCAD.Runtime.Registry.CurrentUser.OpenSubKey(sProdKey);
             RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
@@ -38,21 +42,33 @@ namespace SioForgeCAD.Commun
             regAppAddInKey.SetValue("MANAGED", 1, RegistryValueKind.DWord);
             regAcadAppKey.Close();
             Generic.WriteMessage($"{sAppName} à été enregistrée avec succès");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de l'inscription de l'application : {ex.Message}");
+            }
         }
 
-        public static void Unregister()
+        public static void Unregister(bool Echo = true)
         {
-            // Get the AutoCAD Applications key
-            string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
-            string sAppName = Generic.GetExtensionDLLName();
+            try
+            {
+                // Get the AutoCAD Applications key
+                string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+                string sAppName = Generic.GetExtensionDLLName();
 
-            RegistryKey regAcadProdKey = Autodesk.AutoCAD.Runtime.Registry.CurrentUser.OpenSubKey(sProdKey);
-            RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
+                RegistryKey regAcadProdKey = Autodesk.AutoCAD.Runtime.Registry.CurrentUser.OpenSubKey(sProdKey);
+                RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
 
-            // Delete the key for the application
-            regAcadAppKey.DeleteSubKeyTree(sAppName);
-            regAcadAppKey.Close();
-            Generic.WriteMessage($"{sAppName} à été supprimée avec succès");
+                // Delete the key for the application
+                regAcadAppKey.DeleteSubKeyTree(sAppName);
+                regAcadAppKey.Close();
+                Generic.WriteMessage($"{sAppName} ne se chargera désormais plus au démarage d'AutoCAD");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de la désinscription de l'application : {ex.Message}");
+            }
         }
     }
 }

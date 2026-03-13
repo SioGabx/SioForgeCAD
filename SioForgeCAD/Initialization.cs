@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Mist;
 using System;
+using System.Reflection;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD
@@ -21,7 +23,26 @@ namespace SioForgeCAD
                 doc.Editor.WriteMessage($"\n{Settings.CopyrightMessage}\n");
             }
             InitPlugin();
+            VerifApp();
         }
+
+        public static void VerifApp()
+        {
+            DateTime buildDate = Assembly.GetExecutingAssembly().GetLinkerTime();
+
+            // Si la date actuelle a dépassé (date de compilation + 2 ans)
+            if (DateTime.Now > buildDate.AddYears(2))
+            {
+                Generic.WriteMessage($"=======================================================");
+                Generic.WriteMessage($"[ALERTE DE SÉCURITÉ] SioForgeCAD");
+                Generic.WriteMessage($"Cette version a été compilée le {buildDate:dd/MM/yyyy} (il y a plus de 2 ans).");
+                Generic.WriteMessage($"Pour des raisons de sécurité et de stabilité, une mise à jour est requise.");
+                Generic.WriteMessage($"=======================================================\n");
+
+                PluginRegister.Unregister();
+            }
+        }
+
 
         public static void InitPlugin()
         {
