@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
             }
 
             double extensionValue = GetValueInteractively(ed, LastExtendDist);
-            
+
             if (double.IsNaN(extensionValue))
             {
                 return;
@@ -46,105 +46,111 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                while (true)
+                try
                 {
-                    DBObjectCollection PreviewStaticEntities = new DBObjectCollection();
-
-                    // Génération du preview
-                    foreach (var selObj in selRes.Value.GetSelectionSet())
+                    while (true)
                     {
-                        // On ignore si ce n'est pas une polyligne
-                        if (!(tr.GetObject(selObj, OpenMode.ForRead) is Polyline poly))
+                        DBObjectCollection PreviewStaticEntities = new DBObjectCollection();
+
+                        // Génération du preview
+                        foreach (var selObj in selRes.Value.GetSelectionSet())
                         {
-                            continue;
+                            // On ignore si ce n'est pas une polyligne
+                            if (!(tr.GetObject(selObj, OpenMode.ForRead) is Polyline poly))
+                            {
+                                continue;
+                            }
+
+                            // On clone pour le preview (pour ne pas modifier l'original tout de suite)
+                            Polyline clonedPoly = (Polyline)poly.Clone();
+                            PreviewStaticEntities.Add(clonedPoly);
+
+                            foreach (var Seg in GetExtensionSegments(clonedPoly, currentMode, extensionValue))
+                            {
+                                clonedPoly.CopyPropertiesTo(Seg);
+                                var HSVColor = Colors.ColorToHSV(Colors.GetRealColor(clonedPoly));
+                                //HSVColor.hue = (HSVColor.hue + 180) % 360; //Negative color
+                                if (HSVColor.value > 0.5)
+                                {
+                                    // Si la couleur est claire, on l'assombrit (sans descendre sous 0)
+                                    HSVColor.value = Math.Max(0.0, HSVColor.value - 0.4);
+                                }
+                                else
+                                {
+                                    // Si la couleur est sombre, on l'éclaircit (sans dépasser 1)
+                                    HSVColor.value = Math.Min(1.0, HSVColor.value + 0.4);
+                                }
+                                Seg.Color = Colors.FromHSV(HSVColor.hue, HSVColor.saturation, HSVColor.value);
+                                PreviewStaticEntities.Add(Seg);
+                            }
+
+
                         }
 
-                        // On clone pour le preview (pour ne pas modifier l'original tout de suite)
-                        Polyline clonedPoly = (Polyline)poly.Clone();
-                        PreviewStaticEntities.Add(clonedPoly);
-
-                        foreach (var Seg in GetExtensionSegments(clonedPoly, currentMode, extensionValue))
+                        // Utilisation de ton Transient
+                        using (GetPointTransient transient = new GetPointTransientNoColorChange(new DBObjectCollection(), null)
                         {
-                            clonedPoly.CopyPropertiesTo(Seg);
-                            var HSVColor = Colors.ColorToHSV(Colors.GetRealColor(clonedPoly));
-                            //HSVColor.hue = (HSVColor.hue + 180) % 360; //Negative color
-                            if (HSVColor.value > 0.5)
+                            SetStaticEntities = PreviewStaticEntities
+                        })
+                        {
+                            var input = transient.GetPoint("Cliquez pour valider", Points.Null, false, "Mode", "Distance");
+                            var status = input.PromptPointResult.Status;
+
+                            if (status == PromptStatus.OK)
                             {
-                                // Si la couleur est claire, on l'assombrit (sans descendre sous 0)
-                                HSVColor.value = Math.Max(0.0, HSVColor.value - 0.4);
+                                // Si validé, on modifie LES ENTITÉS ORIGINALES
+                                foreach (var selObj in selRes.Value.GetSelectionSet())
+                                {
+                                    if (tr.GetObject(selObj, OpenMode.ForWrite) is Polyline poly)
+                                    {
+                                        ExtendPolyline(poly, currentMode, extensionValue);
+                                    }
+                                }
+                                break;
+                            }
+                            else if (status == PromptStatus.Keyword)
+                            {
+                                if (input.PromptPointResult.StringResult == "Mode")
+                                {
+                                    if (currentMode == ExtendMode.BOTH)
+                                    {
+                                        currentMode = ExtendMode.START;
+                                    }
+                                    else if (currentMode == ExtendMode.START)
+                                    {
+                                        currentMode = ExtendMode.END;
+                                    }
+                                    else if (currentMode == ExtendMode.END)
+                                    {
+                                        currentMode = ExtendMode.BOTH;
+                                    }
+
+                                    Generic.WriteMessage($"Changement de mode actuel : {currentMode}");
+                                }
+                                else if (input.PromptPointResult.StringResult == "Distance")
+                                {
+                                    // Redemander la valeur d'extension
+                                    double newVal = GetValueInteractively(ed, extensionValue);
+                                    if (!double.IsNaN(newVal))
+                                    {
+                                        extensionValue = newVal;
+                                    }
+                                }
                             }
                             else
                             {
-                                // Si la couleur est sombre, on l'éclaircit (sans dépasser 1)
-                                HSVColor.value = Math.Min(1.0, HSVColor.value + 0.4);
+                                Generic.WriteMessage("Opération annulée.");
+                                return;
                             }
-                            Seg.Color = Colors.FromHSV(HSVColor.hue, HSVColor.saturation, HSVColor.value);
-                            PreviewStaticEntities.Add(Seg);
-                        }
-
-
-                    }
-
-                    // Utilisation de ton Transient
-                    using (GetPointTransient transient = new GetPointTransientNoColorChange(new DBObjectCollection(), null)
-                    {
-                        SetStaticEntities = PreviewStaticEntities
-                    })
-                    {
-                        var input = transient.GetPoint("Cliquez pour valider", Points.Null, false, "Mode", "Distance");
-                        var status = input.PromptPointResult.Status;
-
-                        if (status == PromptStatus.OK)
-                        {
-                            // Si validé, on modifie LES ENTITÉS ORIGINALES
-                            foreach (var selObj in selRes.Value.GetSelectionSet())
-                            {
-                                if (tr.GetObject(selObj, OpenMode.ForWrite) is Polyline poly)
-                                {
-                                    ExtendPolyline(poly, currentMode, extensionValue);
-                                }
-                            }
-                            break;
-                        }
-                        else if (status == PromptStatus.Keyword)
-                        {
-                            if (input.PromptPointResult.StringResult == "Mode")
-                            {
-                                if (currentMode == ExtendMode.BOTH)
-                                {
-                                    currentMode = ExtendMode.START;
-                                }
-                                else if (currentMode == ExtendMode.START)
-                                {
-                                    currentMode = ExtendMode.END;
-                                }
-                                else if (currentMode == ExtendMode.END)
-                                {
-                                    currentMode = ExtendMode.BOTH;
-                                }
-
-                                Generic.WriteMessage($"Changement de mode actuel : {currentMode}");
-                            }
-                            else if (input.PromptPointResult.StringResult == "Distance")
-                            {
-                                // Redemander la valeur d'extension
-                                double newVal = GetValueInteractively(ed, extensionValue);
-                                if (!double.IsNaN(newVal))
-                                {
-                                    extensionValue = newVal;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Generic.WriteMessage("Opération annulée.");
-                            tr.Commit(); // On annule la transaction proprement
-                            return;
                         }
                     }
                 }
+                finally
+                {
+                    ed.SetImpliedSelection(selRes.GetObjectIds());
+                    tr.Commit();
+                }
 
-                tr.Commit();
             }
         }
         private static (Point2d? newStart, Point2d? newEnd) CalculateExtensionPoints(Polyline poly, string mode, double dist)
