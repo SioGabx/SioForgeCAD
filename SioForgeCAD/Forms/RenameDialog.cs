@@ -71,6 +71,19 @@ namespace SioForgeCAD.Forms
             _transformationLogic = transformationLogic;
         }
 
+        public void UpdateMessage(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                lblMessage.Visible = false;
+            }
+            else
+            {
+                lblMessage.Text = text;
+                lblMessage.Visible = true;
+            }
+        }
+
         public List<RenameItem> GetRenamingResults()
         {
             return _items.Where(x => x.Include && x.Original != x.Renamed).ToList();

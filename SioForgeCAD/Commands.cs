@@ -457,6 +457,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "RENAMELAYOUT", CommandFlags.UsePickSet)]
         public static void RENAMELAYOUT() => Functions.RENAMELAYOUT.Rename();
 
+        [CommandMethod("SIOFORGECAD", "RENAMELAYERS", CommandFlags.UsePickSet)]
+        public static void RENAMELAYERS() => Functions.RENAMELAYERS.Rename();
+
         [CommandMethod("SIOFORGECAD", "MANAGEDRAWINGCUSTOMPROPERTIES", CommandFlags.UsePickSet)]
         public static void MANAGEDRAWINGCUSTOMPROPERTIES() => Functions.MANAGEDRAWINGCUSTOMPROPERTIES.Menu();
 

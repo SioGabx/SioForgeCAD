@@ -10,7 +10,7 @@ namespace SioForgeCAD.Functions
 {
     public static class RENAMELAYERS
     {
-        public static void RenameLayersCommand()
+        public static void Rename()
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
@@ -35,11 +35,20 @@ namespace SioForgeCAD.Functions
             {
                 if (!string.Equals(original, transformed, StringComparison.Ordinal))
                 {
-                    SymbolUtilityServices.RepairSymbolName(transformed, false);
+                    try
+                    {
+                        return SymbolUtilityServices.RepairSymbolName(transformed, false);
+                    }
+                    catch
+                    {
+                        return transformed;
+                    }
                 }
                 return original; // Pas de changement, retourner le nom original
             }))
             {
+                //https://help.autodesk.com/view/ACD/2025/FRA/?guid=GUID-28E52FA3-248E-4F65-94DD-7C47BE761D58
+                renameForm.UpdateMessage($"Les noms des calques peuvent contenir jusqu'à 255 caractères et inclure des lettres, des chiffres, des espaces et plusieurs caractères spéciaux.\nIls ne peuvent pas contenir les caractères suivants : { "< > / \\ “ : ; ? * | = ‘".Replace(' ', '\u00A0')}");
                 if (renameForm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     var resultats = renameForm.GetRenamingResults();
