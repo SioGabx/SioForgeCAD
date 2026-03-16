@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
@@ -478,6 +480,49 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+        
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // 1. Récupérer la liste des noms (Calques, Fichiers, etc.)
+            List<string> layerNames = new List<string>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (ObjectId id in lt)
+                {
+                    LayerTableRecord ltr = (LayerTableRecord)tr.GetObject(id, OpenMode.ForRead);
+                    layerNames.Add(ltr.Name);
+                }
+            }
+
+            // 2. Afficher la boîte de dialogue
+            using (var dialog = new ComboboxDialog(layerNames))
+            {
+                // On définit le titre dynamiquement si besoin
+                dialog.Text = "Sélection des calques à traiter";
+
+                if (Application.ShowModalDialog(dialog) == DialogResult.OK)
+                {
+                    // 3. Récupérer les éléments sélectionnés
+                    List<string> selectedLayers = dialog.GetSelectedItems();
+
+                    if (selectedLayers.Count > 0)
+                    {
+                        ed.WriteMessage($"\nVous avez sélectionné {selectedLayers.Count} calque(s) :");
+                        foreach (string name in selectedLayers)
+                        {
+                            ed.WriteMessage($"\n - {name}");
+                        }
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\nAucun élément sélectionné.");
+                    }
+                }
+            }
         }
 
         //TODO : BLKSETTOBYLAYER

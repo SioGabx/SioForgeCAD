@@ -58,8 +58,9 @@ namespace SioForgeCAD.Commun.Drawing
 
                     if (ent is BlockReference br)
                     {
+                        bool IsEntOnLockedLayer = ent.IsEntityOnLockedLayer();
                         Dictionary<string, string> propertiesToCopy = PreserveProperties ? GetPropertiesFromBlock(tr, br) : null;
-
+                        if (IsEntOnLockedLayer) Layers.SetLock(ent.Layer, false);
                         ent.UpgradeOpen();
                         BlockTableRecord ownerBtr = tr.GetObject(br.OwnerId, OpenMode.ForWrite) as BlockTableRecord;
 
@@ -75,6 +76,7 @@ namespace SioForgeCAD.Commun.Drawing
                         {
                             br.Erase(true);
                         }
+                        if (IsEntOnLockedLayer) Layers.SetLock(ent.Layer, true);
                     }
                 }
                 tr.Commit();

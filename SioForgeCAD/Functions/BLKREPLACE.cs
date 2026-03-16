@@ -4,6 +4,8 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -80,7 +82,7 @@ namespace SioForgeCAD.Functions
 
         private static void GetUserOptions(Editor ed, out bool keepAttributes, out bool keepRotation, out bool keepScale)
         {
-            var keepAttributesPrompt = ed.GetOptions("Conserver les attributs dont le nom est identique des blocs À REMPLACER ?", false, "Oui", "Non");
+            var keepAttributesPrompt = ed.GetOptions("Conserver les attributs dont le nom est identique des blocs À REMPLACER ?", false, "Oui", "Non", "Personalisé");
             keepAttributes = keepAttributesPrompt.StringResult != "Non";
             var keepRotationPrompt = ed.GetOptions("Conserver la rotation des blocs À REMPLACER ?", false, "Oui", "Non");
             keepRotation = keepRotationPrompt.StringResult != "Non";

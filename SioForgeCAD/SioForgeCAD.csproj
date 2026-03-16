@@ -209,6 +209,12 @@
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripJig.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyMiddleGrip.cs" />
+    <Compile Include="Forms\ComboboxDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ComboboxDialog.Designer.cs">
+      <DependentUpon>ComboboxDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\RenameDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -386,7 +392,7 @@
   <ItemGroup>
     <Content Include="icon.ico" />
     <None Include="Ressources\Images\VEGBLOC_ColorRamp_HotToCold.png" />
-    <None Include="Ressources\Images\VEGBLOC_Validate.png" />
+    <None Include="Ressources\Images\Form_Validate.png" />
     <None Include="Ressources\Images\VEGBLOC_ColorRamp_ColdToHot.png" />
     <None Include="Ressources\Images\PICKSTYLETRAY_Icon_OFF.png" />
     <None Include="Ressources\Images\PICKSTYLETRAY_Icon_ON.png" />
