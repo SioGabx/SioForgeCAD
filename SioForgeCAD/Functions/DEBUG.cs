@@ -5,11 +5,9 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -40,7 +38,15 @@ namespace SioForgeCAD.Functions
             }
             Generic.Command("_PLAN", "");
         }
-
+        public static void GETOBJECTBYTESIZE()
+        {
+            var ed = Generic.GetEditor();
+            var x = ed.GetEntity("Selectionnez une entité");
+            if (x.Status == PromptStatus.OK)
+            {
+                Generic.WriteMessage($"Taille : {Files.FormatFileSizeFromByte(x.ObjectId.GetObjectByteSize())}");
+            }
+        }
         public static void TRIANGLECC()
         {
             DelaunayTriangulate.TriangulateCommand();

@@ -14,34 +14,34 @@ namespace SioForgeCAD.Commun
             {
                 // Get the AutoCAD Applications key
                 string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
-            string sAppName = Generic.GetExtensionDLLName();
-            RegistryKey regAcadProdKey = Autodesk.AutoCAD.Runtime.Registry.CurrentUser.OpenSubKey(sProdKey);
-            RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
+                string sAppName = Generic.GetExtensionDLLName();
+                RegistryKey regAcadProdKey = Autodesk.AutoCAD.Runtime.Registry.CurrentUser.OpenSubKey(sProdKey);
+                RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
 
-            // Check to see if the "MyApp" key exists
-            string[] subKeys = regAcadAppKey.GetSubKeyNames();
-            foreach (string subKey in subKeys)
-            {
-                // If the application is already registered, exit
-                if (subKey.Equals(sAppName))
+                // Check to see if the "MyApp" key exists
+                string[] subKeys = regAcadAppKey.GetSubKeyNames();
+                foreach (string subKey in subKeys)
                 {
-                    Generic.WriteMessage($"{sAppName} est déja enregistrée");
-                    regAcadAppKey.Close();
-                    return;
+                    // If the application is already registered, exit
+                    if (subKey.Equals(sAppName))
+                    {
+                        Generic.WriteMessage($"{sAppName} est déja enregistrée");
+                        regAcadAppKey.Close();
+                        return;
+                    }
                 }
-            }
 
-            // Get the location of this module
-            string sAssemblyPath = Generic.GetExtensionDLLLocation();
+                // Get the location of this module
+                string sAssemblyPath = Generic.GetExtensionDLLLocation();
 
-            // Register the application
-            RegistryKey regAppAddInKey = regAcadAppKey.CreateSubKey(sAppName);
-            regAppAddInKey.SetValue("DESCRIPTION", sAppName, RegistryValueKind.String);
-            regAppAddInKey.SetValue("LOADCTRLS", 14, RegistryValueKind.DWord);
-            regAppAddInKey.SetValue("LOADER", sAssemblyPath, RegistryValueKind.String);
-            regAppAddInKey.SetValue("MANAGED", 1, RegistryValueKind.DWord);
-            regAcadAppKey.Close();
-            Generic.WriteMessage($"{sAppName} à été enregistrée avec succès");
+                // Register the application
+                RegistryKey regAppAddInKey = regAcadAppKey.CreateSubKey(sAppName);
+                regAppAddInKey.SetValue("DESCRIPTION", sAppName, RegistryValueKind.String);
+                regAppAddInKey.SetValue("LOADCTRLS", 14, RegistryValueKind.DWord);
+                regAppAddInKey.SetValue("LOADER", sAssemblyPath, RegistryValueKind.String);
+                regAppAddInKey.SetValue("MANAGED", 1, RegistryValueKind.DWord);
+                regAcadAppKey.Close();
+                Generic.WriteMessage($"{sAppName} à été enregistrée avec succès");
             }
             catch (Exception ex)
             {
@@ -49,7 +49,7 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static void Unregister(bool Echo = true)
+        public static void Unregister()
         {
             try
             {

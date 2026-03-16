@@ -78,7 +78,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void GetUserOptions(Editor ed,out bool keepAttributes, out bool keepRotation, out bool keepScale)
+        private static void GetUserOptions(Editor ed, out bool keepAttributes, out bool keepRotation, out bool keepScale)
         {
             var keepAttributesPrompt = ed.GetOptions("Conserver les attributs dont le nom est identique des blocs À REMPLACER ?", false, "Oui", "Non");
             keepAttributes = keepAttributesPrompt.StringResult != "Non";

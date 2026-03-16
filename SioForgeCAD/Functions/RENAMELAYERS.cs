@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Forms;
@@ -48,7 +47,7 @@ namespace SioForgeCAD.Functions
             }))
             {
                 //https://help.autodesk.com/view/ACD/2025/FRA/?guid=GUID-28E52FA3-248E-4F65-94DD-7C47BE761D58
-                renameForm.UpdateMessage($"Les noms des calques peuvent contenir jusqu'à 255 caractères et inclure des lettres, des chiffres, des espaces et plusieurs caractères spéciaux.\nIls ne peuvent pas contenir les caractères suivants : { "< > / \\ “ : ; ? * | = ‘".Replace(' ', '\u00A0')}");
+                renameForm.UpdateMessage($"Les noms des calques peuvent contenir jusqu'à 255 caractères et inclure des lettres, des chiffres, des espaces et plusieurs caractères spéciaux.\nIls ne peuvent pas contenir les caractères suivants : {"< > / \\ “ : ; ? * | = ‘".Replace(' ', '\u00A0')}");
                 if (renameForm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     var resultats = renameForm.GetRenamingResults();

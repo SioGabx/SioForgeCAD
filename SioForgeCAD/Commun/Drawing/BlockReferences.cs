@@ -6,7 +6,6 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace SioForgeCAD.Commun.Drawing
 {

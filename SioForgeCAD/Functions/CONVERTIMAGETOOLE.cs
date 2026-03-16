@@ -118,7 +118,7 @@ namespace SioForgeCAD.Functions
                             }
                         }
 
-                       
+
                         var RasterImagePosition = rasterImage.Position.ToPoint2d();
                         //Paste into the drawing because we cannot create a Ole2Frame in NET
                         Generic.Command("_pasteclip", RasterImagePosition);
@@ -134,7 +134,7 @@ namespace SioForgeCAD.Functions
                         }
                         //Get last created entity of type Ole2Frame
                         var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
-                       
+
                         if (InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) is Ole2Frame InsertedOLE)
                         {
                             //Move OLE at the right position

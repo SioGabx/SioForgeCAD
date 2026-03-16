@@ -1,16 +1,10 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
+﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -48,7 +42,7 @@ namespace SioForgeCAD
                     string[] About = new string[]
                     {
                         $"{Settings.CopyrightMessage}",
-                        $"Build version : {ExAssembly.GetName().Version.ToString()}",
+                        $"Build version : {ExAssembly.GetName().Version}",
                         $"Build date    : {ExAssembly.GetLinkerTime()}",
                         $"Plugin path   : \"{ExAssembly.Location}\""
                     };
@@ -479,37 +473,11 @@ namespace SioForgeCAD
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
-        [CommandMethod("DEBUG", "GetObjectByteSize", CommandFlags.Redraw)]
-        public static void GetObjectByteSize()
-        {
-            var ed = Generic.GetEditor();
-            var x = ed.GetEntity("sel ent");
-            if (x.Status == PromptStatus.OK)
-            {
-                Generic.WriteMessage($"Taille : {Files.FormatFileSizeFromByte(x.ObjectId.GetObjectByteSize())}");
-            }
-        }
-
+       
 
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            List<string> mesFichiers = new List<string> { "Piece_001.dwg", "Piece_002.dwg", "Support_A.dwg" };
-
-            // 2. Instancie le dialogue
-            using (var renameForm = new RenameDialog(mesFichiers, (_, transformed) => transformed))
-            {
-                if (renameForm.ShowDialog() == DialogResult.OK)
-                {
-                    foreach (var item in renameForm.GetRenamingResults())
-                    {
-                        // Ici tu effectues le renommage réel (IO, Base de données, etc.)
-                        Console.WriteLine($"Renommage de {item.Original} vers {item.Renamed}");
-                    }
-
-                    MessageBox.Show("Renommage terminé avec succès !");
-                }
-            }
         }
 
         //TODO : BLKSETTOBYLAYER
@@ -772,12 +740,18 @@ namespace SioForgeCAD
 
          }
         */
+
+        [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.UsePickSet)]
+        public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
+
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
         public static void TRIANGLECC() => Functions.DEBUG.DEBUG_RANDOM_POINTS();
 
-
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS() => Functions.DEBUG.DEBUG_RANDOM_POINTS();
+
+        [CommandMethod("DEBUG", "DRAWRAINBOWLIGNES", CommandFlags.Transparent)]
+        public static void DRAWRAINBOWLIGNES() => Functions.DEBUG.DRAWRAINBOWLIGNES();
 
 #endif
     }

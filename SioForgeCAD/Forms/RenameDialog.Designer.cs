@@ -157,7 +157,7 @@
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(275, 30);
             this.btnApply.Text = "Appliquer le renommage";
-            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
+            this.btnApply.Click += new System.EventHandler(this.BtnApply_Click);
 
             // 
             // RenameDialog

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace SioForgeCAD.Forms
 {
@@ -202,7 +201,7 @@ namespace SioForgeCAD.Forms
         #endregion
 
         // Bouton Valider final
-        private void btnApply_Click(object sender, EventArgs e)
+        private void BtnApply_Click(object sender, EventArgs e)
         {
             var results = _items.Where(x => x.Include && x.Original != x.Renamed).ToList();
             // Ici, exécute ton System.IO.File.Move ou passe la liste à ton contrôleur
