@@ -158,23 +158,31 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static void Rename(string OldName, string NewName)
+        public static bool Rename(string OldName, string NewName)
         {
             Database db = Generic.GetDatabase();
 
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
-                string layerName = OldName;
-                string newLayerName = NewName;
-
-                // Renommer le calque
-                LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
-                if (lt.Has(layerName))
+                try
                 {
-                    LayerTableRecord ltr = (LayerTableRecord)trans.GetObject(lt[layerName], OpenMode.ForWrite);
-                    ltr.Name = newLayerName;
+                    string layerName = OldName;
+                    string newLayerName = NewName;
+
+                    // Renommer le calque
+                    LayerTable lt = (LayerTable)trans.GetObject(db.LayerTableId, OpenMode.ForWrite);
+                    if (lt.Has(layerName))
+                    {
+                        LayerTableRecord ltr = (LayerTableRecord)trans.GetObject(lt[layerName], OpenMode.ForWrite);
+                        ltr.Name = newLayerName;
+                        return true;
+                    }
+                    return false;
                 }
-                trans.Commit();
+                finally
+                {
+                    trans.Commit();
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -175,25 +176,53 @@ namespace SioForgeCAD.Commun.Extensions
 
 
 
+        public static DwgVersion GetDwgVersion(this Database db)
+        {
+            DwgVersion LastSaved = db.LastSavedAsVersion;
+            if (LastSaved == DwgVersion.MC0To0) //Not saved
+            {
+                return DwgVersion.Current;
+            }
+            else
+            {
+                return LastSaved;
+            }
+        }
 
+        public static long GetSize(this Database db, DwgVersion version)
+        {
+            string tempFileName = $"SioForgeCAD_SizeCheck_{DateTime.Now:yyMMdd_HHmmss}_{Guid.NewGuid()}.dwg";
+            string tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
+            long sizeBytes = 0;
 
+            try
+            {
+                db.SaveAs(tempFilePath, version);
 
+                FileInfo fi = new FileInfo(tempFilePath);
+                sizeBytes = fi.Length;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.WriteLine("Erreur GetSize: " + ex.Message);
+            }
+            finally
+            {
+                try
+                {
+                    if (File.Exists(tempFilePath))
+                    {
+                        File.Delete(tempFilePath);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.WriteLine("Impossible de supprimer le temp : " + ex.Message);
+                }
+            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            return sizeBytes;
+        }
 
 
 

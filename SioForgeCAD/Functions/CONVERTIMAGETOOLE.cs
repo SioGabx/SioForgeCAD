@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
 using System;
 using System.Diagnostics;
 using System.Drawing.Imaging;
@@ -108,7 +109,7 @@ namespace SioForgeCAD.Functions
                                 System.Windows.Clipboard.Clear();
                                 System.Windows.Clipboard.SetImage(RotatedImage.ToBitmapSource());
 
-                                Generic.WriteMessage($"Conversion de l'image en OLE. Taille de l'image : {RotatedImage.GetImageFileSize()}");
+                                Generic.WriteMessage($"Conversion de l'image en OLE. Taille de l'image d'origine : {RotatedImage.GetImageFileSize()}");
                             }
                             catch (Autodesk.AutoCAD.Runtime.Exception ex)
                             {
@@ -117,12 +118,14 @@ namespace SioForgeCAD.Functions
                             }
                         }
 
-
-                        var RasterImagePosition = rasterImage.Position;
+                       
+                        var RasterImagePosition = rasterImage.Position.ToPoint2d();
                         //Paste into the drawing because we cannot create a Ole2Frame in NET
                         Generic.Command("_pasteclip", RasterImagePosition);
+
                         try
                         {
+                            //Recover clipboard
                             System.Windows.Clipboard.SetDataObject(ClipBackup);
                         }
                         catch (System.Exception ex)
@@ -131,6 +134,7 @@ namespace SioForgeCAD.Functions
                         }
                         //Get last created entity of type Ole2Frame
                         var InsertedOLEObjectId = db.EntLast(typeof(Ole2Frame));
+                       
                         if (InsertedOLEObjectId.GetDBObject(OpenMode.ForWrite) is Ole2Frame InsertedOLE)
                         {
                             //Move OLE at the right position
@@ -159,7 +163,7 @@ namespace SioForgeCAD.Functions
 
                             var blkRef = blkObj.GetDBObject(OpenMode.ForWrite) as BlockReference;
                             rasterImage.CopyPropertiesTo(blkRef);
-
+                            Generic.WriteMessage($"Taille finale de l'image OLE dans le dessin : {Files.FormatFileSizeFromByte(blkRef.ObjectId.GetObjectByteSize())}");
                             // Nettoyer les objets sources
                             rasterImage.EraseObject();
                             InsertedOLE.EraseObject();

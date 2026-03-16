@@ -1,188 +1,199 @@
-﻿using System;
+﻿using SioForgeCAD.Commun.Extensions;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace SioForgeCAD.Forms
 {
     public partial class RenameDialog : Form
     {
-        public class DataTable
+        // On déplace la classe à l'extérieur ou on la garde ici, 
+        // mais INotifyPropertyChanged est crucial pour le refresh auto du Grid
+        public class RenameItem : INotifyPropertyChanged
         {
-            public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
-
-            // This method is called by the Set accessor of each property.
-            // The CallerMemberName attribute that is applied to the optional propertyName
-            // parameter causes the property name of the caller to be substituted as an argument.
+            public event PropertyChangedEventHandler PropertyChanged;
             private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
+                => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
             private bool include = true;
             private string original = string.Empty;
             private string renamed = string.Empty;
 
-            public DataTable(bool include, string original, string renamed)
+            public RenameItem(string original)
             {
-                Include = include;
-                Original = original;
-                Renamed = renamed;
+                this.original = original;
+                this.renamed = original;
             }
 
             public bool Include
             {
                 get => include;
-                set
-                {
-                    include = value;
-                    NotifyPropertyChanged();
-                }
+                set { include = value; NotifyPropertyChanged(); }
             }
             public string Original
             {
                 get => original;
-                private set
-                {
-                    original = value;
-                    NotifyPropertyChanged();
-                }
+                set { original = value; NotifyPropertyChanged(); }
             }
             public string Renamed
             {
                 get => renamed;
-                private set
-                {
-                    renamed = value;
-                    NotifyPropertyChanged();
-                }
+                set { renamed = value; NotifyPropertyChanged(); }
             }
         }
 
-        readonly BindingList<DataTable> dataTableContent = new BindingList<DataTable>();
+        private readonly BindingList<RenameItem> _items = new BindingList<RenameItem>();
+        private Func<string, string, string> _transformationLogic;
 
-        public RenameDialog()
+        public RenameDialog(List<string> filesToRename, Func<string, string, string> transformationLogic)
         {
             InitializeComponent();
+            SetupDataGridView();
 
+            // Initialisation des données
+            foreach (var file in filesToRename)
+            {
+                _items.Add(new RenameItem(file));
+            }
 
+            dataGridView1.DataSource = new BindingSource(_items, null);
+
+            // Liaison des événements de recherche (Assume que tu as ces noms de controls)
+            txtSearch.TextChanged += (s, e) => ApplyRenameLogic();
+            txtReplace.TextChanged += (s, e) => ApplyRenameLogic();
+            chkUseRegex.CheckedChanged += (s, e) => ApplyRenameLogic();
+            _transformationLogic = transformationLogic;
+        }
+
+        public List<RenameItem> GetRenamingResults()
+        {
+            return _items.Where(x => x.Include && x.Original != x.Renamed).ToList();
+        }
+
+        private void SetupDataGridView()
+        {
             dataGridView1.AutoGenerateColumns = false;
+            dataGridView1.Columns.Clear();
+
             var includeCol = new DataGridViewCheckBoxColumn
             {
                 HeaderText = "",
-                DataPropertyName = nameof(DataTable.Include),
-                Name = nameof(DataTable.Include),
-                Width = 60,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
-
+                DataPropertyName = nameof(RenameItem.Include),
+                Name = nameof(RenameItem.Include),
+                Width = 40,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             };
 
             var originalCol = new DataGridViewTextBoxColumn
             {
                 HeaderText = "Original",
-                DataPropertyName = nameof(DataTable.Original),
-                Name = nameof(DataTable.Original),
-                DefaultCellStyle = new DataGridViewCellStyle()
-                {
-                    ForeColor = Color.FromArgb(100, 100, 100)
-                }
+                DataPropertyName = nameof(RenameItem.Original),
+                ReadOnly = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                DefaultCellStyle = new DataGridViewCellStyle { ForeColor = Color.Gray }
             };
 
             var renamedCol = new DataGridViewTextBoxColumn
             {
                 HeaderText = "Nouveau nom",
-                DataPropertyName = nameof(DataTable.Renamed),
-                Name = nameof(DataTable.Renamed),
+                DataPropertyName = nameof(RenameItem.Renamed),
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
             };
 
-            dataGridView1.Columns.Add(includeCol);
-            dataGridView1.Columns.Add(originalCol);
-            dataGridView1.Columns.Add(renamedCol);
+            dataGridView1.Columns.AddRange(includeCol, originalCol, renamedCol);
 
-
-            headerCheckBox.Size = new Size(18, 18);
-            headerCheckBox.BackColor = Color.Transparent;
-            headerCheckBox.Location = new Point(((includeCol.Width - headerCheckBox.Width) / 2) + 2, 0);
+            // Setup Header Checkbox
+            headerCheckBox.Size = new Size(15, 15);
+            headerCheckBox.BackColor = Color.White;
+            // On la place manuellement : X=13 pour l'aligner avec les autres checkbox, Y=10 pour centrer dans l'en-tête de 35px
+            headerCheckBox.Location = new Point(13, 12);
+            headerCheckBox.Checked = true;
             headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
+            dataGridView1.Controls.Add(headerCheckBox);
 
-            this.dataGridView1.Controls.Add(headerCheckBox);
-
-
-            // Ajoute gestion du clic pour empêcher le déclenchement multiple
-            this.dataGridView1.CellValueChanged += DataGridView1_CellValueChanged;
-            this.dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
-
-
-
-
-
-
-
-            var dataTableContent = new BindingList<DataTable>();
-
-
-            dataTableContent.Add(new DataTable(true, "prout", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-            dataTableContent.Add(new DataTable(true, "caca", "bidule"));
-
-
-
-
-            var source = new BindingSource(dataTableContent, null);
-            dataGridView1.DataSource = source;
-            dataGridView1.AutoGenerateColumns = true;
-
-
+            dataGridView1.CellValueChanged += DataGridView1_CellValueChanged;
+            dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
         }
 
+        /// <summary>
+        /// Logique principale de renommage (Cœur de PowerRename)
+        /// </summary>
+        private void ApplyRenameLogic()
+        {
+            string searchText = txtSearch.Text;
+            string replaceText = txtReplace.Text;
+            bool useRegex = chkUseRegex.Checked;
+
+            foreach (var item in _items)
+            {
+                string ItemRenamed = string.Empty;
+                if (string.IsNullOrEmpty(searchText))
+                {
+                    ItemRenamed = item.Original;
+                    continue;
+                }
+
+                try
+                {
+                    if (useRegex)
+                    {
+                        ItemRenamed = Regex.Replace(item.Original, searchText, replaceText);
+                    }
+                    else
+                    {
+                        // Remplacement simple (insensible à la casse comme Windows)
+                        ItemRenamed = item.Original.Replace(searchText, replaceText);
+                    }
+                }
+                catch
+                {
+                    // En cas de Regex invalide pendant la saisie, on ne fait rien
+                    ItemRenamed = item.Original;
+                }
+                item.Renamed = _transformationLogic(item.Original, ItemRenamed);
+            }
+        }
+
+        #region Events Grid
         private void HeaderCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            var CheckedState = headerCheckBox.Checked;
-            for (int i = 0; i < dataGridView1.RowCount; i++)
-            {
-                dataGridView1.Rows[i].Cells[nameof(DataTable.Include)].Value = CheckedState;
-            }
+            foreach (var item in _items)
+                item.Include = headerCheckBox.Checked;
+
+            dataGridView1.Refresh();
         }
 
         private void DataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == dataGridView1.Columns[nameof(DataTable.Include)].Index)
-                UpdateHeaderCheckBox();
+            if (e.RowIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == nameof(RenameItem.Include))
+                UpdateHeaderCheckBoxState();
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.CurrentCell is DataGridViewCheckBoxCell && dataGridView1.IsCurrentCellDirty)
-            {
-                dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
-            }
+            if (dataGridView1.IsCurrentCellDirty) dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 
-        private void UpdateHeaderCheckBox()
+        private void UpdateHeaderCheckBoxState()
         {
-            bool allChecked = true;
-
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                if (Convert.ToBoolean(row.Cells[nameof(DataTable.Include)].Value) == false)
-                {
-                    allChecked = false;
-                    break;
-                }
-            }
-
             headerCheckBox.CheckedChanged -= HeaderCheckBox_CheckedChanged;
-            headerCheckBox.Checked = allChecked;
+            headerCheckBox.Checked = _items.All(x => x.Include);
             headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
         }
+        #endregion
 
-
+        // Bouton Valider final
+        private void btnApply_Click(object sender, EventArgs e)
+        {
+            var results = _items.Where(x => x.Include && x.Original != x.Renamed).ToList();
+            // Ici, exécute ton System.IO.File.Move ou passe la liste à ton contrôleur
+            this.DialogResult = DialogResult.OK;
+        }
     }
 }

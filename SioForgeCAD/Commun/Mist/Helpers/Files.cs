@@ -6,12 +6,12 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
-        public static string FormatFileSizeFromByte(Int64 ovalue, int odecimalPlaces = 1)
+        public static string FormatFileSizeFromByte(long ovalue, int odecimalPlaces = 1)
         {
             string[] SizeSuffixes =
                   { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
-            string SizeSuffix(Int64 value, int decimalPlaces = 1)
+            string SizeSuffix(long value, int decimalPlaces = 1)
             {
                 if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
 

@@ -54,6 +54,7 @@ namespace SioForgeCAD.Functions
         {
             Generic.SetSystemVariable("UCSFOLLOW", 0); //Generates a plan view whenever you change from one UCS to another.  
             Generic.SetSystemVariable("UCSDETECT", 0);
+            Generic.SetSystemVariable("UCSICON", 3); //Le paramètre de cette variable système est spécifique à une fenêtre ou à une présentation. 3 = Actif: affiche l'icône SCU à l'origine, si possible.  https://help.autodesk.com/view/ACDLT/2026/FRA/?guid=GUID-BCC7DA63-7F74-4F61-8605-E36A010FD33A
             Generic.SetSystemVariable("ROLLOVERTIPS", 0);
             Generic.SetSystemVariable("QPMODE", -1);
             Generic.SetSystemVariable("CETRANSPARENCY", -1); //Sets the transparency level for new objects. -1 (ByLayer) 

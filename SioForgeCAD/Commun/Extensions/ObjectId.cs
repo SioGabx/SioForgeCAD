@@ -2,9 +2,13 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace SioForgeCAD.Commun
@@ -201,6 +205,24 @@ namespace SioForgeCAD.Commun
         {
             if (objId == ObjectId.Null) { return false; }
             return objId.ObjectClass.IsDerivedFrom(RXObject.GetClass(type));
+        }
+        public static long GetObjectByteSize(this ObjectId objId)
+        {
+            Database currentDb = objId.Database;
+            if (currentDb == null || objId == ObjectId.Null) return 0;
+
+            using (Database emptyDb = new Database(true, true))
+            {
+                long emptyDwgByteSize = emptyDb.GetSize(currentDb.GetDwgVersion());
+
+                ObjectId modelSpaceId = SymbolUtilityServices.GetBlockModelSpaceId(emptyDb);
+
+                ObjectIdCollection ids = new ObjectIdCollection { objId };
+                emptyDb.WblockCloneObjects(ids, modelSpaceId, new IdMapping(), DuplicateRecordCloning.Replace, false);
+
+                long finalDwgByteSize = emptyDb.GetSize(currentDb.GetDwgVersion());
+                return Math.Max(finalDwgByteSize - emptyDwgByteSize, 0);
+            }
         }
     }
 }

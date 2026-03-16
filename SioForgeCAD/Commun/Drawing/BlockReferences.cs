@@ -12,7 +12,7 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class BlockReferences
     {
-        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true)
+        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
         {
             Database db = Generic.GetDatabase();
 
@@ -41,41 +41,36 @@ namespace SioForgeCAD.Commun.Drawing
                         }
                     }
                 }
-                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation);
+                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation, PreserveProperties);
                 Purge(OldBlockName);
                 tr.Commit();
             }
         }
-        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true)
+        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-
-                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
                 foreach (ObjectId entid in objectIdCollection)
                 {
                     Entity ent = entid.GetObject(OpenMode.ForRead) as Entity;
 
                     if (ent is BlockReference br)
                     {
+                        Dictionary<string, string> propertiesToCopy = PreserveProperties ? GetPropertiesFromBlock(tr, br) : null;
+
                         ent.UpgradeOpen();
                         BlockTableRecord ownerBtr = tr.GetObject(br.OwnerId, OpenMode.ForWrite) as BlockTableRecord;
-                        var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName, ownerBtr);
-                        var newBr = newBrObjId.GetDBObject() as BlockReference;
 
-                        if (KeepScale)
-                        {
-                            newBr.ScaleFactors = br.ScaleFactors;
-                        }
+                        var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), propertiesToCopy, NewBlockName, ownerBtr);
+                        var newBr = tr.GetObject(newBrObjId, OpenMode.ForWrite) as BlockReference;
 
-                        if (KeepRotation)
-                        {
-                            newBr.Rotation = br.Rotation;
-                        }
+                        if (KeepScale) newBr.ScaleFactors = br.ScaleFactors;
+                        if (KeepRotation) newBr.Rotation = br.Rotation;
                         newBr.Color = br.Color;
+                        newBr.Layer = br.Layer;
 
                         if (!br.IsErased)
                         {
@@ -362,13 +357,11 @@ namespace SioForgeCAD.Commun.Drawing
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
-                BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
                 if (targetSpace == null)
                 {
                     targetSpace = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 }
-                //Create new BlockReference, and link it to our block definition
+
                 using (BlockReference blockRef = GetBlockReference(BlocName, BlocLocation.SCG))
                 {
                     blockRef.Color = db.Cecolor;
@@ -376,77 +369,86 @@ namespace SioForgeCAD.Commun.Drawing
 
                     if (!string.IsNullOrEmpty(Layer) && Layers.CheckIfLayerExist(Layer))
                     {
-                        //Debug.WriteLine($"Layer {Layer} exist : {Layers.CheckIfLayerExist(Layer)}");
                         blockRef.Layer = Layer;
                     }
+
                     targetSpace.AppendEntity(blockRef);
                     tr.AddNewlyCreatedDBObject(blockRef, true);
 
-                    if (AttributesValues != null)
-                    {
-                        //Settings legacy block attributes
-                        foreach (ObjectId id in blockDef)
-                        {
-                            DBObject obj = id.GetObject(OpenMode.ForRead);
-                            AttributeDefinition attDef = obj as AttributeDefinition;
-                            if (attDef?.Constant == false)
-                            {
-                                string PropertyName = attDef.Tag.ToUpperInvariant();
-                                if (AttributesValues.ContainsKey(PropertyName))
-                                {
-                                    if (AttributesValues.TryGetValue(PropertyName, out string AttributeDefinitionTargetValue))
-                                    {
-                                        using (AttributeReference attRef = new AttributeReference())
-                                        {
-                                            attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
-                                            attRef.TextString = AttributeDefinitionTargetValue;
-                                            blockRef.AttributeCollection.AppendAttribute(attRef);
-                                            tr.AddNewlyCreatedDBObject(attRef, true);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    ApplyPropertiesToBlock(tr, blockRef, AttributesValues);
 
-                        //Settings Dynamic block attributes
-                        var BlocPropertyCollection = blockRef.DynamicBlockReferencePropertyCollection;
-                        var BlocPropertyCollectionDictionnary = new Dictionary<string, DynamicBlockReferenceProperty>();
-                        foreach (DynamicBlockReferenceProperty BlocProperty in BlocPropertyCollection.OfType<DynamicBlockReferenceProperty>())
-                        {
-                            string PropertyName = BlocProperty.PropertyName.ToUpperInvariant();
-                            if (BlocPropertyCollectionDictionnary.ContainsKey(PropertyName))
-                            {
-                                continue;
-                            }
-                            BlocPropertyCollectionDictionnary.Add(PropertyName, BlocProperty);
-                        }
-                        foreach (string ValueKey in AttributesValues.Keys)
-                        {
-                            if (BlocPropertyCollectionDictionnary.TryGetValue(ValueKey, out DynamicBlockReferenceProperty BlocProperty))
-                            {
-                                object Value = ConvertValueToProperty((DwgDataType)BlocProperty.PropertyTypeCode, AttributesValues[ValueKey]);
-                                if (Value is int ValueAsInt)
-                                {
-                                    BlocProperty.Value = (short)ValueAsInt;
-                                }
-
-                                if (Value is double ValueAsDbl)
-                                {
-                                    BlocProperty.Value = ValueAsDbl;
-                                }
-
-                                if (Value is string ValueAsStr)
-                                {
-                                    BlocProperty.Value = ValueAsStr;
-                                }
-                            }
-                        }
-                    }
                     tr.Commit();
                     return blockRef.ObjectId;
                 }
             }
         }
+
+        private static Dictionary<string, string> GetPropertiesFromBlock(Transaction tr, BlockReference br)
+        {
+            Dictionary<string, string> propertiesToCopy = new Dictionary<string, string>();
+
+            foreach (ObjectId attId in br.AttributeCollection)
+            {
+                var attRef = tr.GetObject(attId, OpenMode.ForRead) as AttributeReference;
+                if (attRef != null)
+                {
+                    propertiesToCopy[attRef.Tag.ToUpperInvariant()] = attRef.TextString;
+                }
+            }
+
+            if (br.IsDynamicBlock)
+            {
+                foreach (DynamicBlockReferenceProperty prop in br.DynamicBlockReferencePropertyCollection)
+                {
+                    propertiesToCopy[prop.PropertyName.ToUpperInvariant()] = prop.Value.ToString();
+                }
+            }
+            return propertiesToCopy;
+        }
+        private static void ApplyPropertiesToBlock(Transaction tr, BlockReference blockRef, Dictionary<string, string> attributesValues)
+        {
+            if (attributesValues == null || attributesValues.Count == 0) return;
+
+            // A. Mise à jour des Attributs Classiques
+            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead);
+            foreach (ObjectId id in btr)
+            {
+                if (id.GetObject(OpenMode.ForRead) is AttributeDefinition attDef && !attDef.Constant)
+                {
+                    string tag = attDef.Tag.ToUpperInvariant();
+                    if (attributesValues.TryGetValue(tag, out string val))
+                    {
+                        using (AttributeReference attRef = new AttributeReference())
+                        {
+                            attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
+                            attRef.TextString = val;
+                            blockRef.AttributeCollection.AppendAttribute(attRef);
+                            tr.AddNewlyCreatedDBObject(attRef, true);
+                        }
+                    }
+                }
+            }
+
+            // B. Mise à jour des Propriétés Dynamiques
+            if (blockRef.IsDynamicBlock)
+            {
+                var dynProps = blockRef.DynamicBlockReferencePropertyCollection;
+                foreach (DynamicBlockReferenceProperty prop in dynProps)
+                {
+                    string propName = prop.PropertyName.ToUpperInvariant();
+                    if (attributesValues.TryGetValue(propName, out string stringValue) && !prop.ReadOnly)
+                    {
+                        try
+                        {
+                            object convertedValue = ConvertValueToProperty((DwgDataType)prop.PropertyTypeCode, stringValue);
+                            prop.Value = convertedValue;
+                        }
+                        catch { /* Log ou ignore si conversion impossible */ }
+                    }
+                }
+            }
+        }
+
 
         public static ObjectId InsertFromNameImportIfNotExist(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
         {

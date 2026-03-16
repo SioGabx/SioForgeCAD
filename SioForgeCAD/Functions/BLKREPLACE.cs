@@ -39,13 +39,13 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                GetUserOptions(ed, out bool keepRotation, out bool keepScale);
+                GetUserOptions(ed, out bool keepAttributes, out bool keepRotation, out bool keepScale);
                 var BackupLayer = Layers.GetCurrentLayerName();
                 Layers.SetCurrentLayerName(BlkToReplacement.Layer);
                 foreach (var OldBlockNewRenameName in OldBlockNewRenameNames)
                 {
 
-                    BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, keepScale, keepRotation);
+                    BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, keepScale, keepRotation, keepAttributes);
                 }
                 Layers.SetCurrentLayerName(BackupLayer);
                 tr.Commit();
@@ -66,23 +66,25 @@ namespace SioForgeCAD.Functions
                 string NewBlockName = BlkToReplacement.GetBlockReferenceName();
                 List<string> OldBlockNewRenameNames = new List<string>();
 
-                GetUserOptions(ed, out bool keepRotation, out bool keepScale);
+                GetUserOptions(ed, out bool keepAttributes, out bool keepRotation, out bool keepScale);
 
                 var BackupLayer = Layers.GetCurrentLayerName();
                 Layers.SetCurrentLayerName(BlkToReplacement.Layer);
 
-                BlockReferences.ReplaceAllBlockReference(BlkToReplaceObjIds.ToObjectIdCollection(), NewBlockName, keepScale, keepRotation);
+                BlockReferences.ReplaceAllBlockReference(BlkToReplaceObjIds.ToObjectIdCollection(), NewBlockName, keepScale, keepRotation, keepAttributes);
                 Layers.SetCurrentLayerName(BackupLayer);
 
                 tr.Commit();
             }
         }
 
-        private static void GetUserOptions(Editor ed, out bool keepRotation, out bool keepScale)
+        private static void GetUserOptions(Editor ed,out bool keepAttributes, out bool keepRotation, out bool keepScale)
         {
-            var keepRotationPrompt = ed.GetOptions("Conserver la rotation du bloc À REMPLACER ?", false, "Oui", "Non");
+            var keepAttributesPrompt = ed.GetOptions("Conserver les attributs dont le nom est identique des blocs À REMPLACER ?", false, "Oui", "Non");
+            keepAttributes = keepAttributesPrompt.StringResult != "Non";
+            var keepRotationPrompt = ed.GetOptions("Conserver la rotation des blocs À REMPLACER ?", false, "Oui", "Non");
             keepRotation = keepRotationPrompt.StringResult != "Non";
-            var keepScalePrompt = ed.GetOptions("Conserver l’échelle du bloc À REMPLACER ?", false, "Oui", "Non");
+            var keepScalePrompt = ed.GetOptions("Conserver l’échelle des blocs À REMPLACER ?", false, "Oui", "Non");
             keepScale = keepRotationPrompt.StringResult != "Non";
         }
     }

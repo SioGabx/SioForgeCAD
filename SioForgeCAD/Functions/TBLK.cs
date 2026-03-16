@@ -127,16 +127,6 @@ namespace SioForgeCAD.Functions
             ed.SetImpliedSelection(selectionSet.ToArray());
         }
 
-
-
-
-
-
-
-
-
-
-
         // --- Méthode commune pour récupérer les blocs sélectionnés ---
         private static List<BlkInstance> AcquireSelectedBlocks(out IEnumerable<ObjectId> selectionSet)
         {

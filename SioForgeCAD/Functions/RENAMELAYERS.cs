@@ -5,39 +5,39 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
-    public static class RENAMELAYOUT
+    public static class RENAMELAYERS
     {
-        public static void Rename()
+        public static void RenameLayersCommand()
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
-            List<string> layoutNames = new List<string>();
+            List<string> layerNames = new List<string>();
 
-            // 1. Récupération des noms de Layouts (hors Model)
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                DBDictionary layoutDict = (DBDictionary)tr.GetObject(db.LayoutDictionaryId, OpenMode.ForRead);
-
-                foreach (DBDictionaryEntry entry in layoutDict)
+                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (ObjectId id in lt)
                 {
-                    // On ignore l'onglet "Model"
-                    if (entry.Key.Equals("Model", StringComparison.OrdinalIgnoreCase))
+                    LayerTableRecord ltr = (LayerTableRecord)tr.GetObject(id, OpenMode.ForRead);
+                    //Ignorer les calques système non renommables
+                    if (ltr.Name == "0" || ltr.Name.Equals("Defpoints", StringComparison.OrdinalIgnoreCase))
                         continue;
-
-                    layoutNames.Add(entry.Key);
+                    layerNames.Add(ltr.Name);
                 }
                 tr.Commit();
             }
 
-            // Note : Les layouts acceptent presque tout, mais RepairSymbolName assure la compatibilité
-            using (var renameForm = new RenameDialog(layoutNames, (_, transformed) =>
+            using (var renameForm = new RenameDialog(layerNames, (original, transformed) =>
             {
-                return SymbolUtilityServices.RepairSymbolName(transformed, false);
+                if (!string.Equals(original, transformed, StringComparison.Ordinal))
+                {
+                    SymbolUtilityServices.RepairSymbolName(transformed, false);
+                }
+                return original; // Pas de changement, retourner le nom original
             }))
             {
                 if (renameForm.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -46,22 +46,24 @@ namespace SioForgeCAD.Functions
 
                     using (Transaction tr = db.TransactionManager.StartTransaction())
                     {
-                        LayoutManager lm = LayoutManager.Current;
+                        LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
 
                         foreach (var item in resultats)
                         {
                             if (string.Equals(item.Original, item.Renamed, StringComparison.Ordinal))
-                                continue;
-
-                            try
                             {
-                                lm.RenameLayout(item.Original, item.Renamed);
+                                continue;
+                            }
+
+                            if (Layers.Rename(item.Original, item.Renamed))
+                            {
                                 ed.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
                             }
-                            catch (System.Exception ex)
+                            else
                             {
-                                ed.WriteMessage($"Erreur lors du renommage de {item.Original} : {ex.Message}");
+                                ed.WriteMessage($"Erreur sur {item.Original}");
                             }
+
                         }
                         tr.Commit();
                     }

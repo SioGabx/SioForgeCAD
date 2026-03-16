@@ -7,10 +7,12 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -453,10 +455,13 @@ namespace SioForgeCAD
         public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN() => Functions.COPYGEOMETRYTOCLIPBOARDFORINDESIGN.Copy();
 
         [CommandMethod("SIOFORGECAD", "RENAMELAYOUT", CommandFlags.UsePickSet)]
-        public static void RENAMELAYOUT() => Functions.RENAMELAYOUT.Replace();
+        public static void RENAMELAYOUT() => Functions.RENAMELAYOUT.Rename();
 
         [CommandMethod("SIOFORGECAD", "MANAGEDRAWINGCUSTOMPROPERTIES", CommandFlags.UsePickSet)]
         public static void MANAGEDRAWINGCUSTOMPROPERTIES() => Functions.MANAGEDRAWINGCUSTOMPROPERTIES.Menu();
+
+        [CommandMethod("SIOFORGECAD", "MANAGESCU", CommandFlags.UsePickSet)]
+        public static void MANAGESCU() => Functions.MANAGESCU.Menu();
 
         [CommandMethod("SIOFORGECAD", "IMPORT3DGEOMETRYFROMOBJFILE", CommandFlags.UsePickSet)]
         public static void IMPORT3DGEOMETRYFROMOBJFILE() => Functions.IMPORT3DGEOMETRYFROMOBJFILE.Menu();
@@ -471,10 +476,37 @@ namespace SioForgeCAD
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
+        [CommandMethod("DEBUG", "GetObjectByteSize", CommandFlags.Redraw)]
+        public static void GetObjectByteSize()
+        {
+            var ed = Generic.GetEditor();
+            var x = ed.GetEntity("sel ent");
+            if (x.Status == PromptStatus.OK)
+            {
+                Generic.WriteMessage($"Taille : {Files.FormatFileSizeFromByte(x.ObjectId.GetObjectByteSize())}");
+            }
+        }
+
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            List<string> mesFichiers = new List<string> { "Piece_001.dwg", "Piece_002.dwg", "Support_A.dwg" };
 
+            // 2. Instancie le dialogue
+            using (var renameForm = new RenameDialog(mesFichiers, (_, transformed) => transformed))
+            {
+                if (renameForm.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (var item in renameForm.GetRenamingResults())
+                    {
+                        // Ici tu effectues le renommage réel (IO, Base de données, etc.)
+                        Console.WriteLine($"Renommage de {item.Original} vers {item.Renamed}");
+                    }
+
+                    MessageBox.Show("Renommage terminé avec succès !");
+                }
+            }
         }
 
         //TODO : BLKSETTOBYLAYER

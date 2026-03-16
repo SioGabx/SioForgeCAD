@@ -28,6 +28,14 @@ namespace SioForgeCAD.Forms
             isCellBeingEdited = false;
         }
 
+        private void UpdateRowsHeight()
+        {
+            foreach (DataGridViewRow row in DataGrid.Rows)
+            {
+                row.Height = DataGrid.RowTemplate.Height;
+            }
+        }
+
         private void DataGrid_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             if (!isCellBeingEdited)
@@ -166,6 +174,8 @@ namespace SioForgeCAD.Forms
                 newRow.CreateCells(DataGrid);
                 DataGrid.Rows.Insert(DataGrid.Rows.Count - 1, newRow);
             }
+
+            UpdateRowsHeight();
             int[] rows = Enumerable.Range(startRow, Math.Min(DataGrid.RowCount, clipboardData.Length)).ToArray();
 
             List<int> columns = new List<int>();
@@ -280,7 +290,7 @@ namespace SioForgeCAD.Forms
 
         private void VegblocDialog_Load(object sender, EventArgs e)
         {
-            const int defaultNumberOfRows = 20;
+            const int defaultNumberOfRows = 50;
 
             // Add empty rows to the DataGridView
             for (int i = 0; i < defaultNumberOfRows; i++)
@@ -288,8 +298,10 @@ namespace SioForgeCAD.Forms
                 DataGrid.Rows.Add();
             }
 
+
             const int ResizeMargin = 2;
             this.Width = DataGrid.PreferredSize.Width + ResizeMargin;
+            UpdateRowsHeight();
         }
 
         private void ValidateButton_Click(object sender, EventArgs e)
