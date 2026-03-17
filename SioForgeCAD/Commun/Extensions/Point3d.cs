@@ -35,6 +35,12 @@ namespace SioForgeCAD.Commun.Extensions
             return dBPoint.AddToDrawing(ColorIndex);
         }
 
+        public static ObjectId AddToDrawing(this Point2d pnt, int? ColorIndex = null)
+        {
+            DBPoint dBPoint = new DBPoint(new Point3d(pnt.X, pnt.Y, 0));
+            return dBPoint.AddToDrawing(ColorIndex);
+        }
+
         public static Point3d GetMiddlePoint(this Point3d A, Point3d B)
         {
             double X = (A.X + B.X) / 2;

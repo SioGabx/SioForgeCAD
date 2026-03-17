@@ -2,7 +2,9 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
@@ -70,56 +72,29 @@ namespace SioForgeCAD.Functions
                         rightSegments[i] = new CircularArc2d(arcSeg.Center, rRight, arcSeg.StartAngle, arcSeg.EndAngle, arcSeg.ReferenceVector, arcSeg.IsClockWise);
                     }
                 }
+                // 3 & 4. Calcul dynamique des sommets et chanfreins (remplace les tableaux par des listes)
+                List<Point2d> finalLeftPoints = new List<Point2d>();
+                List<double> leftBulges = new List<double>();
 
-                Point2d[] finalLeftPoints = new Point2d[numVertices];
-                Point2d[] finalRightPoints = new Point2d[numVertices];
+                List<Point2d> finalRightPoints = new List<Point2d>();
+                List<double> rightBulges = new List<double>();
 
-                // 3. Calcul mathématique des VRAIS sommets par intersection infinie
-                for (int i = 0; i < numVertices; i++)
-                {
-                    Point2d originalVertex = sourcePoly.GetPoint2dAt(i);
-
-                    if (!isClosed && i == 0)
-                    {
-                        finalLeftPoints[i] = leftSegments[0].StartPoint;
-                        finalRightPoints[i] = rightSegments[0].StartPoint;
-                    }
-                    else if (!isClosed && i == numVertices - 1)
-                    {
-                        finalLeftPoints[i] = leftSegments[numSegments - 1].EndPoint;
-                        finalRightPoints[i] = rightSegments[numSegments - 1].EndPoint;
-                    }
-                    else
-                    {
-                        int prevIndex = (i == 0) ? numSegments - 1 : i - 1;
-                        int currIndex = i;
-
-                        finalLeftPoints[i] = GetOffsetIntersection(leftSegments[prevIndex], leftSegments[currIndex], originalVertex);
-                        finalRightPoints[i] = GetOffsetIntersection(rightSegments[prevIndex], rightSegments[currIndex], originalVertex);
-                    }
-                }
-
-                double[] leftBulges = new double[numSegments];
-                double[] rightBulges = new double[numSegments];
-
-                // 4. Calcul des nouveaux Bulges pour les arcs modifiés
                 for (int i = 0; i < numSegments; i++)
                 {
-                    Point2d leftStart = finalLeftPoints[i];
-                    Point2d leftEnd = finalLeftPoints[(i + 1) % numVertices];
+                    Point2d origVertexStart = sourcePoly.GetPoint2dAt(i);
+                    Point2d origVertexEnd = sourcePoly.GetPoint2dAt((i + 1) % numVertices);
 
-                    Point2d rightStart = finalRightPoints[i];
-                    Point2d rightEnd = finalRightPoints[(i + 1) % numVertices];
+                    // Traitement Côté Gauche
+                    ProcessOffsetSide(i, numSegments, isClosed, leftSegments, origVertexStart, origVertexEnd, finalLeftPoints, leftBulges);
 
-                    if (leftSegments[i] is CircularArc2d arcLeft)
-                        leftBulges[i] = GetRecalculatedBulge(arcLeft, leftStart, leftEnd);
-                    else
-                        leftBulges[i] = 0.0;
+                    // Traitement Côté Droit
+                    ProcessOffsetSide(i, numSegments, isClosed, rightSegments, origVertexStart, origVertexEnd, finalRightPoints, rightBulges);
+                }
 
-                    if (rightSegments[i] is CircularArc2d arcRight)
-                        rightBulges[i] = GetRecalculatedBulge(arcRight, rightStart, rightEnd);
-                    else
-                        rightBulges[i] = 0.0;
+                if (!isClosed)
+                {
+                    finalLeftPoints.Add(leftSegments[numSegments - 1].EndPoint);
+                    finalRightPoints.Add(rightSegments[numSegments - 1].EndPoint);
                 }
 
                 // 5. Dessin du/des contour(s)
@@ -130,19 +105,18 @@ namespace SioForgeCAD.Functions
                     Polyline outline = new Polyline();
                     int vertexIndex = 0;
 
-                    // Côté gauche (du début à la fin)
-                    for (int i = 0; i < numVertices; i++)
+                    // Côté gauche
+                    for (int j = 0; j < finalLeftPoints.Count; j++)
                     {
-                        double b = (i < numSegments) ? leftBulges[i] : 0.0;
-                        outline.AddVertexAt(vertexIndex++, finalLeftPoints[i], b, 0, 0);
+                        double b = (j < leftBulges.Count) ? leftBulges[j] : 0.0;
+                        outline.AddVertexAt(vertexIndex++, finalLeftPoints[j], b, 0, 0);
                     }
 
-                    // Côté droit (de la fin au début pour fermer la boucle)
-                    for (int i = numVertices - 1; i >= 0; i--)
+                    // Côté droit (inversé)
+                    for (int j = finalRightPoints.Count - 1; j >= 0; j--)
                     {
-                        // Le bulge est inversé et correspond au segment précédent quand on recule
-                        double b = (i > 0) ? -rightBulges[i - 1] : 0.0;
-                        outline.AddVertexAt(vertexIndex++, finalRightPoints[i], b, 0, 0);
+                        double b = (j > 0) ? -rightBulges[j - 1] : 0.0;
+                        outline.AddVertexAt(vertexIndex++, finalRightPoints[j], b, 0, 0);
                     }
 
                     outline.Closed = true;
@@ -151,15 +125,14 @@ namespace SioForgeCAD.Functions
                 }
                 else
                 {
-                    // Polyligne fermée : génère 2 polylignes (Intérieur / Extérieur)
                     Polyline polyLeft = new Polyline();
                     Polyline polyRight = new Polyline();
 
-                    for (int i = 0; i < numVertices; i++)
-                    {
-                        polyLeft.AddVertexAt(i, finalLeftPoints[i], leftBulges[i], 0, 0);
-                        polyRight.AddVertexAt(i, finalRightPoints[i], rightBulges[i], 0, 0);
-                    }
+                    for (int j = 0; j < finalLeftPoints.Count; j++)
+                        polyLeft.AddVertexAt(j, finalLeftPoints[j], leftBulges[j], 0, 0);
+
+                    for (int j = 0; j < finalRightPoints.Count; j++)
+                        polyRight.AddVertexAt(j, finalRightPoints[j], rightBulges[j], 0, 0);
 
                     polyLeft.Closed = true;
                     polyRight.Closed = true;
@@ -171,28 +144,83 @@ namespace SioForgeCAD.Functions
                 }
 
                 tr.Commit();
-                ed.WriteMessage("\nCommande POLYOUTILINE terminée. Contour généré avec succès !");
+                ed.WriteMessage("\nCommande POLYOUTLINE terminée. Contour généré avec succès !");
             }
         }
 
         // --- MÉTHODES UTILITAIRES MATHÉMATIQUES ---
-
-        private static Point2d GetOffsetIntersection(Curve2d seg1, Curve2d seg2, Point2d originalVertex)
+        private static void ProcessOffsetSide(
+            int i, int numSegments, bool isClosed, Curve2d[] segments,
+            Point2d origVertexStart, Point2d origVertexEnd,
+            List<Point2d> points, List<double> bulges)
         {
-            // Conversion en droite infinie ou cercle complet pour garantir l'intersection
+            Curve2d currSeg = segments[i];
+            Curve2d prevSeg = (i == 0 && !isClosed) ? null : segments[(i == 0) ? numSegments - 1 : i - 1];
+            Curve2d nextSeg = (i == numSegments - 1 && !isClosed) ? null : segments[(i == numSegments - 1) ? 0 : i + 1];
+
+            // 1. Point de départ exact du segment
+            Point2d startPt;
+            if (prevSeg == null)
+            {
+                startPt = currSeg.StartPoint;
+            }
+            else
+            {
+                Point2d? interPrev = GetExactIntersection(prevSeg, currSeg, origVertexStart);
+                startPt = interPrev ?? currSeg.StartPoint;
+            }
+
+            // 2. Point de fin exact du segment
+            Point2d endPt;
+            if (nextSeg == null)
+            {
+                endPt = currSeg.EndPoint;
+            }
+            else
+            {
+                Point2d? interNext = GetExactIntersection(currSeg, nextSeg, origVertexEnd);
+                endPt = interNext ?? currSeg.EndPoint;
+            }
+
+            // 3. Ajout du point et calcul du bulge standard
+            points.Add(startPt);
+            double bulge = 0.0;
+            if (currSeg is CircularArc2d arc)
+            {
+                bulge = GetRecalculatedBulge(arc, startPt, endPt);
+            }
+            bulges.Add(bulge);
+
+            // 4. FIX CRITIQUE : SI AUCUNE INTERSECTION (Création du Chanfrein)
+            if (nextSeg != null)
+            {
+                Point2d? interNext = GetExactIntersection(currSeg, nextSeg, origVertexEnd);
+                if (!interNext.HasValue)
+                {
+                    // On ajoute le bout flottant du segment actuel comme nouveau sommet.
+                    // On lui force un Bulge de 0.0, ce qui crée une belle ligne droite 
+                    // jusqu'au début du segment suivant !
+                    points.Add(endPt);
+                    endPt.AddToDrawing();
+
+                    bulges.Add(0.0);
+                }
+            }
+        }
+
+        private static Point2d? GetExactIntersection(Curve2d seg1, Curve2d seg2, Point2d originalVertex)
+        {
             Curve2d unb1 = seg1 is LineSegment2d ls1 ? (Curve2d)new Line2d(ls1.StartPoint, ls1.Direction) :
                            seg1 is CircularArc2d ca1 ? new CircularArc2d(ca1.Center, ca1.Radius, 0, Math.PI * 2, ca1.ReferenceVector, false) : seg1;
 
             Curve2d unb2 = seg2 is LineSegment2d ls2 ? (Curve2d)new Line2d(ls2.StartPoint, ls2.Direction) :
                            seg2 is CircularArc2d ca2 ? new CircularArc2d(ca2.Center, ca2.Radius, 0, Math.PI * 2, ca2.ReferenceVector, false) : seg2;
 
-            // Utilisation de la classe mathématique pour intercepter les géométries 2D
             CurveCurveIntersector2d intersector = new CurveCurveIntersector2d(unb1, unb2);
             int numInters = intersector.NumberOfIntersectionPoints;
 
             if (numInters > 0)
             {
-                // Sélection de l'intersection la plus proche de l'angle d'origine
                 Point2d bestPoint = intersector.GetIntersectionPoint(0);
                 double minDistance = bestPoint.GetDistanceTo(originalVertex);
 
@@ -209,10 +237,11 @@ namespace SioForgeCAD.Functions
                 return bestPoint;
             }
 
-            // FIX CRITIQUE : Fallback plus sûr en cas de tolérance tangente ratée (moyenne des deux points)
-            return new Point2d((seg1.EndPoint.X + seg2.StartPoint.X) / 2.0, (seg1.EndPoint.Y + seg2.StartPoint.Y) / 2.0);
+            // Retourne null au lieu de forcer une moyenne : 
+            // cela signale au système qu'il doit tirer un chanfrein droit.
+            return null;
         }
-
+    
         private static double GetRecalculatedBulge(CircularArc2d arc, Point2d newStart, Point2d newEnd)
         {
             // 1. Calcul des angles absolus par rapport au centre pour les NOUVEAUX points
