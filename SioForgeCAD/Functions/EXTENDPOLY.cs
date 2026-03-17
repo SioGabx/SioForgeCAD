@@ -260,21 +260,6 @@ namespace SioForgeCAD.Functions
             return double.NaN;
         }
 
-        public class GetPointTransientNoColorChange : GetPointTransient
-        {
-            public GetPointTransientNoColorChange(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction)
-            {
-            }
-
-            public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
-            {
-                return Drawable.Color;
-            }
-
-            public override Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)
-            {
-                return Drawable.Transparency;
-            }
-        }
+        
     }
 }

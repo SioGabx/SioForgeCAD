@@ -468,6 +468,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "UPDATEXREFS", CommandFlags.UsePickSet)]
         public static void UPDATEXREFS() => Functions.UPDATEXREFS.Update();
 
+        [CommandMethod("SIOFORGECAD", "ARRAYCOPY", CommandFlags.UsePickSet)]
+        public static void ARRAYCOPY() => Functions.ARRAYCOPY.Execute();
+
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html
@@ -484,7 +487,9 @@ namespace SioForgeCAD
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
-
+            var o = new PromptDoubleOptions("\nEntrez un nombre : ");
+            o.Keywords.Add("Option1");
+            var z = ed.GetDouble("\nEntrez un nombre : ");
             // 1. Récupérer la liste des noms (Calques, Fichiers, etc.)
             List<string> layerNames = new List<string>();
 

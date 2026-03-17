@@ -146,6 +146,8 @@
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
     <Compile Include="Commun\Extensions\Viewports.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\GetDoubleTransient.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\GetStringTransient.cs" />
     <Compile Include="Commun\Mist\Geometry\Arythmetique.cs" />
     <Compile Include="Commun\Mist\Helpers\Clipboard.cs" />
     <Compile Include="Commun\Mist\Helpers\Colors.cs" />
@@ -240,6 +242,7 @@
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Functions\AREATOFIELD.cs" />
+    <Compile Include="Functions\ARRAYCOPY.cs" />
     <Compile Include="Functions\BATTLEMENTS.cs" />
     <Compile Include="Functions\BLKADDENTITIES.cs" />
     <Compile Include="Functions\BLKAPPLYSCALE.cs" />

@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -328,6 +329,23 @@ namespace SioForgeCAD.Commun
         {
             Matrix3d mat = Matrix3d.Displacement(currentPoint.GetVectorTo(destinationPoint));
             entity.TransformBy(mat);
+        }
+    }
+
+    public class GetPointTransientNoColorChange : GetPointTransient
+    {
+        public GetPointTransientNoColorChange(DBObjectCollection Entities, Func<Points, Dictionary<string, string>> UpdateFunction) : base(Entities, UpdateFunction)
+        {
+        }
+
+        public override Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
+        {
+            return Drawable.Color;
+        }
+
+        public override Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)
+        {
+            return Drawable.Transparency;
         }
     }
 }
