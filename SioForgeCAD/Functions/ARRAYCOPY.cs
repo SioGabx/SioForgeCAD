@@ -16,134 +16,157 @@ namespace SioForgeCAD.Functions
 
         public static void Execute()
         {
-            Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
-            Database db = doc.Database;
+            Database db = Generic.GetDocument().Database;
 
-            // 1. Sélection des objets
+            // 1. Sélection et Point de base
             var selRes = ed.GetSelectionRedraw("Sélectionnez les objets à copier :", true, false, null);
             if (selRes.Status != PromptStatus.OK) return;
 
-            // 2. Point de base
             var ptRes = ed.GetPoint("\nPoint de base : ");
             if (ptRes.Status != PromptStatus.OK) return;
             Point3d basePt = ptRes.Value;
 
-            DBObjectCollection sourceEntities = new DBObjectCollection();
-            DBObjectCollection previewEntities = new DBObjectCollection();
+            // 2. Extraction des entités sources (Clonage initial)
+            DBObjectCollection sourceEntities = GetSourceEntities(db, selRes.Value.GetObjectIds());
+            if (sourceEntities.Count == 0) return;
 
+            try
+            {
+                // 3. Point cible
+                if (!TryGetTargetPoint(basePt, sourceEntities, out Point3d targetPt)) return;
+
+                Vector3d vec = basePt.GetVectorTo(targetPt);
+                if (vec.IsZeroLength())
+                {
+                    Generic.WriteMessage("Le point de copie doit être différent du point de base.");
+                    return;
+                }
+
+                // 4. Boucle interactive "Sketchup"
+                DBObjectCollection finalEntities = RunInteractiveArrayLoop(sourceEntities, vec);
+
+                // 5. Validation finale (Injection dans la DB)
+                if (finalEntities != null && finalEntities.Count > 0)
+                {
+                    CommitEntities(db, finalEntities);
+                    finalEntities.DeepDispose(); // Nettoyage après écriture
+                }
+            }
+            finally
+            {
+                sourceEntities?.DeepDispose();
+            }
+        }
+
+
+
+        private static DBObjectCollection GetSourceEntities(Database db, ObjectId[] ids)
+        {
+            var source = new DBObjectCollection();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                foreach (ObjectId id in selRes.Value.GetObjectIds())
+                foreach (ObjectId id in ids)
                 {
                     if (tr.GetObject(id, OpenMode.ForRead) is Entity ent)
                     {
-                        sourceEntities.Add(ent.Clone() as Entity);
-                        previewEntities.Add(ent.Clone() as Entity);
+                        source.Add(ent.Clone() as Entity);
                     }
                 }
                 tr.Commit();
             }
+            return source;
+        }
 
-            // Déplacement des entités de preview à l'origine pour le Transient
-            var TransMatrix = Matrix3d.Displacement(basePt.GetVectorTo(Point3d.Origin));
-            foreach (Entity entprev in previewEntities)
+        private static bool TryGetTargetPoint(Point3d basePt, DBObjectCollection sourceEntities, out Point3d targetPt)
+        {
+            targetPt = Point3d.Origin;
+
+            // Préparation de l'aperçu au point 0,0,0 pour le Transient
+            DBObjectCollection previewEntities = sourceEntities.DeepClone();
+            var transMatrix = Matrix3d.Displacement(basePt.GetVectorTo(Point3d.Origin));
+            foreach (Entity ent in previewEntities)
             {
-                entprev.TransformBy(TransMatrix);
+                ent.TransformBy(transMatrix);
             }
 
-            // 3. Point de copie (avec aperçu dynamique de la première copie)
-            Point3d targetPt;
-            // Assure-toi que GetPointTransientNoColorChange est bien accessible ici
             using (var getPtTrans = new GetPointTransientNoColorChange(previewEntities, null))
             {
                 var targetRes = getPtTrans.GetPoint("Point de copie : ", basePt.ToPoints(), false);
                 if (targetRes.PromptPointResult.Status != PromptStatus.OK)
                 {
-                    sourceEntities.DeepDispose();
-                    return;
+                    return false;
                 }
+
                 targetPt = targetRes.PromptPointResult.Value;
+                return true;
             }
+        }
 
-            Vector3d vec = basePt.GetVectorTo(targetPt);
-            if (vec.IsZeroLength())
-            {
-                Generic.WriteMessage("\nLe point de copie doit être différent du point de base.");
-                sourceEntities.DeepDispose();
-                return;
-            }
-
-            // 4. Initialisation du mode d'Array "Sketchup"
+        private static DBObjectCollection RunInteractiveArrayLoop(DBObjectCollection sourceEntities, Vector3d vec)
+        {
             string currentMode = MODE_MULTIPLY;
             int currentCount = 1;
+            DBObjectCollection previewEntities = null;
 
+            while (true)
+            {
+                // Nettoyage de l'ancien aperçu
+                previewEntities?.DeepDispose();
+
+                // Génération du nouveau
+                previewEntities = GenerateArrayEntities(sourceEntities, vec, currentMode, currentCount);
+
+                using (var getStringTrans = new GetStringTransientNoColorChange(null))
+                {
+                    getStringTrans.SetStaticEntities = previewEntities;
+
+                    string msg = $"Tapez une distance, ou *5, /3, ou Entrée pour valider\u2028Copie {currentMode} x{currentCount} | Dist: {vec.Length:F2} : ";
+    
+                    var strRes = getStringTrans.GetString(msg);
+
+                    if (strRes.Status == PromptStatus.None || string.IsNullOrWhiteSpace(strRes.StringResult))
+                    {
+                        return previewEntities.DeepClone();
+                    }
+
+                    // Annulation
+                    if (strRes.Status != PromptStatus.OK)
+                    {
+                        Generic.WriteMessage("Opération annulée.");
+                        previewEntities?.DeepDispose();
+                        return null;
+                    }
+
+                    // Mise à jour des paramètres selon la saisie
+                    string input = strRes.StringResult.Trim().ToUpper();
+                    ParseSketchUpInput(input, ref currentMode, ref currentCount, ref vec);
+                }
+            }
+        }
+
+        private static void CommitEntities(Database db, DBObjectCollection entities)
+        {
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
-                previewEntities = new DBObjectCollection(); // Reset pour la boucle interactive
-
-                while (true)
-                {
-                    // Nettoyage de la RAM : on supprime l'ancien aperçu avant d'en créer un nouveau
-                    previewEntities.DeepDispose();
-
-                    // Génération des nouvelles entités clonées en fonction du vecteur et de la quantité
-                    previewEntities = GenerateArrayEntities(sourceEntities, vec, currentMode, currentCount);
-
-                    // 5. Affichage dynamique et demande de la valeur
-                    using (var getStringTrans = new GetStringTransientNoColorChange(null))
-                    {
-                        getStringTrans.SetStaticEntities = previewEntities; //GetStringTransientNoColorChange dispose ents after using
-
-                        string msg = $"Copie [{currentMode} x{currentCount} | Dist: {vec.Length:F2}] (Tapez une distance, ou *5, /3, ou Entrée pour valider) : ";
-                        var strRes = getStringTrans.GetString(msg);
-
-                        // Validation de la commande si l'utilisateur appuie sur Espace ou Entrée à vide
-                        if (strRes.Status == PromptStatus.None || string.IsNullOrWhiteSpace(strRes.StringResult))
-                        {
-                            sourceEntities.DeepDispose();
-                            sourceEntities = new DBObjectCollection();
-                            previewEntities.ToList().ForEach(t => sourceEntities.Add(t.Clone() as Entity));
-                            break;
-                        }
-                        else if (strRes.Status != PromptStatus.OK)
-                        {
-                            Generic.WriteMessage("\nOpération annulée.");
-                            sourceEntities.DeepDispose();
-                            previewEntities.DeepDispose();
-                            return;
-                        }
-
-                        // Analyse de la chaîne tapée
-                        string input = strRes.StringResult.Trim().ToUpper();
-                        ParseSketchUpInput(input, ref currentMode, ref currentCount, ref vec);
-                    }
-                }
-
-                // 6. Validation finale : Écriture dans la base de données
-                // On injecte simplement la dernière collection previewEntities validée
-                foreach (Entity ent in sourceEntities)
+                foreach (Entity ent in entities)
                 {
                     btr.AppendEntity(ent);
                     tr.AddNewlyCreatedDBObject(ent, true);
                 }
-
-                // Nettoyage des objets sources
-                sourceEntities.DeepDispose();
-
                 tr.Commit();
             }
         }
 
-        // --- Méthodes utilitaires ---
+
+
 
         private static DBObjectCollection GenerateArrayEntities(DBObjectCollection source, Vector3d vec, string mode, int count)
         {
-            DBObjectCollection result = new DBObjectCollection();
+            var result = new DBObjectCollection();
             foreach (Entity ent in source)
             {
-                // i commence à 1 pour ne pas superposer une copie sur l'original au point de base
                 for (int i = 1; i <= count; i++)
                 {
                     Entity clone = ent.Clone() as Entity;
@@ -160,14 +183,13 @@ namespace SioForgeCAD.Functions
             string numberPart = input;
             bool isArrayModifier = false;
 
-            // Détection des modificateurs d'Array
-            if (input.StartsWith("*") || input.StartsWith("X"))
+            if (input.StartsWith("*") || input.StartsWith("X", StringComparison.InvariantCultureIgnoreCase))
             {
                 currentMode = MODE_MULTIPLY;
                 numberPart = input.Substring(1);
                 isArrayModifier = true;
             }
-            else if (input.EndsWith("X"))
+            else if (input.EndsWith("X", StringComparison.InvariantCultureIgnoreCase))
             {
                 currentMode = MODE_MULTIPLY;
                 numberPart = input.Substring(0, input.Length - 1);
@@ -180,38 +202,35 @@ namespace SioForgeCAD.Functions
                 isArrayModifier = true;
             }
 
-            // Remplacement sécurisé de la virgule pour la culture Invariant
             numberPart = numberPart.Replace(',', '.');
 
             if (isArrayModifier)
             {
                 if (int.TryParse(numberPart, out int parsedCount))
                 {
-                    currentCount = Math.Max(1, parsedCount); // Empêche le 0 ou négatif
+                    currentCount = Math.Max(1, parsedCount);
                 }
                 else
                 {
-                    Generic.WriteMessage($"\nQuantité invalide ignorée : {input}");
+                    Generic.WriteMessage($"Quantité invalide ignorée : {input}");
                 }
             }
             else
             {
-                // S'il n'y a pas de modificateur, on considère que c'est une nouvelle distance
                 if (double.TryParse(numberPart, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedDistance))
                 {
                     if (parsedDistance > 0)
                     {
-                        // On redéfinit la longueur du vecteur en conservant sa direction
                         vec = vec.GetNormal() * parsedDistance;
                     }
                     else
                     {
-                        Generic.WriteMessage("\nLa distance doit être strictement positive.");
+                        Generic.WriteMessage("La distance doit être strictement positive.");
                     }
                 }
                 else
                 {
-                    Generic.WriteMessage($"\nSaisie invalide ignorée : {input}");
+                    Generic.WriteMessage($"Saisie invalide ignorée : {input}");
                 }
             }
         }

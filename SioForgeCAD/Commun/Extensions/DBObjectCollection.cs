@@ -28,6 +28,16 @@ namespace SioForgeCAD.Commun.Extensions
             collection.Dispose();
         }
 
+        public static DBObjectCollection DeepClone(this DBObjectCollection collection)
+        {
+            var clones = new DBObjectCollection();
+            foreach (Entity ent in collection)
+            {
+                clones.Add(ent.Clone() as Entity);
+            }
+            return clones;
+        }
+
         public static DBObject[] ToArray(this DBObjectCollection collection)
         {
             DBObject[] list = new DBObject[collection.Count];

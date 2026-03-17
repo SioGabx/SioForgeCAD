@@ -20,7 +20,7 @@ namespace SioForgeCAD.Commun
             return Drawable.Transparency;
         }
 
-        public PromptResult GetString(string Message)
+        public PromptResult GetString(string Message, string DefaultValue = "")
         {
             var ed = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
 
@@ -28,7 +28,9 @@ namespace SioForgeCAD.Commun
 
             PromptStringOptions options = new PromptStringOptions("\n" + Message)
             {
-                AllowSpaces = false // Empêche les espaces pour forcer la validation sur "Espace"
+                AllowSpaces = false, // Empêche les espaces pour forcer la validation sur "Espace"
+                DefaultValue = DefaultValue,
+                UseDefaultValue = !string.IsNullOrEmpty(DefaultValue),
             };
 
             PromptResult result = ed.GetString(options);
