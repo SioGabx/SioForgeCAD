@@ -442,7 +442,11 @@ namespace SioForgeCAD.Commun.Drawing
                         try
                         {
                             object convertedValue = ConvertValueToProperty((DwgDataType)prop.PropertyTypeCode, stringValue);
-                            prop.Value = convertedValue;
+                            if (convertedValue != null)
+                            {
+                                prop.Value = convertedValue;
+
+                            }
                         }
                         catch { /* Log ou ignore si conversion impossible */ }
                     }

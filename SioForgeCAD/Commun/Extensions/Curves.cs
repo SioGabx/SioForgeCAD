@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -311,6 +313,68 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return null;
         }
+
+
+        public static Curve ConvertToCurve(this Curve2d curve2d)
+        {
+            switch (curve2d)
+            {
+                case LineSegment2d lineSegment:
+                    var line = new Line(
+                        new Point3d(lineSegment.StartPoint.X, lineSegment.StartPoint.Y, 0.0),
+                        new Point3d(lineSegment.EndPoint.X, lineSegment.EndPoint.Y, 0.0));
+                    return line;
+                case CircularArc2d circularArc:
+                    if (circularArc.EndPoint.IsEqualTo(circularArc.StartPoint) && circularArc.Radius > 0)
+                    {
+                        return new Circle(circularArc.Center.ToPoint3d(), Vector3d.YAxis, circularArc.Radius);
+                    }
+                    else
+                    {
+                        double startAngle = circularArc.IsClockWise ? -circularArc.EndAngle : circularArc.StartAngle;
+                        double endAngle = circularArc.IsClockWise ? -circularArc.StartAngle : circularArc.EndAngle;
+                        return new Arc(
+                            new Point3d(circularArc.Center.X, circularArc.Center.Y, 0.0),
+                            circularArc.Radius,
+                            circularArc.ReferenceVector.Angle + startAngle,
+                            circularArc.ReferenceVector.Angle + endAngle);
+                    }
+                case EllipticalArc2d ellipticalArc:
+                    double ratio = ellipticalArc.MinorRadius / ellipticalArc.MajorRadius;
+                    double startParam = ellipticalArc.IsClockWise ? -ellipticalArc.EndAngle : ellipticalArc.StartAngle;
+                    double endParam = ellipticalArc.IsClockWise ? -ellipticalArc.StartAngle : ellipticalArc.EndAngle;
+                    var ellipse = new Ellipse(
+                        new Point3d(ellipticalArc.Center.X, ellipticalArc.Center.Y, 0.0),
+                        Vector3d.ZAxis,
+                        new Vector3d(ellipticalArc.MajorAxis.X, ellipticalArc.MajorAxis.Y, 0.0) * ellipticalArc.MajorRadius,
+                        ratio,
+                        Math.Atan2(Math.Sin(startParam) * ellipticalArc.MinorRadius, Math.Cos(startParam) * ellipticalArc.MajorRadius),
+                        Math.Atan2(Math.Sin(endParam) * ellipticalArc.MinorRadius, Math.Cos(endParam) * ellipticalArc.MajorRadius));
+                    return ellipse;
+                case NurbCurve2d nurbCurve:
+                    var points = new Point3dCollection();
+                    for (int j = 0; j < nurbCurve.NumControlPoints; j++)
+                    {
+                        var pt = nurbCurve.GetControlPointAt(j);
+                        points.Add(new Point3d(pt.X, pt.Y, 0.0));
+                    }
+                    var knots = new DoubleCollection();
+                    for (int k = 0; k < nurbCurve.NumKnots; k++)
+                    {
+                        knots.Add(nurbCurve.GetKnotAt(k));
+                    }
+                    var weights = new DoubleCollection();
+                    for (int l = 0; l < nurbCurve.NumWeights; l++)
+                    {
+                        weights.Add(nurbCurve.GetWeightAt(l));
+                    }
+                    var spline = new Spline(nurbCurve.Degree, nurbCurve.IsRational, nurbCurve.IsClosed(), false, points, knots, weights, 0.0, 0.0);
+                    return spline;
+
+            }
+            return null;
+        }
+
 
         public static List<Curve> JoinMerge(this IEnumerable<Curve> Curves)
         {

@@ -2,15 +2,226 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {
     internal class POLYOUTLINE
     {
         public static void CreatePolyOutline()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // 1. Sélection de la polyligne
+            PromptEntityOptions peo = new PromptEntityOptions("\nSélectionnez une polyligne avec une épaisseur globale : ");
+            peo.SetRejectMessage("\nVeuillez sélectionner une LwPolyline.");
+            peo.AddAllowedClass(typeof(Polyline), true);
+
+            PromptEntityResult per = ed.GetEntity(peo);
+            if (per.Status != PromptStatus.OK) return;
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                Polyline sourcePoly = tr.GetObject(per.ObjectId, OpenMode.ForRead) as Polyline;
+
+                if (sourcePoly.ConstantWidth <= 0)
+                {
+                    ed.WriteMessage("\nLa polyligne sélectionnée n'a pas d'épaisseur globale. Annulation.");
+                    return;
+                }
+                (Curve2d[] leftSegments, Curve2d[] rightSegments) = GetOffsetCurves(sourcePoly);
+
+                //foreach (var item in leftSegments)
+                //{
+                //    item.ConvertToCurve().AddToDrawing();
+                //}
+                //foreach (var item in rightSegments)
+                //{
+                //    item.ConvertToCurve().AddToDrawing();
+                //}
+
+                TrimAndExtendOffsetCurves(leftSegments, sourcePoly);
+                TrimAndExtendOffsetCurves(rightSegments, sourcePoly);
+                foreach (var item in leftSegments)
+                {
+                    item.ConvertToCurve().AddToDrawing();
+                }
+                foreach (var item in rightSegments)
+                {
+                    item.ConvertToCurve().AddToDrawing();
+                }
+
+                tr.Commit();
+            }
+        }
+
+
+        public static (Curve2d[] leftSegments, Curve2d[] rightSegments) GetOffsetCurves(Polyline sourcePoly)
+        {
+
+            double halfWidth = sourcePoly.ConstantWidth / 2.0;
+            bool isClosed = sourcePoly.Closed;
+
+            int numSegments = sourcePoly.NumberOfVertices - (isClosed ? 0 : 1);
+            int numVertices = isClosed ? numSegments : numSegments + 1;
+
+            Curve2d[] leftSegments = new Curve2d[numSegments];
+            Curve2d[] rightSegments = new Curve2d[numSegments];
+
+            // 2. Récupérer les segments géométriques mathématiques et les décaler
+            for (int i = 0; i < numSegments; i++)
+            {
+                SegmentType type = sourcePoly.GetSegmentType(i);
+
+                if (type == SegmentType.Line)
+                {
+                    LineSegment2d lineSeg = sourcePoly.GetLineSegment2dAt(i);
+                    Vector2d normal = (lineSeg.EndPoint - lineSeg.StartPoint).GetNormal().GetPerpendicularVector();
+
+                    leftSegments[i] = new LineSegment2d(lineSeg.StartPoint + normal * halfWidth, lineSeg.EndPoint + normal * halfWidth);
+                    rightSegments[i] = new LineSegment2d(lineSeg.StartPoint - normal * halfWidth, lineSeg.EndPoint - normal * halfWidth);
+                }
+                else if (type == SegmentType.Arc)
+                {
+                    CircularArc2d arcSeg = sourcePoly.GetArcSegment2dAt(i);
+
+                    // FIX CRITIQUE : Les signes d'offset des arcs sont corrigés
+                    double offsetLeft = arcSeg.IsClockWise ? halfWidth : -halfWidth;
+                    double offsetRight = arcSeg.IsClockWise ? -halfWidth : halfWidth;
+
+                    // FIX CRITIQUE : Empêcher le rayon de devenir négatif ou nul (ce qui crashe la géométrie)
+                    double rLeft = Math.Max(1e-6, arcSeg.Radius + offsetLeft);
+                    double rRight = Math.Max(1e-6, arcSeg.Radius + offsetRight);
+
+                    leftSegments[i] = new CircularArc2d(arcSeg.Center, rLeft, arcSeg.StartAngle, arcSeg.EndAngle, arcSeg.ReferenceVector, arcSeg.IsClockWise);
+                    rightSegments[i] = new CircularArc2d(arcSeg.Center, rRight, arcSeg.StartAngle, arcSeg.EndAngle, arcSeg.ReferenceVector, arcSeg.IsClockWise);
+                }
+            }
+            return (leftSegments, rightSegments);
+        }
+
+        public static void TrimAndExtendOffsetCurves(Curve2d[] curves, Polyline sourcePoly)
+        {
+            if (curves == null || curves.Length < 2) return;
+
+            for (int i = 0; i < curves.Length; i++)
+            {
+                Curve2d c1 = curves[i % curves.Length];
+                Curve2d c2 = curves[(i + 1) % curves.Length];
+
+                Point2d origVertexStart = sourcePoly.GetPoint2dAt(i);
+                Point2d origVertexEnd = sourcePoly.GetPoint2dAt((i + 1) % curves.Length);
+                origVertexStart.AddToDrawing(5);
+                origVertexEnd.AddToDrawing(5);
+                GetExactIntersection2(c1, c2, origVertexEnd);
+            }
+        }
+
+        private static Point2d? GetExactIntersection2(Curve2d seg1, Curve2d seg2, Point2d originalVertex)
+        {
+            Curve2d unb1 = seg1 is LineSegment2d ls1 ? (Curve2d)new Line2d(ls1.StartPoint, ls1.Direction) :
+                           seg1 is CircularArc2d ca1 ? new CircularArc2d(ca1.Center, ca1.Radius, 0, Math.PI * 2, ca1.ReferenceVector, false) : seg1;
+
+            Curve2d unb2 = seg2 is LineSegment2d ls2 ? (Curve2d)new Line2d(ls2.StartPoint, ls2.Direction) :
+                           seg2 is CircularArc2d ca2 ? new CircularArc2d(ca2.Center, ca2.Radius, 0, Math.PI * 2, ca2.ReferenceVector, false) : seg2;
+
+            CurveCurveIntersector2d intersector = new CurveCurveIntersector2d(unb1, unb2);
+            int numInters = intersector.NumberOfIntersectionPoints;
+
+            if (numInters > 0)
+            {
+                Point2d bestPoint = intersector.GetIntersectionPoint(0);
+                double minDistance = bestPoint.GetDistanceTo(originalVertex);
+
+                for (int i = 0; i < numInters; i++)
+                {
+                    Point2d currentPt = intersector.GetIntersectionPoint(i);
+                    currentPt.AddToDrawing();
+
+                    new Line(currentPt.ToPoint3d(), originalVertex.ToPoint3d()).AddToDrawing(5);
+                    double dist = currentPt.GetDistanceTo(originalVertex);
+                    if (dist < minDistance)
+                    {
+                        minDistance = dist;
+                        bestPoint = currentPt;
+                    }
+                }
+                return bestPoint;
+            }
+
+            // Retourne null au lieu de forcer une moyenne : 
+            // cela signale au système qu'il doit tirer un chanfrein droit.
+            return null;
+        }
+
+
+
+
+        private static void AdjustCurveEnd(Curve2d curve, Point2d pt)
+        {
+            if (curve is LineSegment2d line)
+            {
+                line.Set(line.StartPoint, pt); // Met à jour le point de fin
+            }
+            else if (curve is CircularArc2d arc)
+            {
+                Vector2d vec = pt - arc.Center;
+                arc.SetAngles(arc.StartAngle, vec.Angle);
+            }
+        }
+
+        private static void AdjustCurveStart(Curve2d curve, Point2d pt)
+        {
+            if (curve is LineSegment2d line)
+            {
+                line.Set(pt, line.EndPoint); // Met à jour le point de départ
+            }
+            else if (curve is CircularArc2d arc)
+            {
+                Vector2d vec = pt - arc.Center;
+                arc.SetAngles(vec.Angle, arc.EndAngle);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public static void CreatePolyOutlineOld()
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -72,6 +283,9 @@ namespace SioForgeCAD.Functions
                         rightSegments[i] = new CircularArc2d(arcSeg.Center, rRight, arcSeg.StartAngle, arcSeg.EndAngle, arcSeg.ReferenceVector, arcSeg.IsClockWise);
                     }
                 }
+
+
+
                 // 3 & 4. Calcul dynamique des sommets et chanfreins (remplace les tableaux par des listes)
                 List<Point2d> finalLeftPoints = new List<Point2d>();
                 List<double> leftBulges = new List<double>();
@@ -241,7 +455,7 @@ namespace SioForgeCAD.Functions
             // cela signale au système qu'il doit tirer un chanfrein droit.
             return null;
         }
-    
+
         private static double GetRecalculatedBulge(CircularArc2d arc, Point2d newStart, Point2d newEnd)
         {
             // 1. Calcul des angles absolus par rapport au centre pour les NOUVEAUX points
