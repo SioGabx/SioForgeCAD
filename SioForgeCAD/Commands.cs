@@ -468,8 +468,11 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "UPDATEXREFS", CommandFlags.UsePickSet)]
         public static void UPDATEXREFS() => Functions.UPDATEXREFS.Update();
 
-        [CommandMethod("SIOFORGECAD", "ARRAYCOPY", CommandFlags.UsePickSet)]
+        [CommandMethod("SIOFORGECAD", "ARRAYCOPY", CommandFlags.Redraw)]
         public static void ARRAYCOPY() => Functions.ARRAYCOPY.Execute();
+
+        [CommandMethod("SIOFORGECAD", "POLYOUTLINE", CommandFlags.Redraw)]
+        public static void POLYOUTLINE() => Functions.POLYOUTLINE.CreatePolyOutline();
 
 
 #if DEBUG

@@ -266,6 +266,7 @@
     <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\MANAGESCU.cs" />
+    <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />
     <Compile Include="Functions\COPYGEOMETRYTOCLIPBOARDFORINDESIGN.cs" />
