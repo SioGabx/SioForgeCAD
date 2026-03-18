@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.Windows.Markup.Localizer;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -269,49 +270,65 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return null;
             }
-            //Convert all curves to regular Polyline
-            if (curve is Polyline ProjectionTargetPolyLine)
+            Type PreviousTryConvertCurve = typeof(Polyline);
+            Entity LastCurveConverted = curve;
+            //Avoid while infinite loop, if curve after TryGetPolyligne is the same as the previous, that not working
+            while (LastCurveConverted?.GetType() == PreviousTryConvertCurve)
             {
-                return ProjectionTargetPolyLine.Clone() as Polyline;
+                //Save previous
+                PreviousTryConvertCurve = LastCurveConverted?.GetType();
+                LastCurveConverted.Dispose();
+                //Get new
+                LastCurveConverted = TryGetPolyligne(LastCurveConverted);
             }
-            if (curve is Ellipse ProjectionTargetEllipse)
-            {
-                return ProjectionTargetEllipse.ToPolyline();
-            }
-            if (curve is Helix ProjectionTargetHelix)
-            {
-                var FlattenProjectionTargetHelix = (Helix)ProjectionTargetHelix.Clone();
-                FlattenProjectionTargetHelix.Flatten();
-                Curve Converted = FlattenProjectionTargetHelix.ToPolyline(true, true);
-                return Converted as Polyline;
+            return LastCurveConverted as Polyline;
 
-            }
-            if (curve is Spline ProjectionTargetSpline)
+
+            Entity TryGetPolyligne(Entity curv)
             {
-                Curve Converted = ProjectionTargetSpline.ToPolyline(true, true);
-                return Converted as Polyline;
+                //Convert all curves to regular Polyline
+                if (curv is Polyline ProjectionTargetPolyLine)
+                {
+                    return ProjectionTargetPolyLine.Clone() as Polyline;
+                }
+                if (curv is Ellipse ProjectionTargetEllipse)
+                {
+                    return ProjectionTargetEllipse.ToPolyline();
+                }
+                if (curv is Helix ProjectionTargetHelix)
+                {
+                    var FlattenProjectionTargetHelix = (Helix)ProjectionTargetHelix.Clone();
+                    FlattenProjectionTargetHelix.Flatten();
+                    Curve Converted = FlattenProjectionTargetHelix.ToPolyline(true, true);
+                    return Converted as Polyline;
+
+                }
+                if (curv is Spline ProjectionTargetSpline)
+                {
+                    return ProjectionTargetSpline.ToPolyline(true, true);
+                }
+                if (curv is Line ProjectionTargetLine)
+                {
+                    return ProjectionTargetLine.ToPolyline();
+                }
+                if (curv is Circle ProjectionTargetCircle)
+                {
+                    return ProjectionTargetCircle.ToPolyline();
+                }
+                if (curv is Arc ProjectionTargetArc)
+                {
+                    return ProjectionTargetArc.ToPolyline();
+                }
+                if (curv is Polyline2d ProjectionTargetPolyline2d)
+                {
+                    return ProjectionTargetPolyline2d.ToPolyline();
+                }
+                if (curv is Polyline3d ProjectionTargetPolyline3d)
+                {
+                    return ProjectionTargetPolyline3d.ToPolyline();
+                }
+                return null;
             }
-            if (curve is Line ProjectionTargetLine)
-            {
-                return ProjectionTargetLine.ToPolyline();
-            }
-            if (curve is Circle ProjectionTargetCircle)
-            {
-                return ProjectionTargetCircle.ToPolyline();
-            }
-            if (curve is Arc ProjectionTargetArc)
-            {
-                return ProjectionTargetArc.ToPolyline();
-            }
-            if (curve is Polyline2d ProjectionTargetPolyline2d)
-            {
-                return ProjectionTargetPolyline2d.ToPolyline();
-            }
-            if (curve is Polyline3d ProjectionTargetPolyline3d)
-            {
-                return ProjectionTargetPolyline3d.ToPolyline();
-            }
-            return null;
         }
 
 

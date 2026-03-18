@@ -24,7 +24,7 @@ namespace SioForgeCAD.Functions
 
             if (ActualSelection?.Count > 1)
             {
-                var ListOfUniqueBlockName = new List<string>();
+                var ListOfUniqueBlockName = new List<ObjectId>();
                 foreach (ObjectId SelectedBlocObjectId in ActualSelection.GetObjectIds())
                 {
                     using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -33,10 +33,11 @@ namespace SioForgeCAD.Functions
                         {
                             continue;
                         }
-                        string blockname = OriginalBlk.GetBlockReferenceName();
-                        if (!ListOfUniqueBlockName.Contains(blockname))
+                        var BlkDefId = OriginalBlk.GetBlocDefinitionObjectId();
+                        
+                        if (!ListOfUniqueBlockName.Contains(BlkDefId))
                         {
-                            ListOfUniqueBlockName.Add(blockname);
+                            ListOfUniqueBlockName.Add(BlkDefId);
                         }
                     }
                 }
@@ -64,7 +65,7 @@ namespace SioForgeCAD.Functions
             {
                 SelectedBlocObjectIdArray = ActualSelection.GetObjectIds();
             }
-            var ArealdyRenamedBlock = new List<string>();
+            var ArealdyRenamedBlock = new List<ObjectId>();
             foreach (ObjectId SelectedBlocObjectId in SelectedBlocObjectIdArray)
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -73,11 +74,12 @@ namespace SioForgeCAD.Functions
                     {
                         continue;
                     }
-                    string OldName = OriginalBlk.GetBlockReferenceName();
-                    if (ArealdyRenamedBlock.Contains(OldName))
+                    var BlkDefId = OriginalBlk.GetBlocDefinitionObjectId();
+                    if (ArealdyRenamedBlock.Contains(BlkDefId))
                     {
                         continue;
                     }
+                    string OldName = OriginalBlk.GetBlockReferenceName();
                     // ouvrir la table des blocs en lecture
                     BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                     // vérifier si la table contient bien le bloc à renommer
@@ -106,7 +108,7 @@ namespace SioForgeCAD.Functions
                             try
                             {
                                 btr.Name = NewName;
-                                ArealdyRenamedBlock.Add(NewName);
+                                ArealdyRenamedBlock.Add(BlkDefId);
                                 BlockReferences.Purge(OldName);
                                 break;
                             }

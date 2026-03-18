@@ -42,6 +42,7 @@ namespace SioForgeCAD.Functions
                             var EntAsPolyline = curvEnt.ToPolyline();
                             using (EntAsPolyline)
                             {
+                                if (EntAsPolyline is null) { return; }
                                 var Polygon = EntAsPolyline.ToPolygon((uint)LastConvertNumberOfSegmentPerArc);
                                 curvEnt.CopyPropertiesTo(Polygon);
                                 curvEnt.ReplaceInDrawing(Polygon);

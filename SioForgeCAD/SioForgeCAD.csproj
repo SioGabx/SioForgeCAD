@@ -263,6 +263,7 @@
     <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
     <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
+    <Compile Include="Functions\COPYPAPERTOMODEL.cs" />
     <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\MANAGESCU.cs" />

@@ -65,18 +65,23 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static BlockTableRecord GetBlocDefinition(this BlockReference blkRef, OpenMode OpenMode = OpenMode.ForRead)
         {
+            return blkRef is BlockReference ? (BlockTableRecord)blkRef.GetBlocDefinitionObjectId().GetDBObject(OpenMode) : null;
+        }
+
+        public static ObjectId GetBlocDefinitionObjectId(this BlockReference blkRef)
+        {
             if (blkRef is BlockReference)
             {
                 if (blkRef.IsDynamicBlock)
                 {
-                    return (BlockTableRecord)blkRef.DynamicBlockTableRecord.GetDBObject(OpenMode);
+                    return blkRef.DynamicBlockTableRecord;
                 }
                 else
                 {
-                    return (BlockTableRecord)blkRef.BlockTableRecord.GetDBObject(OpenMode);
+                    return blkRef.BlockTableRecord;
                 }
             }
-            return null;
+            return ObjectId.Null;
         }
 
         public static string GetBlockReferenceName(this BlockReference blockRef)
