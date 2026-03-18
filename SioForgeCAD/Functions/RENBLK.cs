@@ -6,7 +6,6 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
@@ -19,111 +18,123 @@ namespace SioForgeCAD.Functions
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            ObjectId[] SelectedBlocObjectIdArray;
-            var ActualSelection = ed.SelectImplied().Value;
+            var actualSelection = ed.SelectImplied().Value;
+            ObjectId[] selectedBlockIds;
 
-            if (ActualSelection?.Count > 1)
+
+            if (actualSelection == null || actualSelection.Count == 0)
             {
-                var ListOfUniqueBlockName = new List<ObjectId>();
-                foreach (ObjectId SelectedBlocObjectId in ActualSelection.GetObjectIds())
-                {
-                    using (Transaction tr = db.TransactionManager.StartTransaction())
-                    {
-                        if (!(SelectedBlocObjectId.GetEntity() is BlockReference OriginalBlk))
-                        {
-                            continue;
-                        }
-                        var BlkDefId = OriginalBlk.GetBlocDefinitionObjectId();
-                        
-                        if (!ListOfUniqueBlockName.Contains(BlkDefId))
-                        {
-                            ListOfUniqueBlockName.Add(BlkDefId);
-                        }
-                    }
-                }
-                if (ListOfUniqueBlockName.Count > 1)
-                {
-                    var AskContinue = MessageBox.Show($"Vous avez sélectionné un total de {ListOfUniqueBlockName.Count} blocs dont le nom est différent.\nÊtes-vous sûr de vouloir continuer ?", Generic.GetExtensionDLLName(), MessageBoxButtons.YesNo);
-                    if (AskContinue != DialogResult.Yes)
-                    {
-                        return;
-                    }
-                }
-            }
-            if (ActualSelection == null || ActualSelection.Count <= 0)
-            {
-                PromptEntityOptions options = new PromptEntityOptions("Sélectionnez un bloc à renommer : ");
+                PromptEntityOptions options = new PromptEntityOptions("\nSélectionnez un bloc à renommer : ");
+                options.SetRejectMessage("L'objet sélectionné n'est pas un bloc.");
+                options.AddAllowedClass(typeof(BlockReference), exactMatch: false); // Force la sélection d'un bloc
+
                 PromptEntityResult selectionResult = ed.GetEntity(options);
                 if (selectionResult.Status != PromptStatus.OK)
                 {
                     Generic.WriteMessage("Sélection de bloc annulée ou invalide.");
                     return;
                 }
-                SelectedBlocObjectIdArray = new ObjectId[] { selectionResult.ObjectId };
+                selectedBlockIds = new[] { selectionResult.ObjectId };
             }
             else
             {
-                SelectedBlocObjectIdArray = ActualSelection.GetObjectIds();
+                selectedBlockIds = actualSelection.GetObjectIds();
             }
-            var ArealdyRenamedBlock = new List<ObjectId>();
-            foreach (ObjectId SelectedBlocObjectId in SelectedBlocObjectIdArray)
+
+
+            var uniqueBlockNames = new HashSet<string>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                foreach (ObjectId id in selectedBlockIds)
+                {
+                    if (id.GetDBObject(OpenMode.ForRead) is BlockReference blkRef)
+                    {
+                        string blockName = blkRef.GetBlockReferenceName();
+                        uniqueBlockNames.Add(blockName);
+                    }
+                }
+                tr.Commit();
+            }
+
+            if (uniqueBlockNames.Count == 0)
+            {
+                Generic.WriteMessage("Aucun bloc valide n'a été trouvé dans la sélection.");
+                return;
+            }
+
+
+            if (uniqueBlockNames.Count > 1)
+            {
+                var askContinue = MessageBox.Show(
+                    $"Vous avez sélectionné un total de {uniqueBlockNames.Count} blocs dont le nom est différent.\nÊtes-vous sûr de vouloir continuer ?",
+                    Generic.GetExtensionDLLName(),
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (askContinue != DialogResult.Yes) return;
+            }
+
+            foreach (string oldName in uniqueBlockNames)
+            {
+                string newName = null;
+                bool isNameValid = false;
+
+                while (!isNameValid)
+                {
+                    using (Forms.InputDialogBox dialogBox = new Forms.InputDialogBox())
+                    {
+                        dialogBox.SetUserInputPlaceholder(oldName);
+                        dialogBox.SetPrompt($"Indiquez un nouveau nom pour le bloc \"{oldName}\"");
+                        dialogBox.SetCursorAtEnd();
+
+                        if (dialogBox.ShowDialog() != DialogResult.OK)
+                        {
+                            return;
+                        }
+
+                        newName = dialogBox.GetUserInput();
+
+                        if (string.IsNullOrWhiteSpace(newName))
+                        {
+                            Generic.WriteMessage("Impossible de définir le bloc avec un nom vide.");
+                            continue;
+                        }
+
+                        newName = SymbolUtilityServices.RepairSymbolName(newName, false);
+                        isNameValid = true;
+                    }
+                }
+
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    if (!(SelectedBlocObjectId.GetEntity() is BlockReference OriginalBlk))
-                    {
-                        continue;
-                    }
-                    var BlkDefId = OriginalBlk.GetBlocDefinitionObjectId();
-                    if (ArealdyRenamedBlock.Contains(BlkDefId))
-                    {
-                        continue;
-                    }
-                    string OldName = OriginalBlk.GetBlockReferenceName();
-                    // ouvrir la table des blocs en lecture
                     BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                    // vérifier si la table contient bien le bloc à renommer
-                    if (bt.Has(OldName))
-                    {
-                        while (true)
-                        {
-                            Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
-                            dialogBox.SetUserInputPlaceholder(OldName);
-                            dialogBox.SetPrompt($"Indiquez un nouveau nom pour le bloc \"{OldName}\"");
-                            dialogBox.SetCursorAtEnd();
-                            DialogResult dialogResult = dialogBox.ShowDialog();
-                            if (dialogResult != DialogResult.OK)
-                            {
-                                return;
-                            }
-                            string NewName = dialogBox.GetUserInput();
-                            if (string.IsNullOrWhiteSpace(NewName))
-                            {
-                                Generic.WriteMessage("Impossible de definir le block avec un nom vide.\n");
-                                continue;
-                            }
-                            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[OldName], OpenMode.ForWrite);
 
-                            NewName = SymbolUtilityServices.RepairSymbolName(NewName, false);
-                            try
-                            {
-                                btr.Name = NewName;
-                                ArealdyRenamedBlock.Add(BlkDefId);
-                                BlockReferences.Purge(OldName);
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                Generic.WriteMessage($"Impossible de definir le nom spécifié : {ex.Message}\n");
-                            }
+                    if (bt.Has(oldName))
+                    {
+                        try
+                        {
+                            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[oldName], OpenMode.ForWrite);
+                            btr.Name = newName;
+
+                            BlockReferences.Purge(oldName);
+                            tr.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            Generic.WriteMessage($"Impossible de définir le nom spécifié pour '{oldName}' : {ex.Message}");
+                            tr.Abort();
                         }
                     }
-
-                    ed.SetImpliedSelection(Array.Empty<ObjectId>());
-                    ed.SetImpliedSelection(SelectedBlocObjectIdArray.ToArray());
-                    tr.Commit();
+                    else
+                    {
+                        tr.Abort();
+                    }
                 }
             }
+
+            ed.SetImpliedSelection(Array.Empty<ObjectId>());
+            ed.SetImpliedSelection(selectedBlockIds);
         }
     }
 }
