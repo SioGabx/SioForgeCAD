@@ -56,6 +56,10 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return new Vector2d(vector.X, vector.Y);
         }
+        public static Vector3d ToVector3d(this Vector2d vector)
+        {
+            return new Vector3d(vector.X, vector.Y, 0);
+        }
 
         /// <summary>
         /// Gets the dot produc of two Vector2ds.

@@ -331,6 +331,18 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Curve2d Reverse(this Curve2d segment)
+        {
+            if (segment is LineSegment2d line)
+            {
+                return new LineSegment2d(line.EndPoint, line.StartPoint);
+            }
+            else if (segment is CircularArc2d arc)
+            {
+                return segment.GetReverseParameterCurve();
+            }
+            return segment.Clone() as Curve2d;
+        }
 
         public static Curve ConvertToCurve(this Curve2d curve2d)
         {

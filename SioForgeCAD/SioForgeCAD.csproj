@@ -142,6 +142,7 @@
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\Layouts.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
+    <Compile Include="Commun\Extensions\Matrix3d.cs" />
     <Compile Include="Commun\Extensions\Object.cs" />
     <Compile Include="Commun\Extensions\SymbolTable.cs" />
     <Compile Include="Commun\Extensions\ViewportDraw.cs" />
