@@ -190,7 +190,6 @@ namespace SioForgeCAD.Functions
 
                 fullContour.AddRange(reversedRight);
                 fullContour.Add(new LineSegment2d(reversedRight.Last().EndPoint, AjustedLeftSegments.First().StartPoint));
-                //fullContour.Add(new LineSegment2d(AjustedRightSegments.First().StartPoint, AjustedLeftSegments.First().StartPoint));
                 return (CreatePolylineFromSegments(fullContour, true), null);
             }
             else

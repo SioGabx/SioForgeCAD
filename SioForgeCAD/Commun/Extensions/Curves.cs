@@ -270,17 +270,18 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return null;
             }
-            Type PreviousTryConvertCurve = typeof(Polyline);
+            Type PreviousTryConvertCurve;
             Entity LastCurveConverted = curve;
-            //Avoid while infinite loop, if curve after TryGetPolyligne is the same as the previous, that not working
-            while (LastCurveConverted?.GetType() == PreviousTryConvertCurve)
+
+            do //Do once to Clone polyline
             {
                 //Save previous
                 PreviousTryConvertCurve = LastCurveConverted?.GetType();
-                LastCurveConverted.Dispose();
                 //Get new
-                LastCurveConverted = TryGetPolyligne(LastCurveConverted);
-            }
+                var NewCurveConverted = TryGetPolyligne(LastCurveConverted);
+                LastCurveConverted.Dispose();
+                LastCurveConverted = NewCurveConverted;
+            } while (LastCurveConverted?.GetType() != PreviousTryConvertCurve); //Avoid while infinite loop, if curve after TryGetPolyligne is the same as the previous, that not working
             return LastCurveConverted as Polyline;
 
 
