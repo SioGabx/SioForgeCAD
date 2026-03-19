@@ -6,6 +6,7 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Drawing
 {
@@ -363,6 +364,8 @@ namespace SioForgeCAD.Commun.Drawing
                     targetSpace = Generic.GetCurrentSpaceBlockTableRecord(tr);
                 }
 
+                BlockTable bt = db.BlockTableId.GetObject(OpenMode.ForRead) as BlockTable;
+                BlockTableRecord blockDef = bt[BlocName].GetObject(OpenMode.ForRead) as BlockTableRecord;
                 using (BlockReference blockRef = GetBlockReference(BlocName, BlocLocation.SCG))
                 {
                     blockRef.Color = db.Cecolor;
@@ -376,7 +379,7 @@ namespace SioForgeCAD.Commun.Drawing
                     targetSpace.AppendEntity(blockRef);
                     tr.AddNewlyCreatedDBObject(blockRef, true);
 
-                    ApplyPropertiesToBlock(tr, blockRef, AttributesValues);
+                    ApplyPropertiesToBlock(tr, blockDef, blockRef, AttributesValues);
 
                     tr.Commit();
                     return blockRef.ObjectId;
@@ -406,52 +409,69 @@ namespace SioForgeCAD.Commun.Drawing
             }
             return propertiesToCopy;
         }
-        private static void ApplyPropertiesToBlock(Transaction tr, BlockReference blockRef, Dictionary<string, string> attributesValues)
+
+        private static void ApplyPropertiesToBlock(Transaction tr, BlockTableRecord btr, BlockReference blockRef, Dictionary<string, string> attributesValues)
         {
             if (attributesValues == null || attributesValues.Count == 0) return;
 
-            // A. Mise à jour des Attributs Classiques
-            BlockTableRecord btr = (BlockTableRecord)tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead);
+            //Settings legacy block attributes
             foreach (ObjectId id in btr)
             {
-                if (id.GetObject(OpenMode.ForRead) is AttributeDefinition attDef && !attDef.Constant)
+                DBObject obj = id.GetObject(OpenMode.ForRead);
+                AttributeDefinition attDef = obj as AttributeDefinition;
+                if (attDef?.Constant == false)
                 {
-                    string tag = attDef.Tag.ToUpperInvariant();
-                    if (attributesValues.TryGetValue(tag, out string val))
+                    string PropertyName = attDef.Tag.ToUpperInvariant();
+                    if (attributesValues.ContainsKey(PropertyName))
                     {
-                        using (AttributeReference attRef = new AttributeReference())
+                        if (attributesValues.TryGetValue(PropertyName, out string AttributeDefinitionTargetValue))
                         {
-                            attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
-                            attRef.TextString = val;
-                            blockRef.AttributeCollection.AppendAttribute(attRef);
-                            tr.AddNewlyCreatedDBObject(attRef, true);
-                        }
-                    }
-                }
-            }
-
-            // B. Mise à jour des Propriétés Dynamiques
-            if (blockRef.IsDynamicBlock)
-            {
-                var dynProps = blockRef.DynamicBlockReferencePropertyCollection;
-                foreach (DynamicBlockReferenceProperty prop in dynProps)
-                {
-                    string propName = prop.PropertyName.ToUpperInvariant();
-                    if (attributesValues.TryGetValue(propName, out string stringValue) && !prop.ReadOnly)
-                    {
-                        try
-                        {
-                            object convertedValue = ConvertValueToProperty((DwgDataType)prop.PropertyTypeCode, stringValue);
-                            if (convertedValue != null)
+                            using (AttributeReference attRef = new AttributeReference())
                             {
-                                prop.Value = convertedValue;
-
+                                attRef.SetAttributeFromBlock(attDef, blockRef.BlockTransform);
+                                attRef.TextString = AttributeDefinitionTargetValue;
+                                blockRef.AttributeCollection.AppendAttribute(attRef);
+                                tr.AddNewlyCreatedDBObject(attRef, true);
                             }
                         }
-                        catch { /* Log ou ignore si conversion impossible */ }
                     }
                 }
             }
+
+            //Settings Dynamic block attributes
+            var BlocPropertyCollection = blockRef.DynamicBlockReferencePropertyCollection;
+            var BlocPropertyCollectionDictionnary = new Dictionary<string, DynamicBlockReferenceProperty>();
+            foreach (DynamicBlockReferenceProperty BlocProperty in BlocPropertyCollection.OfType<DynamicBlockReferenceProperty>())
+            {
+                string PropertyName = BlocProperty.PropertyName.ToUpperInvariant();
+                if (BlocPropertyCollectionDictionnary.ContainsKey(PropertyName))
+                {
+                    continue;
+                }
+                BlocPropertyCollectionDictionnary.Add(PropertyName, BlocProperty);
+            }
+            foreach (string ValueKey in attributesValues.Keys)
+            {
+                if (BlocPropertyCollectionDictionnary.TryGetValue(ValueKey, out DynamicBlockReferenceProperty BlocProperty))
+                {
+                    object Value = ConvertValueToProperty((DwgDataType)BlocProperty.PropertyTypeCode, attributesValues[ValueKey]);
+                    if (Value is int ValueAsInt)
+                    {
+                        BlocProperty.Value = (short)ValueAsInt;
+                    }
+
+                    if (Value is double ValueAsDbl)
+                    {
+                        BlocProperty.Value = ValueAsDbl;
+                    }
+
+                    if (Value is string ValueAsStr)
+                    {
+                        BlocProperty.Value = ValueAsStr;
+                    }
+                }
+            }
+
         }
 
 
