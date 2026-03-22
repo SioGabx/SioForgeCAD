@@ -1,4 +1,12 @@
-﻿namespace SioForgeCAD.Functions
+﻿using System;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
+
+namespace SioForgeCAD.Functions
 {
-    //TEST
+    public static class TEST
+    {
+
+    }
 }

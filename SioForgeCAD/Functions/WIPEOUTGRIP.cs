@@ -30,22 +30,23 @@ namespace SioForgeCAD.Functions
         {
             if (!Instance.IsEnabled)
             {
-                EnableOverrule(true);
-                Generic.WriteMessage("Grip activé.");
+                if (EnableOverrule(true))
+                    Generic.WriteMessage("Grip activé.");
             }
             else
             {
-                EnableOverrule(false);
-                Generic.WriteMessage("Grip désactivé.");
+                if (EnableOverrule(false)) Generic.WriteMessage("Grip désactivé.");
+
             }
         }
 
-        public static void EnableOverrule(bool enable)
+        public static bool EnableOverrule(bool enable)
         {
-            if (!Instance.IsEnabled)
+            if (Instance.IsEnabled != enable)
             {
-                Instance.EnableOverrule(enable);
+                return Instance.EnableOverrule(enable);
             }
+            return false;
         }
 
         public static bool FilterFunction(Entity Entity)

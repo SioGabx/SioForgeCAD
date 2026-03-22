@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
@@ -36,20 +37,26 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             this._MiddleOnHotGripAction = MiddleOnHotGripAction;
         }
 
-        public void EnableOverrule(bool enable)
+        public bool EnableOverrule(bool enable)
         {
             if (enable)
             {
                 if (_enabled)
                 {
-                    return;
+                    return false;
                 }
 
                 _originalOverruling = Overruling;
-                AddOverrule(GetClass(_targetType), this, false);
+                RXClass PolyTypeRxClass = RXObject.GetClass(_targetType);
+                if (PolyTypeRxClass is null)
+                {
+                    Generic.WriteMessage("Impossible d'ajouter cette overrule car AutoCAD n'as pas encore chargé " + _targetType.Name);
+                    return false;
+                }
+                AddOverrule(PolyTypeRxClass, this, false);
                 SetCustomFilter();
                 var overruled = new PolyGripMenu();
-                GetClass(_targetType).AddX(GetClass(typeof(PolyGripMenu)), overruled);
+                PolyTypeRxClass.AddX(GetClass(typeof(PolyGripMenu)), overruled);
                 Overruling = true;
                 _enabled = true;
             }
@@ -57,13 +64,14 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             {
                 if (!_enabled)
                 {
-                    return;
+                    return false;
                 }
 
                 RemoveOverrule(GetClass(_targetType), this);
                 Overruling = _originalOverruling;
                 _enabled = false;
             }
+            return true;
         }
 
         public override bool IsApplicable(RXObject overruledSubject)
