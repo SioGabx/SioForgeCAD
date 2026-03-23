@@ -2,8 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
-using System;
-using System.Collections.Generic;
 
 namespace SioForgeCAD.Commun
 {

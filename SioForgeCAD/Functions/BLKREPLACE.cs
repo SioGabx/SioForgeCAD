@@ -4,8 +4,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {

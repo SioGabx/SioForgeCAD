@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -71,13 +70,15 @@ namespace SioForgeCAD.Forms
 
             // Checkbox d'en-tête (Tout sélectionner)
             headerCheckBox.Checked = true;
-            headerCheckBox.CheckedChanged += (s, e) => {
+            headerCheckBox.CheckedChanged += (s, e) =>
+            {
                 foreach (var item in _items) item.Include = headerCheckBox.Checked;
                 dataGridView1.Refresh();
             };
             dataGridView1.Controls.Add(headerCheckBox);
 
-            dataGridView1.CurrentCellDirtyStateChanged += (s, e) => {
+            dataGridView1.CurrentCellDirtyStateChanged += (s, e) =>
+            {
                 if (dataGridView1.IsCurrentCellDirty) dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
             };
         }

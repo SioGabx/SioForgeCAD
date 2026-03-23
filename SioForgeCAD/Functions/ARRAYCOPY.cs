@@ -1,11 +1,9 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -122,7 +120,7 @@ namespace SioForgeCAD.Functions
                     getStringTrans.SetStaticEntities = previewEntities;
 
                     string msg = $"Tapez une distance, ou *5, /3, ou Entrée pour valider\u2028Copie {currentMode} x{currentCount} | Dist: {vec.Length:F2} : ";
-    
+
                     var strRes = getStringTrans.GetString(msg);
 
                     if (strRes.Status == PromptStatus.None || string.IsNullOrWhiteSpace(strRes.StringResult))
@@ -158,9 +156,6 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-
-
 
         private static DBObjectCollection GenerateArrayEntities(DBObjectCollection source, Vector3d vec, string mode, int count)
         {

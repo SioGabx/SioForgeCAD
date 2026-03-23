@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule

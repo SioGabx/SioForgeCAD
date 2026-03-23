@@ -5,9 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Windows.Forms;
-using System.Windows.Markup.Localizer;
 
 namespace SioForgeCAD.Commun.Extensions
 {

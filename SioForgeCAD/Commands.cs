@@ -5,8 +5,6 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
-using SioForgeCAD.Functions;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
@@ -500,7 +498,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-        
+
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
@@ -821,5 +819,5 @@ namespace SioForgeCAD
         public static void DRAWRAINBOWLIGNES() => Functions.DEBUG.DRAWRAINBOWLIGNES();
 
 #endif
-        }
     }
+}

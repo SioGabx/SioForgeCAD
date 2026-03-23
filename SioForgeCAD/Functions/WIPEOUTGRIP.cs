@@ -35,8 +35,8 @@ namespace SioForgeCAD.Functions
             }
             else
             {
-                if (EnableOverrule(false)) Generic.WriteMessage("Grip désactivé.");
-
+                if (EnableOverrule(false))
+                    Generic.WriteMessage("Grip désactivé.");
             }
         }
 
