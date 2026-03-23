@@ -475,6 +475,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "POLYOUTLINE", CommandFlags.Redraw)]
         public static void POLYOUTLINE() => Functions.POLYOUTLINE.CreatePolyOutline();
 
+        [CommandMethod("SIOFORGECAD", "LAYOUTFROMRECTANGLE", CommandFlags.Redraw)]
+        public static void LAYOUTFROMRECTANGLE() => Functions.LAYOUTFROMRECTANGLE.Execute();
+
 
 
 #if DEBUG
@@ -483,7 +486,16 @@ namespace SioForgeCAD
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
-       
+
+
+        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
+        public static void TEST2()
+        {
+            //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
+            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
+            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
+        }
+
 
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()

@@ -152,6 +152,7 @@
     <Compile Include="Commun\Mist\Geometry\Arythmetique.cs" />
     <Compile Include="Commun\Mist\Helpers\Clipboard.cs" />
     <Compile Include="Commun\Mist\Helpers\Colors.cs" />
+    <Compile Include="Commun\Mist\Helpers\TextParsers\PC3\Files.cs" />
     <Compile Include="Commun\Mist\UI\CUI.cs" />
     <Compile Include="Commun\Mist\Geometry\DelaunayTriangulate.cs" />
     <Compile Include="Commun\Drawing\BlockReferences.cs" />
@@ -267,6 +268,7 @@
     <Compile Include="Functions\COPYPAPERTOMODEL.cs" />
     <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
+    <Compile Include="Functions\LAYOUTFROMRECTANGLE.cs" />
     <Compile Include="Functions\MANAGESCU.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
