@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
@@ -489,6 +490,11 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
+            //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
+            //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
+
+
+
             //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
             SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
             SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");

@@ -268,7 +268,7 @@ namespace SioForgeCAD.Commun.Extensions
                 return null;
             }
             Type PreviousTryConvertCurve;
-            Entity LastCurveConverted = curve;
+            Entity LastCurveConverted = curve.Clone() as Curve;
 
             do //Do once to Clone polyline
             {
