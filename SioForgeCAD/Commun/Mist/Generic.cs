@@ -55,7 +55,10 @@ namespace SioForgeCAD.Commun
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n");
+            if (ed != null)
+            {
+                ed.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n");
+            }
         }
 
         public static void WriteInfoCenterBalloonMessage(object message)
