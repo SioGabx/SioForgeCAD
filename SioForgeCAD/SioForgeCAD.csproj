@@ -72,6 +72,10 @@
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AcDx.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="AcLayer">
+      <HintPath>C:\Program Files\Autodesk\AutoCAD 2021\AcLayer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="AcMgd, Version=24.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AcMgd.dll</HintPath>
       <Private>False</Private>
@@ -135,6 +139,7 @@
     <Compile Include="Commun\Extensions\CircularArc.cs" />
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
+    <Compile Include="Commun\Extensions\Control.cs" />
     <Compile Include="Commun\Extensions\DBText.cs" />
     <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
@@ -270,6 +275,7 @@
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\LAYOUTFROMRECTANGLE.cs" />
     <Compile Include="Functions\MANAGESCU.cs" />
+    <Compile Include="Functions\NEWLAYERFROMSTRING.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />

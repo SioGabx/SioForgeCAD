@@ -17,11 +17,6 @@ namespace SioForgeCAD
 {
     public class Commands
     {
-        public Commands() { }
-
-
-
-
         //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
@@ -359,6 +354,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYMODELTOPAPER() => Functions.COPYMODELTOPAPER.ChangeSpace();
 
+        [CommandMethod("SIOFORGECAD", "COPYPAPERTOMODEL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
+        public static void COPYPAPERTOMODEL() => Functions.COPYPAPERTOMODEL.ChangeSpace();
+
         [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTOUTLINE", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         //Outline (in model space) the selected viewport
@@ -490,14 +488,19 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
+            Functions.TEST.Testi();
+
+
             //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
             //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
 
 
 
             //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
-            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
-            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
+
+
+            //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
+            // SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
         }
 
 
