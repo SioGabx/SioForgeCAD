@@ -1,15 +1,14 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿/// NB: this code requires a reference to AcLayer.dll
 using Autodesk.AutoCAD.LayerManager;
-using Autodesk.AutoCAD.MacroRecorder;
-using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Diagnostics;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using Control = System.Windows.Forms.Control;
 using MenuItem = Autodesk.AutoCAD.LayerManager.MenuItem;
+
 
 namespace SioForgeCAD.Functions
 {
@@ -19,6 +18,7 @@ namespace SioForgeCAD.Functions
         {
             private static MenuItem AddNewLayer = null;
             private static DataGridView LayerGrid;
+            private static LayerManagerControl LayerManager;
 
             public static void Attach()
             {
@@ -55,22 +55,36 @@ namespace SioForgeCAD.Functions
             {
                 DataGridViewSelectedRowCollection CurrentSelectedRows = LayerGrid.SelectedRows;
                 var CurrentSelectedRow = CurrentSelectedRows[0];
-                string LayerName = string.Empty;
-                foreach (DataGridViewCell Cell in CurrentSelectedRow.Cells)
+                var Data = CurrentSelectedRow.DataBoundItem;
+                string LayerName = Data?.GetType()?.GetProperty("Name")?.GetValue(Data)?.ToString();
+                if (LayerName is null) { return; }
+
+                List<string> Names = new List<string>();
+                foreach (var item in (LayerGrid.DataSource as IEnumerable))
                 {
-                    if (Cell.OwningColumn.Name.Equals("Name", StringComparison.OrdinalIgnoreCase))
-                    {
-                        LayerName = Cell.Value.ToString();
-                        break;
-                    }
+                    var itemName = item?.GetType()?.GetProperty("Name")?.GetValue(item)?.ToString();
+                    if (!(itemName is null)) Names.Add(itemName);
                 }
-                using (Transaction tr = Generic.GetDocument().TransactionManager.StartTransaction())
+                string NewLayerName = LayerName + "_";
+
+                for (int index = 1; Names.Contains(NewLayerName); index++)
                 {
-                    var originalLayer = Layers.GetLayerIdByName(LayerName).GetDBObject() as LayerTableRecord;
-                    Layers.CreateLayer((LayerName + "Copy"), originalLayer.Color, originalLayer.LineWeight, originalLayer.Transparency, originalLayer.IsPlottable);
-                        tr.Commit();
+                    NewLayerName = LayerName + "_" + index;
                 }
 
+                MakeNewLayer(NewLayerName, false);
+            }
+
+            private static void MakeNewLayer(string layerName, bool bMakeFrozen)
+            {
+                Type typeLayerManagerControl = LayerManager.GetType();
+                MethodInfo methodeCreate = typeLayerManagerControl.GetMethod("MakeNewLayer", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (methodeCreate == null)
+                {
+                    return;
+                }
+                object[] arguments = new object[] { layerName, bMakeFrozen };
+                methodeCreate.Invoke(LayerManager, arguments);
             }
 
             private static void SetLayerGrid()
@@ -85,6 +99,7 @@ namespace SioForgeCAD.Functions
                         {
                             if (lmc.FindControlByTypeName("LayerGrid") is DataGridView LayerGridControl)//Autodesk.AutoCAD.LayerManager.LayerGrid;
                             {
+                                LayerManager = lmc;
                                 LayerGrid = LayerGridControl;
                             }
                         }
@@ -121,7 +136,6 @@ namespace SioForgeCAD.Functions
                     Menus?.Add(InsertIndex, AddNewLayer);
                 }
             }
-
         }
     }
 }

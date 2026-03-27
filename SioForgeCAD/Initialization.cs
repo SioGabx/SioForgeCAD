@@ -66,6 +66,9 @@ namespace SioForgeCAD
 
             //Event
             Functions.SAVEFILEATCLOSE.Event.Attach();
+
+            //Override
+            Functions.NEWLAYERDEFAULTNAME.Override();
         }
 
         public void Terminate() { }

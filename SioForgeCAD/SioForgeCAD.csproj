@@ -275,7 +275,8 @@
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\LAYOUTFROMRECTANGLE.cs" />
     <Compile Include="Functions\MANAGESCU.cs" />
-    <Compile Include="Functions\NEWLAYERFROMSTRING.cs" />
+    <Compile Include="Functions\NEWLAYERDEFAULTNAME.cs" />
+    <Compile Include="Functions\NEWLAYERFROMSELECTEDINLAYERMANAGER.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />
