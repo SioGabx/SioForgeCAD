@@ -1,5 +1,10 @@
 ﻿/// NB: this code requires a reference to AcLayer.dll
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.LayerManager;
+using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections;
@@ -22,7 +27,13 @@ namespace SioForgeCAD.Functions
 
             public static void Attach()
             {
-                SetLayerGrid();
+                if (LayerGrid is null || LayerManager is null)
+                {
+                    var Palettes = Layers.GetLayerPaletteControls();
+                    LayerGrid = Palettes.LayerGrid;
+                    LayerManager = Palettes.LayerManager;
+                }
+
                 if (LayerGrid != null)
                 {
                     if (AddNewLayer is null)
@@ -38,6 +49,7 @@ namespace SioForgeCAD.Functions
                     LayerGrid.ContextMenuChanged += ContextMenuChangedHandler;
                     LayerGrid.SelectionChanged += SelectionChangedHandler;
                 }
+
             }
 
             private static void SelectionChangedHandler(object sender, EventArgs e)
@@ -51,6 +63,25 @@ namespace SioForgeCAD.Functions
                 ((Control)e).ContextMenuChanged -= ContextMenuChangedHandler;
             }
 
+            /*      var db = Generic.GetDatabase();
+                //Autodesk.AutoCAD.DatabaseServices.TransactionManager transactionManager = LayerManager.LayerViewManager.CurrentDatabase.TransactionManager;
+                Autodesk.AutoCAD.DatabaseServices.TransactionManager transactionManager = db.TransactionManager;
+                Editor editor = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
+                var PolySelection = editor.GetSelectionRedraw("Selectionnez une polyligne", true, false);
+                if (PolySelection.Status != PromptStatus.OK) { return; }
+                using (var tr = transactionManager.StartTransaction()) { 
+                foreach (var polyObjId in PolySelection.Value.GetObjectIds())
+                {
+                    if (transactionManager.GetObject(polyObjId, OpenMode.ForWrite) is Entity poly)
+                    {
+                        poly.ColorIndex = 1;
+                    }
+
+                }
+                    tr.Commit();
+                }
+                return;
+*/
             private static void OnExecute(object sender, EventArgs e)
             {
                 DataGridViewSelectedRowCollection CurrentSelectedRows = LayerGrid.SelectedRows;
@@ -85,26 +116,6 @@ namespace SioForgeCAD.Functions
                 }
                 object[] arguments = new object[] { layerName, bMakeFrozen };
                 methodeCreate.Invoke(LayerManager, arguments);
-            }
-
-            private static void SetLayerGrid()
-            {
-                if (LayerGrid == null)
-                {
-                    FieldInfo field = typeof(PaletteHost).GetField("layerManager_", BindingFlags.Static | BindingFlags.NonPublic);
-                    if (field != null)
-                    {
-                        object rslt = field.GetValue(null);
-                        if (rslt is LayerManagerControl lmc)
-                        {
-                            if (lmc.FindControlByTypeName("LayerGrid") is DataGridView LayerGridControl)//Autodesk.AutoCAD.LayerManager.LayerGrid;
-                            {
-                                LayerManager = lmc;
-                                LayerGrid = LayerGridControl;
-                            }
-                        }
-                    }
-                }
             }
 
             private static void AddMenuItem()

@@ -1,13 +1,35 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.LayerManager;
 using Autodesk.AutoCAD.Windows.Data;
+using SioForgeCAD.Commun.Extensions;
 using System.Diagnostics;
+using System.Reflection;
+using System.Windows.Forms;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
 {
     public static class Layers
     {
+        public static (DataGridView LayerGrid, LayerManagerControl LayerManager) GetLayerPaletteControls()
+        {
+            FieldInfo field = typeof(PaletteHost).GetField("layerManager_", BindingFlags.Static | BindingFlags.NonPublic);
+            if (field != null)
+            {
+                object rslt = field.GetValue(null);
+                if (rslt is LayerManagerControl lmc)
+                {
+                    if (lmc.FindControlByTypeName("LayerGrid") is DataGridView LayerGridControl)//Autodesk.AutoCAD.LayerManager.LayerGrid;
+                    {
+                        return (LayerGridControl, lmc);
+                    }
+                }
+            }
+
+            return (null, null);
+        }
+
         public static string GetCurrentLayerName()
         {
             return Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("clayer").ToString();

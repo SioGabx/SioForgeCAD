@@ -25,7 +25,7 @@
     <WarningLevel>4</WarningLevel>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\Autodesk\AutoCAD 2021\acad.exe</StartProgram>
-    <StartArguments>/nologo /b "start.scr"</StartArguments>
+    <StartArguments>/nologo /b</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
