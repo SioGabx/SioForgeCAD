@@ -4,6 +4,7 @@ using SioForgeCAD.Commun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
 using Control = System.Windows.Forms.Control;
@@ -54,8 +55,11 @@ namespace SioForgeCAD.Functions
 
             private static void ContextMenuChangedHandler(object e, EventArgs s)
             {
-                AddMenuItem();
-                ((Control)e).ContextMenuChanged -= ContextMenuChangedHandler;
+                if (AddMenuItem()) //successfuly added
+                {
+                    Debug.WriteLine($"{nameof(LAYERMANAGERCTXNEWLAYERFROMSELECTED)} successfuly attached");
+                    ((Control)e).ContextMenuChanged -= ContextMenuChangedHandler;
+                }
             }
 
             /*      var db = Generic.GetDatabase();
@@ -115,7 +119,7 @@ namespace SioForgeCAD.Functions
             }
 
 
-            private static void AddMenuItem()
+            private static bool AddMenuItem()
             {
                 var Menus = LayerGrid?.ContextMenu?.MenuItems;
                 if (Menus?.Contains(AddNewLayer) == false)
@@ -135,14 +139,14 @@ namespace SioForgeCAD.Functions
                                 MethodInfo method = (MethodInfo)methodProp.GetValue(updateValue);
                                 if (method.Name == "ID_MENUITEM_LISTCTX_NEWLAYER_Update") //this is the best method for not using specific language
                                 {
-                                    break;
+                                    Menus?.Add(InsertIndex, AddNewLayer);
+                                    return true;
                                 }
                             }
                         }
                     }
-
-                    Menus?.Add(InsertIndex, AddNewLayer);
                 }
+                return false;
             }
         }
     }
