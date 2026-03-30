@@ -220,11 +220,11 @@ namespace SioForgeCAD
         //Select all entities on current layer
         public static void SSCL() => Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
 
-        [CommandMethod("SIOFORGECAD", "SSOC", CommandFlags.Redraw)]
-        public static void SSOC() => Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
+        [CommandMethod("SIOFORGECAD", "SSALLINSIDE", CommandFlags.Redraw)]
+        public static void SSALLINSIDE() => Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
 
-        [CommandMethod("SIOFORGECAD", "SSOF", CommandFlags.Redraw)]
-        public static void SSOF() => Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
+        [CommandMethod("SIOFORGECAD", "SSALLSTRICTLYINSIDE", CommandFlags.Redraw)]
+        public static void SSALLSTRICTLYINSIDE() => Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
 
         [CommandMethod("SIOFORGECAD", "RRR", CommandFlags.UsePickSet)]
         public static void RRR() => Functions.RRR.Rotate();
