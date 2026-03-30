@@ -1,11 +1,6 @@
 ﻿/// NB: this code requires a reference to AcLayer.dll
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.LayerManager;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -114,23 +109,11 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-               // LayerGrid.EditingControlShowing += LayerGrid_EditingControlShowing;
                 object[] arguments = new object[] { layerName, bMakeFrozen };
                 methodeCreate.Invoke(LayerManager, arguments);
 
             }
 
-            /*
-            private static void LayerGrid_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-            {
-                LayerGrid.EditingControlShowing -= LayerGrid_EditingControlShowing;
-                if (e.Control is TextBox tb)
-                {
-                    tb.SelectionStart = tb.Text.Length; // place le curseur à la fin
-                    tb.SelectionLength = 0;             // aucune sélection
-                }
-            }
-            */
 
             private static void AddMenuItem()
             {

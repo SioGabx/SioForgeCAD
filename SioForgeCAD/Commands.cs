@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;

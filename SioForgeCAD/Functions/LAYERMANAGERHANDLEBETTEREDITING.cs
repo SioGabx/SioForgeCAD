@@ -1,9 +1,5 @@
 ﻿using SioForgeCAD.Commun;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
@@ -24,7 +20,7 @@ namespace SioForgeCAD.Functions
         {
             if (e.Control is TextBox tb)
             {
-                // Positionner le curseur à la fin (ton besoin précédent)
+                // Positionner le curseur à la fin 
                 tb.SelectionStart = tb.Text.Length;
                 tb.SelectionLength = 0;
 
