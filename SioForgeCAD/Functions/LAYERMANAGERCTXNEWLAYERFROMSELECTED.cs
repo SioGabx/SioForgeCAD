@@ -17,7 +17,7 @@ using MenuItem = Autodesk.AutoCAD.LayerManager.MenuItem;
 
 namespace SioForgeCAD.Functions
 {
-    public static class NEWLAYERLAYERMANAGERCONTEXTMENU
+    public static class LAYERMANAGERCTXNEWLAYERFROMSELECTED
     {
         public static class ContextMenu
         {
@@ -114,9 +114,23 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
+               // LayerGrid.EditingControlShowing += LayerGrid_EditingControlShowing;
                 object[] arguments = new object[] { layerName, bMakeFrozen };
                 methodeCreate.Invoke(LayerManager, arguments);
+
             }
+
+            /*
+            private static void LayerGrid_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+            {
+                LayerGrid.EditingControlShowing -= LayerGrid_EditingControlShowing;
+                if (e.Control is TextBox tb)
+                {
+                    tb.SelectionStart = tb.Text.Length; // place le curseur à la fin
+                    tb.SelectionLength = 0;             // aucune sélection
+                }
+            }
+            */
 
             private static void AddMenuItem()
             {

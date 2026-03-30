@@ -56,7 +56,7 @@ namespace SioForgeCAD
             Functions.DIMDISASSOCIATE.ContextMenu.Attach();
 
             //Controls ContextMenu
-            Functions.NEWLAYERLAYERMANAGERCONTEXTMENU.ContextMenu.Attach();
+            Functions.LAYERMANAGERCTXNEWLAYERFROMSELECTED.ContextMenu.Attach();
 
             //Tray
             Functions.PICKSTYLETRAY.AddTray();
@@ -68,7 +68,8 @@ namespace SioForgeCAD
             Functions.SAVEFILEATCLOSE.Event.Attach();
 
             //Override
-            Functions.NEWLAYERDEFAULTNAME.Override();
+            Functions.LAYERMANAGERNEWLAYERDEFAULTNAME.Override();
+            Functions.LAYERMANAGERHANDLEBETTEREDITING.Override();
         }
 
         public void Terminate() { }

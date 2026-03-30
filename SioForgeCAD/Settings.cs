@@ -10,6 +10,7 @@ namespace SioForgeCAD
         public static string CopyrightMessage = $"{Generic.GetExtensionDLLName()} - Copyright © HOFFMANN François / SioGabx - {DateTime.Now.Year}.";
 
         public static string CADLayerPrefix = "_APUd_";
+        public static string NewLayerDefaultName = CADLayerPrefix + "SansNom";
         public static string VegblocLayerPrefix = CADLayerPrefix + "VEG_";
         public static string InfoLayerPrefix = CADLayerPrefix + "INFO_";
         public static string BlocNameAltimetrie = CADLayerPrefix + "COTATIONS_Altimetries";

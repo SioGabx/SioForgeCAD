@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
-    public static class NEWLAYERDEFAULTNAME
+    public static class LAYERMANAGERNEWLAYERDEFAULTNAME
     {
         public static void Override()
         {
@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
             {
                 if (name == "Layer")
                 {
-                    return Settings.CADLayerPrefix;
+                    return Settings.NewLayerDefaultName;
                 }
 
                 if (_originalRm != null)
