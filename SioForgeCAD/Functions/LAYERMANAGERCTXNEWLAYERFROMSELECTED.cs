@@ -1,4 +1,5 @@
 ﻿/// NB: this code requires a reference to AcLayer.dll
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.LayerManager;
 using SioForgeCAD.Commun;
 using System;
@@ -95,11 +96,11 @@ namespace SioForgeCAD.Functions
                     var itemName = item?.GetType()?.GetProperty("Name")?.GetValue(item)?.ToString();
                     if (!(itemName is null)) Names.Add(itemName);
                 }
-                string NewLayerName = LayerName + "_";
+                string NewLayerName = SymbolUtilityServices.RepairSymbolName(LayerName, false); //we need to repair if the layername come from a XREF (|)
 
-                for (int index = 1; Names.Contains(NewLayerName); index++)
+                for (int index = 0; Names.Contains(NewLayerName); index++)
                 {
-                    NewLayerName = LayerName + "_" + index;
+                    NewLayerName = $"{LayerName}_{(index > 0 ? index.ToString() : string.Empty)}";
                 }
 
                 MakeNewLayer(NewLayerName, false);

@@ -6,6 +6,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Forms;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Forms;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -60,7 +61,7 @@ namespace SioForgeCAD
                     cs.AddPermanentKeyboardShortcut("F4", "Cancel F4", "^P'_.osmode $M=$(if,$(and,$(getvar,osmode),16384),$(-,$(getvar,osmode),16384),$(+,$(getvar,osmode),16384))", "ID_Cancel_F4");
                     cs.AddPermanentKeyboardShortcut("CTRL+Q", "Toggle QPMODE", "'_setvar;pickstyle;$M=$(if,$(eq,$(getvar,pickstyle),2),1,2)", "Toggle_QPMODE");
                     cs.LoadCui();
-                    Application.ReloadAllMenus();
+                    Debug.WriteLine(System.IO.File.Exists(cs.CUIFileName));
                     break;
             }
         }
