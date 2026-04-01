@@ -66,12 +66,18 @@ namespace SioForgeCAD
 
             //Event
             Functions.SAVEFILEATCLOSE.Event.Attach();
+            Functions.ALLANAVDIALOGSDEFINECURRENTDRAWING.Event.Attach();
 
             //Override
             Functions.LAYERMANAGERNEWLAYERDEFAULTNAME.Override();
             Functions.LAYERMANAGERHANDLEBETTEREDITING.Override();
         }
 
-        public void Terminate() { }
+        public void Terminate()
+        {
+            //Event
+            Functions.SAVEFILEATCLOSE.Event.Detach();
+            Functions.ALLANAVDIALOGSDEFINECURRENTDRAWING.Event.Detach();
+        }
     }
 }

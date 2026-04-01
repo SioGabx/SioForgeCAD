@@ -248,6 +248,7 @@
     <Compile Include="Forms\InputDialogBox.Designer.cs">
       <DependentUpon>InputDialogBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Functions\ALLANAVDIALOGSDEFINECURRENTDRAWING.cs" />
     <Compile Include="Functions\AREATOFIELD.cs" />
     <Compile Include="Functions\ARRAYCOPY.cs" />
     <Compile Include="Functions\BATTLEMENTS.cs" />

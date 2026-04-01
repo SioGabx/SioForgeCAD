@@ -507,6 +507,13 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            Autodesk.AutoCAD.Publishing.Publisher pub = Autodesk.AutoCAD.ApplicationServices.Application.Publisher;
+
+        }
+
+        /*
+        public static void TEST2()
+        {
 
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
@@ -553,6 +560,7 @@ namespace SioForgeCAD
                 }
             }
         }
+        */
 
         //TODO : BLKSETTOBYLAYER
         //TODO : Overrule for XCLIP
