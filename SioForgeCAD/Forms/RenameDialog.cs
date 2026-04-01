@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
 using System.Windows.Forms;
 
 namespace SioForgeCAD.Forms
@@ -54,7 +56,6 @@ namespace SioForgeCAD.Forms
         {
             InitializeComponent();
             SetupDataGridView();
-
             // Initialisation des données
             foreach (var file in filesToRename)
             {
@@ -102,6 +103,7 @@ namespace SioForgeCAD.Forms
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             };
 
+
             var originalCol = new DataGridViewTextBoxColumn
             {
                 HeaderText = "Original",
@@ -132,6 +134,9 @@ namespace SioForgeCAD.Forms
             dataGridView1.CellValueChanged += DataGridView1_CellValueChanged;
             dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
         }
+
+    
+  
 
         /// <summary>
         /// Logique principale de renommage (Cœur de PowerRename)
@@ -176,7 +181,9 @@ namespace SioForgeCAD.Forms
         private void HeaderCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             foreach (var item in _items)
+            {
                 item.Include = headerCheckBox.Checked;
+            }
 
             dataGridView1.Refresh();
         }
@@ -184,12 +191,29 @@ namespace SioForgeCAD.Forms
         private void DataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && dataGridView1.Columns[e.ColumnIndex].Name == nameof(RenameItem.Include))
+            {
+                Debug.WriteLine(dataGridView1.SelectedRows.Count);
+                bool newValue = _items[e.RowIndex].Include;
+                foreach (DataGridViewRow Row in dataGridView1.SelectedRows)
+                {
+                    var item = (RenameItem)Row.DataBoundItem;
+                    item.Include = newValue;
+                }
+
+                if (Control.ModifierKeys.HasFlag(Keys.Control) || Control.ModifierKeys.HasFlag(Keys.Shift))
+                {
+                    dataGridView1.Rows[e.RowIndex].Selected = true;
+                }
                 UpdateHeaderCheckBoxState();
+            }
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.IsCurrentCellDirty) dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            if (dataGridView1.IsCurrentCellDirty)
+            {
+                dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
         }
 
         private void UpdateHeaderCheckBoxState()
@@ -206,6 +230,22 @@ namespace SioForgeCAD.Forms
             var results = _items.Where(x => x.Include && x.Original != x.Renamed).ToList();
             // Ici, exécute ton System.IO.File.Move ou passe la liste à ton contrôleur
             this.DialogResult = DialogResult.OK;
+        }
+
+        private void CopyOriginal_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow?.DataBoundItem is RenameItem item && !string.IsNullOrEmpty(item.Original))
+            {
+                Clipboard.SetText(item.Original);
+            }
+        }
+
+        private void CopyRenamed_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow?.DataBoundItem is RenameItem item && !string.IsNullOrEmpty(item.Renamed))
+            {
+                Clipboard.SetText(item.Renamed);
+            }
         }
     }
 }
