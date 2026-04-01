@@ -21,7 +21,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.ContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.StripContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.CopyOriginal = new System.Windows.Forms.ToolStripMenuItem();
             this.CopyRenamed = new System.Windows.Forms.ToolStripMenuItem();
             this.headerCheckBox = new System.Windows.Forms.CheckBox();
@@ -35,7 +35,7 @@
             this.flowControls = new System.Windows.Forms.FlowLayoutPanel();
             this.lblMessage = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            this.ContextMenu.SuspendLayout();
+            this.StripContextMenu.SuspendLayout();
             this.panelLeft.SuspendLayout();
             this.flowControls.SuspendLayout();
             this.SuspendLayout();
@@ -55,7 +55,7 @@
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.ColumnHeadersHeight = 35;
-            this.dataGridView1.ContextMenuStrip = this.ContextMenu;
+            this.dataGridView1.ContextMenuStrip = this.StripContextMenu;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.White;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -76,12 +76,12 @@
             // 
             // ContextMenu
             // 
-            this.ContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.StripContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.CopyOriginal,
             this.CopyRenamed});
-            this.ContextMenu.Name = "contextMenuStrip1";
-            this.ContextMenu.ShowImageMargin = false;
-            this.ContextMenu.Size = new System.Drawing.Size(174, 70);
+            this.StripContextMenu.Name = "contextMenuStrip1";
+            this.StripContextMenu.ShowImageMargin = false;
+            this.StripContextMenu.Size = new System.Drawing.Size(174, 70);
             // 
             // CopyOriginal
             // 
@@ -225,7 +225,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "PowerRename SioForge";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            this.ContextMenu.ResumeLayout(false);
+            this.StripContextMenu.ResumeLayout(false);
             this.panelLeft.ResumeLayout(false);
             this.panelLeft.PerformLayout();
             this.flowControls.ResumeLayout(false);
@@ -247,7 +247,7 @@
         private System.Windows.Forms.Panel panelLeft;
         private System.Windows.Forms.FlowLayoutPanel flowControls;
         private System.Windows.Forms.Label lblMessage;
-        private System.Windows.Forms.ContextMenuStrip ContextMenu;
+        private System.Windows.Forms.ContextMenuStrip StripContextMenu;
         private System.Windows.Forms.ToolStripMenuItem CopyOriginal;
         private System.Windows.Forms.ToolStripMenuItem CopyRenamed;
     }
