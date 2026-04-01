@@ -72,6 +72,7 @@ namespace SioForgeCAD.Functions
                 Debug.WriteLine(cmd);
                 if (cmd == "OPEN" ||
                     cmd == "SAVEAS" ||
+                    cmd == "PLOT" ||
                     cmd == "QSAVE" ||
                     cmd == "ETRANSMIT" ||
                     cmd == "PUBLISH" ||
