@@ -1,53 +1,73 @@
 ﻿using Autodesk.AutoCAD.LayerManager;
+using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.ViewModel.LayoutSwitch;
+using Autodesk.AutoCAD.Windows;
+using Autodesk.Private.Windows.ToolBars;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
-// Note: this code requires a reference to AcLayer.dll
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Interop;
+using AcApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {
     internal static class TEST
     {
-        private static MenuItem AddNewLayer;
-        internal static void Testi()
+        public static FrameworkElement ObtenirStatusBarContainer()
         {
-            FieldInfo field = typeof(PaletteHost).GetField("layerManager_", BindingFlags.Static | BindingFlags.NonPublic);
-            if (field != null)
+            foreach (PresentationSource source in PresentationSource.CurrentSources)
             {
-                object rslt = field.GetValue(null);
-                if (rslt is LayerManagerControl lmc)
+                if (source.RootVisual != null)
                 {
-                    if (AddNewLayer is null)
+                    if (source.RootVisual.GetType().FullName == "Autodesk.AutoCAD.StatusBar.StatusBarContainer")
                     {
-                        AddNewLayer = new MenuItem
-                        {
-                            Text = "Test",
-                        };
-                        AddNewLayer.Click += AddNewLayer_Click;
-                    }
-                    System.Windows.Forms.Control LayerGridControl = lmc.FindControlByTypeName("LayerGrid"); //Autodesk.AutoCAD.LayerManager.LayerGrid;
-
-                    if (LayerGridControl != null)
-                    {
-                        void ContextMenuChangedHandler(object e, EventArgs s)
-                        {
-                            if (LayerGridControl?.ContextMenu?.MenuItems.Contains(AddNewLayer) == false)
-                            {
-                                LayerGridControl.ContextMenu.MenuItems.Add(AddNewLayer);
-                            }
-                            ((System.Windows.Forms.Control)e).ContextMenuChanged -= ContextMenuChangedHandler;
-                        }
-
-                        LayerGridControl.ContextMenuChanged += ContextMenuChangedHandler;
+                        return source.RootVisual as FrameworkElement;
                     }
                 }
-
             }
+            return null;
         }
 
-        private static void AddNewLayer_Click(object sender, System.EventArgs e)
+        public static void Test()
         {
-            throw new System.NotImplementedException();
+            if (ObtenirStatusBarContainer() is DependencyObject root)
+            {
+                foreach (var control in root.TrouverEnfantsVisuels<FrameworkElement>())
+                {
+                    if (control.GetType().FullName == "Autodesk.AutoCAD.UserControls.LayoutSwitchControl")
+                    {
+                        dynamic LayoutSwitchControl = control;
+
+                        control.Visibility = Visibility.Visible;
+                        LayoutSwitchControl.Content = new Grid() ;
+                        //foreach (var control2 in root.TrouverEnfantsVisuels<FrameworkElement>())
+                        //{
+                        //    if (control2 is System.Windows.Controls.TabControl TabControl)
+                        //    {
+                        //        TabControl.ContextMenu = new System.Windows.Controls.ContextMenu();
+                        //        TabControl.ContextMenu.Items.Add(new System.Windows.Forms.MenuItem("g"));
+                        //        Debug.WriteLine("s");
+                        //        //TabControl
+                        //    }
+                        //}
+
+
+
+
+
+                    }
+                }
+            }
+
         }
+
+       
     }
 }

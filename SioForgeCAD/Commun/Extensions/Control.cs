@@ -1,5 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Media;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -56,6 +59,29 @@ namespace SioForgeCAD.Commun.Extensions
             }
 
             return null;
+        }
+
+        public static IEnumerable<T> TrouverEnfantsVisuels<T>(this DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj == null) yield break;
+
+            // Parcourt les enfants directs de l'objet courant
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+
+                // Si l'enfant est du type recherché, on le retourne
+                if (child != null && child is T tChild)
+                {
+                    yield return tChild;
+                }
+
+                // Appel récursif pour chercher dans les enfants de cet enfant
+                foreach (T childOfChild in TrouverEnfantsVisuels<T>(child))
+                {
+                    yield return childOfChild;
+                }
+            }
         }
     }
 }
