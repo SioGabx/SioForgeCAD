@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.LayerManager;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.LayerManager;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.ViewModel.LayoutSwitch;
 using Autodesk.AutoCAD.Windows;
@@ -45,8 +46,13 @@ namespace SioForgeCAD.Functions
                     {
                         dynamic LayoutSwitchControl = control;
 
-                        control.Visibility = Visibility.Visible;
-                        LayoutSwitchControl.Content = new Grid() ;
+                        control.Visibility = System.Windows.Visibility.Visible;
+                        List<dynamic> LayoutSwitchLayoutData = new List<dynamic>(); //Autodesk.AutoCAD.ViewModel.LayoutSwitch.LayoutData
+                        dynamic context = LayoutSwitchControl.DataContext; //Autodesk.AutoCAD.ViewModel.LayoutSwitch.LayoutTabsData
+                        System.Collections.ObjectModel.ObservableCollection<dynamic> TabsCollection = context.TabsCollection; //Autodesk.AutoCAD.ViewModel.LayoutSwitch.LayoutData
+                        //LayoutSwitchControl.Content = new Grid() ;
+
+
                         //foreach (var control2 in root.TrouverEnfantsVisuels<FrameworkElement>())
                         //{
                         //    if (control2 is System.Windows.Controls.TabControl TabControl)
