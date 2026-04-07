@@ -73,7 +73,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AcLayer, Version=24.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoCAD.NET.AcLayer.21.0.0\lib\net47\AcLayer.dll</HintPath>
+      <HintPath>..\packages\AutoCAD.NET.AcLayer.21.0.1\lib\net47\AcLayer.dll</HintPath>
     </Reference>
     <Reference Include="AcMgd, Version=24.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AcMgd.dll</HintPath>
@@ -426,7 +426,6 @@
   <PropertyGroup>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
-  
   <Target Name="AssemblyVersion" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' AND '$(BuildingProject)' == 'true'">
     <PropertyGroup>
       <AssemblyInfo>Properties\AssemblyInfo.cs</AssemblyInfo>
@@ -448,5 +447,12 @@
       <NewAssemblyInfoContent>$([System.Text.RegularExpressions.Regex]::Replace($(NewAssemblyInfoContent), $(FileVersionRegex), $(NewAssemblyFileVersion)))</NewAssemblyInfoContent>
     </PropertyGroup>
     <WriteLinesToFile File="$(AssemblyInfo)" Lines="$(NewAssemblyInfoContent)" Overwrite="true" />
+  </Target>
+  <Import Project="..\packages\AutoCAD.NET.AcLayer.21.0.1\build\AutoCAD.NET.AcLayer.targets" Condition="Exists('..\packages\AutoCAD.NET.AcLayer.21.0.1\build\AutoCAD.NET.AcLayer.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Ce projet fait référence à des packages NuGet qui sont manquants sur cet ordinateur. Utilisez l'option de restauration des packages NuGet pour les télécharger. Pour plus d'informations, consultez http://go.microsoft.com/fwlink/?LinkID=322105. Le fichier manquant est : {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\AutoCAD.NET.AcLayer.21.0.1\build\AutoCAD.NET.AcLayer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AutoCAD.NET.AcLayer.21.0.1\build\AutoCAD.NET.AcLayer.targets'))" />
   </Target>
 </Project>
