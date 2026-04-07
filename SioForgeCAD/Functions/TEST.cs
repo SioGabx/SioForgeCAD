@@ -78,13 +78,23 @@ namespace SioForgeCAD.Functions
 
                             var LayoutSwitchControlParent = LayoutSwitchControl.Parent as Grid;
                             LayoutSwitchControlParent.Children.Insert(0, InjectedLayoutBar);
-                            //host.DataContext = context;
+
+                            // Tab libre (ex: "Model")
+                            InjectedLayoutBar.AddFreeTab("Model", makeCurrent: true);
+                           InjectedLayoutBar.AddFreeTab("Test1", false);
+                           InjectedLayoutBar.AddFreeTab("Test2", false);
+                           InjectedLayoutBar.AddFreeTab("Test3", false);
+                           InjectedLayoutBar.AddFreeTab("Test4", false);
+                           InjectedLayoutBar.AddFreeTab("Test5", false);
+
+                            // Groupe avec plusieurs feuilles
+                            var groupe = InjectedLayoutBar.AddGroup("Bâtiment A", "Plan RDC", "Plan R+1", "Coupe AA");
                         }
                         else
                         {
                             if (InjectedLayoutBar.Visibility == System.Windows.Visibility.Collapsed)
                             {
-
+                                InjectedLayoutBar.AddFreeTab("Long long name hello world", false);
                                 InjectedLayoutBar.Visibility = System.Windows.Visibility.Visible;
                                 LayoutSwitchControl.Visibility = System.Windows.Visibility.Collapsed;
                             }
@@ -96,6 +106,7 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
+               
                 }
             }
 
