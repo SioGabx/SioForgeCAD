@@ -2,8 +2,6 @@ name: Build and Release SioForgeCAD
 
 on:
   push:
-    branches:
-      - main # ou master
   workflow_dispatch:
 
 permissions:
@@ -24,7 +22,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: 📥 Restauration des paquets NuGet
-        run: nuget restore TonFichierSolution.sln
+        run: nuget restore SioForgeCAD.sln
 
       - name: 🏗️ Compilation du projet (Release)
         run: msbuild SioForgeCAD\SioForgeCAD.csproj /p:Configuration=Release /p:Platform="AnyCPU"
