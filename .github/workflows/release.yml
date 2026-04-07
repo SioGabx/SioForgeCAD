@@ -1,4 +1,4 @@
-name: Build and Release SioForgeCAD
+name: Build and Release
 
 on:
   push:
@@ -10,6 +10,7 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
+    timeout-minutes: 5
 
     steps:
       - name: 🛎️ Checkout du code
@@ -32,16 +33,28 @@ jobs:
         shell: pwsh
         run: |
           $content = Get-Content -Raw -Path SioForgeCAD\Properties\AssemblyInfo.cs
-          if ($content -match '\[assembly:\s*AssemblyVersion\("([^"]+)"\)\]') {
-              $version = $matches[1]
-              Write-Output "Version extraite : $version"
-              # Export vers les outputs de l'étape pour être lu par le bash
-              Write-Output "VERSION=$version" >> $env:GITHUB_OUTPUT
+          
+          # 1. On cherche la ligne AssemblyVersion (en ignorant les lignes commentées)
+          if ($content -match '(?m)^\s*\[assembly:\s*AssemblyVersion\("([^"]+)"\)\]') {
+              $fullVersion = $matches[1]
+              
+              # 2. On tronque pour ne garder que les 3 premiers nombres (ex: 2026.4.7)
+              if ($fullVersion -match '^(\d+\.\d+\.\d+)') {
+                  $shortVersion = $matches[1]
+              } else {
+                  # Sécurité au cas où la version n'aurait que 2 chiffres (ex: 1.0)
+                  $shortVersion = $fullVersion
+              }
+              
+              Write-Output "Version complète trouvée : $fullVersion"
+              Write-Output "Version tronquée utilisée : $shortVersion"
+              
+              # 3. Export vers les outputs de l'étape
+              Write-Output "VERSION=$shortVersion" >> $env:GITHUB_OUTPUT
           } else {
               Write-Error "Impossible de trouver la version dans AssemblyInfo.cs"
               exit 1
           }
-
       - name: 🗜️ Création de l'archive ZIP (Livrable)
         shell: pwsh
         run: |
