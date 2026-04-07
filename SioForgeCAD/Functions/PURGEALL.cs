@@ -48,20 +48,19 @@ namespace SioForgeCAD.Functions
                 }
 
                 // Purge de base
-                AddToReport(nameof(PurgeMethods.Database), PurgeMethods.Database(db));
+                
                 AddToReport(nameof(PurgeMethods.CurvesZeroLength), PurgeMethods.CurvesZeroLength(db));
                 AddToReport(nameof(PurgeMethods.EmptyText), PurgeMethods.EmptyText(db));
                 AddToReport(nameof(PurgeMethods.XREF), PurgeMethods.XREF(db));
 
                 // Purges répétées
-
                 int PreviousPassTotalDeletedCount = -1;
                 int passCount = 0;
                 while (PreviousPassTotalDeletedCount != TotalDeletedCount && passCount < 10)
                 {
                     passCount++;
                     PreviousPassTotalDeletedCount = TotalDeletedCount;
-
+                    AddToReport(nameof(PurgeMethods.Database), PurgeMethods.Database(db));
                     AddToReport(nameof(PurgeMethods.DWF), PurgeMethods.DWF(db));
                     AddToReport(nameof(PurgeMethods.PDF), PurgeMethods.PDF(db));
                     AddToReport(nameof(PurgeMethods.DGN), PurgeMethods.DGN(db));

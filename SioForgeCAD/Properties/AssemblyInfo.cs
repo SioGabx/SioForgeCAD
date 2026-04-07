@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
@@ -36,10 +36,6 @@ using System.Runtime.InteropServices;
 //Hot Reload and Edit & Continue are not compatible with using * in AssemblyVersionAttribute value.
 //Presence of * in the version means that the compiler generates a new version every build based on the current time.
 //The build then produces non-reproducible, non-deterministic outputs
-#if DEBUG
-[assembly: AssemblyVersion("1.1.0.0")]
-#else
-[assembly: AssemblyVersion("1.1.*")]
-#endif
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("2026.4.7.7")]
+[assembly: AssemblyFileVersion("2026.4.7.7")]
 [assembly: NeutralResourcesLanguage("")]

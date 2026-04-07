@@ -1,0 +1,92 @@
+name: Build and Release SioForgeCAD
+
+on:
+  push:
+    branches:
+      - main # ou master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: 🛎️ Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 📦 Configuration de NuGet
+        uses: NuGet/setup-nuget@v3
+
+      - name: 🛠️ Configuration de MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: 📥 Restauration des paquets NuGet
+        run: nuget restore TonFichierSolution.sln
+
+      - name: 🏗️ Compilation du projet (Release)
+        run: msbuild SioForgeCAD\SioForgeCAD.csproj /p:Configuration=Release /p:Platform="AnyCPU"
+        
+      - name: 🔍 Extraction de la version depuis AssemblyInfo.cs
+        id: get_version
+        shell: pwsh
+        run: |
+          $content = Get-Content -Raw -Path SioForgeCAD\Properties\AssemblyInfo.cs
+          if ($content -match '\[assembly:\s*AssemblyVersion\("([^"]+)"\)\]') {
+              $version = $matches[1]
+              Write-Output "Version extraite : $version"
+              # Export vers les outputs de l'étape pour être lu par le bash
+              Write-Output "VERSION=$version" >> $env:GITHUB_OUTPUT
+          } else {
+              Write-Error "Impossible de trouver la version dans AssemblyInfo.cs"
+              exit 1
+          }
+
+      - name: 🗜️ Création de l'archive ZIP (Livrable)
+        shell: pwsh
+        run: |
+          Compress-Archive -Path SioForgeCAD\bin\Release\* -DestinationPath SioForgeCAD_v${{ steps.get_version.outputs.VERSION }}.zip
+
+      - name: 🚀 Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.get_version.outputs.VERSION }}"
+          echo "Using tag: $TAG"
+
+          # Recherche du fichier .zip à la racine du projet
+          # On utilise ls et on récupère le nom du fichier généré
+          FILES=$(ls SioForgeCAD_v*.zip 2>/dev/null || true)
+          
+          # Nettoyage des espaces potentiels
+          FILES=$(echo $FILES | xargs)
+
+          if [ -z "$FILES" ]; then
+            echo "❌ Aucun fichier .zip trouvé !"
+            exit 1
+          fi
+
+          echo "✅ Fichier trouvé : $FILES"
+
+          # Vérifie si la release existe déjà
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "La release existe → Upload des assets"
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            
+            git tag -fa "$TAG" -m "Mise à jour du tag $TAG"
+            git push origin -f refs/tags/"$TAG"
+            
+            # 2. Met à jour le titre et la description
+            gh release edit "$TAG" --title="$TAG" --notes="Release SioForgeCAD version ${{ steps.get_version.outputs.VERSION }}."
+            
+            # 3. Upload et écrase l'ancien fichier .zip
+            gh release upload "$TAG" $FILES --clobber
+          else
+            echo "Création d'une nouvelle release"
+            gh release create "$TAG" $FILES --title="$TAG" --notes="Release SioForgeCAD version ${{ steps.get_version.outputs.VERSION }}."
+          fi

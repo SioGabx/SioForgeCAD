@@ -72,9 +72,8 @@
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AcDx.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="AcLayer">
-      <HintPath>C:\Program Files\Autodesk\AutoCAD 2021\AcLayer.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="AcLayer, Version=24.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoCAD.NET.AcLayer.21.0.0\lib\net47\AcLayer.dll</HintPath>
     </Reference>
     <Reference Include="AcMgd, Version=24.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AcMgd.dll</HintPath>
@@ -107,9 +106,6 @@
     <Reference Include="AdWindows, Version=5.0.1.2, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoCAD.NET.24.3.0\lib\net47\AdWindows.dll</HintPath>
       <Private>False</Private>
-    </Reference>
-    <Reference Include="CavalierContoursSharp, Version=0.6.1.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\CavalierContoursSharp.0.6.1-preview\lib\netstandard2.0\CavalierContoursSharp.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -188,14 +184,14 @@
     <Compile Include="Commun\Extensions\Polylines.cs" />
     <Compile Include="Commun\Extensions\Regions.cs" />
     <Compile Include="Commun\Extensions\Vector3d.cs" />
-    <Compile Include="Commun\Mist\Helpers\TextParsers\CommaSeparatedValues\Reader.cs" />
+    <Compile Include="Commun\Extensions\ObjectId.cs" />
+    <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Mist\AutoCAD\DrawJigs\GetPointJig.cs" />
     <Compile Include="Commun\Mist\AutoCAD\DWGDataStorage.cs" />
+    <Compile Include="Commun\Mist\Helpers\TextParsers\CommaSeparatedValues\Reader.cs" />
     <Compile Include="Commun\Mist\Helpers\Files.cs" />
     <Compile Include="Commun\Mist\AutoCAD\GetPointTransient.cs" />
     <Compile Include="Commun\Mist\AutoCAD\HightLighter.cs" />
-    <Compile Include="Commun\Extensions\ObjectId.cs" />
-    <Compile Include="Commun\Extensions\String.cs" />
     <Compile Include="Commun\Mist\Generic.cs" />
     <Compile Include="Commun\Mist\AutoCAD\Layers.cs" />
     <Compile Include="Commun\Mist\Helpers\TextParsers\Json\Parser.cs" />
@@ -207,12 +203,14 @@
     <Compile Include="Commun\Mist\Geometry\PolygonOperations\Substraction.cs" />
     <Compile Include="Commun\Mist\Geometry\PolygonOperations\Union.cs" />
     <Compile Include="Commun\Mist\Interop\User32PInvoke.cs" />
-    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
-    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
     <Compile Include="Commun\Mist\Geometry\PerpendicularPoint.cs" />
     <Compile Include="Commun\Mist\AutoCAD\PluginRegister.cs" />
     <Compile Include="Commun\Mist\AutoCAD\SelectInXref.cs" />
+    <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
+    <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Commun\Mist\Geometry\PolygonOperations\Slice.cs" />
+    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
+    <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyCornerGrip.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripMenu.cs" />
     <Compile Include="Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs" />
@@ -268,8 +266,6 @@
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />
-    <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
-    <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\COPYPAPERTOMODEL.cs" />
     <Compile Include="Functions\DEBUG.cs" />
@@ -430,11 +426,27 @@
   <PropertyGroup>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
-  <Import Project="..\packages\CavalierContoursSharp.0.6.1-preview\build\net40\CavalierContoursSharp.targets" Condition="Exists('..\packages\CavalierContoursSharp.0.6.1-preview\build\net40\CavalierContoursSharp.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+  
+  <Target Name="AssemblyVersion" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' AND '$(BuildingProject)' == 'true'">
     <PropertyGroup>
-      <ErrorText>Ce projet fait référence à des packages NuGet qui sont manquants sur cet ordinateur. Utilisez l'option de restauration des packages NuGet pour les télécharger. Pour plus d'informations, consultez http://go.microsoft.com/fwlink/?LinkID=322105. Le fichier manquant est : {0}.</ErrorText>
+      <AssemblyInfo>Properties\AssemblyInfo.cs</AssemblyInfo>
+      <AssemblyInfoContent>$([System.IO.File]::ReadAllText($(AssemblyInfo)))</AssemblyInfoContent>
+      <VersionRegex>(\[\s*assembly\s*:\s*AssemblyVersion\(\s*"(\d+)\.(\d+)\.(\d+)(\.)(\d+)("\)\s*\]))</VersionRegex>
+      <FileVersionRegex>(\[\s*assembly\s*:\s*AssemblyFileVersion\(\s*"(\d+)\.(\d+)\.(\d+)(\.)(\d+)("\)\s*\]))</FileVersionRegex>
+      <BuildAndRevisionRegex>(\d+\.\d+")</BuildAndRevisionRegex>
+      <MatchedAssemblyVersion>$([System.Text.RegularExpressions.Regex]::Match('$(AssemblyInfoContent)', '$(VersionRegex)'))</MatchedAssemblyVersion>
+      <BuildAndRevision>$([System.Text.RegularExpressions.Regex]::Match('$(MatchedAssemblyVersion)', '$(BuildAndRevisionRegex)'))</BuildAndRevision>
+      <BuildAndRevision>$(BuildAndRevision.Remove($(BuildAndRevision.LastIndexOf('"')), 1))</BuildAndRevision>
+      <Build>$(BuildAndRevision.SubString(0, $(BuildAndRevision.LastIndexOf('.'))))</Build>
+      <Revision>$(BuildAndRevision.SubString($([MSBuild]::Add($(BuildAndRevision.LastIndexOf('.')), 1))))</Revision>
+      <Revision Condition="$([System.DateTime]::Now.Day) == $(Build)">$([MSBuild]::Add($(Revision), 1))</Revision>
+      <Revision Condition="$([System.DateTime]::Now.Day) != $(Build)">1</Revision>
+      <NewVersionValue>$([System.DateTime]::Now.ToString("yyyy.M.d.$(Revision)"))</NewVersionValue>
+      <NewAssemblyVersion>[assembly: AssemblyVersion("$(NewVersionValue)")]</NewAssemblyVersion>
+      <NewAssemblyFileVersion>[assembly: AssemblyFileVersion("$(NewVersionValue)")]</NewAssemblyFileVersion>
+      <NewAssemblyInfoContent>$([System.Text.RegularExpressions.Regex]::Replace($(AssemblyInfoContent), $(VersionRegex), $(NewAssemblyVersion)))</NewAssemblyInfoContent>
+      <NewAssemblyInfoContent>$([System.Text.RegularExpressions.Regex]::Replace($(NewAssemblyInfoContent), $(FileVersionRegex), $(NewAssemblyFileVersion)))</NewAssemblyInfoContent>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\CavalierContoursSharp.0.6.1-preview\build\net40\CavalierContoursSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CavalierContoursSharp.0.6.1-preview\build\net40\CavalierContoursSharp.targets'))" />
+    <WriteLinesToFile File="$(AssemblyInfo)" Lines="$(NewAssemblyInfoContent)" Overwrite="true" />
   </Target>
 </Project>
