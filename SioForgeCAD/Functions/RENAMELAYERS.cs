@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,14 @@ namespace SioForgeCAD.Functions
                     LayerTableRecord ltr = (LayerTableRecord)tr.GetObject(id, OpenMode.ForRead);
                     //Ignorer les calques système non renommables
                     if (ltr.Name == "0" || ltr.Name.Equals("Defpoints", StringComparison.OrdinalIgnoreCase))
+                    {
                         continue;
+                    }
+
+                    if (ltr.IsXref())
+                    {
+                        continue;
+                    }
                     layerNames.Add(ltr.Name);
                 }
                 tr.Commit();

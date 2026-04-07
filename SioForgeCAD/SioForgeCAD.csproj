@@ -117,6 +117,7 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Controls.Ribbon" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -139,6 +140,7 @@
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
+    <Compile Include="Commun\Extensions\LayerTableRecord.cs" />
     <Compile Include="Commun\Extensions\Layouts.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
     <Compile Include="Commun\Extensions\Matrix3d.cs" />
@@ -225,6 +227,9 @@
     </Compile>
     <Compile Include="Forms\RenameDialog.Designer.cs">
       <DependentUpon>RenameDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\LayoutBar.xaml.cs">
+      <DependentUpon>LayoutBar.xaml</DependentUpon>
     </Compile>
     <Compile Include="Forms\VegblocEditDialog.cs">
       <SubType>Form</SubType>
@@ -412,7 +417,12 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Page Include="Forms\LayoutBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
