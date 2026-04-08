@@ -16,10 +16,13 @@
         <SolidColorBrush x:Key="TextActive" Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
         <SolidColorBrush x:Key="TextInactive" Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
+        <SolidColorBrush x:Key="SubTabInactiveBg" Color="Red"/>
+        <SolidColorBrush x:Key="SubTabHoverBg" Color="Blue"/>
+
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <Style x:Key="TabItemContainerStyle" TargetType="ContentPresenter">
-            <Setter Property="Margin" Value="0,0,-10,0"/>
+            <Setter Property="Margin" Value="0,0,0,0"/>
             <Setter Property="AllowDrop" Value="True"/>
             <Setter Property="Panel.ZIndex" Value="0"/>
             <Style.Triggers>
@@ -33,53 +36,13 @@
         </Style>
 
         <DataTemplate x:Key="TabTooltipTemplate">
-            <StackPanel>
-                <Border BorderThickness="1"
-                        BorderBrush="{StaticResource TabBorder}"
-                        Background="{StaticResource TabBarBackground}"
-                        Padding="6">
-                    <StackPanel>
-                        <!-- Preview image (140×140, hidden when null) -->
-                        <Border x:Name="PreviewBorder"
-                                Width="140" Height="140"
-                                BorderThickness="1"
-                                BorderBrush="{StaticResource TabBorder}"
-                                Margin="0,0,0,4">
-                            <Image Source="{Binding TooltipImage}"
-                                   Stretch="Uniform"
-                                   RenderOptions.BitmapScalingMode="HighQuality"/>
-                        </Border>
-                        <TextBlock Text="{Binding Title}"
-                                   Foreground="{StaticResource TextActive}"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="GroupHint"
-                                   Foreground="{StaticResource TextInactive}"
-                                   FontSize="10"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,2,0,0">
-                            <TextBlock.Text>
-                                <MultiBinding StringFormat="Groupe : {0}">
-                                    <Binding Path="Group.Title"/>
-                                </MultiBinding>
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding TooltipImage}" Value="{x:Null}">
-                    <Setter TargetName="PreviewBorder" Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Group}" Value="{x:Null}">
-                    <Setter TargetName="GroupHint" Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </DataTemplate.Triggers>
+            <Border BorderThickness="1" BorderBrush="{StaticResource TabBorder}" Background="{StaticResource TabBarBackground}" Padding="6">
+                <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextActive}"/>
+            </Border>
         </DataTemplate>
-        
+
         <DataTemplate DataType="{x:Type local:LayoutTab}">
-            <Grid Height="28" Cursor="Hand" MouseLeftButtonDown="Item_MouseLeftButtonDown">
+            <Grid Height="28" Cursor="Hand" MouseLeftButtonUp="Item_MouseLeftButtonUp" MouseLeftButtonDown="Item_MouseLeftButtonDown">
                 <Border x:Name="TabBg" Background="{StaticResource TabInactiveBg}" 
                         BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
                     <Border.RenderTransform>
@@ -92,16 +55,26 @@
                 </StackPanel>
 
                 <Grid.ToolTip>
-                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}"
-                             Content="{Binding}"
-                             Placement="Top"
-                             VerticalOffset="-2"/>
+                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}" Content="{Binding}" Placement="Top" VerticalOffset="-2"/>
                 </Grid.ToolTip>
             </Grid>
             <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsInGroup}" Value="True">
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource SubTabInactiveBg}"/>
+                </DataTrigger>
+
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}"/>
                 </Trigger>
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsInGroup}" Value="True"/>
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource SubTabHoverBg}"/>
+                </MultiDataTrigger>
+
                 <DataTrigger Binding="{Binding IsCurrent}" Value="True">
                     <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}"/>
                     <Setter TargetName="TabText" Property="Foreground" Value="{StaticResource TextActive}"/>
@@ -112,10 +85,8 @@
 
         <DataTemplate DataType="{x:Type local:LayoutGroup}">
             <StackPanel Orientation="Horizontal">
-
-                <Grid Height="28" Cursor="Hand" MouseLeftButtonDown="Item_MouseLeftButtonDown" Background="Transparent">
-                    <Border x:Name="GrpBg" Background="Transparent" 
-                    BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
+                <Grid Height="28" Cursor="Hand" MouseLeftButtonUp="Item_MouseLeftButtonUp" MouseLeftButtonDown="Item_MouseLeftButtonDown" Background="Transparent">
+                    <Border x:Name="GrpBg" Background="Transparent" BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
                         <Border.RenderTransform>
                             <SkewTransform AngleX="-20"/>
                         </Border.RenderTransform>
@@ -125,19 +96,15 @@
                         <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12" FontWeight="Bold"/>
                     </StackPanel>
                 </Grid>
-
-                <ItemsControl ItemsSource="{Binding SubTabs}" 
-                      Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
-                      ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                <ItemsControl ItemsSource="{Binding SubTabs}" Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
+                              ItemContainerStyle="{StaticResource TabItemContainerStyle}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
-
             </StackPanel>
-
             <DataTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="GrpBg" Property="Background" Value="#1AFFFFFF"/>
@@ -162,15 +129,24 @@
 
             <Grid Grid.Column="0" HorizontalAlignment="Left" MaxWidth="{Binding ActualWidth, ElementName=SpaceMeasure}">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <ScrollViewer x:Name="TabScrollViewer" Grid.Column="0" 
+                <ItemsControl Grid.Column="0" ItemsSource="{Binding PinnedItems, ElementName=LayoutBarRoot}"
+                              ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Background="Transparent"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+                <ScrollViewer x:Name="TabScrollViewer" Grid.Column="1" 
                               HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
                               PreviewMouseWheel="TabScrollViewer_PreviewMouseWheel">
-                    <ItemsControl x:Name="TabItemsControl" 
-                                  ItemsSource="{Binding Items, ElementName=LayoutBarRoot}"
+                    <ItemsControl x:Name="TabItemsControl" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}"
                                   ItemContainerStyle="{StaticResource TabItemContainerStyle}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -180,31 +156,25 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <Button x:Name="AddBtn" Grid.Column="1" Width="24" Height="24" Content="+" 
+                <Button x:Name="AddBtn" Grid.Column="2" Width="24" Height="24" Content="+" 
                         Margin="5,2,0,0" VerticalAlignment="Top"
                         Foreground="{StaticResource TextInactive}" Background="Transparent" 
                         BorderThickness="0" FontSize="16" Cursor="Hand" Click="AddBtn_Click"/>
             </Grid>
 
-            <ToggleButton x:Name="OverflowToggle" Grid.Column="1" Width="20" Height="20" Margin="2,0" 
-                          Background="Transparent" BorderThickness="0">
-                <Path Data="{StaticResource OverflowChevron}" Stroke="{StaticResource TextInactive}" 
-                      StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <ToggleButton x:Name="OverflowToggle" Grid.Column="1" Width="20" Height="20" Margin="2,0" Background="Transparent" BorderThickness="0">
+                <Path Data="{StaticResource OverflowChevron}" Stroke="{StaticResource TextInactive}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </ToggleButton>
 
-            <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" Placement="Bottom"
-       IsOpen="{Binding IsChecked, ElementName=OverflowToggle}" StaysOpen="False" AllowsTransparency="True">
+            <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" Placement="Bottom" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}" StaysOpen="False" AllowsTransparency="True">
                 <Border Background="{StaticResource TabBarBackground}" BorderBrush="{StaticResource TabBorder}" BorderThickness="1">
-
                     <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
                         <Menu Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
-
                             <Menu.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel Orientation="Vertical"/>
                                 </ItemsPanelTemplate>
                             </Menu.ItemsPanel>
-
                             <Menu.ItemContainerStyle>
                                 <Style TargetType="MenuItem">
                                     <Setter Property="Header" Value="{Binding Title}"/>
@@ -215,11 +185,8 @@
                             </Menu.ItemContainerStyle>
                         </Menu>
                     </ScrollViewer>
-
                 </Border>
             </Popup>
-
-           
 
             <Popup x:Name="DragIndicator" AllowsTransparency="True" IsHitTestVisible="False">
                 <Path Data="M 0,0 L 10,0 L 5,8 Z" Fill="Orange" Margin="0,0,0,0"/>
