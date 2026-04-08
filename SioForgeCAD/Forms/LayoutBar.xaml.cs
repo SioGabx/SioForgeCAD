@@ -64,16 +64,11 @@ namespace SioForgeCAD.Forms
                 _dragStart = e.GetPosition(null);
                 _dragSource = clickedItem;
                 _isDragging = false;
-
-                // Optionnel : Capture la souris pour s'assurer que le MouseUp sera bien capté ici
-                ((FrameworkElement)sender).CaptureMouse();
             }
         }
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            var element = sender as FrameworkElement;
-            element?.ReleaseMouseCapture();
+        {            
 
             // Si on a relâché le clic SANS avoir bougé la souris (donc sans drag)
             if (!_isDragging && _dragSource != null)
@@ -84,7 +79,9 @@ namespace SioForgeCAD.Forms
                     group.IsExpanded = !group.IsExpanded;
                 }
                 else
+                {
                     SetCurrentItem(_dragSource);
+                }
             }
 
             // On réinitialise
@@ -373,8 +370,8 @@ namespace SioForgeCAD.Forms
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseLeftButtonUp(e);
-            _dragSource = null;
-            _isDragging = false;
+            //_dragSource = null;
+            //_isDragging = false;
             DragIndicator.IsOpen = false;
         }
     }
