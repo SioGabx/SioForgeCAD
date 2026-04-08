@@ -1,12 +1,12 @@
-﻿    using System;
-    using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Controls.Primitives;
-    using System.Windows.Input;
-    using System.Windows.Media;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace SioForgeCAD.Forms
 {
@@ -30,12 +30,12 @@ namespace SioForgeCAD.Forms
             };
 
             // Ajout de tests
-            Items.Add(new LayoutTab { Title = "Model" });
+            Items.Add(new LayoutTab { Title = "Model", IsPinned = true });
             Items.Add(new LayoutTab { Title = "Plan RDC" });
 
             var group = new LayoutGroup { Title = "Feuilles" };
-            group.SubTabs.Add(new LayoutTab { Title = "Coupe AA" });
-            group.SubTabs.Add(new LayoutTab { Title = "Coupe BB" });
+            group.Add(new LayoutTab { Title = "Coupe AA" });
+            group.Add(new LayoutTab { Title = "Coupe BB" });
             Items.Add(group);
 
         }
@@ -46,12 +46,10 @@ namespace SioForgeCAD.Forms
         {
             if ((sender as FrameworkElement)?.DataContext is LayoutItem clickedItem)
             {
-                // Si c'est un groupe, on affiche ses sous-onglets
+                // Si c'est un groupe, on ouvre/ferme le dossier en ligne
                 if (clickedItem is LayoutGroup group)
                 {
-                    GroupPopupList.ItemsSource = group.SubTabs;
-                    GroupPopup.PlacementTarget = sender as UIElement;
-                    GroupPopup.IsOpen = true;
+                    group.IsExpanded = !group.IsExpanded;
                 }
                 // Si c'est un onglet normal, on l'active
                 else
@@ -73,6 +71,10 @@ namespace SioForgeCAD.Forms
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
+                if (item is LayoutTab tab && tab.IsInGroup)
+                {
+                    tab.ParentGroup.IsExpanded = true;
+                }
                 ScrollToItem(item); // SCROLL AUTOMATIQUE
             }
         }
@@ -85,14 +87,7 @@ namespace SioForgeCAD.Forms
             container?.BringIntoView();
         }
 
-        private void GroupSubTab_Click(object sender, RoutedEventArgs e)
-        {
-            if ((sender as FrameworkElement)?.DataContext is LayoutTab clickedTab)
-            {
-                SetCurrentItem(clickedTab);
-                GroupPopup.IsOpen = false; // Ferme le popup
-            }
-        }
+
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -144,8 +139,13 @@ namespace SioForgeCAD.Forms
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
 
-            if (targetContainer != null && targetContainer.DataContext is LayoutItem)
+            if (targetContainer != null && targetContainer.DataContext is LayoutItem layoutItem)
             {
+                if (layoutItem is LayoutTab lb && lb.IsInGroup)
+                {
+                    targetContainer = GetVisualParent<ContentPresenter>(targetContainer);
+                }
+
                 Point pos = e.GetPosition(targetContainer);
                 // On détermine si on est sur la moitié gauche ou droite de l'onglet ciblé
                 bool isRightHalf = pos.X > targetContainer.ActualWidth / 2;
@@ -154,7 +154,7 @@ namespace SioForgeCAD.Forms
                 DragIndicator.Placement = PlacementMode.Top;
 
                 // On place la flèche à gauche ou à droite du conteneur (en compensant la marge négative)
-                DragIndicator.HorizontalOffset = isRightHalf ? targetContainer.ActualWidth : 0;               
+                DragIndicator.HorizontalOffset = isRightHalf ? targetContainer.ActualWidth : 0;
                 DragIndicator.IsOpen = true;
             }
         }
@@ -186,9 +186,9 @@ namespace SioForgeCAD.Forms
                 if (sourceItem is LayoutTab sourceTab && targetItem is LayoutGroup targetGroup)
                 {
                     Items.Remove(sourceTab);
-                    if (!targetGroup.SubTabs.Contains(sourceTab))
+                    if (!targetGroup.Contains(sourceTab))
                     {
-                        targetGroup.SubTabs.Add(sourceTab);
+                        targetGroup.Add(sourceTab);
                     }
                 }
                 // 3. CAS B : Réorganisation classique (Groupe ou Tab déplacé dans la barre principale)
@@ -273,11 +273,39 @@ namespace SioForgeCAD.Forms
 
     public class LayoutTab : LayoutItem
     {
-        // Tu peux rajouter des propriétés spécifiques à tes Layouts AutoCAD ici
+        // Référence vers le groupe parent. Sera null si c'est un onglet de premier niveau.
+        public LayoutGroup ParentGroup { get; set; }
+
+        // Propriété pratique pour vérifier rapidement
+        public bool IsInGroup => ParentGroup != null;
     }
 
     public class LayoutGroup : LayoutItem
     {
+        private bool _isExpanded;
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set { _isExpanded = value; OnPropertyChanged(); }
+        }
+
         public ObservableCollection<LayoutTab> SubTabs { get; } = new ObservableCollection<LayoutTab>();
+
+        public void Add(LayoutTab tab)
+        {
+            tab.ParentGroup = this;
+            SubTabs.Add(tab);
+        }
+
+        public bool Remove(LayoutTab tab)
+        {
+            tab.ParentGroup = null;
+            return SubTabs.Remove(tab);
+        }
+
+        public bool Contains(LayoutTab tab)
+        {
+            return SubTabs.Contains(tab);
+        }
     }
 }

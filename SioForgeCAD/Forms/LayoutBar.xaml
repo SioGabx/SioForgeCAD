@@ -19,7 +19,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <Style x:Key="TabItemContainerStyle" TargetType="ContentPresenter">
-            <Setter Property="Margin" Value="0,0,-12,0"/>
+            <Setter Property="Margin" Value="0,0,-10,0"/>
             <Setter Property="AllowDrop" Value="True"/>
             <Setter Property="Panel.ZIndex" Value="0"/>
             <Style.Triggers>
@@ -111,22 +111,40 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:LayoutGroup}">
-            <Grid Height="28" Cursor="Hand" MouseLeftButtonDown="Item_MouseLeftButtonDown">
-                <Border x:Name="GrpBg" Background="Transparent" 
-                        BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
-                    <Border.RenderTransform>
-                        <SkewTransform AngleX="-20"/>
-                    </Border.RenderTransform>
-                </Border>
-                <StackPanel Orientation="Horizontal" Margin="20,0,25,0" VerticalAlignment="Center">
-                    <TextBlock Text="📁" FontSize="11" Margin="0,0,4,0"/>
-                    <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12" FontWeight="Bold"/>
-                </StackPanel>
-            </Grid>
+            <StackPanel Orientation="Horizontal">
+
+                <Grid Height="28" Cursor="Hand" MouseLeftButtonDown="Item_MouseLeftButtonDown" Background="Transparent">
+                    <Border x:Name="GrpBg" Background="Transparent" 
+                    BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
+                        <Border.RenderTransform>
+                            <SkewTransform AngleX="-20"/>
+                        </Border.RenderTransform>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="20,0,25,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="FolderIcon" Text="📁" FontSize="11" Margin="0,0,4,0"/>
+                        <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding SubTabs}" 
+                      Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
+                      ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+            </StackPanel>
+
             <DataTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="GrpBg" Property="Background" Value="#1AFFFFFF"/>
                 </Trigger>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                    <Setter TargetName="FolderIcon" Property="Text" Value="📂"/>
+                </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
 
@@ -175,38 +193,33 @@
             </ToggleButton>
 
             <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" Placement="Bottom"
-                   IsOpen="{Binding IsChecked, ElementName=OverflowToggle}" StaysOpen="False" AllowsTransparency="True">
+       IsOpen="{Binding IsChecked, ElementName=OverflowToggle}" StaysOpen="False" AllowsTransparency="True">
                 <Border Background="{StaticResource TabBarBackground}" BorderBrush="{StaticResource TabBorder}" BorderThickness="1">
-                    <Menu  Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
-                        <!--<ItemsPanelTemplate>
-                            <VirtualizingStackPanel Orientation="Vertical"/>
-                        </ItemsPanelTemplate>-->
-                        
-                        <Menu.ItemContainerStyle>
-                            <Style TargetType="MenuItem">
-                                <Setter Property="Header" Value="{Binding Title}"/>
-                                <Setter Property="ItemsSource" Value="{Binding SubTabs}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextInactive}"/>
-                                <EventSetter Event="Click" Handler="OverflowMenuItem_Click"/>
-                            </Style>
-                        </Menu.ItemContainerStyle>
-                    </Menu>
+
+                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                        <Menu Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
+
+                            <Menu.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </Menu.ItemsPanel>
+
+                            <Menu.ItemContainerStyle>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Header" Value="{Binding Title}"/>
+                                    <Setter Property="ItemsSource" Value="{Binding SubTabs}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextInactive}"/>
+                                    <EventSetter Event="Click" Handler="OverflowMenuItem_Click"/>
+                                </Style>
+                            </Menu.ItemContainerStyle>
+                        </Menu>
+                    </ScrollViewer>
+
                 </Border>
             </Popup>
 
-            <Popup x:Name="GroupPopup" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-                <Border Background="{StaticResource TabBarBackground}" BorderBrush="{StaticResource TabBorder}" BorderThickness="1">
-                    <ItemsControl x:Name="GroupPopupList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Content="{Binding Title}" Foreground="{StaticResource TextInactive}" 
-                                        Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch"
-                                        Padding="15,5" Cursor="Hand" Click="GroupSubTab_Click"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Border>
-            </Popup>
+           
 
             <Popup x:Name="DragIndicator" AllowsTransparency="True" IsHitTestVisible="False">
                 <Path Data="M 0,0 L 10,0 L 5,8 Z" Fill="Orange" Margin="0,0,0,0"/>
