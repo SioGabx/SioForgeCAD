@@ -32,6 +32,52 @@
             </Style.Triggers>
         </Style>
 
+        <DataTemplate x:Key="TabTooltipTemplate">
+            <StackPanel>
+                <Border BorderThickness="1"
+                        BorderBrush="{StaticResource TabBorder}"
+                        Background="{StaticResource TabBarBackground}"
+                        Padding="6">
+                    <StackPanel>
+                        <!-- Preview image (140×140, hidden when null) -->
+                        <Border x:Name="PreviewBorder"
+                                Width="140" Height="140"
+                                BorderThickness="1"
+                                BorderBrush="{StaticResource TabBorder}"
+                                Margin="0,0,0,4">
+                            <Image Source="{Binding TooltipImage}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+                        <TextBlock Text="{Binding Title}"
+                                   Foreground="{StaticResource TextActive}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="GroupHint"
+                                   Foreground="{StaticResource TextInactive}"
+                                   FontSize="10"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="Groupe : {0}">
+                                    <Binding Path="Group.Title"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding TooltipImage}" Value="{x:Null}">
+                    <Setter TargetName="PreviewBorder" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Group}" Value="{x:Null}">
+                    <Setter TargetName="GroupHint" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+        
         <DataTemplate DataType="{x:Type local:LayoutTab}">
             <Grid Height="28" Cursor="Hand" MouseLeftButtonDown="Item_MouseLeftButtonDown">
                 <Border x:Name="TabBg" Background="{StaticResource TabInactiveBg}" 
@@ -44,6 +90,13 @@
                     <TextBlock Text="📌" Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" FontSize="10" Margin="0,0,4,0"/>
                     <TextBlock x:Name="TabText" Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12"/>
                 </StackPanel>
+
+                <Grid.ToolTip>
+                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}"
+                             Content="{Binding}"
+                             Placement="Top"
+                             VerticalOffset="-2"/>
+                </Grid.ToolTip>
             </Grid>
             <DataTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
