@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:SioForgeCAD.Forms"
-             xmlns:theme="clr-namespace:Autodesk.Windows.Themes;assembly=AdUiPalettes" 
+             xmlns:theme="clr-namespace:Autodesk.Windows.Themes;assembly=AdUiPalettes"
+             xmlns:conv="clr-namespace:SioForgeCAD.Commun.Mist.UI"
              mc:Ignorable="d"
              x:Name="LayoutBarRoot"
              Height="20"
@@ -13,75 +14,128 @@
 
     <UserControl.Resources>
 
-        <SolidColorBrush x:Key="TabBarBackground" 
-                 Color="{Binding Path=CurrentTheme.FileTabsRowBackgroundColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <!-- ═══════════════════════════════════════════════════════════════
+             BRUSHES — Tab bar
+        ════════════════════════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="TabBarBackground"
+                 Color="{Binding Path=CurrentTheme.FileTabsRowBackgroundColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
-        <SolidColorBrush x:Key="TabInactiveBg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <SolidColorBrush x:Key="TabInactiveBg"
+                 Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
-        <SolidColorBrush x:Key="TabHoverBg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <SolidColorBrush x:Key="TabHoverBg"
+                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
-        <SolidColorBrush x:Key="TabBorder" 
-                 Color="{Binding Path=CurrentTheme.FileTabsBorderColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <SolidColorBrush x:Key="TabBorder"
+                 Color="{Binding Path=CurrentTheme.FileTabsBorderColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
-        <SolidColorBrush x:Key="TextActive" 
-                 Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <SolidColorBrush x:Key="TextActive"
+                 Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
-        <SolidColorBrush x:Key="TextInactive" 
-                 Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="GroupHeaderBg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="GroupHeaderHoverBg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="GroupHeaderActiveBg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="NewBtnFg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="NewBtnHoverFg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundHoverColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-
-        <SolidColorBrush x:Key="NewBtnPressedFg" 
-                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundClickColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <SolidColorBrush x:Key="TextInactive"
+                 Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
 
         <LinearGradientBrush x:Key="TabActiveBackground" EndPoint="0,1">
-            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="0"/>
-            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundBottomColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="1"/>
+            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor,
+                          Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="0"/>
+            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundBottomColor,
+                          Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="1"/>
         </LinearGradientBrush>
-        
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             BRUSHES — Group header (séparés pour permettre surcharge)
+        ════════════════════════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="GroupHeaderBg"
+                 Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <SolidColorBrush x:Key="GroupHeaderHoverBg"
+                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <LinearGradientBrush x:Key="GroupHeaderActiveBackground" EndPoint="0,1">
+            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor,
+                          Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="0"/>
+            <GradientStop Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundBottomColor,
+                          Source={x:Static theme:ThemeManager.PaletteSettings}}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <SolidColorBrush x:Key="GroupTextActive"
+                 Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <SolidColorBrush x:Key="GroupTextInactive"
+                 Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <SolidColorBrush x:Key="GroupBorder"
+                 Color="{Binding Path=CurrentTheme.FileTabsBorderColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             BRUSHES — New button
+        ════════════════════════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="NewBtnFg"
+                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <SolidColorBrush x:Key="NewBtnHoverFg"
+                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundHoverColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <SolidColorBrush x:Key="NewBtnPressedFg"
+                 Color="{Binding Path=CurrentTheme.FileTabsNewButtonForegroundClickColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             BRUSHES — Multi-select highlight
+        ════════════════════════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="TabMultiSelectedBg"
+                 Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor,
+                         Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             GEOMETRIES
+        ════════════════════════════════════════════════════════════════ -->
         <Geometry x:Key="TabEndFill">M 0,19 C 17,18 9,0 18,0.5 L 18,19</Geometry>
         <Geometry x:Key="TabEndStroke">M 0,18 L 0,18 C 17,18 9,0 18,0.5</Geometry>
         <Geometry x:Key="TabEndInnerStroke">M 0,17.5 C 18,18 10,1 18,0.5</Geometry>
         <Geometry x:Key="NewTabButtonShape">M 0,15 L 13,15 C 20,15 22,5 22,0 L 10,0 C 4,0 0,9 0,15 Z</Geometry>
         <Geometry x:Key="NewTabButtonPlusShape">M 0,0 L 2,0 2,3 5,3 5,5 2,5 2,8 0,8 0,5 -3,5 -3,3 0,3 Z</Geometry>
-        <Geometry x:Key="LeftScrollButtonShape">M 0,0 L 25,0 35,20 0,20 Z</Geometry>
-        <Geometry x:Key="RightScrollButtonShape">M 0,20 L 35,20 35,0 10,0 Z</Geometry>
+
+        <!-- Overflow button: two small down-chevrons stacked -->
+        <Geometry x:Key="OverflowChevron">M 0,0 L 4,4 8,0 M 0,5 L 4,9 8,5</Geometry>
 
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:PercentConverter x:Key="PercentConverter"/>
 
+        <!-- ═══════════════════════════════════════════════════════════════
+             STYLE — New layout button (+ shaped tab)
+        ════════════════════════════════════════════════════════════════ -->
         <Style x:Key="NewLayoutButtonStyle" TargetType="Button">
-            <Setter Property="Width"  Value="22"/>
-            <Setter Property="Height" Value="22"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width"   Value="22"/>
+            <Setter Property="Height"  Value="22"/>
+            <Setter Property="Margin"  Value="4,0,0,0"/>
+            <Setter Property="Cursor"  Value="Hand"/>
             <Setter Property="ToolTip" Value="Nouveau layout"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid>
                             <Path x:Name="BtnBg"
-                                  Data="M 0,15 L 13,15 C 20,15 22,5 22,0 L 10,0 C 4,0 0,9 0,15 Z"
+                                  Data="{StaticResource NewTabButtonShape}"
                                   Fill="{StaticResource TabInactiveBg}"
                                   Stroke="{StaticResource TabBorder}"
                                   StrokeThickness="0.5"
-                                  Margin="0, 2,0,0"/>
+                                  Margin="0,2,0,0"/>
                             <Path x:Name="Plus"
-                                  Data="M 0,0 L 2,0 2,3 5,3 5,5 2,5 2,8 0,8 0,5 -3,5 -3,3 0,3 Z"
+                                  Data="{StaticResource NewTabButtonPlusShape}"
                                   Fill="{StaticResource NewBtnFg}"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center"
@@ -89,11 +143,11 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Plus" Property="Fill" Value="{StaticResource NewBtnHoverFg}"/>
+                                <Setter TargetName="Plus"  Property="Fill" Value="{StaticResource NewBtnHoverFg}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Plus"  Property="Fill"   Value="{StaticResource NewBtnPressedFg}"/>
-                                <Setter TargetName="BtnBg" Property="Fill"   Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="Plus"  Property="Fill"  Value="{StaticResource NewBtnPressedFg}"/>
+                                <Setter TargetName="BtnBg" Property="Fill"  Value="{StaticResource TabActiveBackground}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -101,51 +155,80 @@
             </Setter>
         </Style>
 
-        <Style x:Key="GroupHeaderButtonStyle" TargetType="Button">
+        <!-- ═══════════════════════════════════════════════════════════════
+             STYLE — Overflow toggle button
+        ════════════════════════════════════════════════════════════════ -->
+        <Style x:Key="OverflowToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width"   Value="18"/>
+            <Setter Property="Height"  Value="18"/>
+            <Setter Property="Margin"  Value="2,1,2,1"/>
             <Setter Property="Cursor"  Value="Hand"/>
-            <Setter Property="Height"  Value="20"/>
-            <Setter Property="Padding" Value="6,0,6,0"/>
+            <Setter Property="ToolTip" Value="Afficher tous les layouts"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="HeaderBorder"
-                                Background="{StaticResource GroupHeaderBg}"
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="{StaticResource TabInactiveBg}"
                                 BorderBrush="{StaticResource TabBorder}"
-                                BorderThickness="0,0,1,0"
-                                Padding="{TemplateBinding Padding}">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock x:Name="ExpandIcon"
-                                           Text="{Binding ExpandIcon}"
-                                           Foreground="{StaticResource TextInactive}"
-                                           FontSize="9"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,3,0"/>
-                                <TextBlock x:Name="GroupTitle"
-                                           Text="{Binding Title}"
-                                           Foreground="{StaticResource TextInactive}"
-                                           FontSize="11"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
+                                BorderThickness="1"
+                                CornerRadius="2">
+                            <Path x:Name="Chevron"
+                                  Data="{StaticResource OverflowChevron}"
+                                  Stroke="{StaticResource NewBtnFg}"
+                                  StrokeThickness="1.3"
+                                  StrokeLineJoin="Round"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Margin="1"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="HeaderBorder" Property="Background"
-                                        Value="{StaticResource GroupHeaderHoverBg}"/>
-                                <Setter TargetName="GroupTitle" Property="Foreground"
-                                        Value="{StaticResource TextActive}"/>
-                                <Setter TargetName="ExpandIcon" Property="Foreground"
-                                        Value="{StaticResource TextActive}"/>
+                                <Setter TargetName="Bd"      Property="Background"    Value="{StaticResource TabHoverBg}"/>
+                                <Setter TargetName="Chevron" Property="Stroke"        Value="{StaticResource NewBtnHoverFg}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd"      Property="Background"    Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="Chevron" Property="Stroke"        Value="{StaticResource NewBtnPressedFg}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             STYLE — Overflow popup list item
+        ════════════════════════════════════════════════════════════════ -->
+        <Style x:Key="OverflowListItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Height"   Value="24"/>
+            <Setter Property="Padding"  Value="8,0,8,0"/>
+            <Setter Property="Cursor"   Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemBd"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                Margin="2,1">
+                            <TextBlock x:Name="ItemTxt"
+                                       Text="{Binding Title}"
+                                       Foreground="{StaticResource TextInactive}"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
+                                       Padding="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBd"  Property="Background"   Value="{StaticResource TabHoverBg}"/>
+                                <Setter TargetName="ItemBd"  Property="BorderBrush"  Value="{StaticResource TabBorder}"/>
+                                <Setter TargetName="ItemTxt" Property="Foreground"   Value="{StaticResource TextActive}"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                                <Setter TargetName="HeaderBorder" Property="Background"
-                                        Value="{StaticResource GroupHeaderActiveBg}"/>
-                                <Setter TargetName="GroupTitle" Property="Foreground"
-                                        Value="{StaticResource TextActive}"/>
-                                <Setter TargetName="ExpandIcon" Property="Foreground"
-                                        Value="{StaticResource TextActive}"/>
-                                <Setter TargetName="HeaderBorder" Property="BorderThickness"
-                                        Value="1,0,1,0"/>
+                                <Setter TargetName="ItemBd"  Property="Background"   Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="ItemBd"  Property="BorderBrush"  Value="{StaticResource TabBorder}"/>
+                                <Setter TargetName="ItemTxt" Property="Foreground"   Value="{StaticResource TextActive}"/>
+                                <Setter TargetName="ItemTxt" Property="FontWeight"   Value="SemiBold"/>
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -153,18 +236,156 @@
             </Setter>
         </Style>
 
+        <!-- ═══════════════════════════════════════════════════════════════
+             STYLE — Group header button  (même forme de tab que les tabs)
+        ════════════════════════════════════════════════════════════════ -->
+        <Style x:Key="GroupHeaderButtonStyle" TargetType="Button">
+            <Setter Property="Cursor"  Value="Hand"/>
+            <Setter Property="Height"  Value="20"/>
+            <Setter Property="Margin"  Value="-5,0,-20,0"/>
+            <Setter Property="Panel.ZIndex" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="TabRoot" VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+
+                                <!-- Left curve -->
+                                <Grid Margin="0" Width="19" VerticalAlignment="Bottom">
+                                    <UIElement.RenderTransform>
+                                        <TranslateTransform X="1"/>
+                                    </UIElement.RenderTransform>
+                                    <Path x:Name="LeftFill"
+                                          Data="{StaticResource TabEndFill}"
+                                          Fill="{StaticResource GroupHeaderBg}">
+                                        <UIElement.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleY="-1"/>
+                                                <TranslateTransform Y="19"/>
+                                            </TransformGroup>
+                                        </UIElement.RenderTransform>
+                                    </Path>
+                                    <Path x:Name="LeftStroke"
+                                          Data="{StaticResource TabEndStroke}"
+                                          Stroke="{StaticResource GroupBorder}"
+                                          StrokeThickness="0.7">
+                                        <UIElement.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleY="-1"/>
+                                                <TranslateTransform Y="19"/>
+                                            </TransformGroup>
+                                        </UIElement.RenderTransform>
+                                    </Path>
+                                </Grid>
+
+                                <!-- Center content -->
+                                <Border x:Name="TabCenter"
+                                        Background="{StaticResource GroupHeaderBg}"
+                                        MinWidth="30">
+                                    <Border Padding="2,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock x:Name="ExpandIcon"
+                                                       Text="{Binding ExpandIcon}"
+                                                       Foreground="{StaticResource GroupTextInactive}"
+                                                       FontSize="9"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,3,0"/>
+                                            <TextBlock x:Name="GroupTitle"
+                                                       Text="{Binding Title}"
+                                                       Foreground="{StaticResource GroupTextInactive}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"
+                                                       MaxWidth="120"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Border>
+
+                                <!-- Right curve -->
+                                <Grid Margin="0" Width="24" Height="19" VerticalAlignment="Bottom">
+                                    <UIElement.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="-1" CenterX="9.5"/>
+                                            <TranslateTransform X="-1"/>
+                                        </TransformGroup>
+                                    </UIElement.RenderTransform>
+                                    <Path x:Name="RightFill"
+                                          Data="{StaticResource TabEndFill}"
+                                          Fill="{StaticResource GroupHeaderBg}">
+                                        <UIElement.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleY="-1"/>
+                                                <TranslateTransform Y="19"/>
+                                            </TransformGroup>
+                                        </UIElement.RenderTransform>
+                                    </Path>
+                                    <Path x:Name="RightStroke"
+                                          Data="{StaticResource TabEndStroke}"
+                                          Stroke="{StaticResource GroupBorder}"
+                                          StrokeThickness="0.7">
+                                        <UIElement.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleY="-1"/>
+                                                <TranslateTransform Y="19"/>
+                                            </TransformGroup>
+                                        </UIElement.RenderTransform>
+                                    </Path>
+                                </Grid>
+
+                            </StackPanel>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="LeftFill"   Property="Fill"       Value="{StaticResource GroupHeaderHoverBg}"/>
+                                <Setter TargetName="RightFill"  Property="Fill"       Value="{StaticResource GroupHeaderHoverBg}"/>
+                                <Setter TargetName="TabCenter"  Property="Background" Value="{StaticResource GroupHeaderHoverBg}"/>
+                                <Setter TargetName="GroupTitle" Property="Foreground" Value="{StaticResource GroupTextActive}"/>
+                                <Setter TargetName="ExpandIcon" Property="Foreground" Value="{StaticResource GroupTextActive}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                <Setter TargetName="LeftFill"   Property="Fill"       Value="{StaticResource GroupHeaderActiveBackground}"/>
+                                <Setter TargetName="RightFill"  Property="Fill"       Value="{StaticResource GroupHeaderActiveBackground}"/>
+                                <Setter TargetName="TabCenter"  Property="Background" Value="{StaticResource GroupHeaderActiveBackground}"/>
+                                <Setter TargetName="GroupTitle" Property="Foreground" Value="{StaticResource GroupTextActive}"/>
+                                <Setter TargetName="ExpandIcon" Property="Foreground" Value="{StaticResource GroupTextActive}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             STYLE — Individual layout tab (ListBoxItem)
+        ════════════════════════════════════════════════════════════════ -->
         <Style x:Key="AcLayoutTabItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Padding"         Value="0"/>
-            <Setter Property="Margin"          Value="-5,0,-20,0"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="IsSelected"      Value="{Binding IsCurrent, Mode=TwoWay}"/>
-            <Setter Property="Panel.ZIndex"    Value="0"/>
+            <Setter Property="Padding"      Value="0"/>
+            <Setter Property="Margin"       Value="-5,0,-20,0"/>
+            <Setter Property="Cursor"       Value="Hand"/>
+            <Setter Property="IsSelected"   Value="{Binding IsCurrent, Mode=TwoWay}"/>
+            <Setter Property="Panel.ZIndex" Value="0"/>
+            <Setter Property="AllowDrop"    Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Grid x:Name="TabRoot" VerticalAlignment="Stretch">
+                            <!-- Drag-drop insertion indicator -->
+                            <Border x:Name="DropLeftIndicator"
+                                    Width="2" HorizontalAlignment="Left"
+                                    Background="{StaticResource TextActive}"
+                                    Visibility="Collapsed"
+                                    Margin="18,2,0,0"/>
+                            <Border x:Name="DropRightIndicator"
+                                    Width="2" HorizontalAlignment="Right"
+                                    Background="{StaticResource TextActive}"
+                                    Visibility="Collapsed"
+                                    Margin="0,2,22,0"/>
+
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
 
+                                <!-- Left curve -->
                                 <Grid Margin="0" Width="19" VerticalAlignment="Bottom">
                                     <UIElement.RenderTransform>
                                         <TranslateTransform X="1"/>
@@ -192,6 +413,7 @@
                                     </Path>
                                 </Grid>
 
+                                <!-- Center label -->
                                 <Border x:Name="TabCenter"
                                         Background="{StaticResource TabInactiveBg}"
                                         MinWidth="20">
@@ -206,6 +428,7 @@
                                     </Border>
                                 </Border>
 
+                                <!-- Right curve -->
                                 <Grid Margin="0" Width="24" Height="19" VerticalAlignment="Bottom">
                                     <UIElement.RenderTransform>
                                         <TransformGroup>
@@ -240,33 +463,127 @@
                         </Grid>
 
                         <ControlTemplate.Triggers>
+                            <!-- Hover (not selected) -->
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
-                                    <Condition Property="IsSelected"    Value="False"/>
-                                    <Condition Property="IsMouseOver"   Value="True"/>
+                                    <Condition Property="IsSelected"  Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="LeftFill"   Property="Fill"       Value="{StaticResource TabHoverBg}"/>
-                                <Setter TargetName="RightFill"  Property="Fill"       Value="{StaticResource TabHoverBg}"/>
-                                <Setter TargetName="TabCenter"  Property="Background" Value="{StaticResource TabHoverBg}"/>
-                                <Setter TargetName="TabLabel"   Property="Foreground" Value="{StaticResource TextActive}"/>
+                                <Setter TargetName="LeftFill"  Property="Fill"       Value="{StaticResource TabHoverBg}"/>
+                                <Setter TargetName="RightFill" Property="Fill"       Value="{StaticResource TabHoverBg}"/>
+                                <Setter TargetName="TabCenter" Property="Background" Value="{StaticResource TabHoverBg}"/>
+                                <Setter TargetName="TabLabel"  Property="Foreground" Value="{StaticResource TextActive}"/>
                             </MultiTrigger>
 
+                            <!-- Selected / active -->
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="LeftFill"   Property="Fill"       Value="{StaticResource TabActiveBackground}"/>
-                                <Setter TargetName="RightFill"  Property="Fill"       Value="{StaticResource TabActiveBackground}"/>
-                                <Setter TargetName="TabCenter"  Property="Background" Value="{StaticResource TabActiveBackground}"/>
-                                <Setter TargetName="TabLabel"   Property="Foreground" Value="{StaticResource TextActive}"/>
-                                <Setter TargetName="TabLabel"   Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="LeftFill"  Property="Fill"       Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="RightFill" Property="Fill"       Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="TabCenter" Property="Background" Value="{StaticResource TabActiveBackground}"/>
+                                <Setter TargetName="TabLabel"  Property="Foreground" Value="{StaticResource TextActive}"/>
+                                <Setter TargetName="TabLabel"  Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Panel.ZIndex" Value="2"/>
                             </Trigger>
+
+                            <!-- Multi-selected (IsMultiSelected custom prop via tag) -->
+                            <DataTrigger Binding="{Binding IsMultiSelected}" Value="True">
+                                <Setter TargetName="LeftFill"  Property="Fill"       Value="{StaticResource TabMultiSelectedBg}"/>
+                                <Setter TargetName="RightFill" Property="Fill"       Value="{StaticResource TabMultiSelectedBg}"/>
+                                <Setter TargetName="TabCenter" Property="Background" Value="{StaticResource TabMultiSelectedBg}"/>
+                                <Setter TargetName="TabLabel"  Property="Foreground" Value="{StaticResource TextActive}"/>
+                                <Setter Property="Panel.ZIndex" Value="1"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
+        <!-- ═══════════════════════════════════════════════════════════════
+             TEMPLATE — Tooltip preview content
+        ════════════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="TabTooltipTemplate" DataType="{x:Type local:LayoutTabItem}">
+            <StackPanel>
+                <Border BorderThickness="1"
+                        BorderBrush="{StaticResource TabBorder}"
+                        Background="{StaticResource TabBarBackground}"
+                        Padding="6">
+                    <StackPanel>
+                        <!-- Preview image (140×140, hidden when null) -->
+                        <Border x:Name="PreviewBorder"
+                                Width="140" Height="140"
+                                BorderThickness="1"
+                                BorderBrush="{StaticResource TabBorder}"
+                                Margin="0,0,0,4">
+                            <Image Source="{Binding TooltipImage}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+                        <TextBlock Text="{Binding Title}"
+                                   Foreground="{StaticResource TextActive}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="GroupHint"
+                                   Foreground="{StaticResource TextInactive}"
+                                   FontSize="10"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="Groupe : {0}">
+                                    <Binding Path="Group.Title"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding TooltipImage}" Value="{x:Null}">
+                    <Setter TargetName="PreviewBorder" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Group}" Value="{x:Null}">
+                    <Setter TargetName="GroupHint" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             TEMPLATE — Tab with tooltip + drag-drop wiring
+        ════════════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="TabItemTemplate" DataType="{x:Type local:LayoutTabItem}">
+            <ListBoxItem Style="{StaticResource AcLayoutTabItemStyle}"
+                         MouseLeftButtonUp="TabItem_MouseLeftButtonUp"
+                         MouseRightButtonUp="TabItem_MouseRightButtonUp"
+                         PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"
+                         MouseMove="TabItem_MouseMove"
+                         Drop="TabItem_Drop"
+                         DragOver="TabItem_DragOver"
+                         DragLeave="TabItem_DragLeave"
+                         VerticalContentAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         AllowDrop="True"
+                         ToolTipService.InitialShowDelay="800"
+                         ToolTipService.ShowDuration="4000">
+                <ListBoxItem.ToolTip>
+                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}"
+                             Content="{Binding}"
+                             Placement="Top"
+                             VerticalOffset="-2"/>
+                </ListBoxItem.ToolTip>
+            </ListBoxItem>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             TEMPLATE — Group (header + expandable tabs)
+        ════════════════════════════════════════════════════════════════ -->
         <DataTemplate x:Key="GroupTemplate" DataType="{x:Type local:LayoutTabGroup}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Stretch"
+                        AllowDrop="True"
+                        Drop="Group_Drop"
+                        DragOver="Group_DragOver">
+
                 <Button Style="{StaticResource GroupHeaderButtonStyle}"
                         Command="{Binding ToggleExpandCommand}"
                         ToolTip="{Binding Title}"/>
@@ -288,13 +605,30 @@
                             <ListBoxItem Style="{StaticResource AcLayoutTabItemStyle}"
                                          MouseLeftButtonUp="TabItem_MouseLeftButtonUp"
                                          MouseRightButtonUp="TabItem_MouseRightButtonUp"
+                                         PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"
+                                         MouseMove="TabItem_MouseMove"
+                                         Drop="TabItem_Drop"
+                                         DragOver="TabItem_DragOver"
+                                         DragLeave="TabItem_DragLeave"
                                          VerticalContentAlignment="Stretch"
-                                         VerticalAlignment="Stretch"/>
+                                         VerticalAlignment="Stretch"
+                                         AllowDrop="True"
+                                         ToolTipService.InitialShowDelay="800"
+                                         ToolTipService.ShowDuration="4000">
+                                <ListBoxItem.ToolTip>
+                                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}"
+                                             Content="{Binding}"
+                                             Placement="Top"
+                                             VerticalOffset="-2"/>
+                                </ListBoxItem.ToolTip>
+                            </ListBoxItem>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <Border Width="1" Background="{StaticResource TabBorder}"
+                <!-- Thin separator after expanded group -->
+                <Border Width="1"
+                        Background="{StaticResource GroupBorder}"
                         Margin="2,2,2,2"
                         Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
@@ -302,54 +636,145 @@
 
     </UserControl.Resources>
 
+    <!-- ═══════════════════════════════════════════════════════════════════
+         ROOT LAYOUT
+    ════════════════════════════════════════════════════════════════════ -->
     <Border Background="{StaticResource TabBarBackground}">
-        <ScrollViewer HorizontalScrollBarVisibility="Hidden"
-                      VerticalScrollBarVisibility="Disabled"
-                      Focusable="False">
-            <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Stretch"
-                        x:Name="MainPanel">
+        <Grid HorizontalAlignment="Left" 
+              MaxWidth="{Binding ActualWidth, ElementName=RootBorder}">
+            <!--<Grid.ColumnDefinitions>
+                --><!-- Tab strip (takes all remaining space) --><!--
+                <ColumnDefinition Width="{Binding ActualWidth, ElementName=RootBorder,
+    Converter={StaticResource PercentConverter},
+    ConverterParameter=0.7}" />
+                --><!-- Overflow toggle button --><!--
+                <ColumnDefinition Width="Auto"/>
+                --><!-- New layout button --><!--
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                
+            </Grid.ColumnDefinitions>-->
 
-                <ItemsControl x:Name="FreeTabsControl"
-                              VerticalAlignment="Stretch">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type local:LayoutTabItem}">
-                            <ListBoxItem Style="{StaticResource AcLayoutTabItemStyle}"
-                                         MouseLeftButtonUp="TabItem_MouseLeftButtonUp"
-                                         MouseRightButtonUp="TabItem_MouseRightButtonUp"
-                                         VerticalContentAlignment="Stretch"
-                                         VerticalAlignment="Stretch"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+            <Grid.ColumnDefinitions>
+                <!-- Colonne principale FIXE (contenu) -->
+                <ColumnDefinition Width="*"/>
 
-                <ItemsControl x:Name="GroupsControl"
-                              VerticalAlignment="Stretch">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type local:LayoutTabGroup}">
-                            <ContentPresenter Content="{Binding}"
-                                              ContentTemplate="{StaticResource GroupTemplate}"
-                                              VerticalAlignment="Stretch"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ColumnDefinition Width="20"/>
 
-                <Button x:Name="NewLayoutBtn"
-                        Style="{StaticResource NewLayoutButtonStyle}"
-                        Click="NewLayoutBtn_Click"
-                        VerticalAlignment="Center"/>
+                <ColumnDefinition Width="50"/>
 
-            </StackPanel>
-        </ScrollViewer>
+                <ColumnDefinition Width="20"/>
+            </Grid.ColumnDefinitions>
+
+
+        <!-- ─── Tab strip ─────────────────────────────────────────── -->
+            <Rectangle Grid.Column="0" VerticalAlignment="Stretch" Opacity="0"></Rectangle>
+            <ScrollViewer x:Name="TabScrollViewer"
+                          Grid.Column="0"
+                          HorizontalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Disabled"
+                          Focusable="False"
+                          ClipToBounds="True">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Stretch"
+                            x:Name="MainPanel">
+
+                    <!-- Free (ungrouped) tabs -->
+                    <ItemsControl x:Name="FreeTabsControl"
+                                  VerticalAlignment="Stretch">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:LayoutTabItem}">
+                                <ListBoxItem Style="{StaticResource AcLayoutTabItemStyle}"
+                                             MouseLeftButtonUp="TabItem_MouseLeftButtonUp"
+                                             MouseRightButtonUp="TabItem_MouseRightButtonUp"
+                                             PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"
+                                             MouseMove="TabItem_MouseMove"
+                                             Drop="TabItem_Drop"
+                                             DragOver="TabItem_DragOver"
+                                             DragLeave="TabItem_DragLeave"
+                                             VerticalContentAlignment="Stretch"
+                                             VerticalAlignment="Stretch"
+                                             AllowDrop="True"
+                                             ToolTipService.InitialShowDelay="800"
+                                             ToolTipService.ShowDuration="4000">
+                                    <ListBoxItem.ToolTip>
+                                        <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}"
+                                                 Content="{Binding}"
+                                                 Placement="Top"
+                                                 VerticalOffset="-2"/>
+                                    </ListBoxItem.ToolTip>
+                                </ListBoxItem>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Groups -->
+                    <ItemsControl x:Name="GroupsControl"
+                                  VerticalAlignment="Stretch">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:LayoutTabGroup}">
+                                <ContentPresenter Content="{Binding}"
+                                                  ContentTemplate="{StaticResource GroupTemplate}"
+                                                  VerticalAlignment="Stretch"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+            </ScrollViewer>
+
+         
+           
+
+            <!-- ─── New layout button ─────────────────────────────────── -->
+            <Button x:Name="NewLayoutBtn"
+                    Grid.Column="1"
+                    Style="{StaticResource NewLayoutButtonStyle}"
+                    Click="NewLayoutBtn_Click"
+                    VerticalAlignment="Center"/>
+            
+            <!-- ─── Overflow button + popup ───────────────────────────── -->
+            <ToggleButton x:Name="OverflowToggle"
+                 Grid.Column="3"
+                 Style="{StaticResource OverflowToggleButtonStyle}"
+                 VerticalAlignment="Center"
+                 Visibility="Collapsed">
+                <ToggleButton.Resources>
+                    <!-- Popup attached to the toggle -->
+                </ToggleButton.Resources>
+            </ToggleButton>
+
+            <Popup x:Name="OverflowPopup"
+        Grid.Column="3"
+        PlacementTarget="{Binding ElementName=OverflowToggle}"
+        Placement="Top"
+        VerticalOffset="-2"
+        AllowsTransparency="True"
+        StaysOpen="False"
+        IsOpen="{Binding IsChecked, ElementName=OverflowToggle, Mode=TwoWay}">
+                <Border BorderThickness="1"
+             BorderBrush="{StaticResource TabBorder}"
+             Background="{StaticResource TabBarBackground}"
+             MinWidth="150" MaxWidth="280">
+                    <ListBox x:Name="OverflowList"
+                  MaxHeight="360"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  ItemContainerStyle="{StaticResource OverflowListItemStyle}"
+                  MouseLeftButtonUp="OverflowList_MouseLeftButtonUp"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                </Border>
+            </Popup>
+        </Grid>
     </Border>
 </UserControl>
