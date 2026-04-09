@@ -214,9 +214,15 @@ namespace SioForgeCAD.Commun
 
         public static void Regen()
         {
+            Editor ed = GetEditor();
+            ed.Regen();
+        }
+
+        public static void RegenCommand()
+        {
             SendStringToExecute("_.REGEN", false);
         }
-        public static void RegenALL()
+        public static void RegenALLCommand()
         {
             SendStringToExecute("_.REGENALL", false);
         }

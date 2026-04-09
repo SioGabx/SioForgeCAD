@@ -334,6 +334,12 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "POLYISCLOCKWISE", CommandFlags.UsePickSet)]
         public static void POLYISCLOCKWISE() => Functions.POLYISCLOCKWISE.Check();
 
+        [CommandMethod("SIOFORGECAD", "ADDPOINTSATPOLYLIGNEVERTICES", CommandFlags.Redraw)]
+        public static void ADDPOINTSATPOLYLIGNEVERTICES() => Functions.ADDPOINTSATPOLYLIGNEVERTICES.Execute();
+       
+        [CommandMethod("SIOFORGECAD", "VIEWGEOMETRYVERTEX", CommandFlags.Redraw)]
+        public static void VIEWGEOMETRYVERTEX() => Functions.VIEWGEOMETRYVERTEX.ToggleOverrule();
+
         [CommandMethod("SIOFORGECAD", "LINESAVERAGE", CommandFlags.UsePickSet)]
         public static void LINESAVERAGE() => Functions.LINESAVERAGE.Compute();
 

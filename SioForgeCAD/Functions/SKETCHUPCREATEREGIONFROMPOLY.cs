@@ -163,7 +163,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            Generic.RegenALL();
+            Generic.RegenALLCommand();
         }
 
     }

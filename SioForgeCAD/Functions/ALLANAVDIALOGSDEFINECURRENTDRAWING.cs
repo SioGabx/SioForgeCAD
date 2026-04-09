@@ -78,6 +78,8 @@ namespace SioForgeCAD.Functions
                     cmd == "PUBLISH" ||
                     cmd == "IMPORT" ||
                     cmd == "EXPORT" ||
+                    cmd == "NETLOAD" ||
+                    cmd == "APPLOAD" ||
                     cmd == "ATTACH" ||
                     cmd == "XREF")
                 {

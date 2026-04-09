@@ -101,7 +101,7 @@ namespace SioForgeCAD.Functions
 
                 Generic.WriteMessage($"{sortedIds.Length} entités triées par ordre d'affichage.");
                 tr.Commit();
-                Generic.Regen();
+                Generic.RegenCommand();
             }
         }
     }
