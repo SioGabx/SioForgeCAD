@@ -1,5 +1,6 @@
 ﻿using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -10,17 +11,16 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace SioForgeCAD.Forms
 {
     public partial class LayoutBar : UserControl
     {
-        // 1. Nouvelle collection dédiée pour figer les épinglés à gauche
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
         public ObservableCollection<LayoutItem> Items { get; } = new ObservableCollection<LayoutItem>();
 
         private LayoutItem _currentItem;
+        private LayoutItem _lastSelectedItem; // Pour la sélection avec Shift
         private Point _dragStart;
         private bool _isDragging;
         private LayoutItem _dragSource;
@@ -32,7 +32,6 @@ namespace SioForgeCAD.Forms
 
             TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-            // Ajout dans la bonne collection
             PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
             Items.Add(new LayoutTab { Title = "Plan RDC" });
             Items.Add(new LayoutTab { Title = "Plan R+1" });
@@ -45,23 +44,11 @@ namespace SioForgeCAD.Forms
             Items.Add(new LayoutTab { Title = "Plan R+2" });
             Items.Add(new LayoutTab { Title = "Plan R+3" });
             Items.Add(new LayoutTab { Title = "Plan R+4" });
-            Items.Add(new LayoutTab { Title = "Plan R+5" });
-            Items.Add(new LayoutTab { Title = "Plan R+6" });
-            Items.Add(new LayoutTab { Title = "Plan R+7" });
-            Items.Add(new LayoutTab { Title = "Plan R+8" });
-            Items.Add(new LayoutTab { Title = "Plan R+9" });
-            Items.Add(new LayoutTab { Title = "Plan R+10" });
-            Items.Add(new LayoutTab { Title = "Plan R+11" });
-            Items.Add(new LayoutTab { Title = "Plan R+12" });
-            Items.Add(new LayoutTab { Title = "Plan R+13" });
         }
 
         private void ClearSelection()
         {
-            // Désélectionne tous les éléments épinglés
             foreach (var item in PinnedItems) item.IsSelected = false;
-
-            // Désélectionne tous les éléments standard et les sous-éléments des groupes
             foreach (var item in Items)
             {
                 item.IsSelected = false;
@@ -72,9 +59,24 @@ namespace SioForgeCAD.Forms
             }
         }
 
+        // Aplatit la hiérarchie pour permettre une sélection par plage (Shift)
+        private List<LayoutItem> GetVisibleItemsList()
+        {
+            var list = new List<LayoutItem>();
+            list.AddRange(PinnedItems);
+            foreach (var item in Items)
+            {
+                list.Add(item);
+                if (item is LayoutGroup group && group.IsExpanded)
+                {
+                    list.AddRange(group.SubTabs);
+                }
+            }
+            return list;
+        }
+
         private void Item_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // On ne fait QUE préparer les variables pour le Drag & Drop
             if ((sender as FrameworkElement)?.DataContext is LayoutItem clickedItem)
             {
                 _dragStart = e.GetPosition(null);
@@ -85,40 +87,56 @@ namespace SioForgeCAD.Forms
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // Si on a relâché le clic SANS avoir bougé la souris (donc sans drag)
             if (!_isDragging && _dragSource != null)
             {
-                // On vérifie si la touche Ctrl est enfoncée
                 bool isCtrlPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+                bool isShiftPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
 
-                // Comportement pour les Dossiers (LayoutGroup)
-                if (_dragSource is LayoutGroup group && !isCtrlPressed)
+                if (_dragSource is LayoutGroup group && !isCtrlPressed && !isShiftPressed)
                 {
-                    group.IsExpanded = !group.IsExpanded; // Clic normal : Ouvre/Ferme le dossier
+                    group.IsExpanded = !group.IsExpanded;
                 }
                 else
                 {
-                    if (isCtrlPressed)
+                    if (isShiftPressed && _lastSelectedItem != null)
                     {
-                        // MULTI-SÉLECTION (Ctrl + Clic) : On inverse l'état de sélection
-                        _dragSource.IsSelected = !_dragSource.IsSelected;
+                        // MULTI-SÉLECTION (Shift + Clic) : Sélection d'une plage
+                        var flatList = GetVisibleItemsList();
+                        int startIndex = flatList.IndexOf(_lastSelectedItem);
+                        int endIndex = flatList.IndexOf(_dragSource);
 
+                        if (startIndex != -1 && endIndex != -1)
+                        {
+                            ClearSelection();
+                            int min = Math.Min(startIndex, endIndex);
+                            int max = Math.Max(startIndex, endIndex);
+                            for (int i = min; i <= max; i++)
+                            {
+                                flatList[i].IsSelected = true;
+                            }
+                        }
+                    }
+                    else if (isCtrlPressed)
+                    {
+                        // MULTI-SÉLECTION (Ctrl + Clic)
+                        _dragSource.IsSelected = !_dragSource.IsSelected;
                         if (_dragSource is LayoutGroup gp)
                         {
-                            gp.SubTabs.ForEach(t => t.IsSelected = gp.IsSelected);
+                            gp.SubTabs.ToList().ForEach(t => t.IsSelected = gp.IsSelected);
                         }
+                        _lastSelectedItem = _dragSource.IsSelected ? _dragSource : null;
                     }
                     else
                     {
-                        // SÉLECTION SIMPLE (Clic normal) : On efface tout et on sélectionne le cliqué
+                        // SÉLECTION SIMPLE
                         ClearSelection();
                         _dragSource.IsSelected = true;
                         SetCurrentItem(_dragSource);
+                        _lastSelectedItem = _dragSource;
                     }
                 }
             }
 
-            // On réinitialise
             _dragSource = null;
             _isDragging = false;
         }
@@ -127,6 +145,7 @@ namespace SioForgeCAD.Forms
         {
             if (_currentItem != null) _currentItem.IsCurrent = false;
             _currentItem = item;
+            _lastSelectedItem = item;
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
@@ -137,72 +156,33 @@ namespace SioForgeCAD.Forms
 
         private void ScrollToItem(LayoutItem item)
         {
-            if (item == null) return;
+            if (item == null || (item is LayoutTab tab && tab.IsPinned)) return;
 
-            // Si l'élément est épinglé, il est toujours visible à gauche, pas besoin de scroller
-            if (item is LayoutTab tab && tab.IsPinned) return;
-
-            // On utilise le Dispatcher pour retarder légèrement l'exécution.
-            // Cela garantit que si le LayoutGroup vient juste d'être mis à IsExpanded = true,
-            // WPF a eu le temps de dessiner ses sous-onglets dans l'arbre visuel avant de scroller.
             Dispatcher.InvokeAsync(() =>
             {
                 FrameworkElement container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement ?? GetVisualContainerFromItem(TabItemsControl, item);
-                if (container != null)
-                {
-                    ScrollTabIntoView(container);
-                }
-
+                if (container != null) ScrollTabIntoView(container);
             }, System.Windows.Threading.DispatcherPriority.Loaded);
-
         }
 
         private void ScrollTabIntoView(FrameworkElement container)
         {
-            if (container == null || TabScrollViewer == null || PinnedControl == null || TabItemsControl == null)
-                return;
-
+            if (container == null || TabScrollViewer == null || PinnedControl == null || TabItemsControl == null) return;
             try
             {
-                // 1. Obtenir la position de l'élément par rapport au conteneur des onglets scrollables
                 GeneralTransform transform = container.TransformToAncestor(TabItemsControl);
                 Point itemPos = transform.Transform(new Point(0, 0));
 
-                double itemLocalX = itemPos.X;
-                double itemWidth = container.ActualWidth;
+                double itemExtentX = PinnedControl.ActualWidth + itemPos.X;
+                double itemExtentRight = itemExtentX + container.ActualWidth;
+                double visibleLeft = TabScrollViewer.HorizontalOffset + PinnedControl.ActualWidth;
+                double visibleRight = TabScrollViewer.HorizontalOffset + TabScrollViewer.ViewportWidth;
 
-                // 2. Récupérer les dimensions utiles de notre layout
-                double pinnedWidth = PinnedControl.ActualWidth;
-                double viewportWidth = TabScrollViewer.ViewportWidth;
-                double currentScroll = TabScrollViewer.HorizontalOffset;
-
-                // 3. Calculer les positions absolues de l'élément dans la zone de défilement totale
-                // On ajoute pinnedWidth car le TabItemsControl a une marge à gauche équivalente
-                double itemExtentX = pinnedWidth + itemLocalX;
-                double itemExtentRight = itemExtentX + itemWidth;
-
-                // 4. Définir les limites de la zone REELLEMENT visible (non cachée par PinnedControl)
-                double visibleLeft = currentScroll + pinnedWidth;
-                double visibleRight = currentScroll + viewportWidth;
-
-                // 5. Ajuster le scroll si l'élément dépasse
-                if (itemExtentX < visibleLeft)
-                {
-                    // L'élément est caché à gauche (sous les épinglés) -> On l'aligne à gauche
-                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - pinnedWidth);
-                }
-                else if (itemExtentRight > visibleRight)
-                {
-                    // L'élément est caché à droite (hors de l'écran) -> On l'aligne à droite
-                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - viewportWidth);
-                }
+                if (itemExtentX < visibleLeft) TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - PinnedControl.ActualWidth);
+                else if (itemExtentRight > visibleRight) TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - TabScrollViewer.ViewportWidth);
             }
-            catch (InvalidOperationException)
-            {
-                // Ignore : Se produit si l'élément n'est pas encore rendu dans l'arbre visuel WPF
-            }
+            catch (InvalidOperationException) { }
         }
-
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -219,6 +199,7 @@ namespace SioForgeCAD.Forms
             Items.Add(newTab);
             SetCurrentItem(newTab);
             TabScrollViewer.ScrollToRightEnd();
+            ClearSelection();
         }
 
         private void TabScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -234,7 +215,6 @@ namespace SioForgeCAD.Forms
         {
             base.OnPreviewMouseMove(e);
 
-            // 2. Annulation du drag si l'item est épinglé
             if (e.LeftButton == MouseButtonState.Pressed && _dragSource?.IsPinned == false && !_isDragging)
             {
                 Vector diff = _dragStart - e.GetPosition(null);
@@ -242,161 +222,172 @@ namespace SioForgeCAD.Forms
                     Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
                     _isDragging = true;
-                    DragDrop.DoDragDrop(this, _dragSource, DragDropEffects.Move);
+
+                    // Si on drag un élément qui n'est pas sélectionné, on le sélectionne lui seul
+                    if (!_dragSource.IsSelected)
+                    {
+                        ClearSelection();
+                        _dragSource.IsSelected = true;
+                        _lastSelectedItem = _dragSource;
+                    }
+
+                    // On rassemble tous les éléments sélectionnés
+                    var selectedItems = GetVisibleItemsList().Where(i => i.IsSelected && !i.IsPinned).ToList();
+
+                    DragDrop.DoDragDrop(this, new DataObject("SelectedItems", selectedItems), DragDropEffects.Move);
                 }
             }
         }
-
 
         protected override void OnDragOver(DragEventArgs e)
         {
             base.OnDragOver(e);
             if (!_isDragging) return;
 
-            LayoutItem sourceItem = e.Data.GetData(typeof(LayoutTab)) as LayoutItem ?? e.Data.GetData(typeof(LayoutGroup)) as LayoutItem ?? _dragSource;
+            LayoutItem sourceItem = (e.Data.GetData("SelectedItems") as List<LayoutItem>)?.FirstOrDefault()
+                                    ?? _dragSource;
+
+            if (sourceItem == null) return;
+
+
+            // --- LOGIQUE D'AUTO-SCROLL ---
+            if (TabScrollViewer != null && PinnedControl != null)
+            {
+                const double scrollTolerance = 80.0; // Largeur de la zone sensible
+                const double minScrollStep = 2.0;    // Vitesse minimale (au bord de la tolerance)
+                const double maxScrollStep = 15.0;   // Vitesse maximale capée (au bord extrême de l'écran)
+
+                Point mousePos = e.GetPosition(this);
+
+                double leftVisibleEdge = PinnedControl.ActualWidth;
+                double rightVisibleEdge = this.ActualWidth;
+
+                double step = 0;
+                bool scrollLeft = false;
+
+                // --- Calcul pour le bord GAUCHE ---
+                if (mousePos.X < leftVisibleEdge + scrollTolerance)
+                {
+                    // Distance entre la souris et le bord gauche (0 au bord, 80 à la limite de la tolérance)
+                    double dist = mousePos.X - leftVisibleEdge;
+
+                    // Intensité linéaire (1 au bord extrême, 0 à la limite de tolérance)
+                    double intensity = 1.0 - (Math.Max(0, dist) / scrollTolerance);
+
+                    // Effet exponentiel/accélération (on met au carré)
+                    intensity = Math.Pow(intensity, 2);
+
+                    // Interpolation entre la vitesse min et max
+                    step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+                    scrollLeft = true;
+                }
+                // --- Calcul pour le bord DROIT ---
+                else if (mousePos.X > rightVisibleEdge - scrollTolerance) // <-- Correction : on enlève le "* 2"
+                {
+                    double dist = rightVisibleEdge - mousePos.X;
+                    dist = Math.Max(0, dist); // Si la souris sort de la fenêtre à droite, la distance reste 0
+
+                    double intensity = 1.0 - (dist / scrollTolerance);
+                    intensity = Math.Max(0.0, intensity); // SÉCURITÉ : Empêche l'intensité de devenir négative
+
+                    intensity = Math.Pow(intensity, 2);
+                    step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+                }
+
+                // --- Application du scroll ---
+                if (step > 0)
+                {
+                    if (scrollLeft)
+                        TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset - step);
+                    else
+                        TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset + step);
+                }
+            }
+            // ------------------------------------------------------------
+
+
+
+
+
+
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
 
-            if (sourceItem is LayoutGroup lg)
-            {
-                lg.IsExpanded = false;
-            }
+            if (sourceItem is LayoutGroup lg) lg.IsExpanded = false;
 
             if (targetContainer?.DataContext is LayoutItem targetItem)
             {
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
-                if (targetItem is LayoutTab tTab && tTab.IsInGroup)
-                {
-                    targetGrp = tTab.ParentGroup;
-                }
+                if (targetItem is LayoutTab tTab && tTab.IsInGroup) targetGrp = tTab.ParentGroup;
 
                 if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                 {
                     if (!targetGrp.Contains(sTab))
                     {
-                        // 1. Si on cible un Groupe avec un onglet externe -> Flèche à -90 au DÉBUT du groupe
-                        var groupContainer = targetItem is LayoutGroup
-                            ? targetContainer
-                            : GetVisualParent<ContentPresenter>(VisualTreeHelper.GetParent(targetContainer));
-
+                        var groupContainer = targetItem is LayoutGroup ? targetContainer : GetVisualParent<ContentPresenter>(VisualTreeHelper.GetParent(targetContainer));
                         var placementTarget = groupContainer ?? targetContainer;
-
-                        // PlacementMode.Relative Plus simple pour caler à gauche
                         ShowDragIndicator(placementTarget, -12, (placementTarget.ActualHeight / 2) + 4, -90, PlacementMode.Relative);
-                        Debug.WriteLine("Cible un Groupe avec un onglet externe");
                     }
                     else if (targetItem is LayoutGroup)
                     {
-                        // Onglet interne déposé directement sur l'en-tête du groupe
                         var firstTabItem = targetGrp.SubTabs.Count > 0 ? targetGrp.SubTabs[0] : null;
-
                         if (firstTabItem != null)
                         {
                             FrameworkElement firstTabContainer = GetVisualContainerFromItem(targetContainer, firstTabItem);
-                            var placementTarget = firstTabContainer ?? targetContainer;
-                            ShowDragIndicator(placementTarget, -5, -2, 0);
-                            Debug.WriteLine("Onglet interne sur le group tab -> Placé avant le 1er onglet");
+                            ShowDragIndicator(firstTabContainer ?? targetContainer, -5, -2, 0);
                         }
                     }
                     else if (targetItem is LayoutTab targetTabInside)
                     {
-                        // 2. Onglet interne au groupe -> Réorganisation classique (Flèche vers le bas)
                         int baseIndex = targetGrp.IndexOf(targetTabInside);
-                        int sourceIndex = targetGrp.IndexOf(sTab); // On récupère l'index de la source dans le groupe
-
+                        int sourceIndex = targetGrp.IndexOf(sTab);
                         CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
-                        bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) ||
-                                                                     (isRightHalf && sourceIndex == baseIndex + 1);
 
+                        bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1);
                         if (isSameLocation)
                         {
-                            // On récupère le conteneur parent (le panel du groupe)
                             var parentPanel = VisualTreeHelper.GetParent(targetContainer);
                             FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sTab);
-
-                            if (sourceTabContainer != null)
-                            {
-                                ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
-                            }
+                            if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
                         }
-                        else
-                        {
-                            ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
-                        }
-
-                        Debug.WriteLine("Onglet interne au groupe");
+                        else ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
                     }
                 }
-                else if (Items.Contains(targetItem) && targetItem != sourceItem) // Condition simplifiée
+                else if (Items.Contains(targetItem) && targetItem != sourceItem)
                 {
-                    // 3. Indicateur vertical classique racine
                     int baseIndex = Items.IndexOf(targetItem);
                     int sourceIndex = Items.IndexOf(sourceItem);
-
                     CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
 
-                    // Un mouvement ne change rien si :
-                    // - On cible la MOITIÉ GAUCHE de l'élément situé juste à DROITE de l'élément glissé
-                    // - On cible la MOITIÉ DROITE de l'élément situé juste à GAUCHE de l'élément glissé
-                    bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) ||
-                                          (isRightHalf && sourceIndex == baseIndex + 1);
-
+                    bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1);
                     if (isSameLocation)
                     {
-                        // On cherche à partir du parent (qui contient TOUS les onglets), 
-                        // ou simplement 'this' si ta classe courante est le conteneur global.
                         var parentPanel = VisualTreeHelper.GetParent(targetContainer);
                         FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sourceItem);
-
-                        if (sourceTabContainer != null)
-                        {
-                            ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
-                        }
+                        if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
                     }
-                    else
-                    {
-                        ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
-                    }
-
-                    Debug.WriteLine("Reorder racine");
+                    else ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
                 }
             }
         }
 
-
-        /// <summary>
-        /// Calcule le nouvel index d'insertion basé sur la position de la souris par rapport au conteneur cible.
-        /// </summary>
         private static int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
         {
             isRightHalf = false;
-
-            // Si l'index est invalide (ex: introuvable), on retourne 0 par sécurité
-            if (currentItemIndex < 0)
-            {
-                Debug.WriteLine("index est invalide (ex: introuvable), on retourne 0 par sécurité");
-                currentItemIndex = 0;
-            }
+            if (currentItemIndex < 0) currentItemIndex = 0;
 
             if (targetContainer != null)
             {
                 Point pos = e.GetPosition(targetContainer);
                 isRightHalf = pos.X > targetContainer.ActualWidth / 2;
-
-                // Si on est sur la moitié droite, on insère APRÈS l'élément visé
-                if (isRightHalf)
-                {
-                    currentItemIndex++;
-                }
+                if (isRightHalf) currentItemIndex++;
             }
-
             return currentItemIndex;
         }
 
-
         private void ShowDragIndicator(UIElement PlacementTarget, double HorizontalOffset, double VerticalOffset, double Rotation, PlacementMode placementMode = PlacementMode.Top)
         {
-            DragIndicator.RenderTransformOrigin = new Point(0.5, 0.5);// On s'assure que la flèche tourne bien autour de son centre
+            DragIndicator.RenderTransformOrigin = new Point(0.5, 0.5);
             DragIndicator.RenderTransform = new RotateTransform(Rotation);
             DragIndicator.PlacementTarget = PlacementTarget;
             DragIndicator.Placement = placementMode;
@@ -404,7 +395,6 @@ namespace SioForgeCAD.Forms
             DragIndicator.VerticalOffset = VerticalOffset;
             DragIndicator.IsOpen = true;
         }
-
 
         protected override void OnDragLeave(DragEventArgs e)
         {
@@ -417,64 +407,94 @@ namespace SioForgeCAD.Forms
             base.OnDrop(e);
             DragIndicator.IsOpen = false;
 
-            LayoutItem sourceItem = e.Data.GetData(typeof(LayoutTab)) as LayoutItem ?? e.Data.GetData(typeof(LayoutGroup)) as LayoutItem ?? _dragSource;
-
-            if (sourceItem != null)
+            // Récupération de la liste complète glissée
+            List<LayoutItem> sourceItems = e.Data.GetData("SelectedItems") as List<LayoutItem>;
+            if (sourceItems == null || !sourceItems.Any())
             {
-                var targetElement = e.OriginalSource as FrameworkElement;
-                var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
-                var targetParentContainer = GetVisualParent<ContentPresenter>(targetContainer);
+                _dragSource = null;
+                _isDragging = false;
+                return;
+            }
 
-                if (targetContainer?.DataContext is LayoutItem targetItem)
+            var targetElement = e.OriginalSource as FrameworkElement;
+            var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
+            var targetParentContainer = GetVisualParent<ContentPresenter>(targetContainer);
+
+            if (targetContainer?.DataContext is LayoutItem targetItem)
+            {
+                // Si on drop sur soi-même ou dans sa propre sélection, on annule
+                if (sourceItems.Contains(targetItem))
                 {
-                    LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
+                    _dragSource = null;
+                    _isDragging = false;
+                    return;
+                }
 
-                    if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
+                LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
+                int insertIndex = 0;
+                LayoutGroup targetGroupDest = null;
+
+                // 1. Calcul de l'index d'insertion
+                if (targetGrp != null)
+                {
+                    targetGroupDest = targetGrp;
+                    if (!targetGrp.Contains(targetItem as LayoutTab)) // Sur l'en-tête, venant de l'extérieur
                     {
-                        if (!targetGrp.Contains(sTab))
-                        {
-                            // Si on cible un Groupe avec un onglet externe 
-                            RemoveFromAll(sTab);
-                            targetGrp.Insert(0, sTab); // BUGFIX : Insert à 0 pour correspondre à la flèche visuelle
-                            targetGrp.IsExpanded = true;
-                        }
-                        else if (targetGrp.Contains(sTab) && targetItem is LayoutTab tTab)
-                        {
-                            // Si on cible un Groupe avec un onglet interne 
-                            var grp = sTab.ParentGroup;
-                            int oldIndex = grp.IndexOf(sTab);
-                            int baseIndex = grp.IndexOf(tTab);
-
-                            // Utilisation de la nouvelle méthode
-                            int newIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
-                            Debug.WriteLine(newIndex);
-                            // Compensation du décalage lors du retrait de l'item original
-                            if (oldIndex < newIndex) newIndex--;
-
-                            grp.Remove(sTab);
-                            grp.Insert(newIndex, sTab);
-                        }
-                        else if (targetGrp.Contains(sTab) && targetItem is LayoutGroup)
-                        {
-                            // Ajout du cas manquant : Onglet interne déposé sur l'en-tête de son propre groupe
-                            var grp = sTab.ParentGroup;
-                            grp.Remove(sTab);
-                            grp.Insert(0, sTab); // On le force au début, comme la flèche l'indique
-                        }
+                        insertIndex = 0;
+                        targetGrp.IsExpanded = true;
                     }
-                    else if (Items.IndexOf(targetItem) != Items.IndexOf(sourceItem))
+                    else if (targetItem is LayoutTab tTab) // Sur un onglet interne
                     {
-                        // Réorganisation classique racine
+                        int baseIndex = targetGrp.IndexOf(tTab);
+                        insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                    }
+                    else if (targetItem is LayoutGroup) // Sur l'en-tête de son propre groupe
+                    {
+                        insertIndex = 0;
+                    }
+                }
+                else
+                {
+                    int baseIndex = Items.IndexOf(targetItem);
+                    insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                }
 
-                        RemoveFromAll(sourceItem);
-                        int baseIndex = Items.IndexOf(targetItem);
+                // 2. Compensation du décalage : retirer les éléments va décaler l'index cible
+                if (targetGroupDest != null)
+                {
+                    int preItemsCount = sourceItems.Count(s => s is LayoutTab t && t.ParentGroup == targetGroupDest && targetGroupDest.IndexOf(t) < insertIndex);
+                    insertIndex -= preItemsCount;
+                }
+                else
+                {
+                    int preItemsCount = sourceItems.Count(s => Items.Contains(s) && Items.IndexOf(s) < insertIndex);
+                    insertIndex -= preItemsCount;
+                }
 
-                        // Utilisation de la nouvelle méthode
-                        int newIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                // 3. Retirer tous les éléments de leurs emplacements d'origine
+                foreach (var item in sourceItems)
+                {
+                    RemoveFromAll(item);
+                }
 
-                        newIndex = Math.Max(0, Math.Min(newIndex, Items.Count));
+                insertIndex = Math.Max(0, insertIndex);
 
-                        Items.Insert(newIndex, sourceItem);
+                // 4. Réinsérer séquentiellement
+                for (int i = 0; i < sourceItems.Count; i++)
+                {
+                    var itemToInsert = sourceItems[i];
+
+                    if (targetGroupDest != null && itemToInsert is LayoutTab t)
+                    {
+                        // Si le groupe est visé, on n'ajoute que des LayoutTabs
+                        int finalIndex = Math.Min(insertIndex + i, targetGroupDest.SubTabs.Count);
+                        targetGroupDest.Insert(finalIndex, t);
+                    }
+                    else
+                    {
+                        // Les LayoutGroup (ou éléments mis à la racine)
+                        int finalIndex = Math.Min(insertIndex + i, Items.Count);
+                        Items.Insert(finalIndex, itemToInsert);
                     }
                 }
             }
@@ -483,7 +503,6 @@ namespace SioForgeCAD.Forms
             _isDragging = false;
         }
 
-        // Utilitaire pour nettoyer un item de toute collection existante avant déplacement
         private void RemoveFromAll(LayoutItem item)
         {
             Items.Remove(item);
@@ -501,30 +520,19 @@ namespace SioForgeCAD.Forms
             if (parentObject is T parent) return parent;
             return GetVisualParent<T>(parentObject);
         }
+
         private static FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
         {
             if (parent == null) return null;
-
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
-
-                // Si l'enfant est un FrameworkElement et que sa donnée correspond au Tab recherché
                 if (child is FrameworkElement fe && fe.DataContext == itemData)
                 {
-                    // On s'assure qu'on ne retourne pas le groupe lui-même par accident
-                    if (!(fe.DataContext is LayoutGroup))
-                    {
-                        return fe;
-                    }
+                    if (!(fe.DataContext is LayoutGroup)) return fe;
                 }
-
-                // Sinon, on cherche plus profondément
                 var result = GetVisualContainerFromItem(child, itemData);
-                if (result != null)
-                {
-                    return result;
-                }
+                if (result != null) return result;
             }
             return null;
         }
@@ -532,8 +540,6 @@ namespace SioForgeCAD.Forms
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseLeftButtonUp(e);
-            //_dragSource = null;
-            //_isDragging = false;
             DragIndicator.IsOpen = false;
         }
     }
@@ -546,22 +552,12 @@ namespace SioForgeCAD.Forms
         private bool _isSelected;
 
         public string Title { get => _title; set { _title = value; OnPropertyChanged(); } }
-
-        // Pinned ne devrait idéalement être changé que via une méthode qui bascule de collection,
-        // mais sa simple présence dans le constructeur suffira pour initier l'UI avec l'approche 2 collections
         public bool IsPinned { get => _isPinned; set { _isPinned = value; OnPropertyChanged(); } }
         public bool IsCurrent { get => _isCurrent; set { _isCurrent = value; OnPropertyChanged(); } }
         public virtual bool IsSelected
         {
             get => _isSelected;
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -572,41 +568,22 @@ namespace SioForgeCAD.Forms
     public class LayoutTab : LayoutItem
     {
         private LayoutGroup _parentGroup;
-
-        // 5. NOTIFICATION : Assure-toi de notifier IsInGroup quand le ParentGroup change
         public LayoutGroup ParentGroup
         {
             get => _parentGroup;
-            set
-            {
-                if (_parentGroup != value)
-                {
-                    _parentGroup = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsInGroup));
-                }
-            }
+            set { if (_parentGroup != value) { _parentGroup = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsInGroup)); } }
         }
-
         public bool IsInGroup => ParentGroup != null;
-
         public override bool IsSelected
         {
             get => base.IsSelected;
-            set
-            {
-                if (base.IsSelected != value)
-                {
-                    base.IsSelected = value;
-                    ParentGroup?.EvaluateGroupSelection(); // Dis au dossier de vérifier s'il est plein ou non
-                }
-            }
+            set { if (base.IsSelected != value) { base.IsSelected = value; ParentGroup?.EvaluateGroupSelection(); } }
         }
     }
 
     public class LayoutGroup : LayoutItem
     {
-        private bool _isSyncing = false; // Le verrou anti-boucle infinie
+        private bool _isSyncing = false;
 
         public LayoutGroup()
         {
@@ -621,40 +598,29 @@ namespace SioForgeCAD.Forms
                 if (base.IsSelected != value)
                 {
                     base.IsSelected = value;
-
-                    // Si on a cliqué sur le dossier, on applique la valeur à tous les sous-onglets
                     if (!_isSyncing)
                     {
                         _isSyncing = true;
-                        foreach (var tab in SubTabs_)
-                        {
-                            tab.IsSelected = value;
-                        }
+                        foreach (var tab in SubTabs_) tab.IsSelected = value;
                         _isSyncing = false;
                     }
                 }
             }
         }
 
-        // Appelée par un enfant quand il change de statut
         internal void EvaluateGroupSelection()
         {
             if (_isSyncing || SubTabs_.Count == 0) return;
-
-            // Le groupe est considéré sélectionné SEULEMENT SI tous ses enfants le sont
             bool allSelected = SubTabs_.All(t => t.IsSelected);
-
             if (base.IsSelected != allSelected)
             {
-                _isSyncing = true; // On verrouille pour que le setter du groupe ne redescende pas vers les enfants
+                _isSyncing = true;
                 base.IsSelected = allSelected;
                 _isSyncing = false;
             }
         }
 
-
         private bool _isExpanded;
-
         public bool IsExpanded
         {
             get => _isExpanded;
@@ -663,27 +629,10 @@ namespace SioForgeCAD.Forms
 
         private ObservableCollection<LayoutTab> SubTabs_ { get; } = new ObservableCollection<LayoutTab>();
         public ReadOnlyObservableCollection<LayoutTab> SubTabs { get; }
-        public void Add(LayoutTab tab)
-        {
-            tab.ParentGroup = this;
-            SubTabs_.Add(tab); EvaluateGroupSelection();
-        }
-        public void Insert(int index, LayoutTab tab)
-        {
-            tab.ParentGroup = this;
-            SubTabs_.Insert(index, tab); EvaluateGroupSelection();
-        }
-
-        public bool Remove(LayoutTab tab)
-        {
-            tab.ParentGroup = null;
-            bool removed = SubTabs_.Remove(tab);
-            if (removed) EvaluateGroupSelection(); 
-            return removed;
-        }
-
+        public void Add(LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Add(tab); EvaluateGroupSelection(); }
+        public void Insert(int index, LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Insert(index, tab); EvaluateGroupSelection(); }
+        public bool Remove(LayoutTab tab) { tab.ParentGroup = null; bool removed = SubTabs_.Remove(tab); if (removed) EvaluateGroupSelection(); return removed; }
         public bool Contains(LayoutTab tab) => SubTabs_.Contains(tab);
         public int IndexOf(LayoutTab tab) => SubTabs_.IndexOf(tab);
-
     }
 }

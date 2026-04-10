@@ -401,25 +401,34 @@
                 Placement="Bottom"
                 PlacementTarget="{Binding ElementName=OverflowToggle}"
                 PopupAnimation="Fade"
-                VerticalOffset="4"
-                StaysOpen="False">
+                StaysOpen="False"
+                VerticalOffset="0">
 
-                <Border Margin="0,0,8,8"
-                    MinWidth="180" 
+                <Border
+                    MinWidth="180"
+                    Margin="0,0,8,8"
                     Background="{StaticResource TabBarBackground}"
                     BorderBrush="{StaticResource TabBackground}"
                     BorderThickness="1"
                     CornerRadius="4">
 
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Opacity="0.4" Direction="270" />
+                        <DropShadowEffect
+                            BlurRadius="8"
+                            Direction="270"
+                            Opacity="0.4"
+                            ShadowDepth="3" />
                     </Border.Effect>
 
-                    <ScrollViewer MaxHeight="350" 
-                                  VerticalScrollBarVisibility="Hidden" 
-                                  HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer
+                        MaxHeight="350"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Hidden">
 
-                        <Menu Margin="0,4" Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
+                        <Menu
+                            Margin="0,4"
+                            Background="Transparent"
+                            ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
                             <Menu.Resources>
                                 <Style TargetType="MenuItem">
                                     <Setter Property="Header" Value="{Binding Title}" />
@@ -432,38 +441,52 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="MenuItem">
-                                                <Border x:Name="BgBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="2,0,0,0">
+                                                <Border
+                                                    x:Name="BgBorder"
+                                                    Background="Transparent"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="2,0,0,0">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
 
-                                                        <ContentPresenter ContentSource="Header" 
-                                                                          Margin="{TemplateBinding Padding}" 
-                                                                          RecognizesAccessKey="True" />
+                                                        <ContentPresenter
+                                                            Margin="{TemplateBinding Padding}"
+                                                            ContentSource="Header"
+                                                            RecognizesAccessKey="True" />
 
-                                                        <Path x:Name="RightArrow" Grid.Column="1" 
-                                                              VerticalAlignment="Center" Margin="10,0,10,0"
-                                                              Data="M 0,0 L 4,4 L 0,8 Z" 
-                                                              Fill="{StaticResource TextInactive}" 
-                                                              Visibility="Collapsed" />
+                                                        <Path
+                                                            x:Name="RightArrow"
+                                                            Grid.Column="1"
+                                                            Margin="10,0,10,0"
+                                                            VerticalAlignment="Center"
+                                                            Data="M 0,0 L 4,4 L 0,8 Z"
+                                                            Fill="{StaticResource TextInactive}"
+                                                            Visibility="Collapsed" />
 
-                                                        <Popup x:Name="PART_Popup" 
-                                                               AllowsTransparency="True" 
-                                                               Placement="Right" 
-                                                               VerticalOffset="-4"
-                                                               HorizontalOffset="-2"
-                                                               IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
-                                                               Focusable="False" 
-                                                               PopupAnimation="Fade">
-                                                            <Border Margin="0,0,8,8"
-                                                                    Background="{StaticResource TabBarBackground}" 
-                                                                    BorderBrush="{StaticResource TabBackground}" 
-                                                                    BorderThickness="1" 
-                                                                    CornerRadius="4">
+                                                        <Popup
+                                                            x:Name="PART_Popup"
+                                                            AllowsTransparency="True"
+                                                            Focusable="False"
+                                                            HorizontalOffset="-2"
+                                                            IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                                            Placement="Right"
+                                                            PopupAnimation="Fade"
+                                                            VerticalOffset="-4">
+                                                            <Border
+                                                                Margin="0,0,8,8"
+                                                                Background="{StaticResource TabBarBackground}"
+                                                                BorderBrush="{StaticResource TabBackground}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="4">
                                                                 <Border.Effect>
-                                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.3" Direction="270" />
+                                                                    <DropShadowEffect
+                                                                        BlurRadius="6"
+                                                                        Direction="270"
+                                                                        Opacity="0.3"
+                                                                        ShadowDepth="2" />
                                                                 </Border.Effect>
                                                                 <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Hidden">
                                                                     <ItemsPresenter Margin="0,4" />
@@ -513,7 +536,7 @@
                 <Path
                     Margin="0,0,0,0"
                     Data="M 0,0 L 10,0 L 5,8 Z"
-                    Fill="{StaticResource TabBarBackground}" />
+                    Fill="#608fbf" />
             </Popup>
         </Grid>
     </Border>
