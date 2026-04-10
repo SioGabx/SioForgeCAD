@@ -26,7 +26,7 @@ namespace SioForgeCAD.Commun.Extensions
         public static Polyline ToPolyline4Pt(this Circle circle)
         {
             Polyline pline = new Polyline();
-            double bulge = -Math.Tan((90 * Math.PI / 180) / 2); //90 is the angle between points //4 is the number of points
+            double bulge = -Math.Tan((90 * Math.PI / 180) / 4); //90 is the angle between points //4 is the number of points
             const double polyWidth = 0.0;
 
             pline.AddVertexAt(0, new Point2d(circle.Center.X - circle.Radius, circle.Center.Y), bulge, polyWidth, polyWidth);

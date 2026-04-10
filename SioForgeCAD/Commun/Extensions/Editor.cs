@@ -280,7 +280,7 @@ namespace SioForgeCAD.Commun.Extensions
             return ed.GetCurves(promptSelectionOptions);
         }
 
-        public static SelectionFilter GetCurvesFilter(this Editor ed)
+        public static SelectionFilter GetCurvesFilter(this Editor _)
         {
             return new SelectionFilter(new TypedValue[] {
                     new TypedValue((int)DxfCode.Operator, "<or"),

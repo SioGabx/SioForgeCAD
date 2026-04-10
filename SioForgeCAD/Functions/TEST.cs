@@ -60,7 +60,7 @@ namespace SioForgeCAD.Functions
                         dynamic context = LayoutSwitchControl.DataContext; //Autodesk.AutoCAD.ViewModel.LayoutSwitch.LayoutTabsData
                                                                            // System.Collections.ObjectModel.ObservableCollection<dynamic> TabsCollection = context.TabsCollection; //Autodesk.AutoCAD.ViewModel.LayoutSwitch.LayoutData
 
-                       // var host = new Grid();
+                        // var host = new Grid();
                         if (InjectedLayoutBar is null && context != null)
                         {
                             InjectedLayoutBar = new LayoutBar();
@@ -80,12 +80,12 @@ namespace SioForgeCAD.Functions
                             LayoutSwitchControlParent.Children.Insert(0, InjectedLayoutBar);
 
                             // Tab libre (ex: "Model")
-                           // InjectedLayoutBar.AddFreeTab("Model", makeCurrent: true);
-                           //InjectedLayoutBar.AddFreeTab("Test1", false);
-                           //InjectedLayoutBar.AddFreeTab("Test2", false);
-                           //InjectedLayoutBar.AddFreeTab("Test3", false);
-                           //InjectedLayoutBar.AddFreeTab("Test4", false);
-                           //InjectedLayoutBar.AddFreeTab("Test5", false);
+                            // InjectedLayoutBar.AddFreeTab("Model", makeCurrent: true);
+                            //InjectedLayoutBar.AddFreeTab("Test1", false);
+                            //InjectedLayoutBar.AddFreeTab("Test2", false);
+                            //InjectedLayoutBar.AddFreeTab("Test3", false);
+                            //InjectedLayoutBar.AddFreeTab("Test4", false);
+                            //InjectedLayoutBar.AddFreeTab("Test5", false);
 
                             // Groupe avec plusieurs feuilles
                             //var groupe = InjectedLayoutBar.AddGroup("Bâtiment A", "Plan RDC", "Plan R+1", "Coupe AA");
@@ -106,7 +106,6 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
-               
                 }
             }
 
@@ -120,8 +119,7 @@ namespace SioForgeCAD.Functions
         /// </summary>
         internal sealed class LayoutTabsDataWrapper
         {
-            private static readonly BindingFlags BF =
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            private const BindingFlags BF = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
             private readonly object _inner;
             private readonly Type _type;
@@ -159,22 +157,20 @@ namespace SioForgeCAD.Functions
         /// </summary>
         internal sealed class LayoutDataWrapper
         {
-            private static readonly BindingFlags BF =
+            private const BindingFlags BF =
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-            private readonly object _inner;
             private readonly Type _type;
 
             public LayoutDataWrapper(object layoutData)
             {
-                _inner = layoutData;
-                _type = _inner?.GetType();
+                Inner = layoutData;
+                _type = Inner?.GetType();
             }
 
-            public object Inner => _inner;
+            public object Inner { get; }
 
             public string Name =>
-                (_type?.GetProperty("Name", BF)?.GetValue(_inner) as string) ?? string.Empty;
+                (_type?.GetProperty("Name", BF)?.GetValue(Inner) as string) ?? string.Empty;
 
             public bool IsModel =>
                 Name.Equals("Model", StringComparison.OrdinalIgnoreCase);

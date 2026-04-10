@@ -136,7 +136,12 @@
                 <DataTrigger Binding="{Binding IsCurrent}" Value="True">
                     <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}" />
                     <Setter TargetName="TabText" Property="Foreground" Value="{StaticResource TextActive}" />
-                    <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold" />
+                    <Setter TargetName="TabText" Property="FontWeight" Value="Heavy" />
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}" />
+                    <Setter TargetName="TabText" Property="Foreground" Value="{StaticResource TextActive}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -177,42 +182,6 @@
                             Text="{Binding Title}" />
                     </StackPanel>
                 </Grid>
-                <!--<ItemsControl
-                    Margin="0,0,0,0"
-                    ItemContainerStyle="{StaticResource TabItemContainerStyle}"
-                    ItemsSource="{Binding SubTabs}"
-                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-
-                <Rectangle
-                    Height="3"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Bottom"
-                    Panel.ZIndex="5"
-                    Fill="{StaticResource TabBarBackground}"
-                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Rectangle.RenderTransform>
-                        <SkewTransform AngleX="-20" />
-                    </Rectangle.RenderTransform>
-                </Rectangle>
-
-                <Rectangle
-                    Width="3"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Stretch"
-                    Panel.ZIndex="5"
-                    Fill="{StaticResource TabBarBackground}"
-                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Rectangle.RenderTransform>
-                        <SkewTransform AngleX="-20" />
-                    </Rectangle.RenderTransform>
-                </Rectangle>-->
-
 
                 <Grid Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
 
@@ -259,6 +228,9 @@
                 </Trigger>
                 <DataTrigger Binding="{Binding IsExpanded}" Value="True">
                     <Setter TargetName="FolderIcon" Property="Text" Value="📂" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="GrpBg" Property="Background" Value="{StaticResource GroupTabHoverBackground}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -333,33 +305,6 @@
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
                 </ScrollViewer>
-
-                <!--<Button
-                    x:Name="AddBtn"
-                    Grid.Column="2"
-                    Width="24"
-                    Height="24"
-                    Margin="5,2,0,0"
-                    VerticalAlignment="Top"
-                    HorizontalContentAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Click="AddBtn_Click"
-                    Content="+"
-                    Cursor="Hand"
-                    FontSize="16"
-                    Foreground="{StaticResource TextInactive}">
-                    <Button.Style>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource TabHoverBg}" />
-                                <Setter Property="Foreground" Value="{StaticResource TextActive}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Button.Style>
-                </Button>-->
-
 
                 <Button
                     x:Name="AddBtn"
@@ -450,64 +395,6 @@
                     StrokeThickness="1.5" />
             </ToggleButton>
 
-            <!--<Popup
-                AllowsTransparency="True"
-                IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
-                Placement="Bottom"
-                PlacementTarget="{Binding ElementName=OverflowToggle}"
-                PopupAnimation="Fade"
-                StaysOpen="False"
-                VerticalOffset="4">
-
-                <Border
-                    Margin="8"
-                    Background="{StaticResource TabBarBackground}"
-                    BorderBrush="{StaticResource TabBackground}"
-                    BorderThickness="1"
-                    CornerRadius="4">
-
-                    <Border.Effect>
-                        <DropShadowEffect
-                            BlurRadius="8"
-                            Direction="270"
-                            Opacity="0.4"
-                            ShadowDepth="3" />
-                    </Border.Effect>
-
-                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
-                        <Menu
-                            Margin="2"
-                            Background="Transparent"
-                            ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
-                            <Menu.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel Orientation="Vertical" />
-                                </ItemsPanelTemplate>
-                            </Menu.ItemsPanel>
-                            <Menu.ItemContainerStyle>
-                                <Style TargetType="MenuItem">
-                                    <Setter Property="Header" Value="{Binding Title}" />
-                                    <Setter Property="ItemsSource" Value="{Binding SubTabs}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextInactive}" />
-                                    <Setter Property="Padding" Value="15,8,25,8" />
-                                    <Setter Property="Cursor" Value="Hand" />
-                                    <EventSetter Event="Click" Handler="OverflowMenuItem_Click" />
-
-                                    <Style.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource TextActive}" />
-                                        </Trigger>
-                                        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource TextActive}" />
-                                            <Setter Property="FontWeight" Value="SemiBold" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Menu.ItemContainerStyle>
-                        </Menu>
-                    </ScrollViewer>
-                </Border>
-            </Popup>-->
             <Popup
                 AllowsTransparency="True"
                 IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"

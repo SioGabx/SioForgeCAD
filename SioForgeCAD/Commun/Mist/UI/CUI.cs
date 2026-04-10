@@ -55,7 +55,7 @@ namespace SioForgeCAD.Commun.Mist
                 Application.LoadPartialMenu(cs.CUIFileName);
                 Application.ReloadAllMenus(); //if missing file but loaded, crash
             }
-                
+
         }
 
         public static MenuMacro GetRubbanCommand(this CustomizationSection source, string ElementID)

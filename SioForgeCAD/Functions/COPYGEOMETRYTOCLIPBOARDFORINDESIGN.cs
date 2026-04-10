@@ -128,14 +128,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static void WriteCircle(StringBuilder writer, Circle circle)
-        {
-            using (var x = circle.ToPolyline4Pt())
-            {
-                WritePolyline(writer, x);
-            }
-        }
-
+  
         private static void WriteLine(StringBuilder w, Point3d p1, Point3d p2)
         {
             w.AppendLine($"{Format(p1)} moveto");
@@ -147,6 +140,30 @@ namespace SioForgeCAD.Functions
             using (var x = arc.ToCircularArc2d())
             {
                 w.AppendLine(GetEpsFromArc(x));
+            }
+        }
+        private static void WriteCircle(StringBuilder w, Circle circle)
+        {
+            if (circle == null || circle.Radius <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                Point2d center = new Point2d(circle.Center.X, circle.Center.Y);
+
+                // Formatage du rayon pour garantir le point comme séparateur décimal (requis par EPS)
+                string radiusStr = circle.Radius.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                // La syntaxe de la commande EPS 'arc' est : x y rayon angle_depart angle_fin arc
+                // Les angles sont toujours exprimés en degrés en PostScript.
+                w.AppendLine($"{Format(center)} {radiusStr} 0 360 arc");
+                w.AppendLine("closepath");
+            }
+            catch (Exception ex)
+            {
+                Generic.WriteMessage($"Echec de l'ajout d'un cercle : {ex.Message}");
             }
         }
 
@@ -259,26 +276,5 @@ namespace SioForgeCAD.Functions
         {
             return Format(pt.X) + " " + Format(pt.Y);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

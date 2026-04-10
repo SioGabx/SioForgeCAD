@@ -1,7 +1,9 @@
-﻿using System;
+﻿using SioForgeCAD.Commun.Extensions;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,10 +30,7 @@ namespace SioForgeCAD.Forms
             InitializeComponent();
             LayoutBarRoot.DataContext = this;
 
-            TabScrollViewer.ScrollChanged += (s, e) =>
-            {
-                OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
-            };
+            TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             // Ajout dans la bonne collection
             PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
@@ -57,18 +56,21 @@ namespace SioForgeCAD.Forms
             Items.Add(new LayoutTab { Title = "Plan R+13" });
         }
 
-        //private void Item_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        //{
-        //    if ((sender as FrameworkElement)?.DataContext is LayoutItem clickedItem)
-        //    {
-        //        if (clickedItem is LayoutGroup group) group.IsExpanded = !group.IsExpanded;
-        //        else SetCurrentItem(clickedItem);
+        private void ClearSelection()
+        {
+            // Désélectionne tous les éléments épinglés
+            foreach (var item in PinnedItems) item.IsSelected = false;
 
-        //        _dragStart = e.GetPosition(null);
-        //        _dragSource = clickedItem;
-        //        _isDragging = false;
-        //    }
-        //}
+            // Désélectionne tous les éléments standard et les sous-éléments des groupes
+            foreach (var item in Items)
+            {
+                item.IsSelected = false;
+                if (item is LayoutGroup group)
+                {
+                    foreach (var subTab in group.SubTabs) subTab.IsSelected = false;
+                }
+            }
+        }
 
         private void Item_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -83,18 +85,36 @@ namespace SioForgeCAD.Forms
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-
             // Si on a relâché le clic SANS avoir bougé la souris (donc sans drag)
             if (!_isDragging && _dragSource != null)
             {
-                // C'est un vrai "Clic" ! On exécute l'action.
-                if (_dragSource is LayoutGroup group)
+                // On vérifie si la touche Ctrl est enfoncée
+                bool isCtrlPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
+                // Comportement pour les Dossiers (LayoutGroup)
+                if (_dragSource is LayoutGroup group && !isCtrlPressed)
                 {
-                    group.IsExpanded = !group.IsExpanded;
+                    group.IsExpanded = !group.IsExpanded; // Clic normal : Ouvre/Ferme le dossier
                 }
                 else
                 {
-                    SetCurrentItem(_dragSource);
+                    if (isCtrlPressed)
+                    {
+                        // MULTI-SÉLECTION (Ctrl + Clic) : On inverse l'état de sélection
+                        _dragSource.IsSelected = !_dragSource.IsSelected;
+
+                        if (_dragSource is LayoutGroup gp)
+                        {
+                            gp.SubTabs.ForEach(t => t.IsSelected = gp.IsSelected);
+                        }
+                    }
+                    else
+                    {
+                        // SÉLECTION SIMPLE (Clic normal) : On efface tout et on sélectionne le cliqué
+                        ClearSelection();
+                        _dragSource.IsSelected = true;
+                        SetCurrentItem(_dragSource);
+                    }
                 }
             }
 
@@ -127,14 +147,7 @@ namespace SioForgeCAD.Forms
             // WPF a eu le temps de dessiner ses sous-onglets dans l'arbre visuel avant de scroller.
             Dispatcher.InvokeAsync(() =>
             {
-                FrameworkElement container = null;
-
-                container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
-                if (container == null)
-                {
-                    container = GetVisualContainerFromItem(TabItemsControl, item);
-                }
-
+                FrameworkElement container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement ?? GetVisualContainerFromItem(TabItemsControl, item);
                 if (container != null)
                 {
                     ScrollTabIntoView(container);
@@ -222,7 +235,7 @@ namespace SioForgeCAD.Forms
             base.OnPreviewMouseMove(e);
 
             // 2. Annulation du drag si l'item est épinglé
-            if (e.LeftButton == MouseButtonState.Pressed && _dragSource != null && !_dragSource.IsPinned && !_isDragging)
+            if (e.LeftButton == MouseButtonState.Pressed && _dragSource?.IsPinned == false && !_isDragging)
             {
                 Vector diff = _dragStart - e.GetPosition(null);
                 if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
@@ -249,7 +262,7 @@ namespace SioForgeCAD.Forms
                 lg.IsExpanded = false;
             }
 
-            if (targetContainer != null && targetContainer.DataContext is LayoutItem targetItem)
+            if (targetContainer?.DataContext is LayoutItem targetItem)
             {
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
                 if (targetItem is LayoutTab tTab && tTab.IsInGroup)
@@ -320,7 +333,7 @@ namespace SioForgeCAD.Forms
                     int baseIndex = Items.IndexOf(targetItem);
                     int sourceIndex = Items.IndexOf(sourceItem);
 
-                    var FuturLocationIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
+                    CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
 
                     // Un mouvement ne change rien si :
                     // - On cible la MOITIÉ GAUCHE de l'élément situé juste à DROITE de l'élément glissé
@@ -354,7 +367,7 @@ namespace SioForgeCAD.Forms
         /// <summary>
         /// Calcule le nouvel index d'insertion basé sur la position de la souris par rapport au conteneur cible.
         /// </summary>
-        private int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
+        private static int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
         {
             isRightHalf = false;
 
@@ -488,7 +501,7 @@ namespace SioForgeCAD.Forms
             if (parentObject is T parent) return parent;
             return GetVisualParent<T>(parentObject);
         }
-        private FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
+        private static FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
         {
             if (parent == null) return null;
 
@@ -530,6 +543,7 @@ namespace SioForgeCAD.Forms
         private string _title;
         private bool _isPinned;
         private bool _isCurrent;
+        private bool _isSelected;
 
         public string Title { get => _title; set { _title = value; OnPropertyChanged(); } }
 
@@ -537,6 +551,18 @@ namespace SioForgeCAD.Forms
         // mais sa simple présence dans le constructeur suffira pour initier l'UI avec l'approche 2 collections
         public bool IsPinned { get => _isPinned; set { _isPinned = value; OnPropertyChanged(); } }
         public bool IsCurrent { get => _isCurrent; set { _isCurrent = value; OnPropertyChanged(); } }
+        public virtual bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected != value)
+                {
+                    _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -563,13 +589,67 @@ namespace SioForgeCAD.Forms
         }
 
         public bool IsInGroup => ParentGroup != null;
+
+        public override bool IsSelected
+        {
+            get => base.IsSelected;
+            set
+            {
+                if (base.IsSelected != value)
+                {
+                    base.IsSelected = value;
+                    ParentGroup?.EvaluateGroupSelection(); // Dis au dossier de vérifier s'il est plein ou non
+                }
+            }
+        }
     }
 
     public class LayoutGroup : LayoutItem
     {
+        private bool _isSyncing = false; // Le verrou anti-boucle infinie
+
         public LayoutGroup()
         {
-            SubTabs = new ReadOnlyObservableCollection<LayoutTab>(_subTabs);
+            SubTabs = new ReadOnlyObservableCollection<LayoutTab>(SubTabs_);
+        }
+
+        public override bool IsSelected
+        {
+            get => base.IsSelected;
+            set
+            {
+                if (base.IsSelected != value)
+                {
+                    base.IsSelected = value;
+
+                    // Si on a cliqué sur le dossier, on applique la valeur à tous les sous-onglets
+                    if (!_isSyncing)
+                    {
+                        _isSyncing = true;
+                        foreach (var tab in SubTabs_)
+                        {
+                            tab.IsSelected = value;
+                        }
+                        _isSyncing = false;
+                    }
+                }
+            }
+        }
+
+        // Appelée par un enfant quand il change de statut
+        internal void EvaluateGroupSelection()
+        {
+            if (_isSyncing || SubTabs_.Count == 0) return;
+
+            // Le groupe est considéré sélectionné SEULEMENT SI tous ses enfants le sont
+            bool allSelected = SubTabs_.All(t => t.IsSelected);
+
+            if (base.IsSelected != allSelected)
+            {
+                _isSyncing = true; // On verrouille pour que le setter du groupe ne redescende pas vers les enfants
+                base.IsSelected = allSelected;
+                _isSyncing = false;
+            }
         }
 
 
@@ -581,34 +661,29 @@ namespace SioForgeCAD.Forms
             set { _isExpanded = value; OnPropertyChanged(); }
         }
 
-        private ObservableCollection<LayoutTab> _subTabs { get; } = new ObservableCollection<LayoutTab>();
+        private ObservableCollection<LayoutTab> SubTabs_ { get; } = new ObservableCollection<LayoutTab>();
         public ReadOnlyObservableCollection<LayoutTab> SubTabs { get; }
         public void Add(LayoutTab tab)
         {
             tab.ParentGroup = this;
-            _subTabs.Add(tab);
+            SubTabs_.Add(tab); EvaluateGroupSelection();
         }
         public void Insert(int index, LayoutTab tab)
         {
             tab.ParentGroup = this;
-            _subTabs.Insert(index, tab);
+            SubTabs_.Insert(index, tab); EvaluateGroupSelection();
         }
 
         public bool Remove(LayoutTab tab)
         {
             tab.ParentGroup = null;
-            return _subTabs.Remove(tab);
+            bool removed = SubTabs_.Remove(tab);
+            if (removed) EvaluateGroupSelection(); 
+            return removed;
         }
 
-        public bool Contains(LayoutTab tab)
-        {
-            return _subTabs.Contains(tab);
-        }
-
-        public int IndexOf(LayoutTab tab)
-        {
-            return _subTabs.IndexOf(tab);
-        }
+        public bool Contains(LayoutTab tab) => SubTabs_.Contains(tab);
+        public int IndexOf(LayoutTab tab) => SubTabs_.IndexOf(tab);
 
     }
 }

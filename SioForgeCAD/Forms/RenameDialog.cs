@@ -136,8 +136,8 @@ namespace SioForgeCAD.Forms
             dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
         }
 
-    
-  
+
+
 
         /// <summary>
         /// Logique principale de renommage (Cœur de PowerRename)

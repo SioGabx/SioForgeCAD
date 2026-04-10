@@ -56,7 +56,7 @@ namespace SioForgeCAD.Commun.Mist.UI
             if (factor >= 0)
             {
                 // Éclaircir : on réduit la distance vers 255
-                result = channel + (255 - channel) * factor;
+                result = channel + ((255 - channel) * factor);
             }
             else
             {

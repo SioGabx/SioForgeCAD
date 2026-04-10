@@ -336,7 +336,7 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "ADDPOINTSATPOLYLIGNEVERTICES", CommandFlags.Redraw)]
         public static void ADDPOINTSATPOLYLIGNEVERTICES() => Functions.ADDPOINTSATPOLYLIGNEVERTICES.Execute();
-       
+
         [CommandMethod("SIOFORGECAD", "VIEWGEOMETRYVERTEX", CommandFlags.Redraw)]
         public static void VIEWGEOMETRYVERTEX() => Functions.VIEWGEOMETRYVERTEX.ToggleOverrule();
 
@@ -515,7 +515,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-           Functions.TEST.Test();
+            Functions.TEST.Test();
         }
 
         /*

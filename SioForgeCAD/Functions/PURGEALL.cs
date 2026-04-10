@@ -48,7 +48,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 // Purge de base
-                
+
                 AddToReport(nameof(PurgeMethods.CurvesZeroLength), PurgeMethods.CurvesZeroLength(db));
                 AddToReport(nameof(PurgeMethods.EmptyText), PurgeMethods.EmptyText(db));
                 AddToReport(nameof(PurgeMethods.XREF), PurgeMethods.XREF(db));
