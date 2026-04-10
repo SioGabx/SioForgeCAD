@@ -264,6 +264,7 @@
         </DataTemplate>
 
         <Geometry x:Key="OverflowChevron">M 0,0 L 4,4 8,0 M 0,5 L 4,9 8,5</Geometry>
+        <Geometry x:Key="NewTabButtonPlusShape">M 0,0 L 2,0 2,3 5,3 5,5 2,5 2,8 0,8 0,5 -3,5 -3,3 0,3 Z</Geometry>
     </UserControl.Resources>
 
     <Border Background="{StaticResource TabBarBackground}">
@@ -333,7 +334,7 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <Button
+                <!--<Button
                     x:Name="AddBtn"
                     Grid.Column="2"
                     Width="24"
@@ -348,37 +349,136 @@
                     Content="+"
                     Cursor="Hand"
                     FontSize="16"
-                    Foreground="{StaticResource TextInactive}" />
+                    Foreground="{StaticResource TextInactive}">
+                    <Button.Style>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource TabHoverBg}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Button.Style>
+                </Button>-->
+
+
+                <Button
+                    x:Name="AddBtn"
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="2,0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Click="AddBtn_Click"
+                    Cursor="Hand"
+                    Foreground="{StaticResource TextInactive}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="3">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Background" Value="Transparent" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource TabHoverBg}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+
+                    <Path
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Data="{StaticResource NewTabButtonPlusShape}"
+                        Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                        Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                        StrokeThickness="0.5" />
+                </Button>
+
+
+
+
             </Grid>
 
             <ToggleButton
                 x:Name="OverflowToggle"
                 Grid.Column="1"
-                Width="20"
-                Height="20"
+                Width="24"
+                Height="24"
                 Margin="2,0"
-                Background="Transparent"
-                BorderThickness="0">
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Cursor="Hand"
+                Foreground="{StaticResource TextInactive}">
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="3">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource TabHoverBg}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background" Value="{StaticResource TabHoverBg}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ToggleButton.Style>
+
                 <Path
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Data="{StaticResource OverflowChevron}"
-                    Stroke="{StaticResource TextInactive}"
+                    Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
                     StrokeThickness="1.5" />
             </ToggleButton>
 
-            <Popup
+            <!--<Popup
                 AllowsTransparency="True"
                 IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
                 Placement="Bottom"
                 PlacementTarget="{Binding ElementName=OverflowToggle}"
-                StaysOpen="False">
+                PopupAnimation="Fade"
+                StaysOpen="False"
+                VerticalOffset="4">
+
                 <Border
+                    Margin="8"
                     Background="{StaticResource TabBarBackground}"
                     BorderBrush="{StaticResource TabBackground}"
-                    BorderThickness="1">
-                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
-                        <Menu Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
+                    BorderThickness="1"
+                    CornerRadius="4">
+
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="8"
+                            Direction="270"
+                            Opacity="0.4"
+                            ShadowDepth="3" />
+                    </Border.Effect>
+
+                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
+                        <Menu
+                            Margin="2"
+                            Background="Transparent"
+                            ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
                             <Menu.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel Orientation="Vertical" />
@@ -389,9 +489,131 @@
                                     <Setter Property="Header" Value="{Binding Title}" />
                                     <Setter Property="ItemsSource" Value="{Binding SubTabs}" />
                                     <Setter Property="Foreground" Value="{StaticResource TextInactive}" />
+                                    <Setter Property="Padding" Value="15,8,25,8" />
+                                    <Setter Property="Cursor" Value="Hand" />
                                     <EventSetter Event="Click" Handler="OverflowMenuItem_Click" />
+
+                                    <Style.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
                                 </Style>
                             </Menu.ItemContainerStyle>
+                        </Menu>
+                    </ScrollViewer>
+                </Border>
+            </Popup>-->
+            <Popup
+                AllowsTransparency="True"
+                IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
+                Placement="Bottom"
+                PlacementTarget="{Binding ElementName=OverflowToggle}"
+                PopupAnimation="Fade"
+                VerticalOffset="4"
+                StaysOpen="False">
+
+                <Border Margin="0,0,8,8"
+                    MinWidth="180" 
+                    Background="{StaticResource TabBarBackground}"
+                    BorderBrush="{StaticResource TabBackground}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Opacity="0.4" Direction="270" />
+                    </Border.Effect>
+
+                    <ScrollViewer MaxHeight="350" 
+                                  VerticalScrollBarVisibility="Hidden" 
+                                  HorizontalScrollBarVisibility="Disabled">
+
+                        <Menu Margin="0,4" Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
+                            <Menu.Resources>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Header" Value="{Binding Title}" />
+                                    <Setter Property="ItemsSource" Value="{Binding SubTabs}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TextInactive}" />
+                                    <Setter Property="Padding" Value="16,6,16,6" />
+                                    <Setter Property="Cursor" Value="Hand" />
+                                    <EventSetter Event="Click" Handler="OverflowMenuItem_Click" />
+
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="MenuItem">
+                                                <Border x:Name="BgBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="2,0,0,0">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <ContentPresenter ContentSource="Header" 
+                                                                          Margin="{TemplateBinding Padding}" 
+                                                                          RecognizesAccessKey="True" />
+
+                                                        <Path x:Name="RightArrow" Grid.Column="1" 
+                                                              VerticalAlignment="Center" Margin="10,0,10,0"
+                                                              Data="M 0,0 L 4,4 L 0,8 Z" 
+                                                              Fill="{StaticResource TextInactive}" 
+                                                              Visibility="Collapsed" />
+
+                                                        <Popup x:Name="PART_Popup" 
+                                                               AllowsTransparency="True" 
+                                                               Placement="Right" 
+                                                               VerticalOffset="-4"
+                                                               HorizontalOffset="-2"
+                                                               IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                                                               Focusable="False" 
+                                                               PopupAnimation="Fade">
+                                                            <Border Margin="0,0,8,8"
+                                                                    Background="{StaticResource TabBarBackground}" 
+                                                                    BorderBrush="{StaticResource TabBackground}" 
+                                                                    BorderThickness="1" 
+                                                                    CornerRadius="4">
+                                                                <Border.Effect>
+                                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.3" Direction="270" />
+                                                                </Border.Effect>
+                                                                <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Hidden">
+                                                                    <ItemsPresenter Margin="0,4" />
+                                                                </ScrollViewer>
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
+                                                </Border>
+
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="HasItems" Value="True">
+                                                        <Setter TargetName="RightArrow" Property="Visibility" Value="Visible" />
+                                                    </Trigger>
+
+                                                    <Trigger Property="IsHighlighted" Value="True">
+                                                        <Setter TargetName="BgBorder" Property="Background" Value="{StaticResource TabHoverBg}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                                        <Setter TargetName="RightArrow" Property="Fill" Value="{StaticResource TextActive}" />
+                                                    </Trigger>
+
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                        <Setter TargetName="BgBorder" Property="BorderBrush" Value="{StaticResource TextActive}" />
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Menu.Resources>
+
+                            <Menu.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel Orientation="Vertical" />
+                                </ItemsPanelTemplate>
+                            </Menu.ItemsPanel>
                         </Menu>
                     </ScrollViewer>
                 </Border>
@@ -404,7 +626,7 @@
                 <Path
                     Margin="0,0,0,0"
                     Data="M 0,0 L 10,0 L 5,8 Z"
-                    Fill="Orange" />
+                    Fill="{StaticResource TabBarBackground}" />
             </Popup>
         </Grid>
     </Border>

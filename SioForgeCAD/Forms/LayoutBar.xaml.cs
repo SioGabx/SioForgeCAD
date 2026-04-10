@@ -36,11 +36,25 @@ namespace SioForgeCAD.Forms
             // Ajout dans la bonne collection
             PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
             Items.Add(new LayoutTab { Title = "Plan RDC" });
+            Items.Add(new LayoutTab { Title = "Plan R+1" });
 
             var group = new LayoutGroup { Title = "Feuilles" };
             group.Add(new LayoutTab { Title = "Coupe AA" });
             group.Add(new LayoutTab { Title = "Coupe BB" });
             Items.Add(group);
+
+            Items.Add(new LayoutTab { Title = "Plan R+2" });
+            Items.Add(new LayoutTab { Title = "Plan R+3" });
+            Items.Add(new LayoutTab { Title = "Plan R+4" });
+            Items.Add(new LayoutTab { Title = "Plan R+5" });
+            Items.Add(new LayoutTab { Title = "Plan R+6" });
+            Items.Add(new LayoutTab { Title = "Plan R+7" });
+            Items.Add(new LayoutTab { Title = "Plan R+8" });
+            Items.Add(new LayoutTab { Title = "Plan R+9" });
+            Items.Add(new LayoutTab { Title = "Plan R+10" });
+            Items.Add(new LayoutTab { Title = "Plan R+11" });
+            Items.Add(new LayoutTab { Title = "Plan R+12" });
+            Items.Add(new LayoutTab { Title = "Plan R+13" });
         }
 
         //private void Item_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -103,9 +117,31 @@ namespace SioForgeCAD.Forms
 
         private void ScrollToItem(LayoutItem item)
         {
-            // Peut se trouver dans l'un des deux ItemsControls (Pinned ou Standard)
-            var container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
-            ScrollTabIntoView(container);
+            if (item == null) return;
+
+            // Si l'élément est épinglé, il est toujours visible à gauche, pas besoin de scroller
+            if (item is LayoutTab tab && tab.IsPinned) return;
+
+            // On utilise le Dispatcher pour retarder légèrement l'exécution.
+            // Cela garantit que si le LayoutGroup vient juste d'être mis à IsExpanded = true,
+            // WPF a eu le temps de dessiner ses sous-onglets dans l'arbre visuel avant de scroller.
+            Dispatcher.InvokeAsync(() =>
+            {
+                FrameworkElement container = null;
+
+                container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
+                if (container == null)
+                {
+                    container = GetVisualContainerFromItem(TabItemsControl, item);
+                }
+
+                if (container != null)
+                {
+                    ScrollTabIntoView(container);
+                }
+
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
+
         }
 
         private void ScrollTabIntoView(FrameworkElement container)
