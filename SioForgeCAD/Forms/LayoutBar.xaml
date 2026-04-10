@@ -1,116 +1,264 @@
-﻿<UserControl x:Class="SioForgeCAD.Forms.LayoutBar"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:theme="clr-namespace:Autodesk.Windows.Themes;assembly=AdUiPalettes"
-             xmlns:local="clr-namespace:SioForgeCAD.Forms"
-             x:Name="LayoutBarRoot"
-             Height="28"
-             SnapsToDevicePixels="True"
-             UseLayoutRounding="True">
+﻿<UserControl
+    x:Class="SioForgeCAD.Forms.LayoutBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:SioForgeCAD.Forms"
+    xmlns:theme="clr-namespace:Autodesk.Windows.Themes;assembly=AdUiPalettes"
+    xmlns:ui="clr-namespace:SioForgeCAD.Commun.Mist.UI"
+    x:Name="LayoutBarRoot"
+    Height="28"
+    SnapsToDevicePixels="True"
+    UseLayoutRounding="True">
 
     <UserControl.Resources>
-        <SolidColorBrush x:Key="TabBarBackground" Color="{Binding Path=CurrentTheme.FileTabsRowBackgroundColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-        <SolidColorBrush x:Key="TabInactiveBg" Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-        <SolidColorBrush x:Key="TabHoverBg" Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-        <SolidColorBrush x:Key="TabBorder" Color="{Binding Path=CurrentTheme.FileTabsBorderColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-        <SolidColorBrush x:Key="TextActive" Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
-        <SolidColorBrush x:Key="TextInactive" Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <ui:WidthToLeftMarginConverter x:Key="WidthToLeftMarginConverter" />
+        <ui:LighteningConverter x:Key="LighteningConverter" />
 
-        <SolidColorBrush x:Key="SubTabInactiveBg" Color="Red"/>
-        <SolidColorBrush x:Key="SubTabHoverBg" Color="Blue"/>
 
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="TabBarBackground" Color="{Binding Path=CurrentTheme.FileTabsRowBackgroundColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+
+        <SolidColorBrush x:Key="TabInactiveBg" Color="{Binding Path=CurrentTheme.FileTabsInactiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+        <SolidColorBrush x:Key="TabHoverBg" Color="{Binding Path=CurrentTheme.FileTabsActiveBackgroundTopColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+        <SolidColorBrush x:Key="TabBackground" Color="{Binding Path=CurrentTheme.FileTabsBorderColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+
+        <SolidColorBrush x:Key="GroupTabBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="GroupTabHoverBackground" Color="#1AFFFFFF" />
+
+        <SolidColorBrush x:Key="GroupSubTabInactiveBg">
+            <SolidColorBrush.Color>
+                <Binding
+                    Converter="{StaticResource LighteningConverter}"
+                    ConverterParameter="-0.4"
+                    Path="Color"
+                    Source="{StaticResource TabInactiveBg}" />
+            </SolidColorBrush.Color>
+        </SolidColorBrush>
+
+        <SolidColorBrush x:Key="GroupSubTabHoverBg">
+            <SolidColorBrush.Color>
+                <Binding
+                    Converter="{StaticResource LighteningConverter}"
+                    ConverterParameter="-0.2"
+                    Path="Color"
+                    Source="{StaticResource TabHoverBg}" />
+            </SolidColorBrush.Color>
+        </SolidColorBrush>
+
+        <SolidColorBrush x:Key="TextActive" Color="{Binding Path=CurrentTheme.ListBoxSelectTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+        <SolidColorBrush x:Key="TextInactive" Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+        <SolidColorBrush x:Key="IconColors" Color="{Binding Path=CurrentTheme.ListBoxInactiveTextColor, Source={x:Static theme:ThemeManager.PaletteSettings}}" />
+
+
 
         <Style x:Key="TabItemContainerStyle" TargetType="ContentPresenter">
-            <Setter Property="Margin" Value="0,0,0,0"/>
-            <Setter Property="AllowDrop" Value="True"/>
-            <Setter Property="Panel.ZIndex" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,0" />
+            <Setter Property="AllowDrop" Value="True" />
+            <Setter Property="Panel.ZIndex" Value="0" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Panel.ZIndex" Value="50"/>
+                    <Setter Property="Panel.ZIndex" Value="50" />
                 </Trigger>
                 <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                    <Setter Property="Panel.ZIndex" Value="100"/>
+                    <Setter Property="Panel.ZIndex" Value="100" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
         <DataTemplate x:Key="TabTooltipTemplate">
-            <Border BorderThickness="1" BorderBrush="{StaticResource TabBorder}" Background="{StaticResource TabBarBackground}" Padding="6">
-                <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextActive}"/>
+            <Border
+                Padding="6"
+                Background="{StaticResource TabBarBackground}"
+                BorderBrush="{StaticResource TabBackground}"
+                BorderThickness="1">
+                <TextBlock Foreground="{StaticResource TextActive}" Text="{Binding Title}" />
             </Border>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:LayoutTab}">
-            <Grid Height="28" Cursor="Hand" MouseLeftButtonUp="Item_MouseLeftButtonUp" MouseLeftButtonDown="Item_MouseLeftButtonDown">
-                <Border x:Name="TabBg" Background="{StaticResource TabInactiveBg}" 
-                        BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
+            <Grid
+                Height="28"
+                Cursor="Hand"
+                MouseLeftButtonDown="Item_MouseLeftButtonDown"
+                MouseLeftButtonUp="Item_MouseLeftButtonUp">
+                <Border
+                    x:Name="TabBg"
+                    Background="{StaticResource TabBarBackground}"
+                    BorderBrush="{StaticResource TabBackground}"
+                    BorderThickness="1,1,1,0">
+                    <Border Background="{StaticResource TabInactiveBg}" />
                     <Border.RenderTransform>
-                        <SkewTransform AngleX="-20"/>
+                        <SkewTransform AngleX="-20" />
                     </Border.RenderTransform>
                 </Border>
-                <StackPanel Orientation="Horizontal" Margin="20,0,25,0" VerticalAlignment="Center">
-                    <TextBlock Text="📌" Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" FontSize="10" Margin="0,0,4,0"/>
-                    <TextBlock x:Name="TabText" Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12"/>
+                <StackPanel
+                    Margin="20,0,25,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,4,0"
+                        FontSize="10"
+                        Foreground="{StaticResource IconColors}"
+                        Text="📌"
+                        Visibility="{Binding IsPinned, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBlock
+                        x:Name="TabText"
+                        FontSize="12"
+                        Foreground="{StaticResource TextInactive}"
+                        Text="{Binding Title}" />
                 </StackPanel>
 
                 <Grid.ToolTip>
-                    <ToolTip ContentTemplate="{StaticResource TabTooltipTemplate}" Content="{Binding}" Placement="Top" VerticalOffset="-2"/>
+                    <ToolTip
+                        Content="{Binding}"
+                        ContentTemplate="{StaticResource TabTooltipTemplate}"
+                        Placement="Top"
+                        VerticalOffset="-2" />
                 </Grid.ToolTip>
             </Grid>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsInGroup}" Value="True">
-                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource SubTabInactiveBg}"/>
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource GroupSubTabInactiveBg}" />
                 </DataTrigger>
 
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}"/>
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}" />
                 </Trigger>
 
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding IsInGroup}" Value="True"/>
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                        <Condition Binding="{Binding IsInGroup}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True" />
                     </MultiDataTrigger.Conditions>
-                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource SubTabHoverBg}"/>
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource GroupSubTabHoverBg}" />
                 </MultiDataTrigger>
 
                 <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}"/>
-                    <Setter TargetName="TabText" Property="Foreground" Value="{StaticResource TextActive}"/>
-                    <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold"/>
+                    <Setter TargetName="TabBg" Property="Background" Value="{StaticResource TabHoverBg}" />
+                    <Setter TargetName="TabText" Property="Foreground" Value="{StaticResource TextActive}" />
+                    <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:LayoutGroup}">
             <StackPanel Orientation="Horizontal">
-                <Grid Height="28" Cursor="Hand" MouseLeftButtonUp="Item_MouseLeftButtonUp" MouseLeftButtonDown="Item_MouseLeftButtonDown" Background="Transparent">
-                    <Border x:Name="GrpBg" Background="Transparent" BorderBrush="{StaticResource TabBorder}" BorderThickness="1,1,1,0">
+                <Grid
+                    Height="28"
+                    Background="Transparent"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="Item_MouseLeftButtonDown"
+                    MouseLeftButtonUp="Item_MouseLeftButtonUp">
+
+                    <Border
+                        x:Name="GrpBg"
+                        Background="{StaticResource TabBarBackground}"
+                        BorderBrush="{StaticResource TabBackground}"
+                        BorderThickness="1,1,1,0">
+                        <Border Background="{StaticResource GroupTabBackground}" />
                         <Border.RenderTransform>
-                            <SkewTransform AngleX="-20"/>
+                            <SkewTransform AngleX="-20" />
                         </Border.RenderTransform>
                     </Border>
-                    <StackPanel Orientation="Horizontal" Margin="20,0,25,0" VerticalAlignment="Center">
-                        <TextBlock x:Name="FolderIcon" Text="📁" FontSize="11" Margin="0,0,4,0"/>
-                        <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextInactive}" FontSize="12" FontWeight="Bold"/>
+                    <StackPanel
+                        Margin="20,0,25,0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="FolderIcon"
+                            Margin="0,0,4,0"
+                            FontSize="11"
+                            Foreground="{StaticResource IconColors}"
+                            Text="📁" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="{StaticResource TextInactive}"
+                            Text="{Binding Title}" />
                     </StackPanel>
                 </Grid>
-                <ItemsControl ItemsSource="{Binding SubTabs}" Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
-                              ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                <!--<ItemsControl
+                    Margin="0,0,0,0"
+                    ItemContainerStyle="{StaticResource TabItemContainerStyle}"
+                    ItemsSource="{Binding SubTabs}"
+                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
+                            <StackPanel Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
+
+                <Rectangle
+                    Height="3"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom"
+                    Panel.ZIndex="5"
+                    Fill="{StaticResource TabBarBackground}"
+                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Rectangle.RenderTransform>
+                        <SkewTransform AngleX="-20" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+
+                <Rectangle
+                    Width="3"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Stretch"
+                    Panel.ZIndex="5"
+                    Fill="{StaticResource TabBarBackground}"
+                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Rectangle.RenderTransform>
+                        <SkewTransform AngleX="-20" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>-->
+
+
+                <Grid Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <ItemsControl
+                        x:Name="SubTabsControl"
+                        ItemContainerStyle="{StaticResource TabItemContainerStyle}"
+                        ItemsSource="{Binding SubTabs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+
+                    <Rectangle
+                        Height="3"
+                        Margin="-10,0,10,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Bottom"
+                        Panel.ZIndex="5"
+                        Fill="{StaticResource TabBarBackground}">
+                        <Rectangle.RenderTransform>
+                            <SkewTransform AngleX="-20" />
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </Grid>
+
+                <Rectangle
+                    Width="3"
+                    VerticalAlignment="Stretch"
+                    Fill="{StaticResource TabBarBackground}"
+                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Rectangle.RenderTransform>
+                        <SkewTransform AngleX="-20" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+
+
+
             </StackPanel>
             <DataTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="GrpBg" Property="Background" Value="#1AFFFFFF"/>
+                    <Setter TargetName="GrpBg" Property="Background" Value="{StaticResource GroupTabHoverBackground}" />
                 </Trigger>
                 <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                    <Setter TargetName="FolderIcon" Property="Text" Value="📂"/>
+                    <Setter TargetName="FolderIcon" Property="Text" Value="📂" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -121,66 +269,127 @@
     <Border Background="{StaticResource TabBarBackground}">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <Border x:Name="SpaceMeasure" Grid.Column="0" />
 
-            <Grid Grid.Column="0" HorizontalAlignment="Left" MaxWidth="{Binding ActualWidth, ElementName=SpaceMeasure}">
+            <Grid
+                Grid.Column="0"
+                MaxWidth="{Binding ActualWidth, ElementName=SpaceMeasure}"
+                HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <ItemsControl Grid.Column="0" ItemsSource="{Binding PinnedItems, ElementName=LayoutBarRoot}"
-                              ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                <ItemsControl
+                    x:Name="PinnedControl"
+                    Grid.Column="0"
+                    Panel.ZIndex="2"
+                    ItemContainerStyle="{StaticResource TabItemContainerStyle}"
+                    ItemsSource="{Binding PinnedItems, ElementName=LayoutBarRoot}">
+
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Background="Transparent"/>
+                            <StackPanel Background="Transparent" Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
 
-                <ScrollViewer x:Name="TabScrollViewer" Grid.Column="1" 
-                              HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
-                              PreviewMouseWheel="TabScrollViewer_PreviewMouseWheel">
-                    <ItemsControl x:Name="TabItemsControl" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}"
-                                  ItemContainerStyle="{StaticResource TabItemContainerStyle}">
+                <!--  PinnedTab right border  -->
+                <Rectangle
+                    Grid.Column="0"
+                    Width="3"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Stretch"
+                    Panel.ZIndex="3"
+                    Fill="{StaticResource TabBarBackground}">
+                    <Rectangle.RenderTransform>
+                        <SkewTransform AngleX="-20" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+
+                <ScrollViewer
+                    x:Name="TabScrollViewer"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Panel.ZIndex="1"
+                    HorizontalScrollBarVisibility="Hidden"
+                    PreviewMouseWheel="TabScrollViewer_PreviewMouseWheel"
+                    VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl
+                        x:Name="TabItemsControl"
+                        Margin="{Binding ActualWidth, ElementName=PinnedControl, Converter={StaticResource WidthToLeftMarginConverter}}"
+                        ItemContainerStyle="{StaticResource TabItemContainerStyle}"
+                        ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Background="Transparent"/>
+                                <StackPanel Background="Transparent" Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
                 </ScrollViewer>
 
-                <Button x:Name="AddBtn" Grid.Column="2" Width="24" Height="24" Content="+" 
-                        Margin="5,2,0,0" VerticalAlignment="Top"
-                        Foreground="{StaticResource TextInactive}" Background="Transparent" 
-                        BorderThickness="0" FontSize="16" Cursor="Hand" Click="AddBtn_Click"/>
+                <Button
+                    x:Name="AddBtn"
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="5,2,0,0"
+                    VerticalAlignment="Top"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="AddBtn_Click"
+                    Content="+"
+                    Cursor="Hand"
+                    FontSize="16"
+                    Foreground="{StaticResource TextInactive}" />
             </Grid>
 
-            <ToggleButton x:Name="OverflowToggle" Grid.Column="1" Width="20" Height="20" Margin="2,0" Background="Transparent" BorderThickness="0">
-                <Path Data="{StaticResource OverflowChevron}" Stroke="{StaticResource TextInactive}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <ToggleButton
+                x:Name="OverflowToggle"
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="2,0"
+                Background="Transparent"
+                BorderThickness="0">
+                <Path
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Data="{StaticResource OverflowChevron}"
+                    Stroke="{StaticResource TextInactive}"
+                    StrokeThickness="1.5" />
             </ToggleButton>
 
-            <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" Placement="Bottom" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}" StaysOpen="False" AllowsTransparency="True">
-                <Border Background="{StaticResource TabBarBackground}" BorderBrush="{StaticResource TabBorder}" BorderThickness="1">
+            <Popup
+                AllowsTransparency="True"
+                IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
+                Placement="Bottom"
+                PlacementTarget="{Binding ElementName=OverflowToggle}"
+                StaysOpen="False">
+                <Border
+                    Background="{StaticResource TabBarBackground}"
+                    BorderBrush="{StaticResource TabBackground}"
+                    BorderThickness="1">
                     <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
                         <Menu Background="Transparent" ItemsSource="{Binding Items, ElementName=LayoutBarRoot}">
                             <Menu.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel Orientation="Vertical"/>
+                                    <VirtualizingStackPanel Orientation="Vertical" />
                                 </ItemsPanelTemplate>
                             </Menu.ItemsPanel>
                             <Menu.ItemContainerStyle>
                                 <Style TargetType="MenuItem">
-                                    <Setter Property="Header" Value="{Binding Title}"/>
-                                    <Setter Property="ItemsSource" Value="{Binding SubTabs}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource TextInactive}"/>
-                                    <EventSetter Event="Click" Handler="OverflowMenuItem_Click"/>
+                                    <Setter Property="Header" Value="{Binding Title}" />
+                                    <Setter Property="ItemsSource" Value="{Binding SubTabs}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TextInactive}" />
+                                    <EventSetter Event="Click" Handler="OverflowMenuItem_Click" />
                                 </Style>
                             </Menu.ItemContainerStyle>
                         </Menu>
@@ -188,8 +397,14 @@
                 </Border>
             </Popup>
 
-            <Popup x:Name="DragIndicator" AllowsTransparency="True" IsHitTestVisible="False">
-                <Path Data="M 0,0 L 10,0 L 5,8 Z" Fill="Orange" Margin="0,0,0,0"/>
+            <Popup
+                x:Name="DragIndicator"
+                AllowsTransparency="True"
+                IsHitTestVisible="False">
+                <Path
+                    Margin="0,0,0,0"
+                    Data="M 0,0 L 10,0 L 5,8 Z"
+                    Fill="Orange" />
             </Popup>
         </Grid>
     </Border>

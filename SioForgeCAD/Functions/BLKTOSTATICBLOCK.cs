@@ -12,7 +12,7 @@ namespace SioForgeCAD.Functions
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-            if (!ed.GetBlocks(out ObjectId[] ObjectIds, null, true, true))
+            if (!ed.GetBlocks(out ObjectId[] ObjectIds, "Selectionnez un bloc", true, true))
             {
                 return;
             }

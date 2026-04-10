@@ -68,7 +68,7 @@ namespace SioForgeCAD.Forms
         }
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {            
+        {
 
             // Si on a relâché le clic SANS avoir bougé la souris (donc sans drag)
             if (!_isDragging && _dragSource != null)
@@ -105,8 +105,55 @@ namespace SioForgeCAD.Forms
         {
             // Peut se trouver dans l'un des deux ItemsControls (Pinned ou Standard)
             var container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
-            container?.BringIntoView();
+            ScrollTabIntoView(container);
         }
+
+        private void ScrollTabIntoView(FrameworkElement container)
+        {
+            if (container == null || TabScrollViewer == null || PinnedControl == null || TabItemsControl == null)
+                return;
+
+            try
+            {
+                // 1. Obtenir la position de l'élément par rapport au conteneur des onglets scrollables
+                GeneralTransform transform = container.TransformToAncestor(TabItemsControl);
+                Point itemPos = transform.Transform(new Point(0, 0));
+
+                double itemLocalX = itemPos.X;
+                double itemWidth = container.ActualWidth;
+
+                // 2. Récupérer les dimensions utiles de notre layout
+                double pinnedWidth = PinnedControl.ActualWidth;
+                double viewportWidth = TabScrollViewer.ViewportWidth;
+                double currentScroll = TabScrollViewer.HorizontalOffset;
+
+                // 3. Calculer les positions absolues de l'élément dans la zone de défilement totale
+                // On ajoute pinnedWidth car le TabItemsControl a une marge à gauche équivalente
+                double itemExtentX = pinnedWidth + itemLocalX;
+                double itemExtentRight = itemExtentX + itemWidth;
+
+                // 4. Définir les limites de la zone REELLEMENT visible (non cachée par PinnedControl)
+                double visibleLeft = currentScroll + pinnedWidth;
+                double visibleRight = currentScroll + viewportWidth;
+
+                // 5. Ajuster le scroll si l'élément dépasse
+                if (itemExtentX < visibleLeft)
+                {
+                    // L'élément est caché à gauche (sous les épinglés) -> On l'aligne à gauche
+                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - pinnedWidth);
+                }
+                else if (itemExtentRight > visibleRight)
+                {
+                    // L'élément est caché à droite (hors de l'écran) -> On l'aligne à droite
+                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - viewportWidth);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Ignore : Se produit si l'élément n'est pas encore rendu dans l'arbre visuel WPF
+            }
+        }
+
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -150,6 +197,8 @@ namespace SioForgeCAD.Forms
                 }
             }
         }
+
+
         protected override void OnDragOver(DragEventArgs e)
         {
             base.OnDragOver(e);
@@ -158,10 +207,12 @@ namespace SioForgeCAD.Forms
             LayoutItem sourceItem = e.Data.GetData(typeof(LayoutTab)) as LayoutItem ?? e.Data.GetData(typeof(LayoutGroup)) as LayoutItem ?? _dragSource;
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
+
             if (sourceItem is LayoutGroup lg)
             {
                 lg.IsExpanded = false;
             }
+
             if (targetContainer != null && targetContainer.DataContext is LayoutItem targetItem)
             {
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
@@ -170,10 +221,7 @@ namespace SioForgeCAD.Forms
                     targetGrp = tTab.ParentGroup;
                 }
 
-                // On s'assure que la flèche tourne bien autour de son centre
-                DragIndicator.RenderTransformOrigin = new Point(0.5, 0.5);
-
-                if (targetGrp != null && sourceItem is LayoutTab sTab)
+                if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                 {
                     if (!targetGrp.Contains(sTab))
                     {
@@ -184,47 +232,128 @@ namespace SioForgeCAD.Forms
 
                         var placementTarget = groupContainer ?? targetContainer;
 
-                        DragIndicator.PlacementTarget = placementTarget;
-                        DragIndicator.Placement = PlacementMode.Relative; // Plus simple pour caler à gauche
+                        // PlacementMode.Relative Plus simple pour caler à gauche
+                        ShowDragIndicator(placementTarget, -12, (placementTarget.ActualHeight / 2) + 4, -90, PlacementMode.Relative);
+                        Debug.WriteLine("Cible un Groupe avec un onglet externe");
+                    }
+                    else if (targetItem is LayoutGroup)
+                    {
+                        // Onglet interne déposé directement sur l'en-tête du groupe
+                        var firstTabItem = targetGrp.SubTabs.Count > 0 ? targetGrp.SubTabs[0] : null;
 
-                        // On pivote la flèche (-90°) pour qu'elle pointe vers la droite
-                        DragIndicator.RenderTransform = new RotateTransform(-90);
+                        if (firstTabItem != null)
+                        {
+                            FrameworkElement firstTabContainer = GetVisualContainerFromItem(targetContainer, firstTabItem);
+                            var placementTarget = firstTabContainer ?? targetContainer;
+                            ShowDragIndicator(placementTarget, -5, -2, 0);
+                            Debug.WriteLine("Onglet interne sur le group tab -> Placé avant le 1er onglet");
+                        }
+                    }
+                    else if (targetItem is LayoutTab targetTabInside)
+                    {
+                        // 2. Onglet interne au groupe -> Réorganisation classique (Flèche vers le bas)
+                        int baseIndex = targetGrp.IndexOf(targetTabInside);
+                        int sourceIndex = targetGrp.IndexOf(sTab); // On récupère l'index de la source dans le groupe
 
-                        // On la place juste avant le groupe (-12px) et on la centre verticalement
-                        DragIndicator.HorizontalOffset = -12;
-                        DragIndicator.VerticalOffset = (placementTarget.ActualHeight / 2) + 4; // -4 car la flèche fait 8 de haut
-                        DragIndicator.IsOpen = true;
+                        CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
+                        bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) ||
+                                                                     (isRightHalf && sourceIndex == baseIndex + 1);
+
+                        if (isSameLocation)
+                        {
+                            // On récupère le conteneur parent (le panel du groupe)
+                            var parentPanel = VisualTreeHelper.GetParent(targetContainer);
+                            FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sTab);
+
+                            if (sourceTabContainer != null)
+                            {
+                                ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                            }
+                        }
+                        else
+                        {
+                            ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
+                        }
+
+                        Debug.WriteLine("Onglet interne au groupe");
+                    }
+                }
+                else if (Items.Contains(targetItem) && targetItem != sourceItem) // Condition simplifiée
+                {
+                    // 3. Indicateur vertical classique racine
+                    int baseIndex = Items.IndexOf(targetItem);
+                    int sourceIndex = Items.IndexOf(sourceItem);
+
+                    var FuturLocationIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
+
+                    // Un mouvement ne change rien si :
+                    // - On cible la MOITIÉ GAUCHE de l'élément situé juste à DROITE de l'élément glissé
+                    // - On cible la MOITIÉ DROITE de l'élément situé juste à GAUCHE de l'élément glissé
+                    bool isSameLocation = (!isRightHalf && sourceIndex == baseIndex - 1) ||
+                                          (isRightHalf && sourceIndex == baseIndex + 1);
+
+                    if (isSameLocation)
+                    {
+                        // On cherche à partir du parent (qui contient TOUS les onglets), 
+                        // ou simplement 'this' si ta classe courante est le conteneur global.
+                        var parentPanel = VisualTreeHelper.GetParent(targetContainer);
+                        FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sourceItem);
+
+                        if (sourceTabContainer != null)
+                        {
+                            ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                        }
                     }
                     else
                     {
-                        // 2. Onglet interne au groupe -> Réorganisation classique (Flèche vers le bas)
-                        DragIndicator.RenderTransform = new RotateTransform(0); // On réinitialise la rotation
-
-                        Point pos = e.GetPosition(targetContainer);
-                        bool isRightHalf = pos.X > targetContainer.ActualWidth / 2;
-
-                        DragIndicator.PlacementTarget = targetContainer;
-                        DragIndicator.Placement = PlacementMode.Top;
-                        DragIndicator.HorizontalOffset = isRightHalf ? targetContainer.ActualWidth - 5 : -5;
-                        DragIndicator.VerticalOffset = -2;
-                        DragIndicator.IsOpen = true;
+                        ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
                     }
-                }
-                else
-                {
-                    // 3. Indicateur vertical classique (Flèche vers le bas)
-                    DragIndicator.RenderTransform = new RotateTransform(0); // On réinitialise la rotation
 
-                    Point pos = e.GetPosition(targetContainer);
-                    bool isRightHalf = pos.X > targetContainer.ActualWidth / 2;
-
-                    DragIndicator.PlacementTarget = targetContainer;
-                    DragIndicator.Placement = PlacementMode.Top;
-                    DragIndicator.HorizontalOffset = isRightHalf ? targetContainer.ActualWidth - 5 : -5;
-                    DragIndicator.VerticalOffset = -2;
-                    DragIndicator.IsOpen = true;
+                    Debug.WriteLine("Reorder racine");
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Calcule le nouvel index d'insertion basé sur la position de la souris par rapport au conteneur cible.
+        /// </summary>
+        private int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
+        {
+            isRightHalf = false;
+
+            // Si l'index est invalide (ex: introuvable), on retourne 0 par sécurité
+            if (currentItemIndex < 0)
+            {
+                Debug.WriteLine("index est invalide (ex: introuvable), on retourne 0 par sécurité");
+                currentItemIndex = 0;
+            }
+
+            if (targetContainer != null)
+            {
+                Point pos = e.GetPosition(targetContainer);
+                isRightHalf = pos.X > targetContainer.ActualWidth / 2;
+
+                // Si on est sur la moitié droite, on insère APRÈS l'élément visé
+                if (isRightHalf)
+                {
+                    currentItemIndex++;
+                }
+            }
+
+            return currentItemIndex;
+        }
+
+
+        private void ShowDragIndicator(UIElement PlacementTarget, double HorizontalOffset, double VerticalOffset, double Rotation, PlacementMode placementMode = PlacementMode.Top)
+        {
+            DragIndicator.RenderTransformOrigin = new Point(0.5, 0.5);// On s'assure que la flèche tourne bien autour de son centre
+            DragIndicator.RenderTransform = new RotateTransform(Rotation);
+            DragIndicator.PlacementTarget = PlacementTarget;
+            DragIndicator.Placement = placementMode;
+            DragIndicator.HorizontalOffset = HorizontalOffset;
+            DragIndicator.VerticalOffset = VerticalOffset;
+            DragIndicator.IsOpen = true;
         }
 
 
@@ -246,19 +375,18 @@ namespace SioForgeCAD.Forms
                 var targetElement = e.OriginalSource as FrameworkElement;
                 var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
                 var targetParentContainer = GetVisualParent<ContentPresenter>(targetContainer);
+
                 if (targetContainer?.DataContext is LayoutItem targetItem)
                 {
-                    LayoutGroup targetGrp =
-                        targetParentContainer.DataContext as LayoutGroup ??
-                        targetContainer.DataContext as LayoutGroup;
+                    LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
 
-                    if (targetGrp != null && sourceItem is LayoutTab sTab)
+                    if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                     {
                         if (!targetGrp.Contains(sTab))
                         {
                             // Si on cible un Groupe avec un onglet externe 
                             RemoveFromAll(sTab);
-                            targetGrp.Add(sTab);
+                            targetGrp.Insert(0, sTab); // BUGFIX : Insert à 0 pour correspondre à la flèche visuelle
                             targetGrp.IsExpanded = true;
                         }
                         else if (targetGrp.Contains(sTab) && targetItem is LayoutTab tTab)
@@ -266,83 +394,41 @@ namespace SioForgeCAD.Forms
                             // Si on cible un Groupe avec un onglet interne 
                             var grp = sTab.ParentGroup;
                             int oldIndex = grp.IndexOf(sTab);
-                            int newIndex = grp.IndexOf(tTab);
+                            int baseIndex = grp.IndexOf(tTab);
 
-                            if (targetContainer != null && e.GetPosition(targetContainer).X > targetContainer.ActualWidth / 2) newIndex++;
+                            // Utilisation de la nouvelle méthode
+                            int newIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                            Debug.WriteLine(newIndex);
+                            // Compensation du décalage lors du retrait de l'item original
                             if (oldIndex < newIndex) newIndex--;
 
                             grp.Remove(sTab);
                             grp.Insert(newIndex, sTab);
                         }
+                        else if (targetGrp.Contains(sTab) && targetItem is LayoutGroup)
+                        {
+                            // Ajout du cas manquant : Onglet interne déposé sur l'en-tête de son propre groupe
+                            var grp = sTab.ParentGroup;
+                            grp.Remove(sTab);
+                            grp.Insert(0, sTab); // On le force au début, comme la flèche l'indique
+                        }
                     }
-                    else
+                    else if (Items.IndexOf(targetItem) != Items.IndexOf(sourceItem))
                     {
                         // Réorganisation classique racine
+
                         RemoveFromAll(sourceItem);
-                        int newIndex = Items.IndexOf(targetItem);
-                        
-                        if (targetContainer != null && e.GetPosition(targetContainer).X > targetContainer.ActualWidth / 2) newIndex++;
+                        int baseIndex = Items.IndexOf(targetItem);
+
+                        // Utilisation de la nouvelle méthode
+                        int newIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
 
                         newIndex = Math.Max(0, Math.Min(newIndex, Items.Count));
+
                         Items.Insert(newIndex, sourceItem);
-                        
                     }
                 }
-
             }
-
-
-
-
-
-
-
-            //LayoutItem sourceItem = e.Data.GetData(typeof(LayoutTab)) as LayoutItem ?? e.Data.GetData(typeof(LayoutGroup)) as LayoutItem ?? _dragSource;
-
-            //if (sourceItem != null)
-            //{
-            //    var targetElement = e.OriginalSource as FrameworkElement;
-            //    var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
-            //    var targetItem = targetContainer?.DataContext as LayoutItem;
-
-            //    // Cas A : Ajout à la fin d'un groupe si la source vient de l'extérieur
-            //    if (sourceItem is LayoutTab sourceTab && targetItem is LayoutGroup targetGroup)
-            //    {
-            //        if (!targetGroup.Contains(sourceTab))
-            //        {
-            //            RemoveFromAll(sourceTab);
-            //            targetGroup.Add(sourceTab);
-            //            targetGroup.IsExpanded = true;
-            //        }
-            //    }
-            //    // Cas B : Réorganisation à l'intérieur du MÊME groupe
-            //    else if (sourceItem is LayoutTab sTab && targetItem is LayoutTab tTab && tTab.IsInGroup)
-            //    {
-            //        if (sTab.ParentGroup == tTab.ParentGroup)
-            //        {
-            //            var grp = sTab.ParentGroup;
-            //            int oldIndex = grp.IndexOf(sTab);
-            //            int newIndex = grp.IndexOf(tTab);
-
-            //            if (targetContainer != null && e.GetPosition(targetContainer).X > targetContainer.ActualWidth / 2) newIndex++;
-            //            if (oldIndex < newIndex) newIndex--;
-
-            //            grp.Remove(sTab);
-            //            grp.Insert(newIndex, sTab);
-            //        }
-            //    }
-            //    // Cas C : Réorganisation classique racine
-            //    else if (targetItem != null && targetItem != sourceItem && !targetItem.IsPinned)
-            //    {
-            //        RemoveFromAll(sourceItem);
-            //        int newIndex = Items.IndexOf(targetItem);
-
-            //        if (targetContainer != null && e.GetPosition(targetContainer).X > targetContainer.ActualWidth / 2) newIndex++;
-
-            //        newIndex = Math.Max(0, Math.Min(newIndex, Items.Count));
-            //        Items.Insert(newIndex, sourceItem);
-            //    }
-            //}
 
             _dragSource = null;
             _isDragging = false;
@@ -359,12 +445,39 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private T GetVisualParent<T>(DependencyObject child) where T : DependencyObject
+        private static T GetVisualParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
             if (parentObject == null) return null;
             if (parentObject is T parent) return parent;
             return GetVisualParent<T>(parentObject);
+        }
+        private FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
+        {
+            if (parent == null) return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                // Si l'enfant est un FrameworkElement et que sa donnée correspond au Tab recherché
+                if (child is FrameworkElement fe && fe.DataContext == itemData)
+                {
+                    // On s'assure qu'on ne retourne pas le groupe lui-même par accident
+                    if (!(fe.DataContext is LayoutGroup))
+                    {
+                        return fe;
+                    }
+                }
+
+                // Sinon, on cherche plus profondément
+                var result = GetVisualContainerFromItem(child, itemData);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return null;
         }
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)

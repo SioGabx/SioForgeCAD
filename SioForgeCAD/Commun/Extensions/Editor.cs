@@ -173,7 +173,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, string Message = "Selectionnez un bloc", bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
+        public static bool GetBlocks(this Editor ed, out ObjectId[] objectId, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {
             objectId = Array.Empty<ObjectId>();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };

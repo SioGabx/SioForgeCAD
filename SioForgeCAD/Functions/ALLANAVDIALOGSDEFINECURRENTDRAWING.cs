@@ -72,6 +72,7 @@ namespace SioForgeCAD.Functions
                 Debug.WriteLine(cmd);
                 if (cmd == "OPEN" ||
                     cmd == "SAVEAS" ||
+                    cmd == "LAYOUT_CONTROL" ||
                     cmd == "PLOT" ||
                     cmd == "QSAVE" ||
                     cmd == "ETRANSMIT" ||
@@ -80,9 +81,32 @@ namespace SioForgeCAD.Functions
                     cmd == "EXPORT" ||
                     cmd == "NETLOAD" ||
                     cmd == "APPLOAD" ||
-                    cmd == "ATTACH" ||
+                    cmd == "RECOVER" ||
+                    cmd == "WMFIN" ||
+                    cmd == "DXBIN" ||
+                    cmd == "ACISIN" ||
+                    cmd == "ATTACH" ||//from ruban
+                    cmd == "XATTACH" ||//in XREF menu
+                    cmd == "IMAGEATTACH" ||//in XREF menu
+                    cmd == "DWFATTACH" ||//in XREF menu
+                    cmd == "DGNATTACH" ||//in XREF menu
+                    cmd == "PDFATTACH" ||//in XREF menu
+                    cmd == "PDFIMPORT" ||//from ruban
+                    cmd == "GEOGRAPHICLOCATION" || //GEOGRAPHICLOCATION from file
+                    cmd == "POINTCLOUDATTACH" || //in XREF menu
+                    cmd == "COORDINATIONMODELATTACH" || //in XREF menu
+                    cmd == "EXPORTDWF" || //big A -> Export
+                    cmd == "EXPORTDWFX" || //big A -> Export
+                    cmd == "3DDWF" || //big A -> Export
+                    cmd == "EXPORTPDF" || //big A -> Export
+                    cmd == "DGNEXPORT" || //big A -> Export
+                    cmd == "ARCHIVE" ||
+                    cmd == "NEW" ||
+                    cmd == "QNEW" ||
+                    cmd == "EXPORT" ||
                     cmd == "XREF")
                 {
+                    Debug.WriteLine(cmd);
                     UpdateRegistry();
                 }
             }

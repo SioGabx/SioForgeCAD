@@ -63,7 +63,7 @@ namespace SioForgeCAD.Functions
                 blockRefId = ObjectId.Null;
                 blockRef = null;
 
-                if (!ed.GetBlocks(out ObjectId[] ids, null, true, true) || ids.Length == 0)
+                if (!ed.GetBlocks(out ObjectId[] ids, "Selectionnez un bloc", true, true) || ids.Length == 0)
                 {
                     return false;
                 }

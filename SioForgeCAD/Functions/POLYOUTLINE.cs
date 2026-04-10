@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
-    internal class POLYOUTLINE
+    public static class POLYOUTLINE
     {
         public static void CreatePolyOutline()
         {
