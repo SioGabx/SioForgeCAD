@@ -281,60 +281,70 @@ namespace SioForgeCAD.Forms
                         _lastSelectedItem = _dragSource;
                     }
 
-                    CreatePreviewWindow();
-
-                    _autoScrollTimer.Start();
-
+                    // 1. On calcule la liste des éléments sélectionnés AVANT de créer la fenêtre
                     var selectedItems = GetVisibleItemsList()
                         .Where(i => i.IsSelected && !i.IsPinned && !(i is LayoutTab tab && tab.ParentGroup != null && tab.ParentGroup.IsSelected))
                         .ToList();
 
+                    // 2. On passe la liste pour générer la prévisualisation complète
+                    CreatePreviewWindow(selectedItems);
+
+                    _autoScrollTimer.Start();
+
                     DragDrop.DoDragDrop(this, new DataObject("SelectedItems", selectedItems), DragDropEffects.Move);
                     _autoScrollTimer.Stop();
-
                 }
             }
         }
 
-        private void CreatePreviewWindow()
+        private void CreatePreviewWindow(List<LayoutItem> selectedItems)
         {
-            FrameworkElement sourceContainer = TabItemsControl.ItemContainerGenerator.ContainerFromItem(_dragSource) as FrameworkElement
-                                                      ?? GetVisualContainerFromItem(TabItemsControl, _dragSource);
+            if (selectedItems == null || !selectedItems.Any()) return;
 
-            if (sourceContainer != null)
+            // 1. On prépare un panel horizontal pour empiler nos vrais contrôles WPF
+            var factory = new FrameworkElementFactory(typeof(StackPanel));
+            factory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+
+            // 2. On utilise un ItemsControl qui va instancier de vrais éléments (clones parfaits)
+            var previewItemsControl = new ItemsControl
             {
-                BitmapSource snapshot = sourceContainer.CreateElementSnapshot();
+                Margin = new Thickness(10, 0, 0, 0),
+                ItemsSource = selectedItems,
+                ItemsPanel = new ItemsPanelTemplate(factory),
+                // On récupère ton style de conteneur original pour respecter tes ZIndex/Marges
+                ItemContainerStyle = TabItemsControl.ItemContainerStyle
+            };
 
-                if (snapshot != null)
+            // 3. On crée la fenêtre ultra-légère
+            _ghostWindow = new Window
+            {
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Background = Brushes.Transparent,
+                ShowInTaskbar = false,
+                Topmost = true,
+                IsHitTestVisible = false, // La souris passe à travers les contrôles
+                SizeToContent = SizeToContent.WidthAndHeight,
+
+                // MAGIE ICI : On donne à la fenêtre l'accès à tes <UserControl.Resources>.
+                // C'est ce qui lui permet de trouver tes DataTemplates (LayoutTab, LayoutGroup) et tes pinceaux !
+                Resources = this.Resources,
+
+                Content = new Border
                 {
-                    // On crée une fenêtre ultra-légère, transparente et intouchable
-                    _ghostWindow = new Window
+                    Opacity = 0.85, // Transparence globale du groupe qui est déplacé
+                    Effect = new System.Windows.Media.Effects.DropShadowEffect
                     {
-                        WindowStyle = WindowStyle.None,
-                        AllowsTransparency = true,
-                        Background = Brushes.Transparent,
-                        ShowInTaskbar = false,
-                        Topmost = true,       // Reste au-dessus de tout
-                        IsHitTestVisible = false, // La souris passe à travers
-                        SizeToContent = SizeToContent.WidthAndHeight,
-                        Content = new Border
-                        {
-                            Opacity = 0.70, // C'est ici qu'on définit la transparence !
-                            Effect = new System.Windows.Media.Effects.DropShadowEffect
-                            {
-                                BlurRadius = 10,
-                                Opacity = 0.5,
-                                Direction = 270
-                            },
-                            Child = new Image { Source = snapshot, Stretch = System.Windows.Media.Stretch.None }
-                        }
-                    };
-                    _ghostWindow.Show();
+                        BlurRadius = 10,
+                        Opacity = 0.5,
+                        Direction = 270
+                    },
+                    Child = previewItemsControl // On injecte notre générateur de contrôles
                 }
-            }
+            };
+
+            _ghostWindow.Show();
         }
-
-
 
         private void DragDropEnd()
         {
