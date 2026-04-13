@@ -11,6 +11,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using static SioForgeCAD.Commun.Mist.User32PInvoke;
 
 namespace SioForgeCAD.Forms
 {
@@ -19,6 +21,7 @@ namespace SioForgeCAD.Forms
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
         public ObservableCollection<LayoutItem> Items { get; } = new ObservableCollection<LayoutItem>();
 
+        private DispatcherTimer _autoScrollTimer;
         private LayoutItem _currentItem;
         private LayoutItem _lastSelectedItem; // Pour la sélection avec Shift
         private Point _dragStart;
@@ -31,6 +34,12 @@ namespace SioForgeCAD.Forms
             LayoutBarRoot.DataContext = this;
 
             TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            _autoScrollTimer = new DispatcherTimer();
+            _autoScrollTimer.Interval = TimeSpan.FromMilliseconds(15); // Rafraîchissement ultra fluide (~60 fps)
+            _autoScrollTimer.Tick += AutoScrollTimer_Tick;
+
+
 
             PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
             Items.Add(new LayoutTab { Title = "Plan RDC" });
@@ -234,10 +243,75 @@ namespace SioForgeCAD.Forms
                     // On rassemble tous les éléments sélectionnés
                     var selectedItems = GetVisibleItemsList().Where(i => i.IsSelected && !i.IsPinned).ToList();
 
+                    _autoScrollTimer.Start();
                     DragDrop.DoDragDrop(this, new DataObject("SelectedItems", selectedItems), DragDropEffects.Move);
+                    _autoScrollTimer.Stop();
                 }
             }
         }
+
+
+
+        private void AutoScrollTimer_Tick(object sender, EventArgs e)
+        {
+            if (!_isDragging || TabScrollViewer == null || PinnedControl == null) return;
+
+            // 1. Obtenir la position GLOBALE de la souris et la convertir en position locale
+            Win32Point w32Mouse = new Win32Point();
+            GetCursorPos(ref w32Mouse);
+            Point screenPos = new Point(w32Mouse.X, w32Mouse.Y);
+            Point mousePos = this.PointFromScreen(screenPos); // Position relative au UserControl
+
+            const double scrollTolerance = 80.0;
+            const double minScrollStep = 2.0;
+            const double maxScrollStep = 15.0;
+
+            // 2. Définir les vrais bords visibles de la zone de scroll
+            double leftVisibleEdge = PinnedControl.ActualWidth;
+
+            // Le bord droit est le bord gauche + la largeur RÉELLE du ScrollViewer (qui exclut les boutons de droite)
+            double rightVisibleEdge = leftVisibleEdge + TabScrollViewer.ActualWidth;
+
+            double step = 0;
+            bool scrollLeft = false;
+
+            // --- Calcul pour le bord GAUCHE ---
+            if (mousePos.X < leftVisibleEdge + scrollTolerance)
+            {
+                double dist = mousePos.X - leftVisibleEdge;
+
+                // Intensity : 1.0 si on est à gauche de la limite, 0.0 si on est à 80px à droite de la limite
+                double intensity = 1.0 - (dist / scrollTolerance);
+                intensity = Math.Max(0.0, Math.Min(1.0, intensity)); // Sécurité : On bloque l'intensité entre 0 et 1
+
+                intensity = Math.Pow(intensity, 2); // Effet exponentiel
+                step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+                scrollLeft = true;
+            }
+            // --- Calcul pour le bord DROIT ---
+            else if (mousePos.X > rightVisibleEdge - scrollTolerance)
+            {
+                double dist = rightVisibleEdge - mousePos.X;
+
+                // Intensity : 1.0 si on est à droite de la limite, 0.0 si on est à 80px à gauche de la limite
+                double intensity = 1.0 - (dist / scrollTolerance);
+                intensity = Math.Max(0.0, Math.Min(1.0, intensity)); // Sécurité : On bloque l'intensité entre 0 et 1
+
+                intensity = Math.Pow(intensity, 2); // Effet exponentiel
+                step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+            }
+
+            // --- Application du scroll ---
+            if (step > 0)
+            {
+                if (scrollLeft)
+                    TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset - step);
+                else
+                    TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset + step);
+            }
+        }
+
+
 
         protected override void OnDragOver(DragEventArgs e)
         {
@@ -248,68 +322,7 @@ namespace SioForgeCAD.Forms
                                     ?? _dragSource;
 
             if (sourceItem == null) return;
-
-
-            // --- LOGIQUE D'AUTO-SCROLL ---
-            if (TabScrollViewer != null && PinnedControl != null)
-            {
-                const double scrollTolerance = 80.0; // Largeur de la zone sensible
-                const double minScrollStep = 2.0;    // Vitesse minimale (au bord de la tolerance)
-                const double maxScrollStep = 15.0;   // Vitesse maximale capée (au bord extrême de l'écran)
-
-                Point mousePos = e.GetPosition(this);
-
-                double leftVisibleEdge = PinnedControl.ActualWidth;
-                double rightVisibleEdge = this.ActualWidth;
-
-                double step = 0;
-                bool scrollLeft = false;
-
-                // --- Calcul pour le bord GAUCHE ---
-                if (mousePos.X < leftVisibleEdge + scrollTolerance)
-                {
-                    // Distance entre la souris et le bord gauche (0 au bord, 80 à la limite de la tolérance)
-                    double dist = mousePos.X - leftVisibleEdge;
-
-                    // Intensité linéaire (1 au bord extrême, 0 à la limite de tolérance)
-                    double intensity = 1.0 - (Math.Max(0, dist) / scrollTolerance);
-
-                    // Effet exponentiel/accélération (on met au carré)
-                    intensity = Math.Pow(intensity, 2);
-
-                    // Interpolation entre la vitesse min et max
-                    step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
-                    scrollLeft = true;
-                }
-                // --- Calcul pour le bord DROIT ---
-                else if (mousePos.X > rightVisibleEdge - scrollTolerance) // <-- Correction : on enlève le "* 2"
-                {
-                    double dist = rightVisibleEdge - mousePos.X;
-                    dist = Math.Max(0, dist); // Si la souris sort de la fenêtre à droite, la distance reste 0
-
-                    double intensity = 1.0 - (dist / scrollTolerance);
-                    intensity = Math.Max(0.0, intensity); // SÉCURITÉ : Empêche l'intensité de devenir négative
-
-                    intensity = Math.Pow(intensity, 2);
-                    step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
-                }
-
-                // --- Application du scroll ---
-                if (step > 0)
-                {
-                    if (scrollLeft)
-                        TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset - step);
-                    else
-                        TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset + step);
-                }
-            }
-            // ------------------------------------------------------------
-
-
-
-
-
-
+           
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
 
@@ -368,7 +381,14 @@ namespace SioForgeCAD.Forms
                     }
                     else ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
                 }
+
+                e.Effects = DragDropEffects.Move;
             }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+                e.Handled = true;
         }
 
         private static int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
