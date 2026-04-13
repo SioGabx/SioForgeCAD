@@ -81,6 +81,76 @@
                 Cursor="Hand"
                 MouseLeftButtonDown="Item_MouseLeftButtonDown"
                 MouseLeftButtonUp="Item_MouseLeftButtonUp">
+
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <ContextMenu.Style>
+                            <Style TargetType="ContextMenu">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ContextMenu">
+                                            <Border
+                                                MinWidth="180"
+                                                Margin="0,0,8,8"
+                                                Background="{StaticResource TabBarBackground}"
+                                                BorderBrush="{StaticResource TabBackground}"
+                                                BorderThickness="1"
+                                                CornerRadius="4">
+                                                <Border.Effect>
+                                                    <DropShadowEffect
+                                                        BlurRadius="8"
+                                                        Direction="270"
+                                                        Opacity="0.4"
+                                                        ShadowDepth="3" />
+                                                </Border.Effect>
+                                                <ItemsPresenter Margin="0,4" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ContextMenu.Style>
+                        <ContextMenu.ItemContainerStyle>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Foreground" Value="{StaticResource TextInactive}" />
+                                <Setter Property="Padding" Value="16,6,16,6" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                            <Border
+                                                x:Name="BgBorder"
+                                                Background="Transparent"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="2,0,0,0">
+                                                <ContentPresenter
+                                                    Margin="{TemplateBinding Padding}"
+                                                    ContentSource="Header"
+                                                    RecognizesAccessKey="True" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter TargetName="BgBorder" Property="Background" Value="{StaticResource TabHoverBg}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                                    <Setter TargetName="BgBorder" Property="BorderBrush" Value="{StaticResource TextActive}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ContextMenu.ItemContainerStyle>
+
+                        <MenuItem Click="ContextMenu_Renommer_Click" Header="Renommer" />
+                        <MenuItem Click="ContextMenu_Tracer_Click" Header="Tracer" />
+                        <MenuItem Click="ContextMenu_Publier_Click" Header="Publier" />
+
+                        <MenuItem Click="ContextMenu_Supprimer_Click" Header="Supprimer" />
+                    </ContextMenu>
+                </Grid.ContextMenu>
+
+
+
                 <Border
                     x:Name="TabBg"
                     Background="{StaticResource TabBarBackground}"

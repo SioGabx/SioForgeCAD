@@ -283,6 +283,7 @@
     <Compile Include="Functions\CCI.cs" />
     <Compile Include="Functions\BLKMAKEUNIQUE.cs" />
     <Compile Include="Functions\COPYPAPERTOMODEL.cs" />
+    <Compile Include="Functions\CUSTOMLAYOUTBAR.cs" />
     <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\LAYERMANAGERHANDLEBETTEREDITING.cs" />

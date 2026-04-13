@@ -23,6 +23,12 @@ namespace SioForgeCAD.Forms
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
         public ObservableCollection<LayoutItem> Items { get; } = new ObservableCollection<LayoutItem>();
 
+        // Événement déclenché quand l'utilisateur change d'onglet
+        public event EventHandler<LayoutTab> ActiveTabChanged;
+
+        // Empêche la boucle infinie (AutoCAD change la barre -> la barre prévient AutoCAD -> etc.)
+        public bool IsSyncing { get; set; }
+
         private Window _ghostWindow;
         private readonly DispatcherTimer _autoScrollTimer;
         private LayoutItem _currentItem;
@@ -46,19 +52,74 @@ namespace SioForgeCAD.Forms
 
 
 
-            PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
-            Items.Add(new LayoutTab { Title = "Plan RDC" });
-            Items.Add(new LayoutTab { Title = "Plan R+1" });
+            //PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
+            //Items.Add(new LayoutTab { Title = "Plan RDC" });
+            //Items.Add(new LayoutTab { Title = "Plan R+1" });
 
-            var group = new LayoutGroup { Title = "Feuilles" };
-            group.Add(new LayoutTab { Title = "Coupe AA" });
-            group.Add(new LayoutTab { Title = "Coupe BB" });
-            Items.Add(group);
+            //var group = new LayoutGroup { Title = "Feuilles" };
+            //group.Add(new LayoutTab { Title = "Coupe AA" });
+            //group.Add(new LayoutTab { Title = "Coupe BB" });
+            //Items.Add(group);
 
-            Items.Add(new LayoutTab { Title = "Plan R+2" });
-            Items.Add(new LayoutTab { Title = "Plan R+3" });
-            Items.Add(new LayoutTab { Title = "Plan R+4" });
+            //Items.Add(new LayoutTab { Title = "Plan R+2" });
+            //Items.Add(new LayoutTab { Title = "Plan R+3" });
+            //Items.Add(new LayoutTab { Title = "Plan R+4" });
         }
+
+       
+
+        private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).Cast<LayoutTab>().ToList();
+
+            if (selectedTabs.Count > 1)
+            {
+                Debug.WriteLine("=== Renommage multiple ===");
+                foreach (var tab in selectedTabs)
+                {
+                    Debug.WriteLine($"- {tab.Title} renommé en {tab.Title}-m");
+                    tab.Title += "-m";
+                    // TODO: Pousser le changement vers AutoCAD via ton TabsDataWrapper si nécessaire
+                }
+            }
+            else if (selectedTabs.Count == 1)
+            {
+                var tab = selectedTabs[0];
+                Debug.WriteLine($"Renommer un seul onglet : {tab.Title}");
+                // TODO: Logique pour ouvrir un TextBox ou une fenêtre de dialogue pour saisir le nouveau nom
+            }
+        }
+
+        private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).ToList();
+            Debug.WriteLine($"Tracer la sélection : {selectedTabs.Count} présentation(s).");
+            // TODO: Appel de la commande AutoCAD Plot pour les LayoutData correspondants
+        }
+
+        private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).ToList();
+            Debug.WriteLine($"Publier la sélection : {selectedTabs.Count} présentation(s).");
+            // TODO: Appel de la commande AutoCAD Publish
+        }
+
+        private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab && !t.IsPinned).ToList();
+
+            if (!selectedTabs.Any()) return;
+
+            Debug.WriteLine($"Suppression de {selectedTabs.Count} présentation(s).");
+
+            foreach (var tab in selectedTabs)
+            {
+                RemoveFromAll(tab);
+            }
+            ClearSelection();
+        }
+
+
 
         private void ClearSelection()
         {
@@ -162,6 +223,10 @@ namespace SioForgeCAD.Forms
             _isDragging = false;
         }
 
+        public void SetCurrentTab(LayoutItem item)
+        {
+            SetCurrentItem(item);
+        }
         private void SetCurrentItem(LayoutItem item)
         {
             if (_currentItem != null)
@@ -180,6 +245,11 @@ namespace SioForgeCAD.Forms
                 }
 
                 ScrollToItem(item);
+                // On prévient TEST.cs que l'onglet a changé, SEULEMENT si ce n'est pas une synchro d'AutoCAD
+                if (item is LayoutTab selectedTab)
+                {
+                    ActiveTabChanged?.Invoke(this, selectedTab);
+                }
             }
         }
 
@@ -751,6 +821,8 @@ namespace SioForgeCAD.Forms
             get => _isSelected;
             set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
         }
+
+        public object AutoCadData { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
