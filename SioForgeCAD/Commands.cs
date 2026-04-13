@@ -500,7 +500,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-
             //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
             //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
 
@@ -517,7 +516,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            
+            Functions.TEST.Attach();
         }
 
         /*

@@ -211,7 +211,7 @@ namespace SioForgeCAD.Forms
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.IsCurrentCellDirty)
+            if (dataGridView1.CurrentCell is DataGridViewCheckBoxCell)
             {
                 dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
             }
@@ -247,6 +247,11 @@ namespace SioForgeCAD.Forms
             {
                 Clipboard.SetText(item.Renamed);
             }
+        }
+
+        private void RenameDialog_Shown(object sender, EventArgs e)
+        {
+            txtSearch.Focus();
         }
     }
 }

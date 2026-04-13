@@ -126,6 +126,11 @@ namespace SioForgeCAD.Commun
         {
             return Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
         }
+        public static Transaction GetTrans()
+        {
+            Database db = Generic.GetDatabase();
+            return db.TransactionManager.StartTransaction();
+        }
 
         public static DwgVersion GetSaveVersion()
         {

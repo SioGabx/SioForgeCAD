@@ -74,14 +74,14 @@
             this.dataGridView1.Size = new System.Drawing.Size(580, 480);
             this.dataGridView1.TabIndex = 5;
             // 
-            // ContextMenu
+            // StripContextMenu
             // 
             this.StripContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.CopyOriginal,
             this.CopyRenamed});
             this.StripContextMenu.Name = "contextMenuStrip1";
             this.StripContextMenu.ShowImageMargin = false;
-            this.StripContextMenu.Size = new System.Drawing.Size(174, 70);
+            this.StripContextMenu.Size = new System.Drawing.Size(174, 48);
             // 
             // CopyOriginal
             // 
@@ -224,6 +224,7 @@
             this.Name = "RenameDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "PowerRename SioForge";
+            this.Shown += new System.EventHandler(this.RenameDialog_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.StripContextMenu.ResumeLayout(false);
             this.panelLeft.ResumeLayout(false);

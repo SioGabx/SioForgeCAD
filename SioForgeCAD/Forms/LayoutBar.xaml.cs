@@ -1,4 +1,6 @@
-﻿using SioForgeCAD.Commun.Extensions;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -42,28 +44,13 @@ namespace SioForgeCAD.Forms
             InitializeComponent();
             LayoutBarRoot.DataContext = this;
 
-            TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
+            TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
             _autoScrollTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(15) // Rafraîchissement ultra fluide (~60 fps)
             };
             _autoScrollTimer.Tick += AutoScrollTimer_Tick;
-
-
-
-            //PinnedItems.Add(new LayoutTab { Title = "Model", IsPinned = true });
-            //Items.Add(new LayoutTab { Title = "Plan RDC" });
-            //Items.Add(new LayoutTab { Title = "Plan R+1" });
-
-            //var group = new LayoutGroup { Title = "Feuilles" };
-            //group.Add(new LayoutTab { Title = "Coupe AA" });
-            //group.Add(new LayoutTab { Title = "Coupe BB" });
-            //Items.Add(group);
-
-            //Items.Add(new LayoutTab { Title = "Plan R+2" });
-            //Items.Add(new LayoutTab { Title = "Plan R+3" });
-            //Items.Add(new LayoutTab { Title = "Plan R+4" });
         }
 
        
@@ -79,14 +66,12 @@ namespace SioForgeCAD.Forms
                 {
                     Debug.WriteLine($"- {tab.Title} renommé en {tab.Title}-m");
                     tab.Title += "-m";
-                    // TODO: Pousser le changement vers AutoCAD via ton TabsDataWrapper si nécessaire
                 }
             }
             else if (selectedTabs.Count == 1)
             {
                 var tab = selectedTabs[0];
                 Debug.WriteLine($"Renommer un seul onglet : {tab.Title}");
-                // TODO: Logique pour ouvrir un TextBox ou une fenêtre de dialogue pour saisir le nouveau nom
             }
         }
 
@@ -112,9 +97,26 @@ namespace SioForgeCAD.Forms
 
             Debug.WriteLine($"Suppression de {selectedTabs.Count} présentation(s).");
 
-            foreach (var tab in selectedTabs)
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
             {
-                RemoveFromAll(tab);
+                foreach (var tab in selectedTabs)
+                {
+                    try
+                    {
+                        string layoutName = tab.Title;
+
+                        LayoutManager.Current.DeleteLayout(layoutName);
+                        RemoveFromAll(tab);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        // AutoCAD refusera toujours de supprimer une présentation si c'est la TOUTE DERNIÈRE
+                        // (Il doit toujours rester au moins un espace papier). Cela lèvera une exception ici.
+                        Debug.WriteLine($"Impossible de supprimer la présentation '{tab.Title}' : {ex.Message}");
+                    }
+                }
+                tr.Commit();
             }
             ClearSelection();
         }
@@ -239,6 +241,7 @@ namespace SioForgeCAD.Forms
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
+                _currentItem.IsSelected = true;
                 if (item is LayoutTab tab && tab.IsInGroup)
                 {
                     tab.ParentGroup.IsExpanded = true;
@@ -246,7 +249,7 @@ namespace SioForgeCAD.Forms
 
                 ScrollToItem(item);
                 // On prévient TEST.cs que l'onglet a changé, SEULEMENT si ce n'est pas une synchro d'AutoCAD
-                if (item is LayoutTab selectedTab)
+                if (item is LayoutTab selectedTab && !IsSyncing)
                 {
                     ActiveTabChanged?.Invoke(this, selectedTab);
                 }
