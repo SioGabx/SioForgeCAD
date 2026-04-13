@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -11,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using static SioForgeCAD.Commun.Mist.User32PInvoke;
 
@@ -21,7 +23,8 @@ namespace SioForgeCAD.Forms
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
         public ObservableCollection<LayoutItem> Items { get; } = new ObservableCollection<LayoutItem>();
 
-        private DispatcherTimer _autoScrollTimer;
+        private Window _ghostWindow;
+        private readonly DispatcherTimer _autoScrollTimer;
         private LayoutItem _currentItem;
         private LayoutItem _lastSelectedItem; // Pour la sélection avec Shift
         private Point _dragStart;
@@ -35,8 +38,10 @@ namespace SioForgeCAD.Forms
 
             TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-            _autoScrollTimer = new DispatcherTimer();
-            _autoScrollTimer.Interval = TimeSpan.FromMilliseconds(15); // Rafraîchissement ultra fluide (~60 fps)
+            _autoScrollTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(15) // Rafraîchissement ultra fluide (~60 fps)
+            };
             _autoScrollTimer.Tick += AutoScrollTimer_Tick;
 
 
@@ -57,13 +62,20 @@ namespace SioForgeCAD.Forms
 
         private void ClearSelection()
         {
-            foreach (var item in PinnedItems) item.IsSelected = false;
+            foreach (var item in PinnedItems)
+            {
+                item.IsSelected = false;
+            }
+
             foreach (var item in Items)
             {
                 item.IsSelected = false;
                 if (item is LayoutGroup group)
                 {
-                    foreach (var subTab in group.SubTabs) subTab.IsSelected = false;
+                    foreach (var subTab in group.SubTabs)
+                    {
+                        subTab.IsSelected = false;
+                    }
                 }
             }
         }
@@ -76,7 +88,7 @@ namespace SioForgeCAD.Forms
             foreach (var item in Items)
             {
                 list.Add(item);
-                if (item is LayoutGroup group && group.IsExpanded)
+                if (item is LayoutGroup group)
                 {
                     list.AddRange(group.SubTabs);
                 }
@@ -152,31 +164,49 @@ namespace SioForgeCAD.Forms
 
         private void SetCurrentItem(LayoutItem item)
         {
-            if (_currentItem != null) _currentItem.IsCurrent = false;
+            if (_currentItem != null)
+            {
+                _currentItem.IsCurrent = false;
+            }
+
             _currentItem = item;
             _lastSelectedItem = item;
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
-                if (item is LayoutTab tab && tab.IsInGroup) tab.ParentGroup.IsExpanded = true;
+                if (item is LayoutTab tab && tab.IsInGroup)
+                {
+                    tab.ParentGroup.IsExpanded = true;
+                }
+
                 ScrollToItem(item);
             }
         }
 
         private void ScrollToItem(LayoutItem item)
         {
-            if (item == null || (item is LayoutTab tab && tab.IsPinned)) return;
+            if (item == null || (item is LayoutTab tab && tab.IsPinned))
+            {
+                return;
+            }
 
             Dispatcher.InvokeAsync(() =>
             {
                 FrameworkElement container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement ?? GetVisualContainerFromItem(TabItemsControl, item);
-                if (container != null) ScrollTabIntoView(container);
-            }, System.Windows.Threading.DispatcherPriority.Loaded);
+                if (container != null)
+                {
+                    ScrollTabIntoView(container);
+                }
+            }, DispatcherPriority.Loaded);
         }
 
         private void ScrollTabIntoView(FrameworkElement container)
         {
-            if (container == null || TabScrollViewer == null || PinnedControl == null || TabItemsControl == null) return;
+            if (container == null || TabScrollViewer == null || PinnedControl == null || TabItemsControl == null)
+            {
+                return;
+            }
+
             try
             {
                 GeneralTransform transform = container.TransformToAncestor(TabItemsControl);
@@ -187,8 +217,14 @@ namespace SioForgeCAD.Forms
                 double visibleLeft = TabScrollViewer.HorizontalOffset + PinnedControl.ActualWidth;
                 double visibleRight = TabScrollViewer.HorizontalOffset + TabScrollViewer.ViewportWidth;
 
-                if (itemExtentX < visibleLeft) TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - PinnedControl.ActualWidth);
-                else if (itemExtentRight > visibleRight) TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - TabScrollViewer.ViewportWidth);
+                if (itemExtentX < visibleLeft)
+                {
+                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - PinnedControl.ActualWidth);
+                }
+                else if (itemExtentRight > visibleRight)
+                {
+                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - TabScrollViewer.ViewportWidth);
+                }
             }
             catch (InvalidOperationException) { }
         }
@@ -213,12 +249,17 @@ namespace SioForgeCAD.Forms
 
         private void TabScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta > 0) TabScrollViewer.LineLeft();
-            else TabScrollViewer.LineRight();
+            if (e.Delta > 0)
+            {
+                TabScrollViewer.LineLeft();
+            }
+            else
+            {
+                TabScrollViewer.LineRight();
+            }
+
             e.Handled = true;
         }
-
-        // --- DRAG AND DROP ---
 
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
@@ -232,29 +273,107 @@ namespace SioForgeCAD.Forms
                 {
                     _isDragging = true;
 
-                    // Si on drag un élément qui n'est pas sélectionné, on le sélectionne lui seul
                     if (!_dragSource.IsSelected)
                     {
+                        // Si on drag un élément qui n'est pas sélectionné, on le sélectionne lui seul
                         ClearSelection();
                         _dragSource.IsSelected = true;
                         _lastSelectedItem = _dragSource;
                     }
 
-                    // On rassemble tous les éléments sélectionnés
-                    var selectedItems = GetVisibleItemsList().Where(i => i.IsSelected && !i.IsPinned).ToList();
+                    CreatePreviewWindow();
 
                     _autoScrollTimer.Start();
+
+                    var selectedItems = GetVisibleItemsList()
+                        .Where(i => i.IsSelected && !i.IsPinned && !(i is LayoutTab tab && tab.ParentGroup != null && tab.ParentGroup.IsSelected))
+                        .ToList();
+
                     DragDrop.DoDragDrop(this, new DataObject("SelectedItems", selectedItems), DragDropEffects.Move);
                     _autoScrollTimer.Stop();
+
+                }
+            }
+        }
+
+        private void CreatePreviewWindow()
+        {
+            FrameworkElement sourceContainer = TabItemsControl.ItemContainerGenerator.ContainerFromItem(_dragSource) as FrameworkElement
+                                                      ?? GetVisualContainerFromItem(TabItemsControl, _dragSource);
+
+            if (sourceContainer != null)
+            {
+                BitmapSource snapshot = sourceContainer.CreateElementSnapshot();
+
+                if (snapshot != null)
+                {
+                    // On crée une fenêtre ultra-légère, transparente et intouchable
+                    _ghostWindow = new Window
+                    {
+                        WindowStyle = WindowStyle.None,
+                        AllowsTransparency = true,
+                        Background = Brushes.Transparent,
+                        ShowInTaskbar = false,
+                        Topmost = true,       // Reste au-dessus de tout
+                        IsHitTestVisible = false, // La souris passe à travers
+                        SizeToContent = SizeToContent.WidthAndHeight,
+                        Content = new Border
+                        {
+                            Opacity = 0.70, // C'est ici qu'on définit la transparence !
+                            Effect = new System.Windows.Media.Effects.DropShadowEffect
+                            {
+                                BlurRadius = 10,
+                                Opacity = 0.5,
+                                Direction = 270
+                            },
+                            Child = new Image { Source = snapshot, Stretch = System.Windows.Media.Stretch.None }
+                        }
+                    };
+                    _ghostWindow.Show();
                 }
             }
         }
 
 
 
+        private void DragDropEnd()
+        {
+            DragIndicator.IsOpen = false;
+
+            if (_ghostWindow != null)
+            {
+                _ghostWindow.Close();
+                _ghostWindow = null;
+            }
+        }
+
+
+
+        protected override void OnGiveFeedback(GiveFeedbackEventArgs e)
+        {
+            base.OnGiveFeedback(e);
+
+            if (_ghostWindow != null && _isDragging)
+            {
+                Win32Point w32Mouse = new Win32Point();
+                GetCursorPos(ref w32Mouse);
+
+                const int offset = 5;// On ajoute un petit décalage pour que le pointeur soit bien lisible au-dessus
+                _ghostWindow.Left = w32Mouse.X + offset;
+                _ghostWindow.Top = w32Mouse.Y + offset;
+
+                //On dit à WPF de garder le vrai pointeur de la souris !
+                e.UseDefaultCursors = true;
+                e.Handled = true;
+            }
+        }
+
         private void AutoScrollTimer_Tick(object sender, EventArgs e)
         {
-            if (!_isDragging || TabScrollViewer == null || PinnedControl == null) return;
+            if (!_isDragging || TabScrollViewer == null || PinnedControl == null)
+            {
+                return;
+            }
 
             // 1. Obtenir la position GLOBALE de la souris et la convertir en position locale
             Win32Point w32Mouse = new Win32Point();
@@ -272,42 +391,35 @@ namespace SioForgeCAD.Forms
             // Le bord droit est le bord gauche + la largeur RÉELLE du ScrollViewer (qui exclut les boutons de droite)
             double rightVisibleEdge = leftVisibleEdge + TabScrollViewer.ActualWidth;
 
-            double step = 0;
+            double dist = 0;
             bool scrollLeft = false;
 
-            // --- Calcul pour le bord GAUCHE ---
             if (mousePos.X < leftVisibleEdge + scrollTolerance)
             {
-                double dist = mousePos.X - leftVisibleEdge;
-
-                // Intensity : 1.0 si on est à gauche de la limite, 0.0 si on est à 80px à droite de la limite
-                double intensity = 1.0 - (dist / scrollTolerance);
-                intensity = Math.Max(0.0, Math.Min(1.0, intensity)); // Sécurité : On bloque l'intensité entre 0 et 1
-
-                intensity = Math.Pow(intensity, 2); // Effet exponentiel
-                step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+                dist += (mousePos.X - leftVisibleEdge);
                 scrollLeft = true;
             }
-            // --- Calcul pour le bord DROIT ---
             else if (mousePos.X > rightVisibleEdge - scrollTolerance)
             {
-                double dist = rightVisibleEdge - mousePos.X;
-
-                // Intensity : 1.0 si on est à droite de la limite, 0.0 si on est à 80px à gauche de la limite
-                double intensity = 1.0 - (dist / scrollTolerance);
-                intensity = Math.Max(0.0, Math.Min(1.0, intensity)); // Sécurité : On bloque l'intensité entre 0 et 1
-
-                intensity = Math.Pow(intensity, 2); // Effet exponentiel
-                step = minScrollStep + (maxScrollStep - minScrollStep) * intensity;
+                dist += (rightVisibleEdge - mousePos.X);
             }
 
-            // --- Application du scroll ---
-            if (step > 0)
+            Debug.WriteLine("dist" + dist);
+            if (dist != 0)
             {
+                double intensity = (double)(1.0 - (dist / scrollTolerance));
+                intensity = Math.Max(0.0, Math.Min(1.0, intensity));
+                intensity = Math.Pow(intensity, 2); // Effet exponentiel
+                double step = minScrollStep + ((maxScrollStep - minScrollStep) * intensity);
+
                 if (scrollLeft)
+                {
                     TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset - step);
+                }
                 else
+                {
                     TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset + step);
+                }
             }
         }
 
@@ -316,22 +428,34 @@ namespace SioForgeCAD.Forms
         protected override void OnDragOver(DragEventArgs e)
         {
             base.OnDragOver(e);
-            if (!_isDragging) return;
+            if (!_isDragging)
+            {
+                return;
+            }
 
             LayoutItem sourceItem = (e.Data.GetData("SelectedItems") as List<LayoutItem>)?.FirstOrDefault()
                                     ?? _dragSource;
 
-            if (sourceItem == null) return;
-           
+            if (sourceItem == null)
+            {
+                return;
+            }
+
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
 
-            if (sourceItem is LayoutGroup lg) lg.IsExpanded = false;
+            if (sourceItem is LayoutGroup lg)
+            {
+                lg.IsExpanded = false;
+            }
 
             if (targetContainer?.DataContext is LayoutItem targetItem)
             {
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
-                if (targetItem is LayoutTab tTab && tTab.IsInGroup) targetGrp = tTab.ParentGroup;
+                if (targetItem is LayoutTab tTab && tTab.IsInGroup)
+                {
+                    targetGrp = tTab.ParentGroup;
+                }
 
                 if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                 {
@@ -361,9 +485,15 @@ namespace SioForgeCAD.Forms
                         {
                             var parentPanel = VisualTreeHelper.GetParent(targetContainer);
                             FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sTab);
-                            if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                            if (sourceTabContainer != null)
+                            {
+                                ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                            }
                         }
-                        else ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
+                        else
+                        {
+                            ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
+                        }
                     }
                 }
                 else if (Items.Contains(targetItem) && targetItem != sourceItem)
@@ -377,30 +507,36 @@ namespace SioForgeCAD.Forms
                     {
                         var parentPanel = VisualTreeHelper.GetParent(targetContainer);
                         FrameworkElement sourceTabContainer = GetVisualContainerFromItem(parentPanel, sourceItem);
-                        if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                        if (sourceTabContainer != null)
+                        {
+                            ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                        }
                     }
-                    else ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
+                    else
+                    {
+                        ShowDragIndicator(targetContainer, isRightHalf ? targetContainer.ActualWidth - 5 : -5, -2, 0);
+                    }
                 }
 
-                e.Effects = DragDropEffects.Move;
             }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-                e.Handled = true;
         }
 
         private static int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
         {
             isRightHalf = false;
-            if (currentItemIndex < 0) currentItemIndex = 0;
+            if (currentItemIndex < 0)
+            {
+                currentItemIndex = 0;
+            }
 
             if (targetContainer != null)
             {
                 Point pos = e.GetPosition(targetContainer);
                 isRightHalf = pos.X > targetContainer.ActualWidth / 2;
-                if (isRightHalf) currentItemIndex++;
+                if (isRightHalf)
+                {
+                    currentItemIndex++;
+                }
             }
             return currentItemIndex;
         }
@@ -425,7 +561,7 @@ namespace SioForgeCAD.Forms
         protected override void OnDrop(DragEventArgs e)
         {
             base.OnDrop(e);
-            DragIndicator.IsOpen = false;
+            DragDropEnd();
 
             // Récupération de la liste complète glissée
             List<LayoutItem> sourceItems = e.Data.GetData("SelectedItems") as List<LayoutItem>;
@@ -499,10 +635,18 @@ namespace SioForgeCAD.Forms
 
                 insertIndex = Math.Max(0, insertIndex);
 
-                // 4. Réinsérer séquentiellement
-                for (int i = 0; i < sourceItems.Count; i++)
+                var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
+
+                // 3. Retirer tous les éléments (utiliser la liste filtrée)
+                foreach (var item in itemsToProcess)
                 {
-                    var itemToInsert = sourceItems[i];
+                    RemoveFromAll(item);
+                }
+
+                // 4. Réinsérer séquentiellement (utiliser la liste filtrée)
+                for (int i = 0; i < itemsToProcess.Count; i++)
+                {
+                    var itemToInsert = itemsToProcess[i];
 
                     if (targetGroupDest != null && itemToInsert is LayoutTab t)
                     {
@@ -536,23 +680,41 @@ namespace SioForgeCAD.Forms
         private static T GetVisualParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null) return null;
-            if (parentObject is T parent) return parent;
+            if (parentObject == null)
+            {
+                return null;
+            }
+
+            if (parentObject is T parent)
+            {
+                return parent;
+            }
+
             return GetVisualParent<T>(parentObject);
         }
 
         private static FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
         {
-            if (parent == null) return null;
+            if (parent == null)
+            {
+                return null;
+            }
+
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
                 if (child is FrameworkElement fe && fe.DataContext == itemData)
                 {
-                    if (!(fe.DataContext is LayoutGroup)) return fe;
+                    if (!(fe.DataContext is LayoutGroup))
+                    {
+                        return fe;
+                    }
                 }
                 var result = GetVisualContainerFromItem(child, itemData);
-                if (result != null) return result;
+                if (result != null)
+                {
+                    return result;
+                }
             }
             return null;
         }
@@ -560,7 +722,7 @@ namespace SioForgeCAD.Forms
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseLeftButtonUp(e);
-            DragIndicator.IsOpen = false;
+            DragDropEnd();
         }
     }
 
@@ -621,7 +783,11 @@ namespace SioForgeCAD.Forms
                     if (!_isSyncing)
                     {
                         _isSyncing = true;
-                        foreach (var tab in SubTabs_) tab.IsSelected = value;
+                        foreach (var tab in SubTabs_)
+                        {
+                            tab.IsSelected = value;
+                        }
+
                         _isSyncing = false;
                     }
                 }
@@ -630,7 +796,11 @@ namespace SioForgeCAD.Forms
 
         internal void EvaluateGroupSelection()
         {
-            if (_isSyncing || SubTabs_.Count == 0) return;
+            if (_isSyncing || SubTabs_.Count == 0)
+            {
+                return;
+            }
+
             bool allSelected = SubTabs_.All(t => t.IsSelected);
             if (base.IsSelected != allSelected)
             {
@@ -651,7 +821,7 @@ namespace SioForgeCAD.Forms
         public ReadOnlyObservableCollection<LayoutTab> SubTabs { get; }
         public void Add(LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Add(tab); EvaluateGroupSelection(); }
         public void Insert(int index, LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Insert(index, tab); EvaluateGroupSelection(); }
-        public bool Remove(LayoutTab tab) { tab.ParentGroup = null; bool removed = SubTabs_.Remove(tab); if (removed) EvaluateGroupSelection(); return removed; }
+        public bool Remove(LayoutTab tab) { tab.ParentGroup = null; bool removed = SubTabs_.Remove(tab); if (removed) { EvaluateGroupSelection(); } return removed; }
         public bool Contains(LayoutTab tab) => SubTabs_.Contains(tab);
         public int IndexOf(LayoutTab tab) => SubTabs_.IndexOf(tab);
     }
