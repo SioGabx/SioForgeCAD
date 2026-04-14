@@ -450,7 +450,7 @@
                 <ItemsControl
                     x:Name="PinnedControl"
                     Grid.Column="0"
-                    Panel.ZIndex="2"
+                    Panel.ZIndex="4"
                     ItemContainerStyle="{StaticResource TabItemContainerStyle}"
                     ItemsSource="{Binding PinnedItems, ElementName=LayoutBarRoot}">
 
@@ -462,6 +462,17 @@
                 </ItemsControl>
 
                 <!--  PinnedTab right border  -->
+                <Rectangle
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Panel.ZIndex="5"
+                    Fill="{StaticResource TabBarBackground}">
+                    <Rectangle.RenderTransform>
+                        <SkewTransform AngleX="-20" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+
                 <Rectangle
                     Grid.Column="0"
                     Width="3"

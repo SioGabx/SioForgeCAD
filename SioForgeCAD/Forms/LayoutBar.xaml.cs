@@ -299,7 +299,7 @@ namespace SioForgeCAD.Forms
                         {
                             PinnedItems.Add(newTab);
                         }
-                        else
+                        else if (!newTab.IsModel)
                         {
                             string groupName = uiState?.GroupName;
                             bool isExpanded = uiState?.IsExpanded ?? true;
@@ -324,7 +324,6 @@ namespace SioForgeCAD.Forms
                                 Items.Add(newTab);
                             }
                         }
-
                         if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
                         {
                             IsSyncing = true;
@@ -341,9 +340,6 @@ namespace SioForgeCAD.Forms
         // ====================================================================
         // CONTEXT MENU
         // ====================================================================
-        // ====================================================================
-        // GESTION DYNAMIQUE DU CONTEXTMENU
-        // ====================================================================
         private void TabContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement fe && fe.DataContext is LayoutTab tab)
@@ -357,14 +353,14 @@ namespace SioForgeCAD.Forms
                         if (Name == "TabMenuItem_Pin")
                         {
                             menuItem.Visibility = (!tab.IsPinned && !tab.IsModel) ?
-                                System.Windows.Visibility.Visible : 
+                                System.Windows.Visibility.Visible :
                                 System.Windows.Visibility.Collapsed;
                         }
 
                         if (Name == "TabMenuItem_Unpin")
                         {
-                            menuItem.Visibility = (tab.IsPinned && !tab.IsModel) ? 
-                                System.Windows.Visibility.Visible : 
+                            menuItem.Visibility = (tab.IsPinned && !tab.IsModel) ?
+                                System.Windows.Visibility.Visible :
                                 System.Windows.Visibility.Collapsed;
                         }
 
@@ -390,21 +386,22 @@ namespace SioForgeCAD.Forms
             {
                 foreach (var tab in targetTabs)
                 {
-                    RemoveFromAll(tab);
                     tab.IsPinned = true;
-                    PinnedItems.Add(tab);
+                    if (!PinnedItems.Contains(tab))
+                    {
+                        PinnedItems.Add(tab);
+                    }
 
                     if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
                     {
                         var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
-                        // On met null pour le groupe car il passe à la racine des épinglés
-                        layout?.SetLayoutUIState(tr, null, true, true);
+                        // On passe le nom du groupe actuel, pour ne pas le casser dans le XData
+                        layout?.SetLayoutUIState(tr, tab.ParentGroup?.Title, true, true);
                     }
                 }
                 tr.Commit();
             }
             ClearSelection();
-            SyncTabOrderToAutoCAD();
         }
 
         private void ContextMenu_Desepingler_Click(object sender, RoutedEventArgs e)
@@ -417,20 +414,18 @@ namespace SioForgeCAD.Forms
             {
                 foreach (var tab in targetTabs)
                 {
-                    RemoveFromAll(tab);
                     tab.IsPinned = false;
-                    Items.Add(tab); // Redescend à la racine par défaut
-
+                    PinnedItems.Remove(tab);
+                   
                     if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
                     {
                         var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
-                        layout?.SetLayoutUIState(tr, null, true, false);
+                        layout?.SetLayoutUIState(tr, tab.ParentGroup?.Title, true, false);
                     }
                 }
                 tr.Commit();
             }
             ClearSelection();
-            SyncTabOrderToAutoCAD();
         }
 
         private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
@@ -912,8 +907,11 @@ namespace SioForgeCAD.Forms
             if (e.LeftButton == MouseButtonState.Pressed && _dragSource?.IsPinned == false && !_isDragging)
             {
                 Vector diff = _dragStart - e.GetPosition(null);
-                if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+                // Définir la distance minimum à parcourir avant de déclencher le Drag & Drop (en pixels)
+                const double dragThreshold = 35.0;
+
+                // On remplace les SystemParameters par notre propre seuil
+                if (Math.Abs(diff.X) > dragThreshold || Math.Abs(diff.Y) > dragThreshold)
                 {
                     _isDragging = true;
 
@@ -1394,8 +1392,10 @@ namespace SioForgeCAD.Forms
         public virtual bool IsSelected
         {
             get => _isSelected;
-            set {
-                if (_isSelected != value) {
+            set
+            {
+                if (_isSelected != value)
+                {
                     _isSelected = value;
                     OnPropertyChanged();
                 }
