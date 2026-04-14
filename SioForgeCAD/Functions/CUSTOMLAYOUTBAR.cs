@@ -15,8 +15,7 @@ namespace SioForgeCAD.Functions
         {
             foreach (PresentationSource source in PresentationSource.CurrentSources)
             {
-                if (source.RootVisual != null &&
-                    source.RootVisual.GetType().FullName == "Autodesk.AutoCAD.StatusBar.StatusBarContainer")
+                if (source.RootVisual?.GetType().FullName == "Autodesk.AutoCAD.StatusBar.StatusBarContainer")
                 {
                     return source.RootVisual as FrameworkElement;
                 }
@@ -53,8 +52,7 @@ namespace SioForgeCAD.Functions
                     Grid.SetRowSpan(InjectedLayoutBar, Grid.GetRowSpan(LayoutSwitchControl));
                     Grid.SetColumnSpan(InjectedLayoutBar, Grid.GetColumnSpan(LayoutSwitchControl));
 
-                    var LayoutSwitchControlParent = LayoutSwitchControl.Parent as Grid;
-                    if (LayoutSwitchControlParent != null)
+                    if (LayoutSwitchControl.Parent is Grid LayoutSwitchControlParent)
                     {
                         LayoutSwitchControlParent.Children.Insert(0, InjectedLayoutBar);
                         LayoutSwitchControlParent.UpdateLayout();

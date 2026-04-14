@@ -197,53 +197,59 @@ namespace SioForgeCAD.Forms
             var doc = Application.DocumentManager.MdiActiveDocument;
             if (doc == null) return;
 
-            // 1. Aplatir la hiérarchie pour obtenir une liste simple de LayoutTab
-            var flatTabs = new List<LayoutTab>();
-            foreach (var item in Items) // On ignore PinnedItems car le Model reste à TabOrder = 0
-            {
-                if (item is LayoutTab tab)
-                {
-                    flatTabs.Add(tab);
-                }
-                else if (item is LayoutGroup group)
-                {
-                    flatTabs.AddRange(group.SubTabs);
-                }
-            }
-
-            // 2. Mettre à jour la base de données AutoCAD
-            // On met IsSyncing à true pour éviter que d'éventuels événements AutoCAD
-            // ne déclenchent un ReloadTabs() pendant qu'on écrit.
             IsSyncing = true;
             try
             {
                 using (doc.LockDocument())
                 using (var tr = doc.Database.TransactionManager.StartTransaction())
                 {
-                    int currentOrder = 1; // Les onglets de présentation commencent à 1
+                    int currentOrder = 1;
 
-                    foreach (var tab in flatTabs)
+                    foreach (var item in Items)
                     {
-                        if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                        if (item is LayoutTab tab)
                         {
-                            var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
-                            if (layout != null && layout.TabOrder != currentOrder)
+                            // Élément à la racine : pas de groupe
+                            UpdateLayoutData(tr, tab, currentOrder, null, true);
+                            currentOrder++;
+                        }
+                        else if (item is LayoutGroup group)
+                        {
+                            // Élément dans un groupe : on transmet l'état IsExpanded du groupe
+                            foreach (var subTab in group.SubTabs)
                             {
-                                layout.TabOrder = currentOrder;
+                                UpdateLayoutData(tr, subTab, currentOrder, group.Title, group.IsExpanded);
+                                currentOrder++;
                             }
                         }
-                        currentOrder++;
                     }
                     tr.Commit();
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.WriteLine($"Erreur lors de la synchro de l'ordre des onglets : {ex.Message}");
+                Debug.WriteLine($"Erreur lors de la synchro : {ex.Message}");
             }
             finally
             {
                 IsSyncing = false;
+            }
+        }
+
+        private static void UpdateLayoutData(Transaction tr, LayoutTab tab, int order, string groupName, bool isExpanded)
+        {
+            if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+            {
+                var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
+                if (layout != null)
+                {
+                    if (layout.TabOrder != order)
+                    {
+                        layout.TabOrder = order;
+                    }
+                    // On sauvegarde le groupe et son état
+                    layout.SetGroupXData(tr, groupName, isExpanded);
+                }
             }
         }
 
@@ -253,12 +259,8 @@ namespace SioForgeCAD.Forms
 
         private void ReloadTabs(Document doc)
         {
-            if (doc == null)
-            {
-                return;
-            }
+            if (doc == null) return;
 
-            // On s'assure que le rechargement UI se fait bien sur le thread principal (WPF)
             Dispatcher.Invoke(() =>
             {
                 Items.Clear();
@@ -270,23 +272,24 @@ namespace SioForgeCAD.Forms
                     var layoutDict = (DBDictionary)tr.GetObject(doc.Database.LayoutDictionaryId, OpenMode.ForRead);
                     var layouts = new List<Layout>();
 
-                    // On récupère toutes les présentations du dictionnaire
                     foreach (DBDictionaryEntry entry in layoutDict)
                     {
                         var layout = (Layout)tr.GetObject(entry.Value, OpenMode.ForRead);
                         layouts.Add(layout);
                     }
 
-                    // On les trie selon l'ordre défini dans AutoCAD (TabOrder)
                     layouts = layouts.OrderBy(l => l.TabOrder).ToList();
+
+                    // Dictionnaire pour suivre les groupes qu'on instancie à la volée
+                    var activeGroups = new Dictionary<string, LayoutGroup>();
 
                     foreach (var layout in layouts)
                     {
                         var newTab = new LayoutTab
                         {
                             Title = layout.LayoutName,
-                            IsPinned = layout.ModelType, // L'espace Objet a ModelType = true
-                            AutoCadData = layout.ObjectId // On sauvegarde l'ObjectId pour un usage futur (ex: Plot, Drag&Drop)
+                            IsPinned = layout.ModelType,
+                            AutoCadData = layout.ObjectId
                         };
 
                         if (newTab.IsPinned)
@@ -295,10 +298,36 @@ namespace SioForgeCAD.Forms
                         }
                         else
                         {
-                            Items.Add(newTab);
+                            // On vérifie si la présentation appartient à un groupe via XData
+                            var groupInfo = layout.GetGroupXData();
+
+                            if (groupInfo.HasValue) // Si le tuple n'est pas null
+                            {
+                                string groupName = groupInfo.Value.GroupName;
+                                bool isExpanded = groupInfo.Value.IsExpanded;
+
+                                // Si le groupe n'existe pas encore dans notre UI, on le crée
+                                if (!activeGroups.TryGetValue(groupName, out LayoutGroup value))
+                                {
+                                    var newGroup = new LayoutGroup
+                                    {
+                                        Title = groupName,
+                                        IsExpanded = isExpanded // <-- On restaure l'état sauvegardé !
+                                    };
+                                    value = newGroup;
+                                    activeGroups[groupName] = value;
+                                    Items.Add(newGroup);
+                                }
+
+                                value.Add(newTab);
+                            }
+                            else
+                            {
+                                // Aucun groupe, on l'ajoute à la racine
+                                Items.Add(newTab);
+                            }
                         }
 
-                        // Si c'est l'onglet actuellement actif, on le sélectionne dans l'UI
                         if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
                         {
                             IsSyncing = true;
@@ -357,7 +386,7 @@ namespace SioForgeCAD.Forms
                 .Where(t => !t.IsPinned)
                 .ToList();
 
-            if (!targetTabs.Any())
+            if (targetTabs.Count == 0)
             {
                 return;
             }
@@ -395,7 +424,7 @@ namespace SioForgeCAD.Forms
                 .Cast<LayoutTab>()
                 .ToList();
 
-            if (!selectedTabs.Any()) return;
+            if (selectedTabs.Count == 0) return;
 
             var newGroup = new LayoutGroup
             {
@@ -420,17 +449,6 @@ namespace SioForgeCAD.Forms
             SyncTabOrderToAutoCAD();
         }
 
-        private LayoutGroup GetTargetedGroupForContextMenu(object sender)
-        {
-            var menuItem = sender as MenuItem;
-            if (menuItem == null) return null;
-
-            // Remonter pour trouver le ContextMenu principal (utile si on est dans un sous-menu)
-            var contextMenu = menuItem.Parent as ContextMenu ?? (menuItem.Parent as MenuItem)?.Parent as ContextMenu;
-            var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
-
-            return placementTarget?.DataContext as LayoutGroup;
-        }
 
         private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e)
         {
@@ -490,7 +508,7 @@ namespace SioForgeCAD.Forms
             if (targetGroup == null) return;
 
             var tabsToDelete = targetGroup.SubTabs.ToList();
-            if (!tabsToDelete.Any())
+            if (tabsToDelete.Count == 0)
             {
                 Items.Remove(targetGroup);
                 return;
@@ -520,13 +538,21 @@ namespace SioForgeCAD.Forms
             // Inutile d'appeler SyncTabOrderToAutoCAD() ici car les événements AutoCAD de suppression (OnLayoutsChanged) vont recharger l'UI.
         }
 
+        private static LayoutGroup GetTargetedGroupForContextMenu(object sender)
+        {
+            if (!(sender is MenuItem menuItem)) return null;
 
+            // Remonter pour trouver le ContextMenu principal (utile si on est dans un sous-menu)
+            var contextMenu = menuItem.Parent as ContextMenu ?? (menuItem.Parent as MenuItem)?.Parent as ContextMenu;
+            var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
+
+            return placementTarget?.DataContext as LayoutGroup;
+        }
 
         private List<LayoutTab> GetTargetedTabsForContextMenu(object sender)
         {
             // 1. On récupère le MenuItem cliqué
-            var menuItem = sender as MenuItem;
-            if (menuItem == null)
+            if (!(sender is MenuItem menuItem))
             {
                 return new List<LayoutTab>();
             }
@@ -541,7 +567,7 @@ namespace SioForgeCAD.Forms
             var clickedTab = placementTarget?.DataContext as LayoutTab;
 
             // 5. Logique de ciblage
-            if (clickedTab != null && !clickedTab.IsSelected)
+            if (clickedTab?.IsSelected == false)
             {
                 // Si le clic a eu lieu sur un onglet NON sélectionné, l'action ne s'applique qu'à lui
                 return new List<LayoutTab> { clickedTab };
@@ -611,6 +637,8 @@ namespace SioForgeCAD.Forms
                 if (_dragSource is LayoutGroup group && !isCtrlPressed && !isShiftPressed)
                 {
                     group.IsExpanded = !group.IsExpanded;
+                    SyncTabOrderToAutoCAD();
+                    ScrollToItem(group);
                 }
                 else
                 {
@@ -661,6 +689,7 @@ namespace SioForgeCAD.Forms
         {
             SetCurrentItem(item);
         }
+
         private void SetCurrentItem(LayoutItem item)
         {
             if (_currentItem != null)
@@ -673,10 +702,10 @@ namespace SioForgeCAD.Forms
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
-                if (item is LayoutTab tab && tab.IsInGroup)
-                {
-                    tab.ParentGroup.IsExpanded = true;
-                }
+                //if (item is LayoutTab tab && tab.IsInGroup)
+                //{
+                //   // tab.ParentGroup.IsExpanded = true;
+                //}
 
                 ScrollToItem(item);
                 // On prévient TEST.cs que l'onglet a changé, SEULEMENT si ce n'est pas une synchro d'AutoCAD
@@ -685,6 +714,7 @@ namespace SioForgeCAD.Forms
                     ActiveTabChanged?.Invoke(this, selectedTab);
                 }
             }
+            ClearSelection();
         }
 
         private void ScrollToItem(LayoutItem item)
@@ -721,10 +751,20 @@ namespace SioForgeCAD.Forms
                 double visibleLeft = TabScrollViewer.HorizontalOffset + PinnedControl.ActualWidth;
                 double visibleRight = TabScrollViewer.HorizontalOffset + TabScrollViewer.ViewportWidth;
 
-                if (itemExtentX < visibleLeft)
+                // On calcule l'espace réellement disponible pour l'affichage
+                double visibleWidth = visibleRight - visibleLeft;
+
+                // 1. Si l'élément est plus grand que la zone visible, on l'aligne d'office à gauche.
+                if (container.ActualWidth > visibleWidth)
                 {
                     TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - PinnedControl.ActualWidth);
                 }
+                // 2. Si le bord gauche dépasse de l'écran, on ramène à gauche.
+                else if (itemExtentX < visibleLeft)
+                {
+                    TabScrollViewer.ScrollToHorizontalOffset(itemExtentX - PinnedControl.ActualWidth);
+                }
+                // 3. Si le bord droit dépasse (et que l'élément n'est pas trop grand), on aligne à droite.
                 else if (itemExtentRight > visibleRight)
                 {
                     TabScrollViewer.ScrollToHorizontalOffset(itemExtentRight - TabScrollViewer.ViewportWidth);
@@ -737,6 +777,11 @@ namespace SioForgeCAD.Forms
         {
             if ((sender as MenuItem)?.DataContext is LayoutTab clickedTab)
             {
+                if (clickedTab.IsInGroup)
+                {
+                    clickedTab.ParentGroup.IsExpanded = true;
+                }
+
                 SetCurrentItem(clickedTab);
                 OverflowToggle.IsChecked = false;
                 ClearSelection();
@@ -794,7 +839,7 @@ namespace SioForgeCAD.Forms
 
                     // 1. On calcule la liste des éléments sélectionnés AVANT de créer la fenêtre
                     var selectedItems = GetVisibleItemsList()
-                        .Where(i => i.IsSelected && !i.IsPinned && !(i is LayoutTab tab && tab.ParentGroup != null && tab.ParentGroup.IsSelected))
+                        .Where(i => i.IsSelected && !i.IsPinned && !(i is LayoutTab tab && tab.ParentGroup?.IsSelected == true))
                         .ToList();
 
                     // 2. On passe la liste pour générer la prévisualisation complète
@@ -810,7 +855,7 @@ namespace SioForgeCAD.Forms
 
         private void CreatePreviewWindow(List<LayoutItem> selectedItems)
         {
-            if (selectedItems == null || !selectedItems.Any())
+            if (selectedItems == null || selectedItems.Count == 0)
             {
                 return;
             }
@@ -928,7 +973,6 @@ namespace SioForgeCAD.Forms
                 dist += (rightVisibleEdge - mousePos.X);
             }
 
-            Debug.WriteLine("dist" + dist);
             if (dist != 0)
             {
                 double intensity = (double)(1.0 - (dist / scrollTolerance));
@@ -1084,110 +1128,110 @@ namespace SioForgeCAD.Forms
         {
             base.OnDrop(e);
             DragDropEnd();
-
-            // Récupération de la liste complète glissée
-            List<LayoutItem> sourceItems = e.Data.GetData("SelectedItems") as List<LayoutItem>;
-            if (sourceItems == null || !sourceItems.Any())
+            try
             {
-                _dragSource = null;
-                _isDragging = false;
-                return;
-            }
-
-            var targetElement = e.OriginalSource as FrameworkElement;
-            var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
-            var targetParentContainer = GetVisualParent<ContentPresenter>(targetContainer);
-
-            if (targetContainer?.DataContext is LayoutItem targetItem)
-            {
-                // Si on drop sur soi-même ou dans sa propre sélection, on annule
-                if (sourceItems.Contains(targetItem))
+                // Récupération de la liste complète glissée
+                if (!(e.Data.GetData("SelectedItems") is List<LayoutItem> sourceItems) || sourceItems.Count == 0)
                 {
-                    _dragSource = null;
-                    _isDragging = false;
                     return;
                 }
 
-                LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
-                int insertIndex = 0;
-                LayoutGroup targetGroupDest = null;
+                var targetElement = e.OriginalSource as FrameworkElement;
+                var targetContainer = GetVisualParent<ContentPresenter>(targetElement);
+                var targetParentContainer = GetVisualParent<ContentPresenter>(targetContainer);
 
-                // 1. Calcul de l'index d'insertion
-                if (targetGrp != null)
+                if (targetContainer?.DataContext is LayoutItem targetItem)
                 {
-                    targetGroupDest = targetGrp;
-                    if (!targetGrp.Contains(targetItem as LayoutTab)) // Sur l'en-tête, venant de l'extérieur
+                    // Si on drop sur soi-même ou dans sa propre sélection, on annule
+                    if (sourceItems.Contains(targetItem))
                     {
-                        insertIndex = 0;
-                       // targetGrp.IsExpanded = true;
+                        return;
                     }
-                    else if (targetItem is LayoutTab tTab) // Sur un onglet interne
+
+                    LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
+                    int insertIndex = 0;
+                    LayoutGroup targetGroupDest = null;
+
+                    // 1. Calcul de l'index d'insertion
+                    if (targetGrp != null)
                     {
-                        int baseIndex = targetGrp.IndexOf(tTab);
-                        insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
-                    }
-                    else if (targetItem is LayoutGroup) // Sur l'en-tête de son propre groupe
-                    {
-                        insertIndex = 0;
-                    }
-                }
-                else
-                {
-                    int baseIndex = Items.IndexOf(targetItem);
-                    insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
-                }
-
-                // 2. Compensation du décalage : retirer les éléments va décaler l'index cible
-                if (targetGroupDest != null)
-                {
-                    int preItemsCount = sourceItems.Count(s => s is LayoutTab t && t.ParentGroup == targetGroupDest && targetGroupDest.IndexOf(t) < insertIndex);
-                    insertIndex -= preItemsCount;
-                }
-                else
-                {
-                    int preItemsCount = sourceItems.Count(s => Items.Contains(s) && Items.IndexOf(s) < insertIndex);
-                    insertIndex -= preItemsCount;
-                }
-
-                // 3. Retirer tous les éléments de leurs emplacements d'origine
-                foreach (var item in sourceItems)
-                {
-                    RemoveFromAll(item);
-                }
-
-                insertIndex = Math.Max(0, insertIndex);
-
-                var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
-
-                // 3. Retirer tous les éléments (utiliser la liste filtrée)
-                foreach (var item in itemsToProcess)
-                {
-                    RemoveFromAll(item);
-                }
-
-                // 4. Réinsérer séquentiellement (utiliser la liste filtrée)
-                for (int i = 0; i < itemsToProcess.Count; i++)
-                {
-                    var itemToInsert = itemsToProcess[i];
-
-                    if (targetGroupDest != null && itemToInsert is LayoutTab t)
-                    {
-                        // Si le groupe est visé, on n'ajoute que des LayoutTabs
-                        int finalIndex = Math.Min(insertIndex + i, targetGroupDest.SubTabs.Count);
-                        targetGroupDest.Insert(finalIndex, t);
+                        targetGroupDest = targetGrp;
+                        if (!targetGrp.Contains(targetItem as LayoutTab)) // Sur l'en-tête, venant de l'extérieur
+                        {
+                            insertIndex = 0;
+                            // targetGrp.IsExpanded = true;
+                        }
+                        else if (targetItem is LayoutTab tTab) // Sur un onglet interne
+                        {
+                            int baseIndex = targetGrp.IndexOf(tTab);
+                            insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                        }
+                        else if (targetItem is LayoutGroup) // Sur l'en-tête de son propre groupe
+                        {
+                            insertIndex = 0;
+                        }
                     }
                     else
                     {
-                        // Les LayoutGroup (ou éléments mis à la racine)
-                        int finalIndex = Math.Min(insertIndex + i, Items.Count);
-                        Items.Insert(finalIndex, itemToInsert);
+                        int baseIndex = Items.IndexOf(targetItem);
+                        insertIndex = CalculateInsertionIndex(e, targetContainer, baseIndex, out _);
+                    }
+
+                    // 2. Compensation du décalage : retirer les éléments va décaler l'index cible
+                    if (targetGroupDest != null)
+                    {
+                        int preItemsCount = sourceItems.Count(s => s is LayoutTab t && t.ParentGroup == targetGroupDest && targetGroupDest.IndexOf(t) < insertIndex);
+                        insertIndex -= preItemsCount;
+                    }
+                    else
+                    {
+                        int preItemsCount = sourceItems.Count(s => Items.Contains(s) && Items.IndexOf(s) < insertIndex);
+                        insertIndex -= preItemsCount;
+                    }
+
+                    // 3. Retirer tous les éléments de leurs emplacements d'origine
+                    foreach (var item in sourceItems)
+                    {
+                        RemoveFromAll(item);
+                    }
+
+                    insertIndex = Math.Max(0, insertIndex);
+
+                    var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
+
+                    // 3. Retirer tous les éléments (utiliser la liste filtrée)
+                    foreach (var item in itemsToProcess)
+                    {
+                        RemoveFromAll(item);
+                    }
+
+                    // 4. Réinsérer séquentiellement (utiliser la liste filtrée)
+                    for (int i = 0; i < itemsToProcess.Count; i++)
+                    {
+                        var itemToInsert = itemsToProcess[i];
+
+                        if (targetGroupDest != null && itemToInsert is LayoutTab t)
+                        {
+                            // Si le groupe est visé, on n'ajoute que des LayoutTabs
+                            int finalIndex = Math.Min(insertIndex + i, targetGroupDest.SubTabs.Count);
+                            targetGroupDest.Insert(finalIndex, t);
+                        }
+                        else
+                        {
+                            // Les LayoutGroup (ou éléments mis à la racine)
+                            int finalIndex = Math.Min(insertIndex + i, Items.Count);
+                            Items.Insert(finalIndex, itemToInsert);
+                        }
                     }
                 }
             }
-            ClearSelection();
-            SyncTabOrderToAutoCAD();
-            _dragSource = null;
-            _isDragging = false;
+            finally
+            {
+                ClearSelection();
+                SyncTabOrderToAutoCAD();
+                _dragSource = null;
+                _isDragging = false;
+            }
         }
 
         private void RemoveFromAll(LayoutItem item)
@@ -1262,7 +1306,12 @@ namespace SioForgeCAD.Forms
         public virtual bool IsSelected
         {
             get => _isSelected;
-            set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
+            set {
+                if (_isSelected != value) {
+                    _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public object AutoCadData { get; set; }
@@ -1354,35 +1403,48 @@ namespace SioForgeCAD.Forms
 
     public static class XDataExtensions
     {
-        // Récupère le nom du groupe depuis la présentation
-        public static string GetGroupXData(this DBObject obj)
+        // Renvoie le nom du groupe et son état, ou null s'il n'y a pas de groupe
+        public static (string GroupName, bool IsExpanded)? GetGroupXData(this DBObject obj)
         {
             string appName = Generic.GetExtensionDLLName();
             ResultBuffer rb = obj.GetXDataForApplication(appName);
 
             if (rb != null)
             {
+                string groupName = null;
+                bool isExpanded = true; // Par défaut, on étend
+
                 foreach (TypedValue tv in rb.AsArray())
                 {
                     if (tv.TypeCode == (short)DxfCode.ExtendedDataAsciiString)
                     {
                         string val = tv.Value as string;
-                        if (val != null && val.StartsWith("Group:"))
+                        if (val?.StartsWith("Group:") == true)
                         {
-                            return val.Substring(6); // On retire le préfixe "Group:"
+                            groupName = val.Substring(6);
                         }
                     }
+                    else if (tv.TypeCode == (short)DxfCode.ExtendedDataInteger16)
+                    {
+                        // 1 = true, 0 = false
+                        isExpanded = (short)tv.Value == 1;
+                    }
+                }
+
+                if (groupName != null)
+                {
+                    return (groupName, isExpanded);
                 }
             }
             return null;
         }
 
-        public static void SetGroupXData(this DBObject obj, Transaction tr, string groupName)
+        // Assigne le groupe ET son état dans la présentation
+        public static void SetGroupXData(this DBObject obj, Transaction tr, string groupName, bool isExpanded)
         {
             string appName = Generic.GetExtensionDLLName();
             Database db = obj.Database;
 
-            // Vérification et création de la table RegApp si nécessaire
             RegAppTable regTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
             if (!regTable.Has(appName))
             {
@@ -1392,7 +1454,6 @@ namespace SioForgeCAD.Forms
                 tr.AddNewlyCreatedDBObject(app, true);
             }
 
-            // Si on n'a pas de nom de groupe, on supprime l'XData pour cette application
             if (string.IsNullOrEmpty(groupName))
             {
                 obj.XData = new ResultBuffer(new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName));
@@ -1401,10 +1462,10 @@ namespace SioForgeCAD.Forms
             {
                 obj.XData = new ResultBuffer(
                     new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName),
-                    new TypedValue((int)DxfCode.ExtendedDataAsciiString, "Group:" + groupName)
+                    new TypedValue((int)DxfCode.ExtendedDataAsciiString, "Group:" + groupName),
+                    new TypedValue((int)DxfCode.ExtendedDataInteger16, isExpanded ? (short)1 : (short)0) // <-- Ajout de l'état ici
                 );
             }
         }
     }
-
 }
