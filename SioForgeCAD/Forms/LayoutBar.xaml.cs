@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
@@ -17,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using static SioForgeCAD.Commun.Mist.User32PInvoke;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD.Forms
 {
@@ -44,16 +46,275 @@ namespace SioForgeCAD.Forms
             InitializeComponent();
             LayoutBarRoot.DataContext = this;
 
-            TabScrollViewer.ScrollChanged += (s, e) => OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+            this.Loaded += LayoutBar_Loaded;
+            this.Unloaded += LayoutBar_Unloaded;
 
             _autoScrollTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(15) // Rafraîchissement ultra fluide (~60 fps)
             };
-            _autoScrollTimer.Tick += AutoScrollTimer_Tick;
+
         }
 
-       
+        private void TabScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ?
+                System.Windows.Visibility.Visible :
+                System.Windows.Visibility.Collapsed;
+        }
+
+        private void LayoutBar_Loaded(object sender, RoutedEventArgs e)
+        {
+            // S'abonner aux événements quand le contrôle est affiché
+            Application.DocumentManager.DocumentActivated += OnDocumentActivated;
+
+            var lm = LayoutManager.Current;
+            lm.LayoutSwitched += OnLayoutSwitched;
+            lm.LayoutCreated += OnLayoutsChanged;
+            lm.LayoutRemoved += OnLayoutsChanged;
+            lm.LayoutRenamed += OnLayoutRenamed;
+
+            ActiveTabChanged += LayoutBar_ActiveTabChanged;
+
+            TabScrollViewer.ScrollChanged += TabScrollViewer_ScrollChanged;
+            _autoScrollTimer.Tick += AutoScrollTimer_Tick;
+
+            ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+        }
+
+        private void LayoutBar_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // CRUCIAL : Se désabonner pour éviter que le contrôle reste en mémoire
+            Application.DocumentManager.DocumentActivated -= OnDocumentActivated;
+
+            var lm = LayoutManager.Current;
+            lm.LayoutSwitched -= OnLayoutSwitched;
+            lm.LayoutCreated -= OnLayoutsChanged;
+            lm.LayoutRemoved -= OnLayoutsChanged;
+            lm.LayoutRenamed -= OnLayoutRenamed;
+
+            this.ActiveTabChanged -= LayoutBar_ActiveTabChanged;
+
+            TabScrollViewer.ScrollChanged -= TabScrollViewer_ScrollChanged;
+            _autoScrollTimer.Tick -= AutoScrollTimer_Tick;
+        }
+
+        // ====================================================================
+        // GESTIONNAIRES D'ÉVÉNEMENTS (AUTOCAD -> WPF)
+        // ====================================================================
+
+        private void OnDocumentActivated(object sender, DocumentCollectionEventArgs e)
+        {
+            ReloadTabs(e.Document);
+        }
+
+        private void OnLayoutSwitched(object sender, LayoutEventArgs e)
+        {
+            if (IsSyncing)
+            {
+                return;
+            }
+
+            IsSyncing = true;
+            try
+            {
+                var tab = GetVisibleItemsList().FirstOrDefault(t => t.Title == e.Name);
+                if (tab != null)
+                {
+                    SetCurrentTab(tab);
+                }
+            }
+            finally
+            {
+                IsSyncing = false;
+            }
+        }
+
+        private void OnLayoutsChanged(object sender, LayoutEventArgs e)
+        {
+            ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+        }
+        private void OnLayoutRenamed(object sender, LayoutRenamedEventArgs e)
+        {
+            ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+        }
+
+        // ====================================================================
+        // GESTIONNAIRE D'ÉVÉNEMENT (WPF -> AUTOCAD)
+        // ====================================================================
+
+        private void LayoutBar_ActiveTabChanged(object sender, LayoutTab e)
+        {
+            if (IsSyncing)
+            {
+                return;
+            }
+
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
+            {
+                if (LayoutManager.Current.CurrentLayout != e.Title)
+                {
+                    if (LayoutManager.Current.LayoutExists(e.Title))
+                    {
+                        LayoutManager.Current.CurrentLayout = e.Title;
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
+        private bool LayoutBar_NewLayoutRequest(Dictionary<string, object> properties)
+        {
+            if (IsSyncing)
+            {
+                return false;
+            }
+
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
+            {
+                try
+                {
+                    var Title = properties["Title"].ToString();
+                    if (!LayoutManager.Current.LayoutExists(Title))
+                    {
+                        var id = LayoutManager.Current.CreateLayout(Title);
+                        LayoutManager.Current.SetCurrentLayoutId(id);
+                        return true;
+                    }
+                }
+                finally
+                {
+                    tr.Commit();
+                }
+            }
+            return false;
+        }
+
+        private void SyncTabOrderToAutoCAD()
+        {
+            var doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null) return;
+
+            // 1. Aplatir la hiérarchie pour obtenir une liste simple de LayoutTab
+            var flatTabs = new List<LayoutTab>();
+            foreach (var item in Items) // On ignore PinnedItems car le Model reste à TabOrder = 0
+            {
+                if (item is LayoutTab tab)
+                {
+                    flatTabs.Add(tab);
+                }
+                else if (item is LayoutGroup group)
+                {
+                    flatTabs.AddRange(group.SubTabs);
+                }
+            }
+
+            // 2. Mettre à jour la base de données AutoCAD
+            // On met IsSyncing à true pour éviter que d'éventuels événements AutoCAD
+            // ne déclenchent un ReloadTabs() pendant qu'on écrit.
+            IsSyncing = true;
+            try
+            {
+                using (doc.LockDocument())
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    int currentOrder = 1; // Les onglets de présentation commencent à 1
+
+                    foreach (var tab in flatTabs)
+                    {
+                        if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                        {
+                            var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
+                            if (layout != null && layout.TabOrder != currentOrder)
+                            {
+                                layout.TabOrder = currentOrder;
+                            }
+                        }
+                        currentOrder++;
+                    }
+                    tr.Commit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de la synchro de l'ordre des onglets : {ex.Message}");
+            }
+            finally
+            {
+                IsSyncing = false;
+            }
+        }
+
+        // ====================================================================
+        // LOGIQUE DE CHARGEMENT DES DONNÉES
+        // ====================================================================
+
+        private void ReloadTabs(Document doc)
+        {
+            if (doc == null)
+            {
+                return;
+            }
+
+            // On s'assure que le rechargement UI se fait bien sur le thread principal (WPF)
+            Dispatcher.Invoke(() =>
+            {
+                Items.Clear();
+                PinnedItems.Clear();
+
+                using (doc.LockDocument())
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    var layoutDict = (DBDictionary)tr.GetObject(doc.Database.LayoutDictionaryId, OpenMode.ForRead);
+                    var layouts = new List<Layout>();
+
+                    // On récupère toutes les présentations du dictionnaire
+                    foreach (DBDictionaryEntry entry in layoutDict)
+                    {
+                        var layout = (Layout)tr.GetObject(entry.Value, OpenMode.ForRead);
+                        layouts.Add(layout);
+                    }
+
+                    // On les trie selon l'ordre défini dans AutoCAD (TabOrder)
+                    layouts = layouts.OrderBy(l => l.TabOrder).ToList();
+
+                    foreach (var layout in layouts)
+                    {
+                        var newTab = new LayoutTab
+                        {
+                            Title = layout.LayoutName,
+                            IsPinned = layout.ModelType, // L'espace Objet a ModelType = true
+                            AutoCadData = layout.ObjectId // On sauvegarde l'ObjectId pour un usage futur (ex: Plot, Drag&Drop)
+                        };
+
+                        if (newTab.IsPinned)
+                        {
+                            PinnedItems.Add(newTab);
+                        }
+                        else
+                        {
+                            Items.Add(newTab);
+                        }
+
+                        // Si c'est l'onglet actuellement actif, on le sélectionne dans l'UI
+                        if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
+                        {
+                            IsSyncing = true;
+                            SetCurrentTab(newTab);
+                            IsSyncing = false;
+                        }
+                    }
+
+                    tr.Commit();
+                }
+            });
+        }
+
+        // ====================================================================
+        // CONTEXT MENU
+        // ====================================================================
 
         private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
         {
@@ -84,43 +345,214 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
         {
-            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).ToList();
-            Debug.WriteLine($"Publier la sélection : {selectedTabs.Count} présentation(s).");
+            var targetTabs = GetTargetedTabsForContextMenu(sender);
+            Debug.WriteLine($"Publier la sélection : {targetTabs.Count} présentation(s).");
             // TODO: Appel de la commande AutoCAD Publish
         }
 
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {
-            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab && !t.IsPinned).ToList();
+            // On récupère la bonne liste et on exclut les onglets épinglés
+            var targetTabs = GetTargetedTabsForContextMenu(sender)
+                .Where(t => !t.IsPinned)
+                .ToList();
 
-            if (!selectedTabs.Any()) return;
+            if (!targetTabs.Any())
+            {
+                return;
+            }
 
-            Debug.WriteLine($"Suppression de {selectedTabs.Count} présentation(s).");
-
+            Debug.WriteLine($"Tentative de suppression de {targetTabs.Count} présentation(s).");
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
             {
-                foreach (var tab in selectedTabs)
+                foreach (var tab in targetTabs)
                 {
                     try
                     {
-                        string layoutName = tab.Title;
-
-                        LayoutManager.Current.DeleteLayout(layoutName);
-                        RemoveFromAll(tab);
+                        LayoutManager.Current.DeleteLayout(tab.Title);
                     }
                     catch (System.Exception ex)
                     {
-                        // AutoCAD refusera toujours de supprimer une présentation si c'est la TOUTE DERNIÈRE
-                        // (Il doit toujours rester au moins un espace papier). Cela lèvera une exception ici.
                         Debug.WriteLine($"Impossible de supprimer la présentation '{tab.Title}' : {ex.Message}");
                     }
                 }
                 tr.Commit();
             }
+
             ClearSelection();
         }
 
+        // ====================================================================
+        // GESTION DES GROUPES
+        // ====================================================================
+
+        private void ContextMenu_CreerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            // Récupérer les onglets sélectionnés (non épinglés)
+            var selectedTabs = GetVisibleItemsList()
+                .Where(t => t.IsSelected && !t.IsPinned && t is LayoutTab)
+                .Cast<LayoutTab>()
+                .ToList();
+
+            if (!selectedTabs.Any()) return;
+
+            var newGroup = new LayoutGroup
+            {
+                Title = "Nouveau Groupe",
+                IsExpanded = true
+            };
+
+            // Trouver l'index d'insertion (à la place du premier onglet sélectionné)
+            int insertIndex = Items.IndexOf(selectedTabs.First());
+            if (insertIndex == -1) insertIndex = Items.Count;
+
+            Items.Insert(insertIndex, newGroup);
+
+            // Déplacer les onglets dans le groupe
+            foreach (var tab in selectedTabs)
+            {
+                RemoveFromAll(tab);
+                newGroup.Add(tab);
+            }
+
+            ClearSelection();
+            SyncTabOrderToAutoCAD();
+        }
+
+        private LayoutGroup GetTargetedGroupForContextMenu(object sender)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem == null) return null;
+
+            // Remonter pour trouver le ContextMenu principal (utile si on est dans un sous-menu)
+            var contextMenu = menuItem.Parent as ContextMenu ?? (menuItem.Parent as MenuItem)?.Parent as ContextMenu;
+            var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
+
+            return placementTarget?.DataContext as LayoutGroup;
+        }
+
+        private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroup = GetTargetedGroupForContextMenu(sender);
+            if (targetGroup != null)
+            {
+                // TODO: Implémenter l'UI de renommage (TextBox)
+                Debug.WriteLine($"Renommer le groupe : {targetGroup.Title}");
+            }
+        }
+
+        private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroup = GetTargetedGroupForContextMenu(sender);
+            if (targetGroup != null)
+            {
+                Debug.WriteLine($"Tracer le groupe : {targetGroup.SubTabs.Count} présentation(s).");
+                // TODO: Appel de la commande AutoCAD Plot pour les LayoutData du groupe
+            }
+        }
+
+        private void ContextMenu_PublierGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroup = GetTargetedGroupForContextMenu(sender);
+            if (targetGroup != null)
+            {
+                Debug.WriteLine($"Publier le groupe : {targetGroup.SubTabs.Count} présentation(s).");
+                // TODO: Appel de la commande AutoCAD Publish pour le groupe
+            }
+        }
+
+        private void ContextMenu_SupprimerGroupeSeul_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroup = GetTargetedGroupForContextMenu(sender);
+            if (targetGroup == null) return;
+
+            int groupIndex = Items.IndexOf(targetGroup);
+            if (groupIndex == -1) return;
+
+            // On extrait la liste avant de modifier la collection
+            var tabsToExtract = targetGroup.SubTabs.ToList();
+
+            foreach (var tab in tabsToExtract)
+            {
+                targetGroup.Remove(tab);
+                Items.Insert(groupIndex, tab); // Replace au niveau racine
+                groupIndex++; // Maintient l'ordre
+            }
+
+            Items.Remove(targetGroup);
+            SyncTabOrderToAutoCAD();
+        }
+
+        private void ContextMenu_SupprimerGroupeEtContenu_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroup = GetTargetedGroupForContextMenu(sender);
+            if (targetGroup == null) return;
+
+            var tabsToDelete = targetGroup.SubTabs.ToList();
+            if (!tabsToDelete.Any())
+            {
+                Items.Remove(targetGroup);
+                return;
+            }
+
+            Debug.WriteLine($"Suppression du groupe et de {tabsToDelete.Count} présentation(s).");
+
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
+            {
+                foreach (var tab in tabsToDelete)
+                {
+                    try
+                    {
+                        LayoutManager.Current.DeleteLayout(tab.Title);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.WriteLine($"Impossible de supprimer la présentation '{tab.Title}' : {ex.Message}");
+                    }
+                }
+                tr.Commit();
+            }
+
+            Items.Remove(targetGroup);
+            ClearSelection();
+            // Inutile d'appeler SyncTabOrderToAutoCAD() ici car les événements AutoCAD de suppression (OnLayoutsChanged) vont recharger l'UI.
+        }
+
+
+
+        private List<LayoutTab> GetTargetedTabsForContextMenu(object sender)
+        {
+            // 1. On récupère le MenuItem cliqué
+            var menuItem = sender as MenuItem;
+            if (menuItem == null)
+            {
+                return new List<LayoutTab>();
+            }
+
+            // 2. On remonte au ContextMenu parent
+            var contextMenu = menuItem.Parent as ContextMenu;
+
+            // 3. On trouve l'élément UI sur lequel le clic droit a été déclenché (ta Grid)
+            var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
+
+            // 4. On récupère le DataContext (ton LayoutTab)
+            var clickedTab = placementTarget?.DataContext as LayoutTab;
+
+            // 5. Logique de ciblage
+            if (clickedTab != null && !clickedTab.IsSelected)
+            {
+                // Si le clic a eu lieu sur un onglet NON sélectionné, l'action ne s'applique qu'à lui
+                return new List<LayoutTab> { clickedTab };
+            }
+
+            // Sinon (l'onglet cliqué fait partie de la sélection), on applique l'action à TOUTE la sélection
+            return GetVisibleItemsList()
+                .Where(t => t.IsSelected && t is LayoutTab)
+                .Cast<LayoutTab>()
+                .ToList();
+        }
 
 
         private void ClearSelection()
@@ -241,7 +673,6 @@ namespace SioForgeCAD.Forms
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = true;
-                _currentItem.IsSelected = true;
                 if (item is LayoutTab tab && tab.IsInGroup)
                 {
                     tab.ParentGroup.IsExpanded = true;
@@ -308,16 +739,23 @@ namespace SioForgeCAD.Forms
             {
                 SetCurrentItem(clickedTab);
                 OverflowToggle.IsChecked = false;
+                ClearSelection();
             }
         }
 
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
-            var newTab = new LayoutTab { Title = $"Layout {Items.Count + PinnedItems.Count + 1}" };
-            Items.Add(newTab);
-            SetCurrentItem(newTab);
-            TabScrollViewer.ScrollToRightEnd();
-            ClearSelection();
+            Dictionary<string, object> properties = new Dictionary<string, object>()
+            {
+                {"Title", $"Présentation_{DateTime.Now.Ticks}" }
+            };
+
+            if (LayoutBar_NewLayoutRequest(properties))
+            {
+                TabScrollViewer.ScrollToRightEnd();
+                ClearSelection();
+            }
+
         }
 
         private void TabScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -372,7 +810,10 @@ namespace SioForgeCAD.Forms
 
         private void CreatePreviewWindow(List<LayoutItem> selectedItems)
         {
-            if (selectedItems == null || !selectedItems.Any()) return;
+            if (selectedItems == null || !selectedItems.Any())
+            {
+                return;
+            }
 
             // 1. On prépare un panel horizontal pour empiler nos vrais contrôles WPF
             var factory = new FrameworkElementFactory(typeof(StackPanel));
@@ -505,8 +946,6 @@ namespace SioForgeCAD.Forms
                 }
             }
         }
-
-
 
         protected override void OnDragOver(DragEventArgs e)
         {
@@ -680,7 +1119,7 @@ namespace SioForgeCAD.Forms
                     if (!targetGrp.Contains(targetItem as LayoutTab)) // Sur l'en-tête, venant de l'extérieur
                     {
                         insertIndex = 0;
-                        targetGrp.IsExpanded = true;
+                       // targetGrp.IsExpanded = true;
                     }
                     else if (targetItem is LayoutTab tTab) // Sur un onglet interne
                     {
@@ -745,7 +1184,8 @@ namespace SioForgeCAD.Forms
                     }
                 }
             }
-
+            ClearSelection();
+            SyncTabOrderToAutoCAD();
             _dragSource = null;
             _isDragging = false;
         }
@@ -910,4 +1350,61 @@ namespace SioForgeCAD.Forms
         public bool Contains(LayoutTab tab) => SubTabs_.Contains(tab);
         public int IndexOf(LayoutTab tab) => SubTabs_.IndexOf(tab);
     }
+
+
+    public static class XDataExtensions
+    {
+        // Récupère le nom du groupe depuis la présentation
+        public static string GetGroupXData(this DBObject obj)
+        {
+            string appName = Generic.GetExtensionDLLName();
+            ResultBuffer rb = obj.GetXDataForApplication(appName);
+
+            if (rb != null)
+            {
+                foreach (TypedValue tv in rb.AsArray())
+                {
+                    if (tv.TypeCode == (short)DxfCode.ExtendedDataAsciiString)
+                    {
+                        string val = tv.Value as string;
+                        if (val != null && val.StartsWith("Group:"))
+                        {
+                            return val.Substring(6); // On retire le préfixe "Group:"
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static void SetGroupXData(this DBObject obj, Transaction tr, string groupName)
+        {
+            string appName = Generic.GetExtensionDLLName();
+            Database db = obj.Database;
+
+            // Vérification et création de la table RegApp si nécessaire
+            RegAppTable regTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
+            if (!regTable.Has(appName))
+            {
+                regTable.UpgradeOpen();
+                RegAppTableRecord app = new RegAppTableRecord { Name = appName };
+                regTable.Add(app);
+                tr.AddNewlyCreatedDBObject(app, true);
+            }
+
+            // Si on n'a pas de nom de groupe, on supprime l'XData pour cette application
+            if (string.IsNullOrEmpty(groupName))
+            {
+                obj.XData = new ResultBuffer(new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName));
+            }
+            else
+            {
+                obj.XData = new ResultBuffer(
+                    new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName),
+                    new TypedValue((int)DxfCode.ExtendedDataAsciiString, "Group:" + groupName)
+                );
+            }
+        }
+    }
+
 }

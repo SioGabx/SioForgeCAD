@@ -158,11 +158,12 @@ namespace SioForgeCAD.Commun
 
         public static DocumentLock GetLock(this Document doc)
         {
-            if (doc.LockMode() == DocumentLockMode.None)
-            {
-                return doc.LockDocument();
-            }
-            return null;
+            //if (doc.LockMode() == DocumentLockMode.None || doc.LockMode() == DocumentLockMode.NotLocked)
+            //{
+            //    return doc.LockDocument();
+            //}
+            //return null;
+            return doc?.LockDocument();
         }
 
         public static Database GetDatabase()

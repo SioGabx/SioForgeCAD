@@ -485,7 +485,7 @@ namespace SioForgeCAD
         public static void LAYOUTFROMRECTANGLE() => Functions.LAYOUTFROMRECTANGLE.Execute();
 
         [CommandMethod("SIOFORGECAD", "CUSTOMLAYOUTBAR", CommandFlags.Redraw)]
-        public static void CUSTOMLAYOUTBAR() => Functions.CUSTOMLAYOUTBAR.Attach();
+        public static void CUSTOMLAYOUTBAR() => Functions.CUSTOMLAYOUTBAR.Toggle();
 
 
 

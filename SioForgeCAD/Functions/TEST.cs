@@ -19,7 +19,7 @@ namespace SioForgeCAD.Functions
         {
             List<FrameworkElement> LayoutSwitchControlList = new List<FrameworkElement>();
 
-            if (CUSTOMLAYOUTBAR.ObtenirStatusBarContainer() is DependencyObject root)
+            if (CUSTOMLAYOUTBAR.GetStatusBarContainer() is DependencyObject root)
             {
                 var EnfantsVisuels = root.TrouverEnfantsVisuels<FrameworkElement>();
                 Debug.WriteLine($"{EnfantsVisuels.Count()} Enfants visuels trouvés");
