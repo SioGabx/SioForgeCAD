@@ -370,6 +370,7 @@ namespace SioForgeCAD.Forms
         {
             if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement fe && fe.DataContext is LayoutTab tab)
             {
+                var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel);
                 foreach (var item in menu.Items)
                 {
                     if (item is MenuItem menuItem)
@@ -393,6 +394,11 @@ namespace SioForgeCAD.Forms
                         if (Name == "TabMenuItem_Rename" || Name == "TabMenuItem_Delete")
                         {
                             menuItem.IsEnabled = !tab.IsModel;
+                        }
+
+                        if (Name == "TabMenuItem_Publish")
+                        {
+                            menuItem.IsEnabled = targetTabs.Count > 1;
                         }
 
                         if (Name == "TabMenuItem_CreateGp")
@@ -665,23 +671,27 @@ namespace SioForgeCAD.Forms
 
         private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate)
         {
-            // 1. On récupère le MenuItem cliqué
-            if (!(sender is MenuItem menuItem))
+            LayoutTab clickedTab;
+            if (sender is MenuItem menuItem)
+            {
+                ContextMenu contextMenu = menuItem.Parent as ContextMenu;
+                var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
+                clickedTab = placementTarget?.DataContext as LayoutTab;
+            }
+            else if (sender is ContextMenu contextMenu)
+            {
+                var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
+                clickedTab = placementTarget?.DataContext as LayoutTab;
+            }
+            else
             {
                 return new List<LayoutTab>();
             }
 
-            // 2. On remonte au ContextMenu parent
-            var contextMenu = menuItem.Parent as ContextMenu;
 
-            // 3. On trouve l'élément UI sur lequel le clic droit a été déclenché (ta Grid)
-            var placementTarget = contextMenu?.PlacementTarget as FrameworkElement;
-
-            // 4. On récupère le DataContext (ton LayoutTab)
-            var clickedTab = placementTarget?.DataContext as LayoutTab;
 
             // 5. Logique de ciblage
-            if (clickedTab?.IsSelected == false)
+            if (clickedTab?.IsSelected == false && clickedTab?.IsCurrent == false)
             {
                 // Si le clic a eu lieu sur un onglet NON sélectionné, l'action ne s'applique qu'à lui
                 if (predicate(clickedTab))
@@ -988,8 +998,16 @@ namespace SioForgeCAD.Forms
 
             if (_ghostWindow != null)
             {
-                _ghostWindow.Close();
-                _ghostWindow = null;
+                /* Évite les crashs si déjà fermé */
+                try
+                {
+                    _ghostWindow.Close();
+                }
+                catch { }
+                finally
+                {
+                    _ghostWindow = null;
+                }
             }
         }
         private void CreatePreviewWindow(List<LayoutItem> selectedItems)
