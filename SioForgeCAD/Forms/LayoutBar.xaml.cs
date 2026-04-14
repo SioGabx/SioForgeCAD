@@ -976,11 +976,22 @@ namespace SioForgeCAD.Forms
                     _autoScrollTimer.Start();
 
                     DragDrop.DoDragDrop(this, new DataObject("SelectedItems", selectedItems), DragDropEffects.Move);
+                    DragDropEnd();
                     _autoScrollTimer.Stop();
                 }
             }
         }
 
+        private void DragDropEnd()
+        {
+            DragIndicator.IsOpen = false;
+
+            if (_ghostWindow != null)
+            {
+                _ghostWindow.Close();
+                _ghostWindow = null;
+            }
+        }
         private void CreatePreviewWindow(List<LayoutItem> selectedItems)
         {
             if (selectedItems == null || selectedItems.Count == 0)
@@ -1033,16 +1044,7 @@ namespace SioForgeCAD.Forms
             _ghostWindow.Show();
         }
 
-        private void DragDropEnd()
-        {
-            DragIndicator.IsOpen = false;
 
-            if (_ghostWindow != null)
-            {
-                _ghostWindow.Close();
-                _ghostWindow = null;
-            }
-        }
 
 
 
