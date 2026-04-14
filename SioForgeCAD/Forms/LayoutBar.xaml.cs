@@ -247,8 +247,7 @@ namespace SioForgeCAD.Forms
                     {
                         layout.TabOrder = order;
                     }
-                    // On sauvegarde le groupe et son état
-                    layout.SetGroupXData(tr, groupName, isExpanded);
+                    layout.SetLayoutUIState(tr, groupName, isExpanded, tab.IsPinned); // <-- Utilisation de la nouvelle méthode
                 }
             }
         }
@@ -285,10 +284,14 @@ namespace SioForgeCAD.Forms
 
                     foreach (var layout in layouts)
                     {
+                        var uiState = layout.GetLayoutUIState();
+                        bool isPinnedUI = uiState?.IsPinned ?? false;
+
                         var newTab = new LayoutTab
                         {
                             Title = layout.LayoutName,
-                            IsPinned = layout.ModelType,
+                            IsModel = layout.ModelType, // On retient s'il s'agit du Model
+                            IsPinned = layout.ModelType || isPinnedUI, // Le model est TOUJOURS épinglé visuellement
                             AutoCadData = layout.ObjectId
                         };
 
@@ -298,32 +301,26 @@ namespace SioForgeCAD.Forms
                         }
                         else
                         {
-                            // On vérifie si la présentation appartient à un groupe via XData
-                            var groupInfo = layout.GetGroupXData();
+                            string groupName = uiState?.GroupName;
+                            bool isExpanded = uiState?.IsExpanded ?? true;
 
-                            if (groupInfo.HasValue) // Si le tuple n'est pas null
+                            if (!string.IsNullOrEmpty(groupName))
                             {
-                                string groupName = groupInfo.Value.GroupName;
-                                bool isExpanded = groupInfo.Value.IsExpanded;
-
-                                // Si le groupe n'existe pas encore dans notre UI, on le crée
                                 if (!activeGroups.TryGetValue(groupName, out LayoutGroup value))
                                 {
                                     var newGroup = new LayoutGroup
                                     {
                                         Title = groupName,
-                                        IsExpanded = isExpanded // <-- On restaure l'état sauvegardé !
+                                        IsExpanded = isExpanded
                                     };
                                     value = newGroup;
                                     activeGroups[groupName] = value;
                                     Items.Add(newGroup);
                                 }
-
                                 value.Add(newTab);
                             }
                             else
                             {
-                                // Aucun groupe, on l'ajoute à la racine
                                 Items.Add(newTab);
                             }
                         }
@@ -344,6 +341,97 @@ namespace SioForgeCAD.Forms
         // ====================================================================
         // CONTEXT MENU
         // ====================================================================
+        // ====================================================================
+        // GESTION DYNAMIQUE DU CONTEXTMENU
+        // ====================================================================
+        private void TabContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement fe && fe.DataContext is LayoutTab tab)
+            {
+                foreach (var item in menu.Items)
+                {
+                    if (item is MenuItem menuItem)
+                    {
+                        string Name = menuItem.Name;
+
+                        if (Name == "TabMenuItem_Pin")
+                        {
+                            menuItem.Visibility = (!tab.IsPinned && !tab.IsModel) ?
+                                System.Windows.Visibility.Visible : 
+                                System.Windows.Visibility.Collapsed;
+                        }
+
+                        if (Name == "TabMenuItem_Unpin")
+                        {
+                            menuItem.Visibility = (tab.IsPinned && !tab.IsModel) ? 
+                                System.Windows.Visibility.Visible : 
+                                System.Windows.Visibility.Collapsed;
+                        }
+
+                        if (Name == "TabMenuItem_Rename" || Name == "TabMenuItem_Delete")
+                            menuItem.IsEnabled = !tab.IsModel;
+                        if (Name == "TabMenuItem_CreateGp")
+                            menuItem.IsEnabled = !tab.IsModel && tab.IsInGroup;
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ACTIONS EPINGLER / DESEPINGLER
+        // ====================================================================
+        private void ContextMenu_Epingler_Click(object sender, RoutedEventArgs e)
+        {
+            var targetTabs = GetTargetedTabsForContextMenu(sender).Where(t => !t.IsPinned && !t.IsModel).ToList();
+            if (targetTabs.Count == 0) return;
+
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
+            {
+                foreach (var tab in targetTabs)
+                {
+                    RemoveFromAll(tab);
+                    tab.IsPinned = true;
+                    PinnedItems.Add(tab);
+
+                    if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                    {
+                        var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
+                        // On met null pour le groupe car il passe à la racine des épinglés
+                        layout?.SetLayoutUIState(tr, null, true, true);
+                    }
+                }
+                tr.Commit();
+            }
+            ClearSelection();
+            SyncTabOrderToAutoCAD();
+        }
+
+        private void ContextMenu_Desepingler_Click(object sender, RoutedEventArgs e)
+        {
+            var targetTabs = GetTargetedTabsForContextMenu(sender).Where(t => t.IsPinned && !t.IsModel).ToList();
+            if (targetTabs.Count == 0) return;
+
+            using (Generic.GetLock())
+            using (var tr = Generic.GetTrans())
+            {
+                foreach (var tab in targetTabs)
+                {
+                    RemoveFromAll(tab);
+                    tab.IsPinned = false;
+                    Items.Add(tab); // Redescend à la racine par défaut
+
+                    if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                    {
+                        var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
+                        layout?.SetLayoutUIState(tr, null, true, false);
+                    }
+                }
+                tr.Commit();
+            }
+            ClearSelection();
+            SyncTabOrderToAutoCAD();
+        }
 
         private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
         {
@@ -1335,6 +1423,7 @@ namespace SioForgeCAD.Forms
             get => base.IsSelected;
             set { if (base.IsSelected != value) { base.IsSelected = value; ParentGroup?.EvaluateGroupSelection(); } }
         }
+        public bool IsModel { get; set; }
     }
 
     public class LayoutGroup : LayoutItem
@@ -1403,8 +1492,8 @@ namespace SioForgeCAD.Forms
 
     public static class XDataExtensions
     {
-        // Renvoie le nom du groupe et son état, ou null s'il n'y a pas de groupe
-        public static (string GroupName, bool IsExpanded)? GetGroupXData(this DBObject obj)
+        // Renvoie le nom du groupe, l'état étendu, ET l'état épinglé
+        public static (string GroupName, bool IsExpanded, bool IsPinned)? GetLayoutUIState(this DBObject obj)
         {
             string appName = Generic.GetExtensionDLLName();
             ResultBuffer rb = obj.GetXDataForApplication(appName);
@@ -1412,7 +1501,9 @@ namespace SioForgeCAD.Forms
             if (rb != null)
             {
                 string groupName = null;
-                bool isExpanded = true; // Par défaut, on étend
+                bool isExpanded = true;
+                bool isPinned = false;
+                int int16Index = 0;
 
                 foreach (TypedValue tv in rb.AsArray())
                 {
@@ -1422,25 +1513,24 @@ namespace SioForgeCAD.Forms
                         if (val?.StartsWith("Group:") == true)
                         {
                             groupName = val.Substring(6);
+                            if (groupName == "") groupName = null; // Nettoyage si vide
                         }
                     }
                     else if (tv.TypeCode == (short)DxfCode.ExtendedDataInteger16)
                     {
-                        // 1 = true, 0 = false
-                        isExpanded = (short)tv.Value == 1;
+                        // Le 1er entier correspond à IsExpanded, le 2ème à IsPinned
+                        if (int16Index == 0) isExpanded = (short)tv.Value == 1;
+                        else if (int16Index == 1) isPinned = (short)tv.Value == 1;
+                        int16Index++;
                     }
                 }
-
-                if (groupName != null)
-                {
-                    return (groupName, isExpanded);
-                }
+                return (groupName, isExpanded, isPinned);
             }
             return null;
         }
 
-        // Assigne le groupe ET son état dans la présentation
-        public static void SetGroupXData(this DBObject obj, Transaction tr, string groupName, bool isExpanded)
+        // Assigne le groupe, son état ET l'état épinglé
+        public static void SetLayoutUIState(this DBObject obj, Transaction tr, string groupName, bool isExpanded, bool isPinned)
         {
             string appName = Generic.GetExtensionDLLName();
             Database db = obj.Database;
@@ -1454,18 +1544,12 @@ namespace SioForgeCAD.Forms
                 tr.AddNewlyCreatedDBObject(app, true);
             }
 
-            if (string.IsNullOrEmpty(groupName))
-            {
-                obj.XData = new ResultBuffer(new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName));
-            }
-            else
-            {
-                obj.XData = new ResultBuffer(
-                    new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName),
-                    new TypedValue((int)DxfCode.ExtendedDataAsciiString, "Group:" + groupName),
-                    new TypedValue((int)DxfCode.ExtendedDataInteger16, isExpanded ? (short)1 : (short)0) // <-- Ajout de l'état ici
-                );
-            }
+            obj.XData = new ResultBuffer(
+                new TypedValue((int)DxfCode.ExtendedDataRegAppName, appName),
+                new TypedValue((int)DxfCode.ExtendedDataAsciiString, "Group:" + (groupName ?? "")),
+                new TypedValue((int)DxfCode.ExtendedDataInteger16, isExpanded ? (short)1 : (short)0),
+                new TypedValue((int)DxfCode.ExtendedDataInteger16, isPinned ? (short)1 : (short)0)
+            );
         }
     }
 }

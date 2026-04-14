@@ -65,31 +65,33 @@
             </Style.Triggers>
         </Style>
 
-        <Style TargetType="Separator" x:Key="{x:Static MenuItem.SeparatorStyleKey}">
-            <Setter Property="Height" Value="1"/>
-            <Setter Property="Margin" Value="16,4,16,4"/>
-            <Setter Property="Background" Value="{StaticResource TabBackground}"/>
+        <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="16,4,16,4" />
+            <Setter Property="Background" Value="{StaticResource TabBackground}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
-                        <Border Background="{TemplateBinding Background}" 
-                            Height="{TemplateBinding Height}" 
-                            Margin="{TemplateBinding Margin}"/>
+                        <Border
+                            Height="{TemplateBinding Height}"
+                            Margin="{TemplateBinding Margin}"
+                            Background="{TemplateBinding Background}" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
         <Style TargetType="Separator">
-            <Setter Property="Height" Value="1"/>
-            <Setter Property="Margin" Value="16,4,16,4"/>
-            <Setter Property="Background" Value="{StaticResource TabBackground}"/>
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="16,4,16,4" />
+            <Setter Property="Background" Value="{StaticResource TabBackground}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
-                        <Border Background="{TemplateBinding Background}" 
-                            Height="{TemplateBinding Height}" 
-                            Margin="{TemplateBinding Margin}"/>
+                        <Border
+                            Height="{TemplateBinding Height}"
+                            Margin="{TemplateBinding Margin}"
+                            Background="{TemplateBinding Background}" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -102,27 +104,52 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="BgBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="2,0,0,0">
+                        <Border
+                            x:Name="BgBorder"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="2,0,0,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <ContentPresenter Margin="{TemplateBinding Padding}" 
-                                              ContentSource="Header" 
-                                              RecognizesAccessKey="True" />
+                                <ContentPresenter
+                                    Margin="{TemplateBinding Padding}"
+                                    ContentSource="Header"
+                                    RecognizesAccessKey="True" />
 
-                                <Path x:Name="RightArrow" Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center" 
-                                  Data="M 0,0 L 4,4 L 0,8 Z" Fill="{StaticResource TextInactive}" Visibility="Collapsed" />
+                                <Path
+                                    x:Name="RightArrow"
+                                    Grid.Column="1"
+                                    Margin="10,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Data="M 0,0 L 4,4 L 0,8 Z"
+                                    Fill="{StaticResource TextInactive}"
+                                    Visibility="Collapsed" />
 
-                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False" HorizontalOffset="-2" 
-                                   IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
-                                   Placement="Right" PopupAnimation="Fade" VerticalOffset="-4">
-                                    <Border Margin="0,0,8,8" Background="{StaticResource TabBarBackground}" 
-                                        BorderBrush="{StaticResource TabBackground}" BorderThickness="1" CornerRadius="4">
+                                <Popup
+                                    x:Name="PART_Popup"
+                                    AllowsTransparency="True"
+                                    Focusable="False"
+                                    HorizontalOffset="-2"
+                                    IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Placement="Right"
+                                    PopupAnimation="Fade"
+                                    VerticalOffset="-4">
+                                    <Border
+                                        Margin="0,0,8,8"
+                                        Background="{StaticResource TabBarBackground}"
+                                        BorderBrush="{StaticResource TabBackground}"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
                                         <Border.Effect>
-                                            <DropShadowEffect BlurRadius="6" Direction="270" Opacity="0.3" ShadowDepth="2" />
+                                            <DropShadowEffect
+                                                BlurRadius="6"
+                                                Direction="270"
+                                                Opacity="0.3"
+                                                ShadowDepth="2" />
                                         </Border.Effect>
                                         <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Hidden">
                                             <ItemsPresenter Margin="0,4" />
@@ -154,13 +181,19 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border MinWidth="180" Margin="0,0,8,8"
+                        <Border
+                            MinWidth="180"
+                            Margin="0,0,8,8"
                             Background="{StaticResource TabBarBackground}"
                             BorderBrush="{StaticResource TabBackground}"
                             BorderThickness="1"
                             CornerRadius="4">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="8" Direction="270" Opacity="0.4" ShadowDepth="3" />
+                                <DropShadowEffect
+                                    BlurRadius="8"
+                                    Direction="270"
+                                    Opacity="0.4"
+                                    ShadowDepth="3" />
                             </Border.Effect>
                             <ItemsPresenter Margin="0,4" />
                         </Border>
@@ -168,7 +201,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <DataTemplate x:Key="TabTooltipTemplate">
             <Border
                 Padding="6"
@@ -187,13 +220,38 @@
                 MouseLeftButtonUp="Item_MouseLeftButtonUp">
 
                 <Grid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Click="ContextMenu_Renommer_Click" Header="Renommer" />
-                        <MenuItem Click="ContextMenu_Tracer_Click" Header="Tracer" />
-                        <MenuItem Click="ContextMenu_Publier_Click" Header="Publier" />
-                        <MenuItem Click="ContextMenu_Supprimer_Click" Header="Supprimer" />
-                        <Separator Background="{StaticResource TabBackground}" Margin="10,0"/>
-                        <MenuItem Click="ContextMenu_CreerGroupe_Click" Header="Créer un groupe avec la sélection" />
+                    <ContextMenu Opened="TabContextMenu_Opened">
+                        <MenuItem
+                            x:Name="TabMenuItem_Pin"
+                            Click="ContextMenu_Epingler_Click"
+                            Header="Épingler" />
+                        <MenuItem
+                            x:Name="TabMenuItem_Unpin"
+                            Click="ContextMenu_Desepingler_Click"
+                            Header="Désépingler" />
+                        <Separator Margin="10,0" Background="{StaticResource TabBackground}" />
+
+                        <MenuItem
+                            x:Name="TabMenuItem_Rename"
+                            Click="ContextMenu_Renommer_Click"
+                            Header="Renommer" />
+                        <MenuItem
+                            x:Name="TabMenuItem_Trace"
+                            Click="ContextMenu_Tracer_Click"
+                            Header="Tracer" />
+                        <MenuItem
+                            x:Name="TabMenuItem_Publish"
+                            Click="ContextMenu_Publier_Click"
+                            Header="Publier" />
+                        <MenuItem
+                            x:Name="TabMenuItem_Delete"
+                            Click="ContextMenu_Supprimer_Click"
+                            Header="Supprimer" />
+                        <Separator Margin="10,0" Background="{StaticResource TabBackground}" />
+                        <MenuItem
+                            x:Name="TabMenuItem_CreateGp"
+                            Click="ContextMenu_CreerGroupe_Click"
+                            Header="Créer un groupe avec la sélection" />
                     </ContextMenu>
                 </Grid.ContextMenu>
 
@@ -278,8 +336,8 @@
                             <MenuItem Click="ContextMenu_RenommerGroupe_Click" Header="Renommer le groupe" />
                             <MenuItem Click="ContextMenu_TracerGroupe_Click" Header="Tracer le groupe" />
                             <MenuItem Click="ContextMenu_PublierGroupe_Click" Header="Publier le groupe" />
-                            <Separator Background="{StaticResource TabBackground}" Margin="10,0"/>
-                            <MenuItem Header="Supprimer..." Foreground="{StaticResource TextInactive}">
+                            <Separator Margin="10,0" Background="{StaticResource TabBackground}" />
+                            <MenuItem Foreground="{StaticResource TextInactive}" Header="Supprimer...">
                                 <MenuItem Click="ContextMenu_SupprimerGroupeSeul_Click" Header="Le groupe seulement" />
                                 <MenuItem Click="ContextMenu_SupprimerGroupeEtContenu_Click" Header="Le groupe et son contenu" />
                             </MenuItem>
