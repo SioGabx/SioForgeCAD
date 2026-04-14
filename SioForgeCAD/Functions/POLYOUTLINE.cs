@@ -235,7 +235,7 @@ namespace SioForgeCAD.Functions
 
         private static (Curve2d Original, Curve2d Ajusted) GetCurveFromList(List<(Curve2d Original, Curve2d Ajusted)> values, Curve2d OToFind)
         {
-            return values.FirstOrDefault(c => (c.Original == OToFind));
+            return values.FirstOrDefault(c => c.Original == OToFind);
         }
 
         private static Point2d? GetExactIntersection2(Curve2d seg1, Curve2d seg2, Point2d originalVertex)

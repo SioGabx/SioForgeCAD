@@ -29,6 +29,8 @@ namespace SioForgeCAD.Commun.Mist
             public Int32 Y;
         }
 
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr handle);
 
         [DllImport("user32.dll")]
         internal static extern bool OpenClipboard(IntPtr hWndNewOwner);

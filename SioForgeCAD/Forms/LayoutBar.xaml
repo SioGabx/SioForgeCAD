@@ -202,21 +202,12 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Key="TabTooltipTemplate">
-            <Border
-                Padding="6"
-                Background="{StaticResource TabBarBackground}"
-                BorderBrush="{StaticResource TabBackground}"
-                BorderThickness="1">
-                <TextBlock Foreground="{StaticResource TextActive}" Text="{Binding Title}" />
-            </Border>
-        </DataTemplate>
-
         <DataTemplate DataType="{x:Type local:LayoutTab}">
             <Grid
                 Height="28"
                 Cursor="Hand"
                 MouseLeftButtonDown="Item_MouseLeftButtonDown"
+                ToolTipOpening="Item_ToolTipOpening"
                 MouseLeftButtonUp="Item_MouseLeftButtonUp">
 
                 <Grid.ContextMenu>
@@ -285,11 +276,12 @@
                 </StackPanel>
 
                 <Grid.ToolTip>
-                    <ToolTip
-                        Content="{Binding}"
-                        ContentTemplate="{StaticResource TabTooltipTemplate}"
-                        Placement="Top"
-                        VerticalOffset="-2" />
+                    <ToolTip Placement="Top" VerticalOffset="-2">
+                        <Border Padding="6" Background="{StaticResource TabBarBackground}" 
+                    BorderBrush="{StaticResource TabBackground}" BorderThickness="1">
+                            <Image x:Name="TooltipImage" Stretch="Uniform" MaxWidth="300" MaxHeight="200"/>
+                        </Border>
+                    </ToolTip>
                 </Grid.ToolTip>
             </Grid>
             <DataTemplate.Triggers>
@@ -466,7 +458,7 @@
                     Grid.Column="0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Panel.ZIndex="5"
+                    Panel.ZIndex="3"
                     Fill="{StaticResource TabBarBackground}">
                     <Rectangle.RenderTransform>
                         <SkewTransform AngleX="-20" />
@@ -478,7 +470,7 @@
                     Width="3"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Stretch"
-                    Panel.ZIndex="3"
+                    Panel.ZIndex="5"
                     Fill="{StaticResource TabBarBackground}">
                     <Rectangle.RenderTransform>
                         <SkewTransform AngleX="-20" />

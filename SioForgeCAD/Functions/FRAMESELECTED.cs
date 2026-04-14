@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                     if (!ForceFrameSelected)
                     {
                         var Options = ed.GetOptions("Voullez-vous zoomer sur chaque entités individuellement ?", false, "Oui", "Non");
-                        if ((Options.Status != PromptStatus.OK || Options.StringResult == "Non"))
+                        if (Options.Status != PromptStatus.OK || Options.StringResult == "Non")
                         {
                             return;
                         }

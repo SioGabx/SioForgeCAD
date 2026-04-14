@@ -151,6 +151,7 @@
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />
     <Compile Include="Commun\Extensions\LayerTableRecord.cs" />
+    <Compile Include="Commun\Extensions\LayoutManager.cs" />
     <Compile Include="Commun\Extensions\Layouts.cs" />
     <Compile Include="Commun\Extensions\LineSegment.cs" />
     <Compile Include="Commun\Extensions\Matrix3d.cs" />

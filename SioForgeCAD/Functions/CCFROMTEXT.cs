@@ -162,7 +162,7 @@ namespace SioForgeCAD.Functions
                 foreach (DBObject ProxyInnerEnt in ProxyInnerEnts)
                 {
                     var Values = GetAltitudeInObject(ProxyInnerEnt);
-                    if (!(string.IsNullOrEmpty(Values.Text)))
+                    if (!string.IsNullOrEmpty(Values.Text))
                     {
                         PossiblesValues.Add(Values);
                     }

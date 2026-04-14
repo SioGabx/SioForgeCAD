@@ -367,7 +367,7 @@ namespace SioForgeCAD.Forms
                         if (Name == "TabMenuItem_Rename" || Name == "TabMenuItem_Delete")
                             menuItem.IsEnabled = !tab.IsModel;
                         if (Name == "TabMenuItem_CreateGp")
-                            menuItem.IsEnabled = !tab.IsModel && tab.IsInGroup;
+                            menuItem.IsEnabled = !tab.IsModel && !tab.IsInGroup;
                     }
                 }
             }
@@ -1370,6 +1370,25 @@ namespace SioForgeCAD.Forms
                 }
             }
             return null;
+        }
+        private void Item_ToolTipOpening(object sender, ToolTipEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.ToolTip is ToolTip tt && fe.DataContext is LayoutTab tab)
+            {
+                if (fe.ContextMenu?.IsOpen == true || LayoutBarRoot.OverflowToggle.IsChecked == true)
+                {
+                    e.Handled = true; // Annule l'ouverture du ToolTip
+                    return;
+                }
+
+                // ToolTip -> Content (Border) -> Child (Image)
+                var img = (tt.Content as Border)?.Child as System.Windows.Controls.Image;
+
+                if (img != null)
+                {
+                    img.Source = LayoutManager.Current.GetLayoutImage(tab.Title);
+                }
+            }
         }
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
