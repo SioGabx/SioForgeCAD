@@ -1,5 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.GraphicsInterface;
+using Autodesk.AutoCAD.Internal;
+using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
@@ -56,6 +59,29 @@ namespace SioForgeCAD.Forms
 
         }
 
+        public static bool CanLayoutSwitch
+        {
+            get
+            {
+                var Doc = Generic.GetDocument();
+                if (null == Doc || Doc.IsDisposed)
+                {
+                    return false;
+                }
+                var systemVariable = Generic.GetSystemVariable("TRACEMODE");
+                if (systemVariable != null && (short)systemVariable == 2)
+                {
+                    return false;
+                }
+                if (Doc.Editor.IsQuiescent)
+                {
+                    return !Utils.IsInBlockEditor();
+                }
+                return false;
+            }
+        }
+
+
         private void TabScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             OverflowToggle.Visibility = TabScrollViewer.ScrollableWidth > 0 ?
@@ -68,7 +94,7 @@ namespace SioForgeCAD.Forms
             // S'abonner aux événements quand le contrôle est affiché
             Application.DocumentManager.DocumentActivated += OnDocumentActivated;
 
-            var lm = LayoutManager.Current;
+            LayoutManager lm = LayoutManager.Current;
             lm.LayoutSwitched += OnLayoutSwitched;
             lm.LayoutCreated += OnLayoutsChanged;
             lm.LayoutRemoved += OnLayoutsChanged;
@@ -365,9 +391,14 @@ namespace SioForgeCAD.Forms
                         }
 
                         if (Name == "TabMenuItem_Rename" || Name == "TabMenuItem_Delete")
+                        {
                             menuItem.IsEnabled = !tab.IsModel;
+                        }
+
                         if (Name == "TabMenuItem_CreateGp")
+                        {
                             menuItem.IsEnabled = !tab.IsModel && !tab.IsInGroup;
+                        }
                     }
                 }
             }
@@ -378,7 +409,7 @@ namespace SioForgeCAD.Forms
         // ====================================================================
         private void ContextMenu_Epingler_Click(object sender, RoutedEventArgs e)
         {
-            var targetTabs = GetTargetedTabsForContextMenu(sender).Where(t => !t.IsPinned && !t.IsModel).ToList();
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel);
             if (targetTabs.Count == 0) return;
 
             using (Generic.GetLock())
@@ -406,7 +437,7 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Desepingler_Click(object sender, RoutedEventArgs e)
         {
-            var targetTabs = GetTargetedTabsForContextMenu(sender).Where(t => t.IsPinned && !t.IsModel).ToList();
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => t.IsPinned && !t.IsModel);
             if (targetTabs.Count == 0) return;
 
             using (Generic.GetLock())
@@ -416,7 +447,7 @@ namespace SioForgeCAD.Forms
                 {
                     tab.IsPinned = false;
                     PinnedItems.Remove(tab);
-                   
+
                     if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
                     {
                         var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
@@ -430,28 +461,28 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
         {
-            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).Cast<LayoutTab>().ToList();
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
 
-            if (selectedTabs.Count > 1)
+            if (targetTabs.Count > 1)
             {
                 Debug.WriteLine("=== Renommage multiple ===");
-                foreach (var tab in selectedTabs)
+                foreach (var tab in targetTabs)
                 {
                     Debug.WriteLine($"- {tab.Title} renommé en {tab.Title}-m");
                     tab.Title += "-m";
                 }
             }
-            else if (selectedTabs.Count == 1)
+            else if (targetTabs.Count == 1)
             {
-                var tab = selectedTabs[0];
+                var tab = targetTabs[0];
                 Debug.WriteLine($"Renommer un seul onglet : {tab.Title}");
             }
         }
 
         private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
         {
-            var selectedTabs = GetVisibleItemsList().Where(t => t.IsSelected && t is LayoutTab).ToList();
-            Debug.WriteLine($"Tracer la sélection : {selectedTabs.Count} présentation(s).");
+            var targetTabs = GetTargetedTabsForContextMenu(sender);
+            Debug.WriteLine($"Tracer la sélection : {targetTabs.Count} présentation(s).");
             // TODO: Appel de la commande AutoCAD Plot pour les LayoutData correspondants
         }
 
@@ -465,9 +496,7 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {
             // On récupère la bonne liste et on exclut les onglets épinglés
-            var targetTabs = GetTargetedTabsForContextMenu(sender)
-                .Where(t => !t.IsPinned)
-                .ToList();
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
 
             if (targetTabs.Count == 0)
             {
@@ -502,12 +531,9 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_CreerGroupe_Click(object sender, RoutedEventArgs e)
         {
             // Récupérer les onglets sélectionnés (non épinglés)
-            var selectedTabs = GetVisibleItemsList()
-                .Where(t => t.IsSelected && !t.IsPinned && t is LayoutTab)
-                .Cast<LayoutTab>()
-                .ToList();
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
 
-            if (selectedTabs.Count == 0) return;
+            if (targetTabs.Count == 0) return;
 
             var newGroup = new LayoutGroup
             {
@@ -516,13 +542,13 @@ namespace SioForgeCAD.Forms
             };
 
             // Trouver l'index d'insertion (à la place du premier onglet sélectionné)
-            int insertIndex = Items.IndexOf(selectedTabs.First());
+            int insertIndex = Items.IndexOf(targetTabs.First());
             if (insertIndex == -1) insertIndex = Items.Count;
 
             Items.Insert(insertIndex, newGroup);
 
             // Déplacer les onglets dans le groupe
-            foreach (var tab in selectedTabs)
+            foreach (var tab in targetTabs)
             {
                 RemoveFromAll(tab);
                 newGroup.Add(tab);
@@ -634,6 +660,11 @@ namespace SioForgeCAD.Forms
 
         private List<LayoutTab> GetTargetedTabsForContextMenu(object sender)
         {
+            return GetTargetedTabsForContextMenu(sender, _ => true);
+        }
+
+        private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate)
+        {
             // 1. On récupère le MenuItem cliqué
             if (!(sender is MenuItem menuItem))
             {
@@ -653,13 +684,21 @@ namespace SioForgeCAD.Forms
             if (clickedTab?.IsSelected == false)
             {
                 // Si le clic a eu lieu sur un onglet NON sélectionné, l'action ne s'applique qu'à lui
-                return new List<LayoutTab> { clickedTab };
+                if (predicate(clickedTab))
+                {
+                    return new List<LayoutTab> { clickedTab }.ToList();
+                }
+                else
+                {
+                    return new List<LayoutTab>();
+                }
             }
 
             // Sinon (l'onglet cliqué fait partie de la sélection), on applique l'action à TOUTE la sélection
             return GetVisibleItemsList()
-                .Where(t => t.IsSelected && t is LayoutTab)
+                .Where(t => (t.IsSelected || t.IsCurrent) && t is LayoutTab)
                 .Cast<LayoutTab>()
+                .Where(predicate)
                 .ToList();
         }
 
@@ -712,6 +751,7 @@ namespace SioForgeCAD.Forms
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            if (!CanLayoutSwitch) { return; }
             if (!_isDragging && _dragSource != null)
             {
                 bool isCtrlPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
@@ -858,6 +898,7 @@ namespace SioForgeCAD.Forms
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanLayoutSwitch) { return; }
             if ((sender as MenuItem)?.DataContext is LayoutTab clickedTab)
             {
                 if (clickedTab.IsInGroup)
@@ -873,6 +914,7 @@ namespace SioForgeCAD.Forms
 
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanLayoutSwitch) { return; }
             Dictionary<string, object> properties = new Dictionary<string, object>()
             {
                 {"Title", $"Présentation_{DateTime.Now.Ticks}" }
