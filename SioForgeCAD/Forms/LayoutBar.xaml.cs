@@ -243,7 +243,8 @@ namespace SioForgeCAD.Forms
                         {
                             PinnedItems.Add(newTab);
                         }
-                        else if (!newTab.IsModel)
+
+                        if (!newTab.IsModel)
                         {
                             string groupName = uiState?.GroupName;
                             bool isExpanded = uiState?.IsExpanded ?? true;
@@ -303,7 +304,7 @@ namespace SioForgeCAD.Forms
             if ((sender as FrameworkElement)?.DataContext is LayoutItem clickedItem)
             {
                 _dragStart = e.GetPosition(null);
-                _dragSource = clickedItem;
+                _dragSource = GetTabFromRegularList(clickedItem);
                 _isDragging = false;
             }
         }
@@ -380,6 +381,7 @@ namespace SioForgeCAD.Forms
         private void SetCurrentItem(LayoutItem item)
         {
             if (_currentItem != null) _currentItem.IsCurrent = false;
+            item = GetTabFromRegularList(item);
 
             _currentItem = item;
             _lastSelectedItem = item;
@@ -395,6 +397,16 @@ namespace SioForgeCAD.Forms
                 }
             }
             ClearSelection();
+        }
+
+        private LayoutItem GetTabFromRegularList(LayoutItem item)
+        {
+            if (item is LayoutTab itemTab && itemTab.IsPinned)
+            {
+                var RegularItemsList = GetVisibleItemsList(false);
+                return RegularItemsList.Where(t => t.Title == item.Title).DefaultIfEmpty(item).First();
+            }
+            return item;
         }
 
         private void ClearSelection()
@@ -429,7 +441,7 @@ namespace SioForgeCAD.Forms
         {
             base.OnPreviewMouseMove(e);
 
-            if (e.LeftButton == MouseButtonState.Pressed && _dragSource?.IsPinned == false && !_isDragging)
+            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging && _dragSource != null)
             {
                 Vector diff = _dragStart - e.GetPosition(null);
 
@@ -444,10 +456,18 @@ namespace SioForgeCAD.Forms
                         _lastSelectedItem = _dragSource;
                     }
 
-                    var selectedItems = GetVisibleItemsList()
-                        .Where(i => i.IsSelected && !i.IsPinned && !(i is LayoutTab tab && tab.ParentGroup?.IsSelected == true))
+                    var selectedItems = GetVisibleItemsList(false)
+                        .Where(i => i.IsSelected && !(i is LayoutTab tab && tab.ParentGroup?.IsSelected == true))
                         .ToList();
 
+                    //Close all groups for preview
+                    foreach (var item in selectedItems)
+                    {
+                        if (item is LayoutTab tab && tab.IsInGroup && tab.ParentGroup is LayoutGroup gp)
+                        {
+                            gp.IsExpanded = false;
+                        }
+                    }
                     CreatePreviewWindow(selectedItems);
                     _autoScrollTimer.Start();
 
@@ -477,31 +497,35 @@ namespace SioForgeCAD.Forms
 
         protected override void OnDragOver(DragEventArgs e)
         {
+            Debug.WriteLine("OnDragOver");
             base.OnDragOver(e);
             if (!_isDragging) return;
-
+            Debug.WriteLine("OnDragOver and _isDragging");
             var sourceItem = (e.Data.GetData("SelectedItems") as List<LayoutItem>)?.FirstOrDefault() ?? _dragSource;
             if (sourceItem == null) return;
-
-            if (sourceItem is LayoutGroup lg) lg.IsExpanded = false;
 
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = UIHelper.GetVisualParent<ContentPresenter>(targetElement);
 
             if (targetContainer?.DataContext is LayoutItem targetItem)
             {
+                if (targetItem == sourceItem) return;
+                if (sourceItem is LayoutGroup lg) lg.IsExpanded = false;
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
                 if (targetItem is LayoutTab tTab && tTab.IsInGroup) targetGrp = tTab.ParentGroup;
 
                 if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                 {
+                    // --- CAS 1 : Déplacement vers ou à l'intérieur d'un GROUPE ---
                     if (!targetGrp.Contains(sTab))
                     {
+                        // A. Si l'onglet source n'appartient pas encore à ce groupe (entrée dans un groupe)
                         var placementTarget = (targetItem is LayoutGroup ? targetContainer : UIHelper.GetVisualParent<ContentPresenter>(VisualTreeHelper.GetParent(targetContainer))) ?? targetContainer;
                         ShowDragIndicator(placementTarget, -12, (placementTarget.ActualHeight / 2) + 4, -90, PlacementMode.Relative);
                     }
                     else if (targetItem is LayoutGroup)
                     {
+                        // B. Si on survole l'en-tête du groupe lui-même
                         var firstTabItem = targetGrp.SubTabs.FirstOrDefault();
                         if (firstTabItem != null)
                         {
@@ -511,6 +535,7 @@ namespace SioForgeCAD.Forms
                     }
                     else if (targetItem is LayoutTab targetTabInside)
                     {
+                        // C. Réorganisation à l'intérieur du même groupe
                         int baseIndex = targetGrp.IndexOf(targetTabInside);
                         int sourceIndex = targetGrp.IndexOf(sTab);
                         CalculateInsertionIndex(e, targetContainer, baseIndex, out bool isRightHalf);
@@ -526,6 +551,7 @@ namespace SioForgeCAD.Forms
                         }
                     }
                 }
+                // --- CAS 2 : Déplacement entre éléments de la LISTE PRINCIPALE (Hors groupes) ---
                 else if (Items.Contains(targetItem) && targetItem != sourceItem)
                 {
                     int baseIndex = Items.IndexOf(targetItem);
@@ -553,13 +579,13 @@ namespace SioForgeCAD.Forms
 
         protected override void OnDrop(DragEventArgs e)
         {
+            Debug.WriteLine("OnDrop");
             base.OnDrop(e);
-            DragDropEnd();
 
+            if (!(e.Data.GetData("SelectedItems") is List<LayoutItem> sourceItems) || sourceItems.Count == 0) return;
+            DragDropEnd();
             try
             {
-                if (!(e.Data.GetData("SelectedItems") is List<LayoutItem> sourceItems) || sourceItems.Count == 0) return;
-
                 var targetElement = e.OriginalSource as FrameworkElement;
                 var targetContainer = UIHelper.GetVisualParent<ContentPresenter>(targetElement);
                 var targetParentContainer = UIHelper.GetVisualParent<ContentPresenter>(targetContainer);
@@ -596,7 +622,7 @@ namespace SioForgeCAD.Forms
                     // 3. Suppression et Réinsertion
                     var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
 
-                    foreach (var item in itemsToProcess) RemoveFromAll(item);
+                    foreach (var item in itemsToProcess) RemoveFromAll(item, true, false);
 
                     for (int i = 0; i < itemsToProcess.Count; i++)
                     {
@@ -621,10 +647,10 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private void RemoveFromAll(LayoutItem item)
+        private void RemoveFromAll(LayoutItem item, bool RemoveFromRegulars, bool RemoveFromPinneds)
         {
-            Items.Remove(item);
-            PinnedItems.Remove(item);
+            if (RemoveFromRegulars) Items.Remove(item);
+            if (RemoveFromPinneds) PinnedItems.Remove(item);
             if (item is LayoutTab tab && tab.ParentGroup != null) tab.ParentGroup.Remove(tab);
         }
 
@@ -688,6 +714,7 @@ namespace SioForgeCAD.Forms
 
         private void DragDropEnd()
         {
+            Debug.WriteLine("DragDropEnd");
             DragIndicator.IsOpen = false;
             if (_ghostWindow != null)
             {
@@ -843,7 +870,7 @@ namespace SioForgeCAD.Forms
         {
             if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement fe && fe.DataContext is LayoutTab tab)
             {
-                var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel);
+                var targetTabs = GetTargetedTabsForContextMenu(sender);
 
                 foreach (MenuItem menuItem in menu.Items.OfType<MenuItem>())
                 {
@@ -863,7 +890,8 @@ namespace SioForgeCAD.Forms
                             menuItem.IsEnabled = targetTabs.Count > 1;
                             break;
                         case "TabMenuItem_CreateGp":
-                            menuItem.IsEnabled = !tab.IsModel && !tab.IsInGroup;
+                            var ct = targetTabs.Count(t => t.IsInGroup);
+                            menuItem.IsEnabled = !tab.IsModel && ct <= 0;
                             break;
                     }
                 }
@@ -960,7 +988,7 @@ namespace SioForgeCAD.Forms
 
             foreach (var tab in targetTabs)
             {
-                RemoveFromAll(tab);
+                RemoveFromAll(tab, true, false);
                 newGroup.Add(tab);
             }
 
