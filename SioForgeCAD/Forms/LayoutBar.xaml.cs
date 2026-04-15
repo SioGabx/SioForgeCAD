@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using static SioForgeCAD.Commun.Mist.User32PInvoke;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
@@ -279,13 +280,9 @@ namespace SioForgeCAD.Forms
 
         private static void ExpandLayoutItemGroup(LayoutItem item, bool IsExpanded)
         {
-            if (item is LayoutTab tab && tab.IsInGroup && tab.ParentGroup is LayoutGroup gp)
+            if (item is LayoutGroup gp)
             {
                 gp.IsExpanded = IsExpanded;
-            }
-            else if (item is LayoutGroup gp2)
-            {
-                gp2.IsExpanded = IsExpanded;
             }
         }
 
@@ -828,8 +825,24 @@ namespace SioForgeCAD.Forms
 
         private void TabScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta > 0) TabScrollViewer.LineLeft();
-            else TabScrollViewer.LineRight();
+            // Calculate the target position
+            double scrollStep = e.Delta * -2;
+            double targetOffset = TabScrollViewer.HorizontalOffset + scrollStep;
+
+            targetOffset = Math.Max(0, Math.Min(targetOffset, TabScrollViewer.ScrollableWidth));
+
+            DoubleAnimation scrollAnimation = new DoubleAnimation
+            {
+                From = TabScrollViewer.HorizontalOffset,
+                To = targetOffset,
+                Duration = TimeSpan.FromMilliseconds(200),
+                // QuadraticEase makes the start/stop feel natural rather than robotic
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            // We use BeginAnimation on a dummy dependency property
+            TabScrollViewer.BeginAnimation(ScrollHelper.HorizontalOffsetProperty, scrollAnimation);
+
             e.Handled = true;
         }
 
@@ -1272,4 +1285,22 @@ namespace SioForgeCAD.Forms
     }
 
     #endregion
+
+    public static class ScrollHelper
+    {
+        public static readonly DependencyProperty HorizontalOffsetProperty =
+            DependencyProperty.RegisterAttached("HorizontalOffset", typeof(double), typeof(ScrollHelper),
+                new PropertyMetadata(0.0, OnHorizontalOffsetChanged));
+
+        public static void SetHorizontalOffset(DependencyObject target, double value)
+            => target.SetValue(HorizontalOffsetProperty, value);
+
+        private static void OnHorizontalOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ScrollViewer viewer)
+            {
+                viewer.ScrollToHorizontalOffset((double)e.NewValue);
+            }
+        }
+    }
 }

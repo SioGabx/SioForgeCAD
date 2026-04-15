@@ -220,6 +220,7 @@
     <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
     <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Commun\Mist\Geometry\PolygonOperations\Slice.cs" />
+    <Compile Include="Commun\Mist\UI\WPFScrollBehavior.cs" />
     <Compile Include="Commun\Mist\UI\WPFValueConverter.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
