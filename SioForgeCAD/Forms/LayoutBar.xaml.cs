@@ -45,7 +45,7 @@ namespace SioForgeCAD.Forms
         private LayoutItem _lastSelectedItem;
 
         // Variables Drag & Drop
-        private Point _dragStart;
+        private Point? _dragStart;
         private bool _isDragging;
         private LayoutItem _dragSource;
 
@@ -277,6 +277,18 @@ namespace SioForgeCAD.Forms
             });
         }
 
+        private static void ExpandLayoutItemGroup(LayoutItem item, bool IsExpanded)
+        {
+            if (item is LayoutTab tab && tab.IsInGroup && tab.ParentGroup is LayoutGroup gp)
+            {
+                gp.IsExpanded = IsExpanded;
+            }
+            else if (item is LayoutGroup gp2)
+            {
+                gp2.IsExpanded = IsExpanded;
+            }
+        }
+
         private bool TryCreateNewLayout(string title)
         {
             if (IsSyncing) return false;
@@ -303,7 +315,8 @@ namespace SioForgeCAD.Forms
         {
             if ((sender as FrameworkElement)?.DataContext is LayoutItem clickedItem)
             {
-                _dragStart = e.GetPosition(null);
+                _dragStart = e.GetPosition(this);
+                Debug.WriteLine("_dragStart to " + _dragStart.ToString());
                 _dragSource = GetTabFromRegularList(clickedItem);
                 _isDragging = false;
             }
@@ -437,14 +450,15 @@ namespace SioForgeCAD.Forms
 
         #region Drag & Drop
 
-        protected override void OnPreviewMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnPreviewMouseMove(e);
+            base.OnMouseMove(e);
 
-            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging && _dragSource != null)
+            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging && _dragSource != null && _dragStart is Point dragStart)
             {
-                Vector diff = _dragStart - e.GetPosition(null);
-
+                Point currentPos = e.GetPosition(this);
+                Vector diff = dragStart - currentPos;
+                Debug.WriteLine("check _dragStart + current pos " + currentPos);
                 if (Math.Abs(diff.X) > DRAG_THRESHOLD || Math.Abs(diff.Y) > DRAG_THRESHOLD)
                 {
                     _isDragging = true;
@@ -461,13 +475,9 @@ namespace SioForgeCAD.Forms
                         .ToList();
 
                     //Close all groups for preview
-                    foreach (var item in selectedItems)
-                    {
-                        if (item is LayoutTab tab && tab.IsInGroup && tab.ParentGroup is LayoutGroup gp)
-                        {
-                            gp.IsExpanded = false;
-                        }
-                    }
+                    selectedItems.ForEach(t => ExpandLayoutItemGroup(t, false));
+
+                    Debug.WriteLine("CreatePreviewWindow");
                     CreatePreviewWindow(selectedItems);
                     _autoScrollTimer.Start();
 
@@ -870,6 +880,8 @@ namespace SioForgeCAD.Forms
         {
             if (sender is ContextMenu menu && menu.PlacementTarget is FrameworkElement fe && fe.DataContext is LayoutTab tab)
             {
+                _dragStart = null; //avoid drag
+                Debug.WriteLine("_dragStart to null");
                 var targetTabs = GetTargetedTabsForContextMenu(sender);
 
                 foreach (MenuItem menuItem in menu.Items.OfType<MenuItem>())

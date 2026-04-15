@@ -207,8 +207,8 @@
                 Height="28"
                 Cursor="Hand"
                 MouseLeftButtonDown="Item_MouseLeftButtonDown"
-                ToolTipOpening="Item_ToolTipOpening"
-                MouseLeftButtonUp="Item_MouseLeftButtonUp">
+                MouseLeftButtonUp="Item_MouseLeftButtonUp"
+                ToolTipOpening="Item_ToolTipOpening">
 
                 <Grid.ContextMenu>
                     <ContextMenu Opened="TabContextMenu_Opened">
@@ -277,9 +277,16 @@
 
                 <Grid.ToolTip>
                     <ToolTip Placement="Top" VerticalOffset="-2">
-                        <Border Padding="6" Background="{StaticResource TabBarBackground}" 
-                    BorderBrush="{StaticResource TabBackground}" BorderThickness="1">
-                            <Image x:Name="TooltipImage" Stretch="Uniform" MaxWidth="300" MaxHeight="200"/>
+                        <Border
+                            Padding="6"
+                            Background="{StaticResource TabBarBackground}"
+                            BorderBrush="{StaticResource TabBackground}"
+                            BorderThickness="1">
+                            <Image
+                                x:Name="TooltipImage"
+                                MaxWidth="300"
+                                MaxHeight="200"
+                                Stretch="Uniform" />
                         </Border>
                     </ToolTip>
                 </Grid.ToolTip>
