@@ -41,20 +41,40 @@ namespace SioForgeCAD.Functions
             StringBuilder svgUses = new StringBuilder();
             Dictionary<ObjectId, SymbolData> processedBlocks = new Dictionary<ObjectId, SymbolData>();
 
+            // Récupération de la matrice de transformation Système Général (WCS) -> Système Utilisateur (SCU)
+            Matrix3d wcsToUcs = ed.CurrentUserCoordinateSystem.Inverse();
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                // 1. Périmètre et Origine
+                // 1. Périmètre et Origine par rapport au SCU
                 Polyline perimeter = tr.GetObject(perimeterId, OpenMode.ForRead) as Polyline;
                 if (perimeter == null) return;
 
-                Extents3d perimeterExtents = perimeter.GeometricExtents;
-                double originX = perimeterExtents.MinPoint.X;
-                double originY = perimeterExtents.MaxPoint.Y;
+                double minX = double.MaxValue, minY = double.MaxValue;
+                double maxX = double.MinValue, maxY = double.MinValue;
+                List<Point2d> perimeterUcsPoints = new List<Point2d>();
 
-                double svgWidth = (perimeterExtents.MaxPoint.X - perimeterExtents.MinPoint.X) * multiplier;
-                double svgHeight = (perimeterExtents.MaxPoint.Y - perimeterExtents.MinPoint.Y) * multiplier;
+                // Calcul de l'encombrement du périmètre dans le référentiel SCU
+                for (int i = 0; i < perimeter.NumberOfVertices; i++)
+                {
+                    Point3d wcsPt = perimeter.GetPoint3dAt(i);
+                    Point3d ucsPt = wcsPt.TransformBy(wcsToUcs);
 
-                string svgPerimeter = GeneratePerimeterSvg(perimeter, originX, originY, multiplier);
+                    if (ucsPt.X < minX) minX = ucsPt.X;
+                    if (ucsPt.Y < minY) minY = ucsPt.Y;
+                    if (ucsPt.X > maxX) maxX = ucsPt.X;
+                    if (ucsPt.Y > maxY) maxY = ucsPt.Y;
+
+                    perimeterUcsPoints.Add(new Point2d(ucsPt.X, ucsPt.Y));
+                }
+
+                double originX = minX;
+                double originY = maxY;
+
+                double svgWidth = (maxX - minX) * multiplier;
+                double svgHeight = (maxY - minY) * multiplier;
+
+                string svgPerimeter = GeneratePerimeterSvg(perimeterUcsPoints, originX, originY, multiplier);
 
                 // 2. Traitement des blocs
                 foreach (SelectedObject selObj in selResult.Value)
@@ -69,15 +89,16 @@ namespace SioForgeCAD.Functions
                     string blockName = "VEG_" + Regex.Replace(rawName, "[^a-zA-Z0-9_\\-]", "_");
 
                     // Définition du symbole (Mise en cache)
+                    // Note: La définition interne du bloc n'a pas besoin de connaître le SCU, elle reste dans son espace local
                     if (!processedBlocks.ContainsKey(btrId))
                     {
                         SymbolData sData = ProcessBlockDefinition(tr, btrId, blockName, multiplier, svgDefs);
                         processedBlocks.Add(btrId, sData);
                     }
 
-                    // Placement de l'instance
+                    // Placement de l'instance dans le SCU
                     SymbolData symData = processedBlocks[btrId];
-                    svgUses.AppendLine(GenerateUseSvg(blkRef, symData, originX, originY, multiplier));
+                    svgUses.AppendLine(GenerateUseSvg(blkRef, symData, originX, originY, multiplier, wcsToUcs));
                 }
                 tr.Commit();
 
@@ -127,13 +148,12 @@ namespace SioForgeCAD.Functions
             return true;
         }
 
-        private static string GeneratePerimeterSvg(Polyline perimeter, double originX, double originY, double multiplier)
+        private static string GeneratePerimeterSvg(List<Point2d> ucsPoints, double originX, double originY, double multiplier)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("    <polygon points=\"");
-            for (int i = 0; i < perimeter.NumberOfVertices; i++)
+            foreach (var pt in ucsPoints)
             {
-                Point2d pt = perimeter.GetPoint2dAt(i);
                 double sx = (pt.X - originX) * multiplier;
                 double sy = (originY - pt.Y) * multiplier;
                 sb.Append($"{F(sx)},{F(sy)} ");
@@ -238,21 +258,25 @@ namespace SioForgeCAD.Functions
                     return $"        <path d=\"{pathData.ToString().Trim()}\" style=\"fill:#E7E7E7;stroke:none;\" />";
                 }
             }
-            return null; // Entité non supportée
+            return null;
         }
 
-        private static string GenerateUseSvg(BlockReference blkRef, SymbolData symData, double originX, double originY, double multiplier)
+        private static string GenerateUseSvg(BlockReference blkRef, SymbolData symData, double originX, double originY, double multiplier, Matrix3d wcsToUcs)
         {
-            double sX = blkRef.ScaleFactors.X;
-            double sY = blkRef.ScaleFactors.Y;
-            double rot = blkRef.Rotation;
+            // Matrice combinée : De l'espace du bloc vers le SCG (BlockTransform), puis du SCG vers le SCU (wcsToUcs)
+            Matrix3d blockToUcs = wcsToUcs * blkRef.BlockTransform;
 
-            double a = sX * Math.Cos(rot);
-            double b = -sX * Math.Sin(rot);
-            double c = -sY * Math.Sin(rot);
-            double d = -sY * Math.Cos(rot);
-            double e = (blkRef.Position.X - originX) * multiplier;
-            double f = (originY - blkRef.Position.Y) * multiplier;
+            // Projection de la matrice 3D AutoCAD vers la matrice 2D SVG
+            // SVG Matrice = [a c e]
+            //               [b d f]
+            double a = blockToUcs[0, 0];
+            double b = -blockToUcs[1, 0]; // Négatif car l'axe Y SVG est inversé (vers le bas)
+            double c = blockToUcs[0, 1];
+            double d = -blockToUcs[1, 1]; // Négatif car l'axe Y SVG est inversé
+
+            // Translation prenant en compte l'origine locale du périmètre
+            double e = (blockToUcs[0, 3] - originX) * multiplier;
+            double f = (originY - blockToUcs[1, 3]) * multiplier;
 
             return $"    <use xlink:href=\"#{symData.Id}\" x=\"{F(symData.MinX)}\" y=\"{F(symData.MinY)}\" width=\"{F(symData.Width)}\" height=\"{F(symData.Height)}\" transform=\"matrix({F(a)} {F(b)} {F(c)} {F(d)} {F(e)} {F(f)})\" style=\"overflow:visible;\" />";
         }
@@ -273,9 +297,6 @@ namespace SioForgeCAD.Functions
 
         // --- UTILITAIRES ---
 
-        /// <summary>
-        /// Formate un double avec un point décimal et un maximum de 4 décimales.
-        /// </summary>
         private static string F(double value)
         {
             return value.ToString("0.####", CultureInfo.InvariantCulture);
