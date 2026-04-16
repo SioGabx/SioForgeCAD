@@ -54,7 +54,10 @@ namespace SioForgeCAD.Functions
             if (pdr.Status != PromptStatus.OK) return;
 
             double scaleFactor = pdr.Value;
-            double multiplier = 1000.0 / scaleFactor;
+            // 1m CAD = 1000mm. On divise par l'échelle pour avoir les mm sur papier.
+            // Ensuite, on convertit ces mm en Points (Pixels Illustrator) avec 72 / 25.4
+            double mmToPt = 72.0 / 25.4;
+            double multiplier = (1000.0 / scaleFactor) * mmToPt;
 
             StringBuilder svgDefs = new StringBuilder();
             StringBuilder svgUses = new StringBuilder();
@@ -235,9 +238,12 @@ namespace SioForgeCAD.Functions
                 // --- 5. ASSEMBLAGE ---
                 StringBuilder finalSvg = new StringBuilder();
                 finalSvg.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+
+                // On ajoute x="0px" y="0px" et on formate la width et height avec "px"
                 finalSvg.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" " +
-                    "viewBox=\"0 0 {0} {1}\" width=\"{0}px\" height=\"{1}px\">", svgWidth, svgHeight));
+                    "x=\"0px\" y=\"0px\" width=\"{0}px\" height=\"{1}px\" viewBox=\"0 0 {0} {1}\" style=\"enable-background:new 0 0 {0} {1};\" xml:space=\"preserve\">",
+                    svgWidth, svgHeight));
 
                 finalSvg.AppendLine("<defs>");
                 finalSvg.Append(svgDefs.ToString());
