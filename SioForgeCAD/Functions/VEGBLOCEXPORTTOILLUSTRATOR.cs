@@ -162,6 +162,27 @@ namespace SioForgeCAD.Functions
             return sb.ToString();
         }
 
+        // --- MÉTHODE GenerateUseSvg MODIFIÉE ---
+        private static string GenerateUseSvg(BlockReference blkRef, SymbolData symData, double originX, double originY, double multiplier, Matrix3d wcsToUcs)
+        {
+            // 1. Calcul de la position de l'insertion dans le SCU
+            Point3d insPtWcs = blkRef.Position;
+            Point3d insPtUcs = insPtWcs.TransformBy(wcsToUcs);
+
+            // 2. Conversion en coordonnées SVG (Y inversé par rapport à l'origine du périmètre)
+            double svgX = (insPtUcs.X - originX) * multiplier;
+            double svgY = (originY - insPtUcs.Y) * multiplier;
+
+            // 3. Ajustement : Le x,y d'un <use> cible le coin haut-gauche du viewBox du symbole.
+            // On doit ajouter le décalage (MinX, MinY) du symbole pour que le point d'insertion reste correct.
+            double finalX = svgX + symData.MinX;
+            double finalY = svgY + symData.MinY;
+
+            // On retourne le tag sans l'attribut transform
+            return $"    <use xlink:href=\"#{symData.Id}\" x=\"{F(finalX)}\" y=\"{F(finalY)}\" width=\"{F(symData.Width)}\" height=\"{F(symData.Height)}\" />";
+        }
+
+        // --- MÉTHODE ProcessBlockDefinition MODIFIÉE ---
         private static SymbolData ProcessBlockDefinition(Transaction tr, ObjectId btrId, string blockName, double multiplier, StringBuilder svgDefs)
         {
             BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
@@ -169,6 +190,7 @@ namespace SioForgeCAD.Functions
             Extents3d blockExtents = new Extents3d();
             bool hasBlockExtents = false;
 
+            // Calcul des extents pour définir le viewBox
             foreach (ObjectId entId in btr)
             {
                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
@@ -177,67 +199,94 @@ namespace SioForgeCAD.Functions
                     if (!hasBlockExtents) { blockExtents = ent.GeometricExtents; hasBlockExtents = true; }
                     else { blockExtents.AddExtents(ent.GeometricExtents); }
                 }
-                catch { /* Ignore les entités non géométriques */ }
+                catch { }
 
-                string entitySvg = EntityToSvg(ent, multiplier);
+                // Conversion avec inversion de l'axe Y intégrée
+                string entitySvg = EntityToSvgInverted(ent, multiplier);
                 if (!string.IsNullOrEmpty(entitySvg))
-                {
                     innerGeometries.AppendLine(entitySvg);
-                }
             }
 
             SymbolData sData = new SymbolData { Id = blockName, MinX = 0, MinY = 0, Width = 100, Height = 100 };
             if (hasBlockExtents)
             {
+                // En SVG inversé, le MinY devient le point le plus haut (donc lié au Max Y AutoCAD)
                 sData.MinX = blockExtents.MinPoint.X * multiplier;
                 sData.MinY = -blockExtents.MaxPoint.Y * multiplier;
                 sData.Width = (blockExtents.MaxPoint.X - blockExtents.MinPoint.X) * multiplier;
                 sData.Height = (blockExtents.MaxPoint.Y - blockExtents.MinPoint.Y) * multiplier;
             }
 
-            svgDefs.AppendLine($"    <symbol id=\"{sData.Id}\" viewBox=\"{F(sData.MinX)} {F(sData.MinY)} {F(sData.Width)} {F(sData.Height)}\" style=\"overflow:visible;\">");
+            svgDefs.AppendLine($"    <symbol id=\"{sData.Id}\" viewBox=\"{F(sData.MinX)} {F(sData.MinY)} {F(sData.Width)} {F(sData.Height)}\" overflow=\"visible\">");
             svgDefs.Append(innerGeometries.ToString());
             svgDefs.AppendLine("    </symbol>");
 
             return sData;
         }
 
-        private static string EntityToSvg(Entity ent, double multiplier)
+        // --- NOUVELLE MÉTHODE POUR LA GÉOMÉTRIE INVERSÉE ---
+        private static string EntityToSvgInverted(Entity ent, double multiplier)
         {
-            string style = "fill:none;stroke:#333333;stroke-width:0.5;";
-            byte alphaValue = ent.Transparency.IsByAlpha ? ent.Transparency.Alpha : (byte)255;
+            // Préparation du style de base
+            string strokeColor = "#333333";
+            string style = $"fill:none;stroke:{strokeColor};stroke-width:0.5;";
 
+            // Gestion de la transparence (Alpha)
+            byte alphaValue = ent.Transparency.IsByAlpha ? ent.Transparency.Alpha : (byte)255;
             if (alphaValue < 255)
             {
                 style += $"opacity:{F(alphaValue / 255.0)};";
             }
 
+            // 1. CERCLES
             if (ent is Circle circle)
             {
-                return $"        <circle cx=\"{F(circle.Center.X * multiplier)}\" cy=\"{F(circle.Center.Y * multiplier)}\" r=\"{F(circle.Radius * multiplier)}\" style=\"{style}\" />";
+                return $"        <circle cx=\"{F(circle.Center.X * multiplier)}\" cy=\"{F(-circle.Center.Y * multiplier)}\" r=\"{F(circle.Radius * multiplier)}\" style=\"{style}\" />";
             }
+
+            // 2. POLYLIGNES
             else if (ent is Polyline poly)
             {
                 StringBuilder pts = new StringBuilder();
                 for (int i = 0; i < poly.NumberOfVertices; i++)
                 {
                     Point2d pt = poly.GetPoint2dAt(i);
-                    pts.Append($"{F(pt.X * multiplier)},{F(pt.Y * multiplier)} ");
+                    // Inversion de l'axe Y : -pt.Y
+                    pts.Append($"{F(pt.X * multiplier)},{F(-pt.Y * multiplier)} ");
                 }
                 string tag = poly.Closed ? "polygon" : "polyline";
                 return $"        <{tag} points=\"{pts.ToString().Trim()}\" style=\"{style}\" />";
             }
+
+            // 3. TEXTE SIMPLE (DBText)
             else if (ent is DBText dbText)
             {
                 string text = SecurityElement.Escape(dbText.TextString);
-                return $"        <text transform=\"translate({F(dbText.Position.X * multiplier)} {F(dbText.Position.Y * multiplier)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(dbText.Height * multiplier)}\" fill=\"#333333\">{text}</text>";
+                double posX = dbText.Position.X * multiplier;
+                double posY = -dbText.Position.Y * multiplier; // Inversion Y
+                double fontSize = dbText.Height * multiplier;
+
+                // Note : On n'utilise pas de scale(1 -1) ici pour que le texte reste lisible.
+                // L'ancrage est mis à 'middle' pour correspondre aux blocs de végétation centrés.
+                return $"        <text x=\"{F(posX)}\" y=\"{F(posY)}\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
             }
+
+            // 4. TEXTE MULTI-LIGNE (MText)
             else if (ent is MText mText)
             {
-                string text = SecurityElement.Escape(mText.Text);
-                return $"        <text transform=\"translate({F(mText.Location.X * multiplier)} {F(mText.Location.Y * multiplier)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(mText.TextHeight * multiplier)}\" fill=\"#333333\">{text}</text>";
+                // Nettoyage des codes de formatage AutoCAD (\P, \f, etc.)
+                string cleanText = Regex.Replace(mText.Contents, @"\\P|\\f[^;]*;|\\L|\\l|\\S[^;]*;|\\T[^;]*;|\\Q[^;]*;|\\W[^;]*;|\\A[^;]*;|\\H[^;]*;|\\C[^;]*;|[{}]", " ");
+                string text = SecurityElement.Escape(cleanText.Trim());
+
+                double posX = mText.Location.X * multiplier;
+                double posY = -mText.Location.Y * multiplier; // Inversion Y
+                double fontSize = mText.TextHeight * multiplier;
+
+                return $"        <text x=\"{F(posX)}\" y=\"{F(posY)}\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
             }
-            else if (ent is Hatch hatch && hatch.Associative)
+
+            // 5. HACHURES (Hatch)
+            else if (ent is Hatch hatch)
             {
                 StringBuilder pathData = new StringBuilder();
                 for (int i = 0; i < hatch.NumberOfLoops; i++)
@@ -245,40 +294,25 @@ namespace SioForgeCAD.Functions
                     HatchLoop loop = hatch.GetLoopAt(i);
                     if (loop.IsPolyline)
                     {
+                        bool first = true;
                         foreach (BulgeVertex bv in loop.Polyline)
                         {
-                            string cmd = pathData.Length == 0 ? "M" : "L";
-                            pathData.Append($"{cmd}{F(bv.Vertex.X * multiplier)},{F(bv.Vertex.Y * multiplier)} ");
+                            string cmd = first ? "M" : "L";
+                            pathData.Append($"{cmd}{F(bv.Vertex.X * multiplier)},{F(-bv.Vertex.Y * multiplier)} ");
+                            first = false;
                         }
                         pathData.Append("Z ");
                     }
                 }
+
                 if (pathData.Length > 0)
                 {
-                    return $"        <path d=\"{pathData.ToString().Trim()}\" style=\"fill:#E7E7E7;stroke:none;\" />";
+                    // Style de remplissage par défaut pour les hachures
+                    return $"        <path d=\"{pathData.ToString().Trim()}\" style=\"fill:#E7E7E7;stroke:none;opacity:0.6;\" />";
                 }
             }
-            return null;
-        }
 
-        private static string GenerateUseSvg(BlockReference blkRef, SymbolData symData, double originX, double originY, double multiplier, Matrix3d wcsToUcs)
-        {
-            // Matrice combinée : De l'espace du bloc vers le SCG (BlockTransform), puis du SCG vers le SCU (wcsToUcs)
-            Matrix3d blockToUcs = wcsToUcs * blkRef.BlockTransform;
-
-            // Projection de la matrice 3D AutoCAD vers la matrice 2D SVG
-            // SVG Matrice = [a c e]
-            //               [b d f]
-            double a = blockToUcs[0, 0];
-            double b = -blockToUcs[1, 0]; // Négatif car l'axe Y SVG est inversé (vers le bas)
-            double c = blockToUcs[0, 1];
-            double d = -blockToUcs[1, 1]; // Négatif car l'axe Y SVG est inversé
-
-            // Translation prenant en compte l'origine locale du périmètre
-            double e = (blockToUcs[0, 3] - originX) * multiplier;
-            double f = (originY - blockToUcs[1, 3]) * multiplier;
-
-            return $"    <use xlink:href=\"#{symData.Id}\" x=\"{F(symData.MinX)}\" y=\"{F(symData.MinY)}\" width=\"{F(symData.Width)}\" height=\"{F(symData.Height)}\" transform=\"matrix({F(a)} {F(b)} {F(c)} {F(d)} {F(e)} {F(f)})\" style=\"overflow:visible;\" />";
+            return null; // Entité non supportée
         }
 
         private static string BuildSvgDocument(double width, double height, string defs, string perimeter, string uses)
