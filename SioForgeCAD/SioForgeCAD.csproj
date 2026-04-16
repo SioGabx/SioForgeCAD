@@ -220,7 +220,6 @@
     <Compile Include="Commun\Mist\Geometry\CotePoints.cs" />
     <Compile Include="Commun\Mist\Geometry\Points.cs" />
     <Compile Include="Commun\Mist\Geometry\PolygonOperations\Slice.cs" />
-    <Compile Include="Commun\Mist\UI\WPFScrollBehavior.cs" />
     <Compile Include="Commun\Mist\UI\WPFValueConverter.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGrip.cs" />
     <Compile Include="Commun\Overrules\CopyGripOverrule\CopyGripOverrule.cs" />
@@ -295,6 +294,7 @@
     <Compile Include="Functions\LAYERMANAGERCTXNEWLAYERFROMSELECTED.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
+    <Compile Include="Functions\VEGBLOCEXPORTTOILLUSTRATOR.cs" />
     <Compile Include="Functions\VIEWGEOMETRYVERTEX.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />
     <Compile Include="Functions\COPYGEOMETRYTOCLIPBOARDFORINDESIGN.cs" />
