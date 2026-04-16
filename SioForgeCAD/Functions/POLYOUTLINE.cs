@@ -80,8 +80,8 @@ namespace SioForgeCAD.Functions
                     LineSegment2d lineSeg = sourcePoly.GetLineSegment2dAt(i);
                     Vector2d normal = (lineSeg.EndPoint - lineSeg.StartPoint).GetNormal().GetPerpendicularVector();
 
-                    leftSegments[i] = new LineSegment2d(lineSeg.StartPoint + normal * halfWidth, lineSeg.EndPoint + normal * halfWidth);
-                    rightSegments[i] = new LineSegment2d(lineSeg.StartPoint - normal * halfWidth, lineSeg.EndPoint - normal * halfWidth);
+                    leftSegments[i] = new LineSegment2d(lineSeg.StartPoint + (normal * halfWidth), lineSeg.EndPoint + (normal * halfWidth));
+                    rightSegments[i] = new LineSegment2d(lineSeg.StartPoint - (normal * halfWidth), lineSeg.EndPoint - (normal * halfWidth));
                 }
                 else if (type == SegmentType.Arc)
                 {

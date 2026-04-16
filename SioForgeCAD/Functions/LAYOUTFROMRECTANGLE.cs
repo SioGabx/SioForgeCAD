@@ -46,8 +46,8 @@ namespace SioForgeCAD.Functions
                 double modelWidth = ext.MaxPoint.X - ext.MinPoint.X;
                 double modelHeight = ext.MaxPoint.Y - ext.MinPoint.Y;
                 Point2d modelCenter = new Point2d(
-                    ext.MinPoint.X + modelWidth / 2,
-                    ext.MinPoint.Y + modelHeight / 2
+                    ext.MinPoint.X + (modelWidth / 2),
+                    ext.MinPoint.Y + (modelHeight / 2)
                 );
 
                 // 3. Calculs pour l'Espace Papier

@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun.Mist
     public static class Colors
     {
 
-        public static Color GetRealColor(Entity ent)
+        public static Color GetRealColor(this Entity ent)
         {
             Color DefinedColor;
             if (ent.Color.IsByLayer)
@@ -22,6 +22,15 @@ namespace SioForgeCAD.Commun.Mist
                 DefinedColor = ent.Color;
             }
             return Color.FromRgb(DefinedColor.ColorValue.R, DefinedColor.ColorValue.G, DefinedColor.ColorValue.B);
+        }
+
+
+        public static string ColorToHex(this Color acadColor)
+        {
+            if (acadColor == null) return "#000000"; // Or string.Empty
+
+            var rgb = acadColor.ColorValue;
+            return $"#{rgb.R:X2}{rgb.G:X2}{rgb.B:X2}";
         }
 
         public static (double R, double G, double B) SetBrightness(double BrightnessFactor, double R, double G, double B)
@@ -82,11 +91,11 @@ namespace SioForgeCAD.Commun.Mist
                 }
                 else if (max == color.Green)
                 {
-                    hue = 60d * (2d + (color.Blue - color.Red) / delta);
+                    hue = 60d * (2d + ((color.Blue - color.Red) / delta));
                 }
                 else
                 {
-                    hue = 60d * (4d + (color.Red - color.Green) / delta);
+                    hue = 60d * (4d + ((color.Red - color.Green) / delta));
                 }
 
                 // Si l'angle est négatif, on le ramène dans le cercle [0, 360[
