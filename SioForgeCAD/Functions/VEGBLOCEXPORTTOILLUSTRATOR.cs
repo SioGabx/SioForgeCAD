@@ -3,11 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
-
 using SioForgeCAD.Commun.Extensions;
-
-// using SioForgeCAD.Commun;            // À décommenter si besoin
-// using SioForgeCAD.Commun.Extensions; // À décommenter si besoin
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -102,7 +98,7 @@ namespace SioForgeCAD.Functions
                         string rawName = blkRef.IsDynamicBlock ? ((BlockTableRecord)tr.GetObject(blkRef.DynamicBlockTableRecord, OpenMode.ForRead)).Name : blkRef.Name;
                         string blockName = "VEG_" + Regex.Replace(rawName, "[^a-zA-Z0-9_\\-]", "_");
 
-                        // --- 3. DÉFINITION DU SYMBOLE (Avec calcul du ViewBox local) ---
+                        // --- 3. DÉFINITION DU SYMBOLE (Dimensions cuites à l'échelle Illustrator) ---
                         if (!processedBlocks.ContainsKey(btrId))
                         {
                             BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForRead) as BlockTableRecord;
@@ -115,7 +111,7 @@ namespace SioForgeCAD.Functions
                             {
                                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
 
-                                // Calcul de l'encombrement local
+                                // Calcul de l'encombrement local (toujours en coordonnées CAD ici)
                                 try
                                 {
                                     if (!hasBlockExtents) { blockExtents = ent.GeometricExtents; hasBlockExtents = true; }
@@ -123,8 +119,8 @@ namespace SioForgeCAD.Functions
                                 }
                                 catch { /* Ignore les entités non géométriques */ }
 
-                                double strokeWidth = Math.Max(0.1, 0.5 / multiplier);
-                                string style = $"fill:none;stroke:#333333;stroke-width:{strokeWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)};";
+                                // L'épaisseur de trait est maintenant en points Illustrator directs (ex: 0.5pt)
+                                string style = "fill:none;stroke:#333333;stroke-width:0.5;";
 
                                 byte alphaValue = 255;
                                 if (ent.Transparency.IsByAlpha) alphaValue = ent.Transparency.Alpha;
@@ -134,11 +130,12 @@ namespace SioForgeCAD.Functions
                                     style += $"opacity:{opacity.ToString(System.Globalization.CultureInfo.InvariantCulture)};";
                                 }
 
+                                // Application du MULTIPLIER directement sur les géométries
                                 if (ent is Circle circle)
                                 {
                                     innerGeometries.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                         "        <circle cx=\"{0}\" cy=\"{1}\" r=\"{2}\" style=\"{3}\" />",
-                                        circle.Center.X, circle.Center.Y, circle.Radius, style));
+                                        circle.Center.X * multiplier, circle.Center.Y * multiplier, circle.Radius * multiplier, style));
                                 }
                                 else if (ent is Polyline poly)
                                 {
@@ -146,7 +143,7 @@ namespace SioForgeCAD.Functions
                                     for (int i = 0; i < poly.NumberOfVertices; i++)
                                     {
                                         Point2d pt = poly.GetPoint2dAt(i);
-                                        pts.AppendFormat(System.Globalization.CultureInfo.InvariantCulture, "{0},{1} ", pt.X, pt.Y);
+                                        pts.AppendFormat(System.Globalization.CultureInfo.InvariantCulture, "{0},{1} ", pt.X * multiplier, pt.Y * multiplier);
                                     }
                                     innerGeometries.AppendLine($"        <{(poly.Closed ? "polygon" : "polyline")} points=\"{pts.ToString().Trim()}\" style=\"{style}\" />");
                                 }
@@ -154,13 +151,13 @@ namespace SioForgeCAD.Functions
                                 {
                                     innerGeometries.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                         "        <text transform=\"translate({0} {1}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{2}\" fill=\"#333333\">{3}</text>",
-                                        dbText.Position.X, dbText.Position.Y, dbText.Height, System.Security.SecurityElement.Escape(dbText.TextString)));
+                                        dbText.Position.X * multiplier, dbText.Position.Y * multiplier, dbText.Height * multiplier, System.Security.SecurityElement.Escape(dbText.TextString)));
                                 }
                                 else if (ent is MText mText)
                                 {
                                     innerGeometries.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                         "        <text transform=\"translate({0} {1}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{2}\" fill=\"#333333\">{3}</text>",
-                                        mText.Location.X, mText.Location.Y, mText.TextHeight, System.Security.SecurityElement.Escape(mText.Text)));
+                                        mText.Location.X * multiplier, mText.Location.Y * multiplier, mText.TextHeight * multiplier, System.Security.SecurityElement.Escape(mText.Text)));
                                 }
                                 else if (ent is Hatch hatch && hatch.Associative)
                                 {
@@ -173,7 +170,7 @@ namespace SioForgeCAD.Functions
                                             foreach (BulgeVertex bv in loop.Polyline)
                                             {
                                                 pathData.AppendFormat(System.Globalization.CultureInfo.InvariantCulture, "{0}{1},{2} ",
-                                                    (pathData.Length == 0 ? "M" : "L"), bv.Vertex.X, bv.Vertex.Y);
+                                                    (pathData.Length == 0 ? "M" : "L"), bv.Vertex.X * multiplier, bv.Vertex.Y * multiplier);
                                             }
                                             pathData.Append("Z ");
                                         }
@@ -186,18 +183,18 @@ namespace SioForgeCAD.Functions
                                 }
                             }
 
-                            // Définition des dimensions locales pour Illustrator
+                            // Définition des dimensions locales mises à l'échelle pour Illustrator
                             SymbolData sData = new SymbolData { Id = blockName, MinX = 0, MinY = 0, Width = 100, Height = 100 };
                             if (hasBlockExtents)
                             {
-                                sData.MinX = blockExtents.MinPoint.X;
-                                sData.MinY = -blockExtents.MaxPoint.Y; // Inversion du haut CAD vers SVG
-                                sData.Width = blockExtents.MaxPoint.X - blockExtents.MinPoint.X;
-                                sData.Height = blockExtents.MaxPoint.Y - blockExtents.MinPoint.Y;
+                                sData.MinX = blockExtents.MinPoint.X * multiplier;
+                                sData.MinY = -blockExtents.MaxPoint.Y * multiplier; // Inversion du haut
+                                sData.Width = (blockExtents.MaxPoint.X - blockExtents.MinPoint.X) * multiplier;
+                                sData.Height = (blockExtents.MaxPoint.Y - blockExtents.MinPoint.Y) * multiplier;
                             }
                             processedBlocks.Add(btrId, sData);
 
-                            // Création du <symbol> avec le viewBox exigé par Illustrator
+                            // Création du <symbol> avec le viewBox mis à l'échelle
                             svgDefs.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                 "    <symbol id=\"{0}\" viewBox=\"{1} {2} {3} {4}\" style=\"overflow:visible;\">",
                                 sData.Id, sData.MinX, sData.MinY, sData.Width, sData.Height));
@@ -206,22 +203,24 @@ namespace SioForgeCAD.Functions
                             svgDefs.AppendLine("    </symbol>");
                         }
 
-                        // --- 4. PLACEMENT DE L'INSTANCE (<use>) AVEC WIDTH/HEIGHT STRICTS ---
+                        // --- 4. PLACEMENT DE L'INSTANCE (<use>) ---
                         SymbolData symData = processedBlocks[btrId];
 
                         double sX = blkRef.ScaleFactors.X;
                         double sY = blkRef.ScaleFactors.Y;
                         double rot = blkRef.Rotation;
 
-                        double a = multiplier * sX * Math.Cos(rot);
-                        double b = -multiplier * sX * Math.Sin(rot);
-                        double c = -multiplier * sY * Math.Sin(rot);
-                        double d = -multiplier * sY * Math.Cos(rot);
+                        // La géométrie étant DÉJÀ à l'échelle, on ne met plus "multiplier" dans a, b, c, d.
+                        // On conserve juste l'échelle locale du bloc (sX, sY) et l'inversion d'axe Y.
+                        double a =  sX * Math.Cos(rot);
+                        double b = -sX * Math.Sin(rot);
+                        double c = -sY * Math.Sin(rot);
+                        double d =  -sY * Math.Cos(rot);
 
+                        // La position X/Y globale d'insertion subit toujours le multiplier pour le placement sur la feuille
                         double e = (blkRef.Position.X - originX) * multiplier;
                         double f = (originY - blkRef.Position.Y) * multiplier;
 
-                        // On injecte x, y, width et height calqués sur le ViewBox pour satisfaire Illustrator
                         svgUses.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "    <use xlink:href=\"#{0}\" x=\"{1}\" y=\"{2}\" width=\"{3}\" height=\"{4}\" transform=\"matrix({5} {6} {7} {8} {9} {10})\" style=\"overflow:visible;\" />",
                             symData.Id, symData.MinX, symData.MinY, symData.Width, symData.Height, a, b, c, d, e, f));
@@ -239,7 +238,6 @@ namespace SioForgeCAD.Functions
                 StringBuilder finalSvg = new StringBuilder();
                 finalSvg.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 
-                // On ajoute x="0px" y="0px" et on formate la width et height avec "px"
                 finalSvg.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" " +
                     "x=\"0px\" y=\"0px\" width=\"{0}px\" height=\"{1}px\" viewBox=\"0 0 {0} {1}\" style=\"enable-background:new 0 0 {0} {1};\" xml:space=\"preserve\">",
@@ -257,7 +255,7 @@ namespace SioForgeCAD.Functions
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ExportPlanVeg.svg");
                 File.WriteAllText(path, finalSvg.ToString(), Encoding.UTF8);
 
-                ed.WriteMessage($"\nExport SVG réussi (Dimensions et ViewBox intégrés pour Illustrator). Fichier : {path}");
+                ed.WriteMessage($"\nExport SVG réussi (Géométries internes à l'échelle Illustrator). Fichier : {path}");
             }
         }
     }
