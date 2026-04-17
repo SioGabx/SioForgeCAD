@@ -93,6 +93,23 @@ namespace SioForgeCAD.Functions
                         {
                             var BlockReference = BlockReferences.GetBlockReference(blockName, new Point3d(xPosition, yPosition, Point3d.Origin.Z));
                             var Infos = VEGBLOC.GetDataStore(BlockReference);
+                            var Layer = blockName;
+                            if (!Layers.CheckIfLayerExist(Layer))
+                            {
+                                Generic.WriteMessage($"Erreur détéctée sur le calque du bloc {blockName}, veuillez corriger le calque manuellement");
+                                ObjectIdCollection objectIdCollection = BlockReferences.GetAllBlockReferenceInstances(blockName, tr, db);
+                                var MostUsedLayer = Layers.GetLayerCountsFromCollection(objectIdCollection).FirstOrDefault();
+                                if (string.IsNullOrEmpty(MostUsedLayer.Key))
+                                {
+                                    Layers.CreateLayer(Layer, Color.FromColorIndex(ColorMethod.ByColor, 5), LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(0), true);
+                                }
+                                else
+                                {
+                                    Layer = MostUsedLayer.Key;
+                                }
+
+                            }
+
 
                             LegendPart.Add(new MText
                             {
@@ -102,7 +119,7 @@ namespace SioForgeCAD.Functions
                                 TextHeight = 0.25,
                                 Attachment = AttachmentPoint.MiddleLeft,
                                 Normal = Vector3d.ZAxis,
-                                Layer = blockName,
+                                Layer = Layer,
                                 Transparency = Generic.GetTransparencyFromAlpha(0),
                                 ColorIndex = 256
                             });
@@ -112,7 +129,7 @@ namespace SioForgeCAD.Functions
 
                             Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
                             BlockReference.TransformBy(scaleMatrix);
-                            BlockReference.Layer = blockName;
+                            BlockReference.Layer = Layer;
                             BlockReference.ColorIndex = 256;
                             LegendPart.Add(BlockReference);
                             yPosition -= rowSpacing;

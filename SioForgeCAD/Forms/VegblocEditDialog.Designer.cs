@@ -1,4 +1,7 @@
-﻿namespace SioForgeCAD.Forms
+﻿using System;
+using static SioForgeCAD.Functions.VEGBLOC;
+
+namespace SioForgeCAD.Forms
 {
     partial class VegblocEditDialog
     {
@@ -73,25 +76,11 @@
             // 
             // TypeInput
             // 
-            this.TypeInput.AutoCompleteCustomSource.AddRange(new string[] {
-            "ARBRES",
-            "CÉPÉES",
-            "ARBUSTES",
-            "GRIMPANTES",
-            "GRAMINÉES",
-            "VIVACES",
-            "BULBEUSES"});
+            this.TypeInput.AutoCompleteCustomSource.AddRange(Enum.GetNames(typeof(VegblocTypes)));
             this.TypeInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.TypeInput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.TypeInput.FormattingEnabled = true;
-            this.TypeInput.Items.AddRange(new object[] {
-            "ARBRES",
-            "CEPÉES",
-            "ARBUSTES",
-            "GRIMPANTES",
-            "GRAMINÉES",
-            "VIVACES",
-            "BULBEUSES"});
+            this.TypeInput.Items.AddRange(Enum.GetNames(typeof(VegblocTypes)));
             this.TypeInput.Location = new System.Drawing.Point(11, 116);
             this.TypeInput.Name = "TypeInput";
             this.TypeInput.Size = new System.Drawing.Size(392, 21);

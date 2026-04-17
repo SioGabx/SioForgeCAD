@@ -109,10 +109,10 @@ namespace SioForgeCAD.Functions
             StringBuilder innerGeometries = new StringBuilder();
             Extents3d ext = new Extents3d();
             bool hasExt = false;
-
             foreach (ObjectId entId in btr)
             {
                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
+                if (!(ent is Hatch || ent is DBText || ent is MText)) { continue; }
                 try
                 {
                     if (!hasExt) { ext = ent.GeometricExtents; hasExt = true; }
@@ -152,13 +152,11 @@ namespace SioForgeCAD.Functions
                 style += $"opacity:{F(alphaValue / 255.0)};";
             }
 
-            // 1. CERCLES
             if (ent is Circle circle)
             {
                 return $"<circle cx=\"{F(circle.Center.X * multiplier)}\" cy=\"{F(circle.Center.Y * multiplier)}\" r=\"{F(circle.Radius * multiplier)}\" style=\"{style}\" />";
             }
 
-            // 2. POLYLIGNES (Lignes, Rectangles, contours complexes)
             else if (ent is Polyline poly)
             {
                 StringBuilder pts = new StringBuilder();
@@ -170,21 +168,14 @@ namespace SioForgeCAD.Functions
                 string tag = poly.Closed ? "polygon" : "polyline";
                 return $"<{tag} points=\"{pts.ToString().Trim()}\" style=\"{style}\" />";
             }
-
-            // 3. TEXTE SIMPLE (DBText)
             else if (ent is DBText dbText)
             {
                 string text = SecurityElement.Escape(dbText.TextString);
                 double tx = dbText.Position.X * multiplier;
                 double ty = dbText.Position.Y * multiplier;
                 double fontSize = dbText.Height * multiplier;
-
-                // Note : On applique un scale(1, -1) local pour que le texte ne soit pas écrit 
-                // à l'envers à cause du flip global du conteneur <g>.
                 return $"<text transform=\"translate({F(tx)} {F(ty)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
             }
-
-            // 4. TEXTE MULTI-LIGNE (MText)
             else if (ent is MText mText)
             {
                 // Nettoyage des codes de formatage AutoCAD (\P, \f, etc.)
@@ -197,8 +188,6 @@ namespace SioForgeCAD.Functions
 
                 return $"<text transform=\"translate({F(tx)} {F(ty)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
             }
-
-            // 5. HACHURES (Hatch)
             else if (ent is Hatch hatch)
             {
                 StringBuilder pathData = new StringBuilder();

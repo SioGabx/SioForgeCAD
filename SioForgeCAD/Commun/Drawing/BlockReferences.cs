@@ -12,35 +12,40 @@ namespace SioForgeCAD.Commun.Drawing
 {
     public static class BlockReferences
     {
+        public static ObjectIdCollection GetAllBlockReferenceInstances(string Name, Transaction tr, Database db)
+        {
+            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+            ObjectIdCollection objectIdCollection = new ObjectIdCollection();
+
+            // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
+            foreach (ObjectId btrId in bt)
+            {
+                BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
+
+                // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
+                if (btr.IsAnonymous || (!btr.IsLayout && !btr.IsFromExternalReference))
+                {
+                    continue;
+                }
+
+                foreach (ObjectId entId in btr)
+                {
+                    Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
+                    if (ent is BlockReference br && br.GetBlockReferenceName() == Name)
+                    {
+                        objectIdCollection.Add(ent.ObjectId);
+                    }
+                }
+            }
+            return objectIdCollection;
+        }
         public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
         {
             Database db = Generic.GetDatabase();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-
-                // On parcourt tous les BlockTableRecord (ModelSpace, PaperSpace, blocs, etc.)
-                foreach (ObjectId btrId in bt)
-                {
-                    BlockTableRecord btr = tr.GetObject(btrId, OpenMode.ForWrite) as BlockTableRecord;
-
-                    // Ne pas traiter les blocs anonymes (ex: ceux créés par les hachures ou dynamiques internes)
-                    if (btr.IsAnonymous || (!btr.IsLayout && !btr.IsFromExternalReference))
-                    {
-                        continue;
-                    }
-
-                    foreach (ObjectId entId in btr)
-                    {
-                        Entity ent = entId.GetObject(OpenMode.ForRead) as Entity;
-                        if (ent is BlockReference br && br.GetBlockReferenceName() == OldBlockName)
-                        {
-                            objectIdCollection.Add(ent.ObjectId);
-                        }
-                    }
-                }
+                ObjectIdCollection objectIdCollection = GetAllBlockReferenceInstances(OldBlockName, tr, db);
                 ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation, PreserveProperties);
                 Purge(OldBlockName);
                 tr.Commit();

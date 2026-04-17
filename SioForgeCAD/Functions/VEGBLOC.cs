@@ -26,6 +26,18 @@ namespace SioForgeCAD.Functions
         {
             BlocName, CompleteName, Height, Width, Type, VegblocVersion
         }
+        public enum VegblocTypes
+        {
+            ARBRES,
+            FRUITIERS,
+            CÉPÉES,
+            ARBUSTES,
+            GRIMPANTES,
+            GRAMINÉES,
+            VIVACES,
+            FOUGÈRES,
+            BULBEUSES
+        }
         public static void Create()
         {
             VegblocDialog vegblocDialog = new VegblocDialog();
@@ -133,9 +145,19 @@ namespace SioForgeCAD.Functions
             return data.ToJson();
         }
 
+      
         public static Dictionary<DataStore, string> GetDataStore(BlockReference BlkRef)
         {
             string BlocDescription = BlkRef.GetDescription();
+            var DataStoreFromJson = GetDataStore(BlocDescription);
+            if (DataStoreFromJson != null)
+            {
+                return DataStoreFromJson;
+            }
+            return GetLEGACYDataStore(BlkRef);
+        }
+        public static Dictionary<DataStore, string> GetDataStore(string BlocDescription)
+        {
             if (string.IsNullOrWhiteSpace(BlocDescription))
             {
                 return null;
@@ -153,7 +175,7 @@ namespace SioForgeCAD.Functions
                 Debug.WriteLine(ex);
                 return null;
             }
-            return GetLEGACYDataStore(BlkRef);
+            return null;
             //return null;
         }
 

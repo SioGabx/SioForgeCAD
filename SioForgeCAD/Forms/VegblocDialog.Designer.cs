@@ -1,4 +1,7 @@
-﻿namespace SioForgeCAD.Forms
+﻿using System;
+using static SioForgeCAD.Functions.VEGBLOC;
+
+namespace SioForgeCAD.Forms
 {
     partial class VegblocDialog
     {
@@ -113,14 +116,7 @@
             this.TYPE.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.TYPE.FillWeight = 100F;
             this.TYPE.HeaderText = "Type";
-            this.TYPE.Items.AddRange(new object[] {
-            "ARBRES",
-            "CÉPÉES",
-            "ARBUSTES",
-            "GRIMPANTES",
-            "GRAMINÉES",
-            "VIVACES",
-            "BULBEUSES"});
+            this.TYPE.Items.AddRange(Enum.GetNames(typeof(VegblocTypes)));
             this.TYPE.MinimumWidth = 100;
             this.TYPE.Name = "TYPE";
             // 

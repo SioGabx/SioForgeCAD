@@ -96,6 +96,17 @@ namespace SioForgeCAD.Functions
                         Generic.WriteMessage("Opération annulée");
                         return;
                     }
+                    var OldLayer = Layers.GetLayerTableRecordByName(BlkRef.Layer);
+                    var LayerId = Layers.CreateLayer(OldBlockName, OldLayer.Color, OldLayer.LineWeight, OldLayer.Transparency, OldLayer.IsPlottable);
+                    ObjectIdCollection objectIdCollection = BlockReferences.GetAllBlockReferenceInstances(OldBlockName, tr, db);
+                    foreach (ObjectId item in objectIdCollection)
+                    {
+                        if (item.GetDBObject(OpenMode.ForWrite) is BlockReference BlkRefInstance)
+                        {
+                            BlkRefInstance.LayerId = LayerId;
+                        }
+                    }
+
                 }
 
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out string BlockData, out bool WasCreated);
@@ -130,6 +141,7 @@ namespace SioForgeCAD.Functions
                     Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
                     Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
+
                 var BlkDef = db.GetBlocDefinition(NewBlockName);
                 BlkDef.UpgradeOpen();
                 BlkDef.Comments = BlockData;

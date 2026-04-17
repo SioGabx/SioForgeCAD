@@ -2,9 +2,12 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.LayerManager;
+using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun.Extensions;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
@@ -138,6 +141,20 @@ namespace SioForgeCAD.Commun
             }
         }
 
+        public static LayerTableRecord GetLayerTableRecordByName(string layerName, Database db = null)
+        {
+            if (db == null)
+            {
+                db = Generic.GetDatabase();
+            }
+            var LayId = GetLayerIdByName(layerName, db);
+            if (LayId == ObjectId.Null)
+            {
+                return null;
+            }
+            return LayId.GetDBObject() as LayerTableRecord;
+        }
+
         public static bool CheckIfLayerExist(string layername)
         {
             Document doc = Generic.GetDocument();
@@ -150,11 +167,12 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static void CreateLayer(string Name, Color Color, LineWeight LineWeight, Transparency Transparence, bool IsPlottable)
+        public static ObjectId CreateLayer(string Name, Color Color, LineWeight LineWeight, Transparency Transparence, bool IsPlottable)
         {
             Database db = Generic.GetDatabase();
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
             {
+                ObjectId LayerId = ObjectId.Null;
                 LayerTable acLyrTbl = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
 
                 if (!acLyrTbl.Has(Name))
@@ -166,7 +184,7 @@ namespace SioForgeCAD.Commun
                         acLyrTblRec.IsPlottable = IsPlottable;
                         acLyrTblRec.LineWeight = LineWeight;
                         acLyrTbl.UpgradeOpen();
-                        acLyrTbl.Add(acLyrTblRec);
+                        LayerId = acLyrTbl.Add(acLyrTblRec);
                         acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
                         acLyrTblRec.Transparency = Transparence;
                     }
@@ -175,8 +193,11 @@ namespace SioForgeCAD.Commun
                 {
                     LayerTableRecord ltr = (LayerTableRecord)acTrans.GetObject(acLyrTbl[Name], OpenMode.ForWrite);
                     ltr.Name = Name;
+
+                    LayerId = ltr.ObjectId;
                 }
                 acTrans.Commit();
+                return LayerId;
             }
         }
 
@@ -313,6 +334,46 @@ namespace SioForgeCAD.Commun
             {
                 Generic.WriteMessage($"Impossible de supprimer le calque {sourceLayerName}: {ex.Message}");
             }
+        }
+
+        public static Dictionary<string, int> GetLayerCountsFromCollection(ObjectIdCollection ids)
+        {
+            var layerStats = new Dictionary<string, int>();
+
+            if (ids == null || ids.Count == 0)
+            {
+                return layerStats;
+            }
+
+            Database db = Generic.GetDatabase();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                foreach (ObjectId id in ids)
+                {
+                    if (id.IsValid && id.ObjectClass.IsDerivedFrom(RXClass.GetClass(typeof(Entity))))
+                    {
+                        Entity ent = tr.GetObject(id, OpenMode.ForRead) as Entity;
+
+                        if (ent != null)
+                        {
+                            string layerName = ent.Layer;
+
+                            if (layerStats.TryGetValue(layerName, out int value))
+                            {
+                                layerStats[layerName] = ++value;
+                            }
+                            else
+                            {
+                                layerStats[layerName] = 1;
+                            }
+                        }
+                    }
+                }
+                tr.Commit();
+            }
+
+            return layerStats.OrderByDescending(x => x.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         public static Color GetLayerColor(string LayerName)
