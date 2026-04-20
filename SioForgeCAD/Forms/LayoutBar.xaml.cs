@@ -27,6 +27,14 @@ namespace SioForgeCAD.Forms
 {
     public partial class LayoutBar : UserControl
     {
+        public enum DuplicatePosition
+        {
+            Beginning,
+            End,
+            Before,
+            After
+        }
+
         #region Propriétés et Variables
 
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
@@ -120,7 +128,15 @@ namespace SioForgeCAD.Forms
         #region Synchronisation AutoCAD <-> WPF
 
         private void OnDocumentActivated(object sender, DocumentCollectionEventArgs e) => ReloadTabs(e.Document);
-        private void OnLayoutsChanged(object sender, LayoutEventArgs e) => ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+
+        private bool _isDuplicating = false;
+        private void OnLayoutsChanged(object sender, LayoutEventArgs e)
+        {
+            if (!_isDuplicating)
+            {
+                ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+            }
+        }
         private void OnLayoutRenamed(object sender, LayoutRenamedEventArgs e) => ReloadTabs(Application.DocumentManager.MdiActiveDocument);
 
         private void OnLayoutSwitched(object sender, LayoutEventArgs e)
@@ -674,6 +690,28 @@ namespace SioForgeCAD.Forms
             return currentItemIndex;
         }
 
+        private void InsertItems(List<LayoutItem> itemsToInsert, LayoutGroup targetGroup, int startIndex)
+        {
+            for (int i = 0; i < itemsToInsert.Count; i++)
+            {
+                var item = itemsToInsert[i];
+
+                // Règle métier : Si on cible un groupe ET que l'élément est un onglet (un groupe ne va pas dans un groupe)
+                if (targetGroup != null && item is LayoutTab tab)
+                {
+                    int index = Math.Min(startIndex + i, targetGroup.SubTabs.Count);
+                    targetGroup.Insert(index, tab);
+                }
+                else
+                {
+                    // Insertion à la racine (Items)
+                    int index = Math.Min(startIndex, Items.Count);
+                    Items.Insert(index, item);
+                    startIndex++; // On incrémente l'index racine pour que les éléments suivants ne s'empilent pas à l'envers
+                }
+            }
+        }
+
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseLeftButtonUp(e);
@@ -773,7 +811,6 @@ namespace SioForgeCAD.Forms
                 TabScrollViewer.ScrollToHorizontalOffset(TabScrollViewer.HorizontalOffset + (scrollLeft ? -step : step));
             }
         }
-
         #endregion
 
         #region UI Events & Scrolling
@@ -859,6 +896,121 @@ namespace SioForgeCAD.Forms
             }
         }
 
+        private string GenerateUniqueLayoutName(string baseName)
+        {
+            string newName = $"{baseName} (Copie)";
+            int counter = 2;
+
+            while (LayoutManager.Current.LayoutExists(newName))
+            {
+                newName = $"{baseName} (Copie {counter})";
+                counter++;
+            }
+            return newName;
+        }
+
+        private string GenerateUniqueGroupName(string baseName)
+        {
+            string newName = $"{baseName} (Copie)";
+            int counter = 2;
+
+            // On vérifie l'existence du nom dans les éléments de niveau racine (Items)
+            while (Items.OfType<LayoutGroup>().Any(g => g.Title == newName))
+            {
+                newName = $"{baseName} (Copie {counter})";
+                counter++;
+            }
+            return newName;
+        }
+
+        private void InsertDuplicatedItems(List<LayoutItem> newItems, DuplicatePosition pos, LayoutItem targetItem)
+        {
+            int rootInsertIndex = Items.Count;
+            int groupInsertIndex = -1;
+            LayoutGroup targetGroup = null;
+
+            // Calcul de l'index de base en fonction de la cible
+            switch (pos)
+            {
+                case DuplicatePosition.Beginning:
+                    rootInsertIndex = 0;
+                    groupInsertIndex = 0; // Si applicable
+                    break;
+
+                case DuplicatePosition.End:
+                    rootInsertIndex = Items.Count;
+                    // groupInsertIndex reste à -1 (ajout à la fin)
+                    break;
+
+                case DuplicatePosition.Before:
+                    if (targetItem is LayoutTab tTabBefore && tTabBefore.IsInGroup)
+                    {
+                        targetGroup = tTabBefore.ParentGroup;
+                        groupInsertIndex = targetGroup.IndexOf(tTabBefore);
+                        rootInsertIndex = Items.IndexOf(targetGroup);
+                    }
+                    else
+                    {
+                        rootInsertIndex = targetItem != null ? Items.IndexOf(targetItem) : 0;
+                    }
+                    break;
+
+                case DuplicatePosition.After:
+                    if (targetItem is LayoutTab tTabAfter && tTabAfter.IsInGroup)
+                    {
+                        targetGroup = tTabAfter.ParentGroup;
+                        groupInsertIndex = targetGroup.IndexOf(tTabAfter) + 1;
+                        rootInsertIndex = Items.IndexOf(targetGroup) + 1;
+                    }
+                    else
+                    {
+                        rootInsertIndex = targetItem != null ? Items.IndexOf(targetItem) + 1 : Items.Count;
+                    }
+                    break;
+            }
+
+            if (rootInsertIndex < 0) rootInsertIndex = Items.Count;
+
+            // Insertion des éléments
+            for (int i = 0; i < newItems.Count; i++)
+            {
+                var item = newItems[i];
+
+                // Si c'est un onglet et qu'on cible l'intérieur d'un groupe
+                if (item is LayoutTab tab && targetGroup != null)
+                {
+                    int insertAt = groupInsertIndex >= 0 ? groupInsertIndex + i : targetGroup.SubTabs.Count;
+                    targetGroup.Insert(Math.Min(insertAt, targetGroup.SubTabs.Count), tab);
+                }
+                else
+                {
+                    // Soit c'est un groupe (qui ne peut pas aller dans un groupe), soit on cible la racine
+                    Items.Insert(Math.Min(rootInsertIndex, Items.Count), item);
+                    rootInsertIndex++; // On décale l'index racine pour le prochain élément
+                }
+            }
+        }
+
+        private LayoutTab DuplicateSingleTab(LayoutTab originalTab)
+        {
+            string newName = GenerateUniqueLayoutName(originalTab.Title);
+
+            // Clonage physique dans AutoCAD
+            LayoutManager.Current.CloneLayout(originalTab.Title, newName, 0);
+
+            // Création de l'objet WPF
+            var newLayoutId = LayoutManager.Current.GetLayoutId(newName);
+            return new LayoutTab
+            {
+                Title = newName,
+                IsModel = false,
+                IsPinned = false,
+                AutoCadData = newLayoutId
+            };
+        }
+
+
+
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
             if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
@@ -872,7 +1024,7 @@ namespace SioForgeCAD.Forms
         {
             if (sender is FrameworkElement fe && fe.ToolTip is ToolTip tt && fe.DataContext is LayoutTab tab)
             {
-                if (fe.ContextMenu?.IsOpen == true || LayoutBarRoot.OverflowToggle.IsChecked == true)
+                if (fe.ContextMenu?.IsOpen == true || OverflowToggle.IsChecked == true)
                 {
                     e.Handled = true;
                     return;
@@ -1100,7 +1252,102 @@ namespace SioForgeCAD.Forms
         }
 
         #endregion
+
+        private void ContextMenu_Duplicate_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Déterminer ce qui doit être dupliqué (un groupe entier OU des onglets sélectionnés)
+            var itemsToDuplicate = new List<LayoutItem>();
+
+            var selectedItems = GetVisibleItemsList(false) // true/false selon si vous autorisez la duplication d'onglets épinglés
+          .Where(i => i.IsSelected &&
+                      !(i is LayoutTab tab && (tab.IsModel || tab.ParentGroup?.IsSelected == true)))
+          .ToList();
+            if (selectedItems.Count > 0)
+            {
+                itemsToDuplicate.AddRange(selectedItems);
+            }
+            else
+            {
+                // Fallback de sécurité : si l'utilisateur fait un clic droit direct sur un élément 
+                // non sélectionné (ce qui ne devrait pas arriver souvent avec le comportement WPF)
+                var targetGroup = GetTargetedGroupForContextMenu(sender);
+                if (targetGroup != null)
+                {
+                    itemsToDuplicate.Add(targetGroup);
+                }
+                else
+                {
+                    itemsToDuplicate.AddRange(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+                }
+            }
+
+            if (itemsToDuplicate.Count == 0) return;
+
+            // -----------------------------------------------------------------------
+            // À FAIRE : Afficher la boîte de dialogue pour définir la position
+            // (userChoicePosition et userChoiceTarget)
+            // -----------------------------------------------------------------------
+            DuplicatePosition userChoicePosition = DuplicatePosition.After;
+            LayoutItem userChoiceTarget = itemsToDuplicate.Last();
+
+            _isDuplicating = true;
+
+            try
+            {
+                using (Generic.GetLock())
+                using (var tr = Generic.GetTrans())
+                {
+                    var newlyCreatedItems = new List<LayoutItem>();
+
+                    // 2. Traitement de chaque élément
+                    foreach (var item in itemsToDuplicate)
+                    {
+                        if (item is LayoutTab tab)
+                        {
+                            newlyCreatedItems.Add(DuplicateSingleTab(tab));
+                        }
+                        else if (item is LayoutGroup group)
+                        {
+                            // Duplication du conteneur Groupe
+                            var newGroup = new LayoutGroup
+                            {
+                                Title = GenerateUniqueGroupName(group.Title),
+                                IsExpanded = group.IsExpanded
+                            };
+
+                            // Duplication de chaque présentation contenue dans ce groupe
+                            foreach (var subTab in group.SubTabs)
+                            {
+                                var newSubTab = DuplicateSingleTab(subTab);
+                                newGroup.Add(newSubTab);
+                            }
+
+                            newlyCreatedItems.Add(newGroup);
+                        }
+                    }
+
+                    // 3. Insertion visuelle au bon endroit
+                    InsertDuplicatedItems(newlyCreatedItems, userChoicePosition, userChoiceTarget);
+
+                    tr.Commit();
+
+                    // 4. Synchronisation de l'ordre global (XData)
+                    SyncTabOrderToAutoCAD();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de la duplication : {ex.Message}");
+            }
+            finally
+            {
+                _isDuplicating = false;
+                ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+            }
+        }
     }
+
+
 
     #region Classes Utilitaires (Visual Tree)
 

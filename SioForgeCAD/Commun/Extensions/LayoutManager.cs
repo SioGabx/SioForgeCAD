@@ -14,7 +14,7 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class LayoutManagerExtensions
     {
-               public static BitmapSource GetLayoutImage(this LayoutManager lm, string Name)
+        public static BitmapSource GetLayoutImage(this LayoutManager lm, string Name)
         {
             var db = Generic.GetDatabase();
             var Doc = Generic.GetDocument();
