@@ -234,10 +234,8 @@
                             x:Name="TabMenuItem_Publish"
                             Click="ContextMenu_Publier_Click"
                             Header="Publier" />
-                        <MenuItem
-         x:Name="TabMenuItem_Duplicate"
-         Click="ContextMenu_Duplicate_Click"
-         Header="Dupliquer la sélection" />
+                        <MenuItem x:Name="TabMenuItem_Duplicate" Header="Dupliquer la sélection" />
+                        <MenuItem x:Name="TabMenuItem_Move" Header="Déplacer la sélection" />
                         <MenuItem
                             x:Name="TabMenuItem_Delete"
                             Click="ContextMenu_Supprimer_Click"

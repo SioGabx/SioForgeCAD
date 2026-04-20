@@ -65,7 +65,7 @@ namespace SioForgeCAD.Forms
             get
             {
                 var doc = Generic.GetDocument();
-                if (doc == null || doc.IsDisposed) return false;
+                if (doc?.IsDisposed != false) return false;
 
                 var sysVar = Generic.GetSystemVariable("TRACEMODE");
                 if (sysVar != null && (short)sysVar == 2) return false;
@@ -450,7 +450,7 @@ namespace SioForgeCAD.Forms
 
         private List<LayoutItem> GetVisibleItemsList(bool IncludePinnedItems = true)
         {
-            List<LayoutItem> list = new List<LayoutItem>((IncludePinnedItems ? PinnedItems.ToList() : new List<LayoutItem>()));
+            List<LayoutItem> list = new List<LayoutItem>(IncludePinnedItems ? PinnedItems.ToList() : new List<LayoutItem>());
             foreach (var item in Items)
             {
                 list.Add(item);
@@ -486,7 +486,6 @@ namespace SioForgeCAD.Forms
                     var selectedItems = GetVisibleItemsList(false)
                         .Where(i => i.IsSelected && !(i is LayoutTab tab && tab.ParentGroup?.IsSelected == true))
                         .ToList();
-
                     //Close all groups for preview
                     selectedItems.ForEach(t => ExpandLayoutItemGroup(t, false));
 
@@ -642,23 +641,12 @@ namespace SioForgeCAD.Forms
 
                     insertIndex = Math.Max(0, insertIndex);
 
-                    // 3. Suppression et Réinsertion
+                    // 3. Suppression
                     var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
-
                     foreach (var item in itemsToProcess) RemoveFromAll(item, true, false);
 
-                    for (int i = 0; i < itemsToProcess.Count; i++)
-                    {
-                        var itemToInsert = itemsToProcess[i];
-                        if (targetGroupDest != null && itemToInsert is LayoutTab t)
-                        {
-                            targetGroupDest.Insert(Math.Min(insertIndex + i, targetGroupDest.SubTabs.Count), t);
-                        }
-                        else
-                        {
-                            Items.Insert(Math.Min(insertIndex + i, Items.Count), itemToInsert);
-                        }
-                    }
+                    // 4. Réinsertion mutualisée 🚀
+                    InsertItems(itemsToProcess, targetGroupDest, insertIndex);
                 }
             }
             finally
@@ -896,15 +884,12 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private string GenerateUniqueLayoutName(string baseName)
+        private static string GenerateUniqueLayoutName(string baseName)
         {
             string newName = $"{baseName} (Copie)";
-            int counter = 2;
-
-            while (LayoutManager.Current.LayoutExists(newName))
+            for (int counter = 2; LayoutManager.Current.LayoutExists(newName); counter++)
             {
                 newName = $"{baseName} (Copie {counter})";
-                counter++;
             }
             return newName;
         }
@@ -912,86 +897,58 @@ namespace SioForgeCAD.Forms
         private string GenerateUniqueGroupName(string baseName)
         {
             string newName = $"{baseName} (Copie)";
-            int counter = 2;
 
             // On vérifie l'existence du nom dans les éléments de niveau racine (Items)
-            while (Items.OfType<LayoutGroup>().Any(g => g.Title == newName))
+            for (int counter = 2; Items.OfType<LayoutGroup>().Any(g => g.Title == newName); counter++)
             {
                 newName = $"{baseName} (Copie {counter})";
-                counter++;
             }
             return newName;
         }
 
         private void InsertDuplicatedItems(List<LayoutItem> newItems, DuplicatePosition pos, LayoutItem targetItem)
         {
-            int rootInsertIndex = Items.Count;
-            int groupInsertIndex = -1;
+            int insertIndex = 0;
             LayoutGroup targetGroup = null;
 
-            // Calcul de l'index de base en fonction de la cible
+            // Définir la cible de base
+            if (targetItem is LayoutTab tab && tab.IsInGroup)
+            {
+                targetGroup = tab.ParentGroup;
+            }
+
+            // Calculer l'index d'insertion
             switch (pos)
             {
                 case DuplicatePosition.Beginning:
-                    rootInsertIndex = 0;
-                    groupInsertIndex = 0; // Si applicable
+                    insertIndex = 0;
                     break;
 
                 case DuplicatePosition.End:
-                    rootInsertIndex = Items.Count;
-                    // groupInsertIndex reste à -1 (ajout à la fin)
+                    insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
                     break;
 
                 case DuplicatePosition.Before:
-                    if (targetItem is LayoutTab tTabBefore && tTabBefore.IsInGroup)
-                    {
-                        targetGroup = tTabBefore.ParentGroup;
-                        groupInsertIndex = targetGroup.IndexOf(tTabBefore);
-                        rootInsertIndex = Items.IndexOf(targetGroup);
-                    }
-                    else
-                    {
-                        rootInsertIndex = targetItem != null ? Items.IndexOf(targetItem) : 0;
-                    }
-                    break;
-
                 case DuplicatePosition.After:
-                    if (targetItem is LayoutTab tTabAfter && tTabAfter.IsInGroup)
+                    int offset = pos == DuplicatePosition.After ? 1 : 0;
+                    if (targetGroup != null)
                     {
-                        targetGroup = tTabAfter.ParentGroup;
-                        groupInsertIndex = targetGroup.IndexOf(tTabAfter) + 1;
-                        rootInsertIndex = Items.IndexOf(targetGroup) + 1;
+                        insertIndex = targetGroup.IndexOf(targetItem as LayoutTab) + offset;
                     }
                     else
                     {
-                        rootInsertIndex = targetItem != null ? Items.IndexOf(targetItem) + 1 : Items.Count;
+                        insertIndex = targetItem != null ? Items.IndexOf(targetItem) + offset : Items.Count;
                     }
                     break;
             }
 
-            if (rootInsertIndex < 0) rootInsertIndex = Items.Count;
+            if (insertIndex < 0)
+                insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
 
-            // Insertion des éléments
-            for (int i = 0; i < newItems.Count; i++)
-            {
-                var item = newItems[i];
-
-                // Si c'est un onglet et qu'on cible l'intérieur d'un groupe
-                if (item is LayoutTab tab && targetGroup != null)
-                {
-                    int insertAt = groupInsertIndex >= 0 ? groupInsertIndex + i : targetGroup.SubTabs.Count;
-                    targetGroup.Insert(Math.Min(insertAt, targetGroup.SubTabs.Count), tab);
-                }
-                else
-                {
-                    // Soit c'est un groupe (qui ne peut pas aller dans un groupe), soit on cible la racine
-                    Items.Insert(Math.Min(rootInsertIndex, Items.Count), item);
-                    rootInsertIndex++; // On décale l'index racine pour le prochain élément
-                }
-            }
+            InsertItems(newItems, targetGroup, insertIndex);
         }
 
-        private LayoutTab DuplicateSingleTab(LayoutTab originalTab)
+        private static LayoutTab DuplicateSingleTab(LayoutTab originalTab)
         {
             string newName = GenerateUniqueLayoutName(originalTab.Title);
 
@@ -1069,6 +1026,13 @@ namespace SioForgeCAD.Forms
                         case "TabMenuItem_CreateGp":
                             var ct = targetTabs.Count(t => t.IsInGroup);
                             menuItem.IsEnabled = !tab.IsModel && ct <= 0;
+                            break;
+                        case "TabMenuItem_Duplicate":
+                            PopulateDuplicateSubMenu(menuItem);
+                            menuItem.IsEnabled = !tab.IsModel;
+                            break;
+                        case "TabMenuItem_Move":
+                            //TODO
                             break;
                     }
                 }
@@ -1222,54 +1186,29 @@ namespace SioForgeCAD.Forms
             ClearSelection();
         }
 
-        private static LayoutGroup GetTargetedGroupForContextMenu(object sender)
-        {
-            if (!(sender is MenuItem menuItem)) return null;
-            var contextMenu = menuItem.Parent as ContextMenu ?? (menuItem.Parent as MenuItem)?.Parent as ContextMenu;
-            return (contextMenu?.PlacementTarget as FrameworkElement)?.DataContext as LayoutGroup;
-        }
-
-        private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate = null)
-        {
-            predicate = predicate ?? (_ => true);
-            LayoutTab clickedTab = null;
-
-            if (sender is MenuItem menuItem && menuItem.Parent is ContextMenu menuFromItem)
-            {
-                clickedTab = (menuFromItem.PlacementTarget as FrameworkElement)?.DataContext as LayoutTab;
-            }
-            else if (sender is ContextMenu contextMenu)
-            {
-                clickedTab = (contextMenu.PlacementTarget as FrameworkElement)?.DataContext as LayoutTab;
-            }
-
-            if (clickedTab?.IsSelected == false && clickedTab?.IsCurrent == false)
-            {
-                return predicate(clickedTab) ? new List<LayoutTab> { clickedTab } : new List<LayoutTab>();
-            }
-
-            return GetVisibleItemsList().OfType<LayoutTab>().Where(t => (t.IsSelected || t.IsCurrent) && predicate(t)).ToList();
-        }
-
-        #endregion
-
         private void ContextMenu_Duplicate_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Déterminer ce qui doit être dupliqué (un groupe entier OU des onglets sélectionnés)
-            var itemsToDuplicate = new List<LayoutItem>();
+            // 1. Récupération des paramètres de position depuis le sous-menu cliqué
+            var menuItem = sender as MenuItem;
+            var config = menuItem?.Tag as Tuple<DuplicatePosition, LayoutItem>;
 
-            var selectedItems = GetVisibleItemsList(false) // true/false selon si vous autorisez la duplication d'onglets épinglés
-          .Where(i => i.IsSelected &&
-                      !(i is LayoutTab tab && (tab.IsModel || tab.ParentGroup?.IsSelected == true)))
-          .ToList();
+            if (config == null) return;
+
+            DuplicatePosition userChoicePosition = config.Item1;
+            LayoutItem userChoiceTarget = config.Item2;
+
+            // 2. Déterminer ce qui doit être dupliqué
+            var itemsToDuplicate = new List<LayoutItem>();
+            var selectedItems = GetVisibleItemsList(false)
+                .Where(i => i.IsSelected && !(i is LayoutTab tab && (tab.IsModel || tab.ParentGroup?.IsSelected == true)))
+                .ToList();
+
             if (selectedItems.Count > 0)
             {
                 itemsToDuplicate.AddRange(selectedItems);
             }
             else
             {
-                // Fallback de sécurité : si l'utilisateur fait un clic droit direct sur un élément 
-                // non sélectionné (ce qui ne devrait pas arriver souvent avec le comportement WPF)
                 var targetGroup = GetTargetedGroupForContextMenu(sender);
                 if (targetGroup != null)
                 {
@@ -1277,18 +1216,11 @@ namespace SioForgeCAD.Forms
                 }
                 else
                 {
-                    itemsToDuplicate.AddRange(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+                    itemsToDuplicate.AddRange(GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel));
                 }
             }
 
             if (itemsToDuplicate.Count == 0) return;
-
-            // -----------------------------------------------------------------------
-            // À FAIRE : Afficher la boîte de dialogue pour définir la position
-            // (userChoicePosition et userChoiceTarget)
-            // -----------------------------------------------------------------------
-            DuplicatePosition userChoicePosition = DuplicatePosition.After;
-            LayoutItem userChoiceTarget = itemsToDuplicate.Last();
 
             _isDuplicating = true;
 
@@ -1299,7 +1231,7 @@ namespace SioForgeCAD.Forms
                 {
                     var newlyCreatedItems = new List<LayoutItem>();
 
-                    // 2. Traitement de chaque élément
+                    // 3. Traitement de chaque élément
                     foreach (var item in itemsToDuplicate)
                     {
                         if (item is LayoutTab tab)
@@ -1308,14 +1240,12 @@ namespace SioForgeCAD.Forms
                         }
                         else if (item is LayoutGroup group)
                         {
-                            // Duplication du conteneur Groupe
                             var newGroup = new LayoutGroup
                             {
                                 Title = GenerateUniqueGroupName(group.Title),
                                 IsExpanded = group.IsExpanded
                             };
 
-                            // Duplication de chaque présentation contenue dans ce groupe
                             foreach (var subTab in group.SubTabs)
                             {
                                 var newSubTab = DuplicateSingleTab(subTab);
@@ -1326,12 +1256,12 @@ namespace SioForgeCAD.Forms
                         }
                     }
 
-                    // 3. Insertion visuelle au bon endroit
+                    // 4. Insertion visuelle au bon endroit
                     InsertDuplicatedItems(newlyCreatedItems, userChoicePosition, userChoiceTarget);
 
                     tr.Commit();
 
-                    // 4. Synchronisation de l'ordre global (XData)
+                    // 5. Synchronisation de l'ordre global (XData)
                     SyncTabOrderToAutoCAD();
                 }
             }
@@ -1345,9 +1275,137 @@ namespace SioForgeCAD.Forms
                 ReloadTabs(Application.DocumentManager.MdiActiveDocument);
             }
         }
+
+        // Nouvelle méthode pour générer le sous-menu
+        private void PopulateDuplicateSubMenu(MenuItem duplicateMenu)
+        {
+            duplicateMenu.Items.Clear();
+
+            // --- Boutons de base ---
+            var btnBeginning = new MenuItem { Header = "Au début", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
+            btnBeginning.Click += ContextMenu_Duplicate_Click;
+            duplicateMenu.Items.Add(btnBeginning);
+
+            var btnEnd = new MenuItem { Header = "À la fin", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, null) };
+            btnEnd.Click += ContextMenu_Duplicate_Click;
+            duplicateMenu.Items.Add(btnEnd);
+
+            duplicateMenu.Items.Add(new Separator());
+
+            // --- Sous-menus dynamiques "Avant..." et "Après..." ---
+            var menuBefore = new MenuItem { Header = "Avant..." };
+            var menuAfter = new MenuItem { Header = "Après..." };
+
+            // 2. Ajouter les éléments de la liste principale (Items racine et Groupes)
+            foreach (var item in Items)
+            {
+                if (item is LayoutTab tab)
+                {
+                    // Onglet simple à la racine
+                    menuBefore.Items.Add(CreateDuplicateMenuItem(tab, DuplicatePosition.Before, tab.Title));
+                    menuAfter.Items.Add(CreateDuplicateMenuItem(tab, DuplicatePosition.After, tab.Title));
+                }
+                else if (item is LayoutGroup group)
+                {
+                    // --- Sous-menu pour le groupe entier ---
+                    var groupMenuBefore = new MenuItem { Header = group.Title };
+                    var groupMenuAfter = new MenuItem { Header = group.Title };
+
+                    // Option pour cibler le déplacement par rapport au groupe LUI-MÊME
+                    groupMenuBefore.Items.Add(CreateDuplicateMenuItem(group, DuplicatePosition.Before, $"[Avant le groupe entier]"));
+                    groupMenuAfter.Items.Add(CreateDuplicateMenuItem(group, DuplicatePosition.After, $"[Après le groupe entier]"));
+
+                    if (group.SubTabs.Count > 0)
+                    {
+                        groupMenuBefore.Items.Add(new Separator());
+                        groupMenuAfter.Items.Add(new Separator());
+                    }
+
+                    // Options pour cibler les sous-onglets À L'INTÉRIEUR du groupe
+                    foreach (var subTab in group.SubTabs)
+                    {
+                        groupMenuBefore.Items.Add(CreateDuplicateMenuItem(subTab, DuplicatePosition.Before, subTab.Title));
+                        groupMenuAfter.Items.Add(CreateDuplicateMenuItem(subTab, DuplicatePosition.After, subTab.Title));
+                    }
+
+                    menuBefore.Items.Add(groupMenuBefore);
+                    menuAfter.Items.Add(groupMenuAfter);
+                }
+            }
+
+            duplicateMenu.Items.Add(menuBefore);
+            duplicateMenu.Items.Add(menuAfter);
+        }
+
+        private MenuItem CreateDuplicateMenuItem(LayoutItem targetItem, DuplicatePosition position, string header)
+        {
+            var menuItem = new MenuItem
+            {
+                Header = header,
+                // On injecte la position et l'item cible dans le Tag pour les récupérer au clic
+                Tag = new Tuple<DuplicatePosition, LayoutItem>(position, targetItem)
+            };
+            menuItem.Click += ContextMenu_Duplicate_Click;
+            return menuItem;
+        }
+
+        private static ContextMenu GetRootContextMenu(object sender)
+        {
+            // Si l'objet cliqué est DÉJÀ le ContextMenu (rare mais possible)
+            if (sender is ContextMenu cm) return cm;
+
+            FrameworkElement current = sender as FrameworkElement;
+
+            // Remonte de Parent en Parent tant qu'on n'est pas tombé sur le ContextMenu racine
+            while (current != null && !(current is ContextMenu))
+            {
+                current = current.Parent as FrameworkElement;
+            }
+
+            return current as ContextMenu;
+        }
+        private static LayoutItem GetRootLayoutItem(ContextMenu sender)
+        {
+            if (sender is null) { return null; }
+            else if (sender.DataContext is LayoutItem lay)
+            {
+                return lay;
+            }
+            else if ((sender?.PlacementTarget as FrameworkElement)?.DataContext is LayoutItem lay2)
+            {
+                Debug.WriteLine("GetRootLayoutItem from PlacementTarget");
+                return lay2;
+            }
+            return null;
+        }
+
+        private static LayoutGroup GetTargetedGroupForContextMenu(object sender)
+        {
+            var contextMenu = GetRootContextMenu(sender);
+            return GetRootLayoutItem(contextMenu) as LayoutGroup;
+        }
+
+        private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate = null)
+        {
+            predicate = predicate ?? (_ => true);
+            LayoutTab clickedTab = GetRootLayoutItem(GetRootContextMenu(sender)) as LayoutTab;
+
+
+            // Si le clic a été fait sur un onglet spécifique qui n'est ni sélectionné ni courant
+            if (clickedTab?.IsSelected == false && clickedTab?.IsCurrent == false)
+            {
+                return predicate(clickedTab) ? new List<LayoutTab> { clickedTab } : new List<LayoutTab>();
+            }
+
+            // Sinon, on retourne la liste de tous les éléments sélectionnés/courants
+            return GetVisibleItemsList()
+                    .OfType<LayoutTab>()
+                    .Where(t => (t.IsSelected || t.IsCurrent) && predicate(t))
+                    .ToList();
+        }
+
+        #endregion
     }
-
-
 
     #region Classes Utilitaires (Visual Tree)
 

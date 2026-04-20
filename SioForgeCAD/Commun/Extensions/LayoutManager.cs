@@ -34,11 +34,10 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         try
                         {
-                            using (Transaction transaction = database.TransactionManager.StartOpenCloseTransaction())
+                            using (OpenCloseTransaction transaction = database.TransactionManager.StartOpenCloseTransaction())
                             using (DBObject dBObject = transaction.GetObject(database.LayoutDictionaryId, OpenMode.ForRead))
                             {
-                                DBDictionary dBDictionary = dBObject as DBDictionary;
-                                if (dBDictionary == null)
+                                if (!(dBObject is DBDictionary dBDictionary))
                                 {
                                     return null;
                                 }
