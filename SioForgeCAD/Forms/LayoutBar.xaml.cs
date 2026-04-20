@@ -45,7 +45,11 @@ namespace SioForgeCAD.Forms
         /// <summary>
         /// Empêche la boucle infinie de synchronisation (AutoCAD -> WPF -> AutoCAD).
         /// </summary>
-        public bool IsSyncing { get; set; }
+        public bool IsSyncingFromAutoCAD { get; set; }
+        /// <summary>
+        /// Empêche la boucle infinie de synchronisation (WPF -> AutoCAD -> WPF).
+        /// </summary>
+        private bool IsSyncingFromWPF = false;
 
         private Window _ghostWindow;
         private readonly DispatcherTimer _autoScrollTimer;
@@ -65,12 +69,21 @@ namespace SioForgeCAD.Forms
             get
             {
                 var doc = Generic.GetDocument();
-                if (doc?.IsDisposed != false) return false;
+                if (doc?.IsDisposed != false)
+                {
+                    return false;
+                }
 
                 var sysVar = Generic.GetSystemVariable("TRACEMODE");
-                if (sysVar != null && (short)sysVar == 2) return false;
+                if (sysVar != null && (short)sysVar == 2)
+                {
+                    return false;
+                }
 
-                if (doc.Editor.IsQuiescent) return !Utils.IsInBlockEditor();
+                if (doc.Editor.IsQuiescent)
+                {
+                    return !Utils.IsInBlockEditor();
+                }
 
                 return false;
             }
@@ -129,10 +142,9 @@ namespace SioForgeCAD.Forms
 
         private void OnDocumentActivated(object sender, DocumentCollectionEventArgs e) => ReloadTabs(e.Document);
 
-        private bool _isDuplicating = false;
         private void OnLayoutsChanged(object sender, LayoutEventArgs e)
         {
-            if (!_isDuplicating)
+            if (!IsSyncingFromWPF)
             {
                 ReloadTabs(Application.DocumentManager.MdiActiveDocument);
             }
@@ -141,23 +153,32 @@ namespace SioForgeCAD.Forms
 
         private void OnLayoutSwitched(object sender, LayoutEventArgs e)
         {
-            if (IsSyncing) return;
+            if (IsSyncingFromAutoCAD)
+            {
+                return;
+            }
 
-            IsSyncing = true;
+            IsSyncingFromAutoCAD = true;
             try
             {
                 var tab = GetVisibleItemsList().FirstOrDefault(t => t.Title == e.Name);
-                if (tab != null) SetCurrentTab(tab);
+                if (tab != null)
+                {
+                    SetCurrentTab(tab);
+                }
             }
             finally
             {
-                IsSyncing = false;
+                IsSyncingFromAutoCAD = false;
             }
         }
 
         private void LayoutBar_ActiveTabChanged(object sender, LayoutTab e)
         {
-            if (IsSyncing) return;
+            if (IsSyncingFromAutoCAD)
+            {
+                return;
+            }
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
@@ -173,9 +194,12 @@ namespace SioForgeCAD.Forms
         private void SyncTabOrderToAutoCAD()
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
-            if (doc == null) return;
+            if (doc == null)
+            {
+                return;
+            }
 
-            IsSyncing = true;
+            IsSyncingFromAutoCAD = true;
             try
             {
                 using (doc.LockDocument())
@@ -205,7 +229,7 @@ namespace SioForgeCAD.Forms
             }
             finally
             {
-                IsSyncing = false;
+                IsSyncingFromAutoCAD = false;
             }
         }
 
@@ -215,7 +239,11 @@ namespace SioForgeCAD.Forms
             {
                 if (tr.GetObject(layoutId, OpenMode.ForWrite) is Layout layout)
                 {
-                    if (layout.TabOrder != order) layout.TabOrder = order;
+                    if (layout.TabOrder != order)
+                    {
+                        layout.TabOrder = order;
+                    }
+
                     layout.SetLayoutUIState(tr, groupName, isExpanded, tab.IsPinned);
                 }
             }
@@ -223,7 +251,10 @@ namespace SioForgeCAD.Forms
 
         private void ReloadTabs(Document doc)
         {
-            if (doc == null) return;
+            if (doc == null)
+            {
+                return;
+            }
 
             Dispatcher.Invoke(() =>
             {
@@ -284,9 +315,9 @@ namespace SioForgeCAD.Forms
 
                         if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
                         {
-                            IsSyncing = true;
+                            IsSyncingFromAutoCAD = true;
                             SetCurrentTab(newTab);
-                            IsSyncing = false;
+                            IsSyncingFromAutoCAD = false;
                         }
                     }
                     tr.Commit();
@@ -304,7 +335,10 @@ namespace SioForgeCAD.Forms
 
         private bool TryCreateNewLayout(string title)
         {
-            if (IsSyncing) return false;
+            if (IsSyncingFromAutoCAD)
+            {
+                return false;
+            }
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
@@ -337,7 +371,10 @@ namespace SioForgeCAD.Forms
 
         private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (!CanLayoutSwitch) return;
+            if (!CanLayoutSwitch)
+            {
+                return;
+            }
 
             if (!_isDragging && _dragSource != null)
             {
@@ -388,7 +425,10 @@ namespace SioForgeCAD.Forms
 
                 if (targetItem is LayoutGroup gp)
                 {
-                    foreach (var subTab in gp.SubTabs) subTab.IsSelected = gp.IsSelected;
+                    foreach (var subTab in gp.SubTabs)
+                    {
+                        subTab.IsSelected = gp.IsSelected;
+                    }
                 }
                 _lastSelectedItem = targetItem.IsSelected ? targetItem : null;
             }
@@ -406,7 +446,11 @@ namespace SioForgeCAD.Forms
 
         private void SetCurrentItem(LayoutItem item)
         {
-            if (_currentItem != null) _currentItem.IsCurrent = false;
+            if (_currentItem != null)
+            {
+                _currentItem.IsCurrent = false;
+            }
+
             item = GetTabFromRegularList(item);
 
             _currentItem = item;
@@ -417,7 +461,7 @@ namespace SioForgeCAD.Forms
                 _currentItem.IsCurrent = true;
                 ScrollToItem(item);
 
-                if (item is LayoutTab selectedTab && !IsSyncing)
+                if (item is LayoutTab selectedTab && !IsSyncingFromAutoCAD)
                 {
                     ActiveTabChanged?.Invoke(this, selectedTab);
                 }
@@ -437,13 +481,20 @@ namespace SioForgeCAD.Forms
 
         private void ClearSelection()
         {
-            foreach (var item in PinnedItems) item.IsSelected = false;
+            foreach (var item in PinnedItems)
+            {
+                item.IsSelected = false;
+            }
+
             foreach (var item in Items)
             {
                 item.IsSelected = false;
                 if (item is LayoutGroup group)
                 {
-                    foreach (var subTab in group.SubTabs) subTab.IsSelected = false;
+                    foreach (var subTab in group.SubTabs)
+                    {
+                        subTab.IsSelected = false;
+                    }
                 }
             }
         }
@@ -454,10 +505,99 @@ namespace SioForgeCAD.Forms
             foreach (var item in Items)
             {
                 list.Add(item);
-                if (item is LayoutGroup group) list.AddRange(group.SubTabs);
+                if (item is LayoutGroup group)
+                {
+                    list.AddRange(group.SubTabs);
+                }
             }
             return list;
         }
+
+
+        private static string GenerateUniqueLayoutName(string baseName)
+        {
+            string newName = $"{baseName} (Copie)";
+            for (int counter = 2; LayoutManager.Current.LayoutExists(newName); counter++)
+            {
+                newName = $"{baseName} (Copie {counter})";
+            }
+            return newName;
+        }
+
+        private string GenerateUniqueGroupName(string baseName)
+        {
+            string newName = $"{baseName} (Copie)";
+
+            // On vérifie l'existence du nom dans les éléments de niveau racine (Items)
+            for (int counter = 2; Items.OfType<LayoutGroup>().Any(g => g.Title == newName); counter++)
+            {
+                newName = $"{baseName} (Copie {counter})";
+            }
+            return newName;
+        }
+
+        private void InsertDuplicatedItems(List<LayoutItem> newItems, DuplicatePosition pos, LayoutItem targetItem)
+        {
+            int insertIndex = 0;
+            LayoutGroup targetGroup = null;
+
+            // Définir la cible de base
+            if (targetItem is LayoutTab tab && tab.IsInGroup)
+            {
+                targetGroup = tab.ParentGroup;
+            }
+
+            // Calculer l'index d'insertion
+            switch (pos)
+            {
+                case DuplicatePosition.Beginning:
+                    insertIndex = 0;
+                    break;
+
+                case DuplicatePosition.End:
+                    insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
+                    break;
+
+                case DuplicatePosition.Before:
+                case DuplicatePosition.After:
+                    int offset = pos == DuplicatePosition.After ? 1 : 0;
+                    if (targetGroup != null)
+                    {
+                        insertIndex = targetGroup.IndexOf(targetItem as LayoutTab) + offset;
+                    }
+                    else
+                    {
+                        insertIndex = targetItem != null ? Items.IndexOf(targetItem) + offset : Items.Count;
+                    }
+                    break;
+            }
+
+            if (insertIndex < 0)
+            {
+                insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
+            }
+
+            InsertItems(newItems, targetGroup, insertIndex);
+        }
+
+        private static LayoutTab DuplicateSingleTab(LayoutTab originalTab)
+        {
+            string newName = GenerateUniqueLayoutName(originalTab.Title);
+
+            // Clonage physique dans AutoCAD
+            LayoutManager.Current.CloneLayout(originalTab.Title, newName, 0);
+
+            // Création de l'objet WPF
+            var newLayoutId = LayoutManager.Current.GetLayoutId(newName);
+            return new LayoutTab
+            {
+                Title = newName,
+                IsModel = false,
+                IsPinned = false,
+                AutoCadData = newLayoutId
+            };
+        }
+
 
         #endregion
 
@@ -521,20 +661,38 @@ namespace SioForgeCAD.Forms
         {
             Debug.WriteLine("OnDragOver");
             base.OnDragOver(e);
-            if (!_isDragging) return;
+            if (!_isDragging)
+            {
+                return;
+            }
+
             Debug.WriteLine("OnDragOver and _isDragging");
             var sourceItem = (e.Data.GetData("SelectedItems") as List<LayoutItem>)?.FirstOrDefault() ?? _dragSource;
-            if (sourceItem == null) return;
+            if (sourceItem == null)
+            {
+                return;
+            }
 
             var targetElement = e.OriginalSource as FrameworkElement;
             var targetContainer = UIHelper.GetVisualParent<ContentPresenter>(targetElement);
 
             if (targetContainer?.DataContext is LayoutItem targetItem)
             {
-                if (targetItem == sourceItem) return;
-                if (sourceItem is LayoutGroup lg) lg.IsExpanded = false;
+                if (targetItem == sourceItem)
+                {
+                    return;
+                }
+
+                if (sourceItem is LayoutGroup lg)
+                {
+                    lg.IsExpanded = false;
+                }
+
                 LayoutGroup targetGrp = targetItem as LayoutGroup;
-                if (targetItem is LayoutTab tTab && tTab.IsInGroup) targetGrp = tTab.ParentGroup;
+                if (targetItem is LayoutTab tTab && tTab.IsInGroup)
+                {
+                    targetGrp = tTab.ParentGroup;
+                }
 
                 if (targetGrp != null && sourceItem is LayoutTab sTab && sourceItem != targetItem)
                 {
@@ -565,7 +723,10 @@ namespace SioForgeCAD.Forms
                         if ((!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1))
                         {
                             var sourceTabContainer = UIHelper.GetVisualContainerFromItem(VisualTreeHelper.GetParent(targetContainer), sTab);
-                            if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                            if (sourceTabContainer != null)
+                            {
+                                ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                            }
                         }
                         else
                         {
@@ -583,7 +744,10 @@ namespace SioForgeCAD.Forms
                     if ((!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1))
                     {
                         var sourceTabContainer = UIHelper.GetVisualContainerFromItem(VisualTreeHelper.GetParent(targetContainer), sourceItem);
-                        if (sourceTabContainer != null) ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                        if (sourceTabContainer != null)
+                        {
+                            ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
+                        }
                     }
                     else
                     {
@@ -604,7 +768,11 @@ namespace SioForgeCAD.Forms
             Debug.WriteLine("OnDrop");
             base.OnDrop(e);
 
-            if (!(e.Data.GetData("SelectedItems") is List<LayoutItem> sourceItems) || sourceItems.Count == 0) return;
+            if (!(e.Data.GetData("SelectedItems") is List<LayoutItem> sourceItems) || sourceItems.Count == 0)
+            {
+                return;
+            }
+
             DragDropEnd();
             try
             {
@@ -614,7 +782,10 @@ namespace SioForgeCAD.Forms
 
                 if (targetContainer?.DataContext is LayoutItem targetItem)
                 {
-                    if (sourceItems.Contains(targetItem)) return;
+                    if (sourceItems.Contains(targetItem))
+                    {
+                        return;
+                    }
 
                     LayoutGroup targetGrp = targetParentContainer?.DataContext as LayoutGroup ?? targetContainer.DataContext as LayoutGroup;
                     int insertIndex = 0;
@@ -624,9 +795,18 @@ namespace SioForgeCAD.Forms
                     if (targetGrp != null)
                     {
                         targetGroupDest = targetGrp;
-                        if (!targetGrp.Contains(targetItem as LayoutTab)) insertIndex = 0;
-                        else if (targetItem is LayoutTab tTab) insertIndex = CalculateInsertionIndex(e, targetContainer, targetGrp.IndexOf(tTab), out _);
-                        else if (targetItem is LayoutGroup) insertIndex = 0;
+                        if (!targetGrp.Contains(targetItem as LayoutTab))
+                        {
+                            insertIndex = 0;
+                        }
+                        else if (targetItem is LayoutTab tTab)
+                        {
+                            insertIndex = CalculateInsertionIndex(e, targetContainer, targetGrp.IndexOf(tTab), out _);
+                        }
+                        else if (targetItem is LayoutGroup)
+                        {
+                            insertIndex = 0;
+                        }
                     }
                     else
                     {
@@ -635,15 +815,22 @@ namespace SioForgeCAD.Forms
 
                     // 2. Compensation des index (si on retire des éléments placés AVANT l'index cible)
                     if (targetGroupDest != null)
+                    {
                         insertIndex -= sourceItems.Count(s => s is LayoutTab t && t.ParentGroup == targetGroupDest && targetGroupDest.IndexOf(t) < insertIndex);
+                    }
                     else
+                    {
                         insertIndex -= sourceItems.Count(s => Items.Contains(s) && Items.IndexOf(s) < insertIndex);
+                    }
 
                     insertIndex = Math.Max(0, insertIndex);
 
                     // 3. Suppression
                     var itemsToProcess = sourceItems.Where(i => !(i is LayoutTab t && sourceItems.Contains(t.ParentGroup))).ToList();
-                    foreach (var item in itemsToProcess) RemoveFromAll(item, true, false);
+                    foreach (var item in itemsToProcess)
+                    {
+                        RemoveFromAll(item, true, false);
+                    }
 
                     // 4. Réinsertion mutualisée 🚀
                     InsertItems(itemsToProcess, targetGroupDest, insertIndex);
@@ -660,42 +847,73 @@ namespace SioForgeCAD.Forms
 
         private void RemoveFromAll(LayoutItem item, bool RemoveFromRegulars, bool RemoveFromPinneds)
         {
-            if (RemoveFromRegulars) Items.Remove(item);
-            if (RemoveFromPinneds) PinnedItems.Remove(item);
-            if (item is LayoutTab tab && tab.ParentGroup != null) tab.ParentGroup.Remove(tab);
+            if (RemoveFromRegulars)
+            {
+                Items.Remove(item);
+            }
+
+            if (RemoveFromPinneds)
+            {
+                PinnedItems.Remove(item);
+            }
+
+            if (item is LayoutTab tab && tab.ParentGroup != null)
+            {
+                tab.ParentGroup.Remove(tab);
+            }
         }
 
         private static int CalculateInsertionIndex(DragEventArgs e, FrameworkElement targetContainer, int currentItemIndex, out bool isRightHalf)
         {
             isRightHalf = false;
-            if (currentItemIndex < 0) currentItemIndex = 0;
+            if (currentItemIndex < 0)
+            {
+                currentItemIndex = 0;
+            }
 
             if (targetContainer != null)
             {
                 isRightHalf = e.GetPosition(targetContainer).X > targetContainer.ActualWidth / 2;
-                if (isRightHalf) currentItemIndex++;
+                if (isRightHalf)
+                {
+                    currentItemIndex++;
+                }
             }
             return currentItemIndex;
         }
 
         private void InsertItems(List<LayoutItem> itemsToInsert, LayoutGroup targetGroup, int startIndex)
         {
-            for (int i = 0; i < itemsToInsert.Count; i++)
-            {
-                var item = itemsToInsert[i];
+            int subTabInsertCount = 0;
+            int rootInsertCount = 0;
 
-                // Règle métier : Si on cible un groupe ET que l'élément est un onglet (un groupe ne va pas dans un groupe)
+            // Calcul de l'index de base à la racine.
+            // Si on dépose dans un groupe cible, les groupes déplacés (qui ne peuvent pas être imbriqués) 
+            // iront se placer juste après ce groupe cible à la racine.
+            // Sinon, on utilise simplement le startIndex prévu pour la racine.
+            int baseRootIndex = targetGroup != null ? Items.IndexOf(targetGroup) + 1 : startIndex;
+            if (baseRootIndex <= 0 && targetGroup != null)
+            {
+                baseRootIndex = Items.Count; // Sécurité si le targetGroup n'est pas trouvé
+            }
+
+            foreach (var item in itemsToInsert)
+            {
+                // Règle métier : Si on cible un groupe ET que l'élément est un onglet
                 if (targetGroup != null && item is LayoutTab tab)
                 {
-                    int index = Math.Min(startIndex + i, targetGroup.SubTabs.Count);
+                    // On utilise un compteur dédié pour les onglets insérés dans le groupe
+                    int index = Math.Min(startIndex + subTabInsertCount, targetGroup.SubTabs.Count);
                     targetGroup.Insert(index, tab);
+                    subTabInsertCount++;
                 }
                 else
                 {
-                    // Insertion à la racine (Items)
-                    int index = Math.Min(startIndex, Items.Count);
+                    // Insertion à la racine (Items) : 
+                    // Soit targetGroup est null, soit l'élément est un LayoutGroup qui est rejeté du sous-groupe.
+                    int index = Math.Min(baseRootIndex + rootInsertCount, Items.Count);
                     Items.Insert(index, item);
-                    startIndex++; // On incrémente l'index racine pour que les éléments suivants ne s'empilent pas à l'envers
+                    rootInsertCount++;
                 }
             }
         }
@@ -712,7 +930,10 @@ namespace SioForgeCAD.Forms
 
         private void CreatePreviewWindow(List<LayoutItem> selectedItems)
         {
-            if (selectedItems == null || selectedItems.Count == 0) return;
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                return;
+            }
 
             var factory = new FrameworkElementFactory(typeof(StackPanel));
             factory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
@@ -768,7 +989,10 @@ namespace SioForgeCAD.Forms
 
         private void AutoScrollTimer_Tick(object sender, EventArgs e)
         {
-            if (!_isDragging || TabScrollViewer == null || PinnedControl == null) return;
+            if (!_isDragging || TabScrollViewer == null || PinnedControl == null)
+            {
+                return;
+            }
 
             Win32Point w32Mouse = new Win32Point();
             GetCursorPos(ref w32Mouse);
@@ -805,20 +1029,29 @@ namespace SioForgeCAD.Forms
 
         private void ScrollToItem(LayoutItem item)
         {
-            if (item == null || (item is LayoutTab tab && tab.IsPinned)) return;
+            if (item == null || (item is LayoutTab tab && tab.IsPinned))
+            {
+                return;
+            }
 
             Dispatcher.InvokeAsync(() =>
             {
                 var container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement
                                 ?? UIHelper.GetVisualContainerFromItem(TabItemsControl, item);
 
-                if (container != null) ScrollTabIntoView(container);
+                if (container != null)
+                {
+                    ScrollTabIntoView(container);
+                }
             }, DispatcherPriority.Loaded);
         }
 
         private void ScrollTabIntoView(FrameworkElement container)
         {
-            if (container == null || TabScrollViewer == null || PinnedControl == null) return;
+            if (container == null || TabScrollViewer == null || PinnedControl == null)
+            {
+                return;
+            }
 
             try
             {
@@ -873,100 +1106,23 @@ namespace SioForgeCAD.Forms
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            if (!CanLayoutSwitch) return;
+            if (!CanLayoutSwitch)
+            {
+                return;
+            }
 
             if ((sender as MenuItem)?.DataContext is LayoutTab clickedTab)
             {
-                if (clickedTab.IsInGroup) clickedTab.ParentGroup.IsExpanded = true;
+                if (clickedTab.IsInGroup)
+                {
+                    clickedTab.ParentGroup.IsExpanded = true;
+                }
+
                 SetCurrentItem(clickedTab);
                 OverflowToggle.IsChecked = false;
                 ClearSelection();
             }
         }
-
-        private static string GenerateUniqueLayoutName(string baseName)
-        {
-            string newName = $"{baseName} (Copie)";
-            for (int counter = 2; LayoutManager.Current.LayoutExists(newName); counter++)
-            {
-                newName = $"{baseName} (Copie {counter})";
-            }
-            return newName;
-        }
-
-        private string GenerateUniqueGroupName(string baseName)
-        {
-            string newName = $"{baseName} (Copie)";
-
-            // On vérifie l'existence du nom dans les éléments de niveau racine (Items)
-            for (int counter = 2; Items.OfType<LayoutGroup>().Any(g => g.Title == newName); counter++)
-            {
-                newName = $"{baseName} (Copie {counter})";
-            }
-            return newName;
-        }
-
-        private void InsertDuplicatedItems(List<LayoutItem> newItems, DuplicatePosition pos, LayoutItem targetItem)
-        {
-            int insertIndex = 0;
-            LayoutGroup targetGroup = null;
-
-            // Définir la cible de base
-            if (targetItem is LayoutTab tab && tab.IsInGroup)
-            {
-                targetGroup = tab.ParentGroup;
-            }
-
-            // Calculer l'index d'insertion
-            switch (pos)
-            {
-                case DuplicatePosition.Beginning:
-                    insertIndex = 0;
-                    break;
-
-                case DuplicatePosition.End:
-                    insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
-                    break;
-
-                case DuplicatePosition.Before:
-                case DuplicatePosition.After:
-                    int offset = pos == DuplicatePosition.After ? 1 : 0;
-                    if (targetGroup != null)
-                    {
-                        insertIndex = targetGroup.IndexOf(targetItem as LayoutTab) + offset;
-                    }
-                    else
-                    {
-                        insertIndex = targetItem != null ? Items.IndexOf(targetItem) + offset : Items.Count;
-                    }
-                    break;
-            }
-
-            if (insertIndex < 0)
-                insertIndex = targetGroup != null ? targetGroup.SubTabs.Count : Items.Count;
-
-            InsertItems(newItems, targetGroup, insertIndex);
-        }
-
-        private static LayoutTab DuplicateSingleTab(LayoutTab originalTab)
-        {
-            string newName = GenerateUniqueLayoutName(originalTab.Title);
-
-            // Clonage physique dans AutoCAD
-            LayoutManager.Current.CloneLayout(originalTab.Title, newName, 0);
-
-            // Création de l'objet WPF
-            var newLayoutId = LayoutManager.Current.GetLayoutId(newName);
-            return new LayoutTab
-            {
-                Title = newName,
-                IsModel = false,
-                IsPinned = false,
-                AutoCadData = newLayoutId
-            };
-        }
-
-
 
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -1028,11 +1184,12 @@ namespace SioForgeCAD.Forms
                             menuItem.IsEnabled = !tab.IsModel && ct <= 0;
                             break;
                         case "TabMenuItem_Duplicate":
-                            PopulateDuplicateSubMenu(menuItem);
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click);
                             menuItem.IsEnabled = !tab.IsModel;
                             break;
                         case "TabMenuItem_Move":
-                            //TODO
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Move_Click);
+                            menuItem.IsEnabled = !tab.IsModel;
                             break;
                     }
                 }
@@ -1042,7 +1199,10 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_Epingler_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel);
-            if (targetTabs.Count == 0) return;
+            if (targetTabs.Count == 0)
+            {
+                return;
+            }
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
@@ -1050,7 +1210,10 @@ namespace SioForgeCAD.Forms
                 foreach (var tab in targetTabs)
                 {
                     tab.IsPinned = true;
-                    if (!PinnedItems.Contains(tab)) PinnedItems.Add(tab);
+                    if (!PinnedItems.Contains(tab))
+                    {
+                        PinnedItems.Add(tab);
+                    }
 
                     if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
                     {
@@ -1066,7 +1229,10 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_Desepingler_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => t.IsPinned && !t.IsModel);
-            if (targetTabs.Count == 0) return;
+            if (targetTabs.Count == 0)
+            {
+                return;
+            }
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
@@ -1098,12 +1264,16 @@ namespace SioForgeCAD.Forms
         }
 
         private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer");
+
         private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Publier");
 
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-            if (targetTabs.Count == 0) return;
+            if (targetTabs.Count == 0)
+            {
+                return;
+            }
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
@@ -1120,7 +1290,10 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_CreerGroupe_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-            if (targetTabs.Count == 0) return;
+            if (targetTabs.Count == 0)
+            {
+                return;
+            }
 
             var newGroup = new LayoutGroup { Title = "Nouveau Groupe", IsExpanded = true };
 
@@ -1138,16 +1311,24 @@ namespace SioForgeCAD.Forms
         }
 
         private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Renommer Groupe");
+
         private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer Groupe");
+
         private void ContextMenu_PublierGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Publier Groupe");
 
         private void ContextMenu_SupprimerGroupeSeul_Click(object sender, RoutedEventArgs e)
         {
             var targetGroup = GetTargetedGroupForContextMenu(sender);
-            if (targetGroup == null) return;
+            if (targetGroup == null)
+            {
+                return;
+            }
 
             int groupIndex = Items.IndexOf(targetGroup);
-            if (groupIndex == -1) return;
+            if (groupIndex == -1)
+            {
+                return;
+            }
 
             var tabsToExtract = targetGroup.SubTabs.ToList();
             foreach (var tab in tabsToExtract)
@@ -1163,7 +1344,10 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_SupprimerGroupeEtContenu_Click(object sender, RoutedEventArgs e)
         {
             var targetGroup = GetTargetedGroupForContextMenu(sender);
-            if (targetGroup == null) return;
+            if (targetGroup == null)
+            {
+                return;
+            }
 
             var tabsToDelete = targetGroup.SubTabs.ToList();
             if (tabsToDelete.Count == 0)
@@ -1188,41 +1372,24 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Duplicate_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Récupération des paramètres de position depuis le sous-menu cliqué
             var menuItem = sender as MenuItem;
-            var config = menuItem?.Tag as Tuple<DuplicatePosition, LayoutItem>;
-
-            if (config == null) return;
+            if (!(menuItem?.Tag is Tuple<DuplicatePosition, LayoutItem> config))
+            {
+                return;
+            }
 
             DuplicatePosition userChoicePosition = config.Item1;
             LayoutItem userChoiceTarget = config.Item2;
 
-            // 2. Déterminer ce qui doit être dupliqué
-            var itemsToDuplicate = new List<LayoutItem>();
-            var selectedItems = GetVisibleItemsList(false)
-                .Where(i => i.IsSelected && !(i is LayoutTab tab && (tab.IsModel || tab.ParentGroup?.IsSelected == true)))
-                .ToList();
 
-            if (selectedItems.Count > 0)
+            var itemsToDuplicate = GetTargetedTabsAndGroupsForContextMenu(sender);
+
+            if (itemsToDuplicate.Count == 0)
             {
-                itemsToDuplicate.AddRange(selectedItems);
-            }
-            else
-            {
-                var targetGroup = GetTargetedGroupForContextMenu(sender);
-                if (targetGroup != null)
-                {
-                    itemsToDuplicate.Add(targetGroup);
-                }
-                else
-                {
-                    itemsToDuplicate.AddRange(GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel));
-                }
+                return;
             }
 
-            if (itemsToDuplicate.Count == 0) return;
-
-            _isDuplicating = true;
+            IsSyncingFromWPF = true;
 
             try
             {
@@ -1256,12 +1423,9 @@ namespace SioForgeCAD.Forms
                         }
                     }
 
-                    // 4. Insertion visuelle au bon endroit
                     InsertDuplicatedItems(newlyCreatedItems, userChoicePosition, userChoiceTarget);
-
                     tr.Commit();
 
-                    // 5. Synchronisation de l'ordre global (XData)
                     SyncTabOrderToAutoCAD();
                 }
             }
@@ -1271,61 +1435,159 @@ namespace SioForgeCAD.Forms
             }
             finally
             {
-                _isDuplicating = false;
+                IsSyncingFromWPF = false;
                 ReloadTabs(Application.DocumentManager.MdiActiveDocument);
             }
         }
 
-        // Nouvelle méthode pour générer le sous-menu
-        private void PopulateDuplicateSubMenu(MenuItem duplicateMenu)
+        private void ContextMenu_Move_Click(object sender, RoutedEventArgs e)
         {
-            duplicateMenu.Items.Clear();
+            var menuItem = sender as MenuItem;
+
+            if (!(menuItem?.Tag is Tuple<DuplicatePosition, LayoutItem> config))
+            {
+                return;
+            }
+
+            DuplicatePosition userChoicePosition = config.Item1;
+            LayoutItem userChoiceTarget = config.Item2;
+
+            // 1. Déterminer ce qui doit être déplacé
+            var itemsToMove = new List<LayoutItem>();
+            var selectedItems = GetVisibleItemsList(false)
+                .Where(i => i.IsSelected && !(i is LayoutTab tab && (tab.IsModel || tab.ParentGroup?.IsSelected == true)))
+                .ToList();
+
+            if (selectedItems.Count > 0)
+            {
+                itemsToMove.AddRange(selectedItems);
+            }
+            else
+            {
+                var targetGroup = GetTargetedGroupForContextMenu(sender);
+                if (targetGroup != null)
+                {
+                    itemsToMove.Add(targetGroup);
+                }
+                else
+                {
+                    itemsToMove.AddRange(GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel));
+                }
+            }
+
+            if (itemsToMove.Count == 0)
+            {
+                return;
+            }
+
+            // 2. Définir le groupe cible et l'index de base
+            LayoutGroup targetGroupDest = null;
+            if (userChoiceTarget is LayoutTab tabTarget && tabTarget.IsInGroup)
+            {
+                targetGroupDest = tabTarget.ParentGroup;
+            }
+            else if (userChoiceTarget is LayoutGroup groupTarget && (userChoicePosition == DuplicatePosition.Beginning || userChoicePosition == DuplicatePosition.End))
+            {
+                targetGroupDest = groupTarget;
+            }
+
+            int insertIndex = 0;
+            switch (userChoicePosition)
+            {
+                case DuplicatePosition.Beginning:
+                    insertIndex = 0;
+                    break;
+                case DuplicatePosition.End:
+                    insertIndex = targetGroupDest != null ? targetGroupDest.SubTabs.Count : Items.Count;
+                    break;
+                case DuplicatePosition.Before:
+                case DuplicatePosition.After:
+                    int offset = userChoicePosition == DuplicatePosition.After ? 1 : 0;
+                    if (targetGroupDest != null)
+                    {
+                        insertIndex = targetGroupDest.IndexOf(userChoiceTarget as LayoutTab) + offset;
+                    }
+                    else
+                    {
+                        insertIndex = userChoiceTarget != null ? Items.IndexOf(userChoiceTarget) + offset : Items.Count;
+                    }
+
+                    break;
+            }
+
+            // 3. Compensation des index (si on retire des éléments placés AVANT l'index cible)
+            if (targetGroupDest != null)
+            {
+                insertIndex -= itemsToMove.Count(s => s is LayoutTab t && t.ParentGroup == targetGroupDest && targetGroupDest.IndexOf(t) < insertIndex);
+            }
+            else
+            {
+                insertIndex -= itemsToMove.Count(s => Items.Contains(s) && Items.IndexOf(s) < insertIndex);
+            }
+
+            insertIndex = Math.Max(0, insertIndex);
+
+            // 4. Suppression et Réinsertion
+            var itemsToProcess = itemsToMove.Where(i => !(i is LayoutTab t && itemsToMove.Contains(t.ParentGroup))).ToList();
+
+            foreach (var item in itemsToProcess)
+            {
+                RemoveFromAll(item, true, false);
+            }
+
+            InsertItems(itemsToProcess, targetGroupDest, insertIndex);
+
+            // 5. Nettoyage et synchronisation AutoCAD
+            ClearSelection();
+            SyncTabOrderToAutoCAD();
+        }
+
+        private void PopulatePositionSubMenu(MenuItem parentMenu, RoutedEventHandler clickHandler)
+        {
+            parentMenu.Items.Clear();
 
             // --- Boutons de base ---
             var btnBeginning = new MenuItem { Header = "Au début", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
-            btnBeginning.Click += ContextMenu_Duplicate_Click;
-            duplicateMenu.Items.Add(btnBeginning);
+            btnBeginning.Click += clickHandler;
+            parentMenu.Items.Add(btnBeginning);
 
             var btnEnd = new MenuItem { Header = "À la fin", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, null) };
-            btnEnd.Click += ContextMenu_Duplicate_Click;
-            duplicateMenu.Items.Add(btnEnd);
+            btnEnd.Click += clickHandler;
+            parentMenu.Items.Add(btnEnd);
 
-            duplicateMenu.Items.Add(new Separator());
+            parentMenu.Items.Add(new Separator());
 
             // --- Sous-menus dynamiques "Avant..." et "Après..." ---
             var menuBefore = new MenuItem { Header = "Avant..." };
             var menuAfter = new MenuItem { Header = "Après..." };
 
-            // 2. Ajouter les éléments de la liste principale (Items racine et Groupes)
             foreach (var item in Items)
             {
                 if (item is LayoutTab tab)
                 {
-                    // Onglet simple à la racine
-                    menuBefore.Items.Add(CreateDuplicateMenuItem(tab, DuplicatePosition.Before, tab.Title));
-                    menuAfter.Items.Add(CreateDuplicateMenuItem(tab, DuplicatePosition.After, tab.Title));
+                    menuBefore.Items.Add(CreatePositionMenuItem(tab, DuplicatePosition.Before, tab.Title, clickHandler));
+                    menuAfter.Items.Add(CreatePositionMenuItem(tab, DuplicatePosition.After, tab.Title, clickHandler));
                 }
                 else if (item is LayoutGroup group)
                 {
-                    // --- Sous-menu pour le groupe entier ---
                     var groupMenuBefore = new MenuItem { Header = group.Title };
                     var groupMenuAfter = new MenuItem { Header = group.Title };
 
-                    // Option pour cibler le déplacement par rapport au groupe LUI-MÊME
-                    groupMenuBefore.Items.Add(CreateDuplicateMenuItem(group, DuplicatePosition.Before, $"[Avant le groupe entier]"));
-                    groupMenuAfter.Items.Add(CreateDuplicateMenuItem(group, DuplicatePosition.After, $"[Après le groupe entier]"));
-
-                    if (group.SubTabs.Count > 0)
+                    groupMenuBefore.Items.Add(CreatePositionMenuItem(group, DuplicatePosition.Before, "[Avant le groupe entier]", clickHandler));
+                    groupMenuAfter.Items.Add(CreatePositionMenuItem(group, DuplicatePosition.After, "[Après le groupe entier]", clickHandler));
+                    if (!Items.Any(t => t is LayoutGroup gp && gp.IsSelected))
                     {
-                        groupMenuBefore.Items.Add(new Separator());
-                        groupMenuAfter.Items.Add(new Separator());
-                    }
+                        if (group.SubTabs.Count > 0)
+                        {
+                            groupMenuBefore.Items.Add(new Separator());
+                            groupMenuAfter.Items.Add(new Separator());
+                        }
 
-                    // Options pour cibler les sous-onglets À L'INTÉRIEUR du groupe
-                    foreach (var subTab in group.SubTabs)
-                    {
-                        groupMenuBefore.Items.Add(CreateDuplicateMenuItem(subTab, DuplicatePosition.Before, subTab.Title));
-                        groupMenuAfter.Items.Add(CreateDuplicateMenuItem(subTab, DuplicatePosition.After, subTab.Title));
+                        foreach (var subTab in group.SubTabs)
+                        {
+                            groupMenuBefore.Items.Add(CreatePositionMenuItem(subTab, DuplicatePosition.Before, subTab.Title, clickHandler));
+                            groupMenuAfter.Items.Add(CreatePositionMenuItem(subTab, DuplicatePosition.After, subTab.Title, clickHandler));
+                        }
                     }
 
                     menuBefore.Items.Add(groupMenuBefore);
@@ -1333,26 +1595,28 @@ namespace SioForgeCAD.Forms
                 }
             }
 
-            duplicateMenu.Items.Add(menuBefore);
-            duplicateMenu.Items.Add(menuAfter);
+            parentMenu.Items.Add(menuBefore);
+            parentMenu.Items.Add(menuAfter);
         }
 
-        private MenuItem CreateDuplicateMenuItem(LayoutItem targetItem, DuplicatePosition position, string header)
+        private static MenuItem CreatePositionMenuItem(LayoutItem targetItem, DuplicatePosition position, string header, RoutedEventHandler clickHandler)
         {
             var menuItem = new MenuItem
             {
                 Header = header,
-                // On injecte la position et l'item cible dans le Tag pour les récupérer au clic
                 Tag = new Tuple<DuplicatePosition, LayoutItem>(position, targetItem)
             };
-            menuItem.Click += ContextMenu_Duplicate_Click;
+            menuItem.Click += clickHandler;
             return menuItem;
         }
 
         private static ContextMenu GetRootContextMenu(object sender)
         {
             // Si l'objet cliqué est DÉJÀ le ContextMenu (rare mais possible)
-            if (sender is ContextMenu cm) return cm;
+            if (sender is ContextMenu cm)
+            {
+                return cm;
+            }
 
             FrameworkElement current = sender as FrameworkElement;
 
@@ -1379,6 +1643,29 @@ namespace SioForgeCAD.Forms
             return null;
         }
 
+        private List<LayoutItem> GetTargetedTabsAndGroupsForContextMenu(object sender)
+        {
+            var Targeted = new HashSet<LayoutItem>();
+            foreach (var tab in GetTargetedTabsForContextMenu(sender, t => !t.IsPinned && !t.IsModel))
+            {
+                if (tab.IsInGroup && tab.ParentGroup is LayoutGroup gp)
+                {
+                    if (gp.IsSelected)
+                    {
+                        Targeted.Add(gp);
+                    }
+                    else
+                    {
+                        Targeted.Add(tab);
+                    }
+                }
+                else
+                {
+                    Targeted.Add(tab);
+                }
+            }
+            return Targeted.ToList();
+        }
         private static LayoutGroup GetTargetedGroupForContextMenu(object sender)
         {
             var contextMenu = GetRootContextMenu(sender);
@@ -1414,21 +1701,34 @@ namespace SioForgeCAD.Forms
         public static T GetVisualParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null) return null;
+            if (parentObject == null)
+            {
+                return null;
+            }
+
             return parentObject as T ?? GetVisualParent<T>(parentObject);
         }
 
         public static FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
         {
-            if (parent == null) return null;
+            if (parent == null)
+            {
+                return null;
+            }
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is FrameworkElement fe && fe.DataContext == itemData && !(fe.DataContext is LayoutGroup)) return fe;
+                if (child is FrameworkElement fe && fe.DataContext == itemData && !(fe.DataContext is LayoutGroup))
+                {
+                    return fe;
+                }
 
                 var result = GetVisualContainerFromItem(child, itemData);
-                if (result != null) return result;
+                if (result != null)
+                {
+                    return result;
+                }
             }
             return null;
         }
@@ -1498,7 +1798,11 @@ namespace SioForgeCAD.Forms
                     if (!_isSyncing)
                     {
                         _isSyncing = true;
-                        foreach (var tab in SubTabs_) tab.IsSelected = value;
+                        foreach (var tab in SubTabs_)
+                        {
+                            tab.IsSelected = value;
+                        }
+
                         _isSyncing = false;
                     }
                 }
@@ -1507,7 +1811,11 @@ namespace SioForgeCAD.Forms
 
         internal void EvaluateGroupSelection()
         {
-            if (_isSyncing || SubTabs_.Count == 0) return;
+            if (_isSyncing || SubTabs_.Count == 0)
+            {
+                return;
+            }
+
             bool allSelected = SubTabs_.All(t => t.IsSelected);
             if (base.IsSelected != allSelected)
             {
@@ -1524,7 +1832,7 @@ namespace SioForgeCAD.Forms
 
         public void Add(LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Add(tab); EvaluateGroupSelection(); }
         public void Insert(int index, LayoutTab tab) { tab.ParentGroup = this; SubTabs_.Insert(index, tab); EvaluateGroupSelection(); }
-        public bool Remove(LayoutTab tab) { tab.ParentGroup = null; bool removed = SubTabs_.Remove(tab); if (removed) EvaluateGroupSelection(); return removed; }
+        public bool Remove(LayoutTab tab) { tab.ParentGroup = null; bool removed = SubTabs_.Remove(tab); if (removed) { EvaluateGroupSelection(); } return removed; }
         public bool Contains(LayoutTab tab) => SubTabs_.Contains(tab);
         public int IndexOf(LayoutTab tab) => SubTabs_.IndexOf(tab);
     }
@@ -1552,12 +1860,22 @@ namespace SioForgeCAD.Forms
                     if (tv.TypeCode == (short)DxfCode.ExtendedDataAsciiString && tv.Value is string val && val.StartsWith("Group:"))
                     {
                         groupName = val.Substring(6);
-                        if (string.IsNullOrEmpty(groupName)) groupName = null;
+                        if (string.IsNullOrEmpty(groupName))
+                        {
+                            groupName = null;
+                        }
                     }
                     else if (tv.TypeCode == (short)DxfCode.ExtendedDataInteger16)
                     {
-                        if (int16Index == 0) isExpanded = (short)tv.Value == 1;
-                        else if (int16Index == 1) isPinned = (short)tv.Value == 1;
+                        if (int16Index == 0)
+                        {
+                            isExpanded = (short)tv.Value == 1;
+                        }
+                        else if (int16Index == 1)
+                        {
+                            isPinned = (short)tv.Value == 1;
+                        }
+
                         int16Index++;
                     }
                 }

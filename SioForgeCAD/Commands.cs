@@ -292,7 +292,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "RANDOMPAVEMENT", CommandFlags.Modal)]
         public static void RANDOMPAVEMENT() => Functions.RANDOMPAVEMENT.Draw();
 
-        [CommandMethod("SIOFORGECAD", "PURGEALL", CommandFlags.Modal)]
+        [CommandMethod("SIOFORGECAD", "PURGEALL", CommandFlags.Modal | CommandFlags.NoBlockEditor)]
         public static void PURGEALL() => Functions.PURGEALL.Purge();
 
         [CommandMethod("SIOFORGECAD", "READXDATA", CommandFlags.UsePickSet)]
@@ -498,80 +498,31 @@ namespace SioForgeCAD
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
-
-
-        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
-        public static void TEST2()
-        {
-            //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
-            //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
-
-
-
-            //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
-
-
-            //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
-            // SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
-        }
-
-
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
             Functions.TEST.Attach();
         }
 
-        /*
+        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-            var o = new PromptDoubleOptions("\nEntrez un nombre : ");
-            o.Keywords.Add("Option1");
-            var z = ed.GetDouble("\nEntrez un nombre : ");
-            // 1. Récupérer la liste des noms (Calques, Fichiers, etc.)
-            List<string> layerNames = new List<string>();
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
-                foreach (ObjectId id in lt)
-                {
-                    LayerTableRecord ltr = (LayerTableRecord)tr.GetObject(id, OpenMode.ForRead);
-                    layerNames.Add(ltr.Name);
-                }
-            }
-
-            // 2. Afficher la boîte de dialogue
-            using (var dialog = new ComboboxDialog(layerNames))
-            {
-                // On définit le titre dynamiquement si besoin
-                dialog.Text = "Sélection des calques à traiter";
-
-                if (Application.ShowModalDialog(dialog) == DialogResult.OK)
-                {
-                    // 3. Récupérer les éléments sélectionnés
-                    List<string> selectedLayers = dialog.GetSelectedItems();
-
-                    if (selectedLayers.Count > 0)
-                    {
-                        ed.WriteMessage($"\nVous avez sélectionné {selectedLayers.Count} calque(s) :");
-                        foreach (string name in selectedLayers)
-                        {
-                            ed.WriteMessage($"\n - {name}");
-                        }
-                    }
-                    else
-                    {
-                        ed.WriteMessage("\nAucun élément sélectionné.");
-                    }
-                }
-            }
         }
-        */
+
+        [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
+        public static void TEST3()
+        {
+        }
+
+        //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
+        //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
+
+
+        //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
+
+        //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
+        //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
+
 
         //TODO : BLKSETTOBYLAYER
         //TODO : Overrule for XCLIP
@@ -582,257 +533,8 @@ namespace SioForgeCAD
 
         //https://keanw.com/2014/06/iterating-autocad-system-variables-using-net-part-2.html
 
-
-        /*
-         * // <snip>
         //https://github.com/huypham0808/Autopublish_AutoCAD_Plug-in/blob/f2f059f795bb26f7b654a05e64de68557f34f950/Command.cs#L165
-        //https://github.com/ADN-DevTech/MgdDbg/blob/master/Reactors/Events/PlotEvents.cs
-        protected override void
-        EnableEventsImp()
-        {
-            Utils.AcadUi.PrintToCmdLine("\nPlot Events Turned On ...\n");
 
-            AcPl.PlotReactorManager plot = new AcPl.PlotReactorManager();
-
-            plot.BeginDocument += new Autodesk.AutoCAD.PlottingServices.BeginDocumentEventHandler(event_BeginDocument);
-            plot.BeginPage += new Autodesk.AutoCAD.PlottingServices.BeginPageEventHandler(event_BeginPage);
-            plot.BeginPlot += new Autodesk.AutoCAD.PlottingServices.BeginPlotEventHandler(event_BeginPlot);
-            plot.EndDocument += new Autodesk.AutoCAD.PlottingServices.EndDocumentEventHandler(event_EndDocument);
-            plot.EndPage += new Autodesk.AutoCAD.PlottingServices.EndPageEventHandler(event_EndPage);
-            plot.EndPlot += new Autodesk.AutoCAD.PlottingServices.EndPlotEventHandler(event_EndPlot);
-            plot.PageCancelled += new Autodesk.AutoCAD.PlottingServices.PageCancelledEventHandler(event_PageCancelled);
-            plot.PlotCancelled += new Autodesk.AutoCAD.PlottingServices.PlotCancelledEventHandler(event_PlotCancelled);
-        }
-
-// <snip>
-
-        private void
-        event_BeginPlot(object sender, Autodesk.AutoCAD.PlottingServices.BeginPlotEventArgs e)
-        {
-            // <-- do something useful
-        }
-
-// <snip>
-         */
-
-        //[CommandMethod("DEBUG", "MERGECAVALIERCONTOURS", CommandFlags.UsePickSet)]
-
-        /*
-         public static void MERGECAVALIERCONTOURS()
-         {
-             Editor ed = Generic.GetEditor();
-             Database db = Generic.GetDatabase();
-             using (Transaction tr = db.TransactionManager.StartTransaction())
-             {
-                 if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
-                 {
-                     return;
-                 }
-
-                 FirstHachure.RegisterHighlight();
-                 bool Reselect = true;
-                 Hatch SecondHachure = null;
-                 try
-                 {
-                     while (Reselect)
-                     {
-                         ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
-                         Reselect = false;
-                         if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
-                         {
-                             return;
-                         }
-                         if (SecondHachure == FirstHachure)
-                         {
-                             Reselect = true;
-                         }
-                     }
-                 }
-                 finally
-                 {
-                     FirstHachure.RegisterUnhighlight();
-                 }
-
-                 Entity ExistingBoundaryStyle = FirstHachure;
-                 if (FirstHachure.Associative)
-                 {
-                     FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
-                     ExistingBoundaryStyle = AssociatedBoundary;
-                 }
-
-                 if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
-                 {
-                     return;
-                 }
-
-                 var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
-                 var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
-
-                 var (union, _) = Poly1.BooleanOperation(Poly2, CavalierContoursSharp.BooleanOp.Or);
-
-                 foreach (var item in union)
-                 {
-
-                     ConvertCavToPoly(item).AddToDrawing();
-
-                     foreach (var item2 in item.ParallelOffset(5, null))
-                     {
-                         ConvertCavToPoly(item2).AddToDrawing();
-                     }
-
-
-                 }
-
-                 tr.Commit();
-             }
-
-
-
-             CavalierContoursSharp.Polyline ConvertToCavPoly(Polyline poly)
-             {
-                 CavalierContoursSharp.Polyline CavPoly = new CavalierContoursSharp.Polyline();
-                 for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
-                 {
-                     var AutoCadBulge = poly.GetBulgeAt(i);
-                     var AutoCadVertex = poly.GetPoint2dAt(i);
-                     CavPoly.AddVertex(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
-
-
-                 }
-                 CavPoly.IsClosed = poly.Closed;
-                 return CavPoly;
-
-             }
-
-             Polyline ConvertCavToPoly(CavalierContoursSharp.Polyline poly)
-             {
-                 Polyline Poly = new Polyline();
-
-                 foreach (CavalierContoursSharp.CavcVertex item in poly)
-                 {
-                     Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
-                 }
-                 Poly.Closed = poly.IsClosed;
-                 return Poly;
-
-
-             }
-
-
-
-
-
-
-
-         }
-
-         public static void MERGECAVALIERCONTOURS()
-         {
-             Editor ed = Generic.GetEditor();
-             Database db = Generic.GetDatabase();
-             using (Transaction tr = db.TransactionManager.StartTransaction())
-             {
-                 if (!ed.GetHatch(out Hatch FirstHachure, "Veuillez selectionner une première hachure"))
-                 {
-                     return;
-                 }
-
-                 FirstHachure.RegisterHighlight();
-                 bool Reselect = true;
-                 Hatch SecondHachure = null;
-                 try
-                 {
-                     while (Reselect)
-                     {
-                         ed.SetImpliedSelection(System.Array.Empty<ObjectId>());
-                         Reselect = false;
-                         if (!ed.GetHatch(out SecondHachure, "Veuillez selectionner une deuxième hachure"))
-                         {
-                             return;
-                         }
-                         if (SecondHachure == FirstHachure)
-                         {
-                             Reselect = true;
-                         }
-                     }
-                 }
-                 finally
-                 {
-                     FirstHachure.RegisterUnhighlight();
-                 }
-
-                 Entity ExistingBoundaryStyle = FirstHachure;
-                 if (FirstHachure.Associative)
-                 {
-                     FirstHachure.GetAssociatedBoundary(out Curve AssociatedBoundary);
-                     ExistingBoundaryStyle = AssociatedBoundary;
-                 }
-
-                 if (!FirstHachure.GetPolyHole(out var FirstHachurePolyHole) || !SecondHachure.GetPolyHole(out var SecondHachurePolyHole))
-                 {
-                     return;
-                 }
-
-                 var Poly1 = ConvertToCavPoly(FirstHachurePolyHole.Boundary);
-                 var Poly2 = ConvertToCavPoly(SecondHachurePolyHole.Boundary);
-
-                 var ress = PlineBoolean.Compute(Poly1, Poly2, BooleanOp.Or);
-                 foreach (var item in ress.Pos)
-                 {
-
-                     ConvertCavToPoly(item.Pline).AddToDrawing();
-
-                     //foreach (var item2 in item.ParallelOffset(5, null))
-                     //{
-                     //    ConvertCavToPoly(item2).AddToDrawing();
-                     //}
-
-
-                 }
-
-                 tr.Commit();
-             }
-
-
-
-             CavalierContours.Polyline ConvertToCavPoly(Autodesk.AutoCAD.DatabaseServices.Polyline poly)
-             {
-                 CavalierContours.Polyline CavPoly = new CavalierContours.Polyline();
-                 for (int i = 0; i < poly.GetReelNumberOfVertices(); i++)
-                 {
-                     var AutoCadBulge = poly.GetBulgeAt(i);
-                     var AutoCadVertex = poly.GetPoint2dAt(i);
-                     CavPoly.Add(AutoCadVertex.X, AutoCadVertex.Y, AutoCadBulge);
-
-
-                 }
-                 CavPoly.IsClosed = poly.Closed;
-                 return CavPoly;
-
-             }
-
-             Polyline ConvertCavToPoly(CavalierContours.Polyline poly)
-             {
-                 Polyline Poly = new Polyline();
-
-                 foreach (var item in poly.Vertexes)
-                 {
-                     Poly.AddVertex(new Point2d(item.X, item.Y), item.Bulge);
-                 }
-                 Poly.Closed = poly.IsClosed;
-                 return Poly;
-
-
-             }
-
-
-
-
-
-
-
-         }
-        */
 
         [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.UsePickSet)]
         public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
@@ -847,5 +549,6 @@ namespace SioForgeCAD
         public static void DRAWRAINBOWLIGNES() => Functions.DEBUG.DRAWRAINBOWLIGNES();
 
 #endif
+
     }
 }
