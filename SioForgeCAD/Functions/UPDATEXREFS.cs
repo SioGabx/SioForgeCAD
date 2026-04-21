@@ -75,8 +75,7 @@ namespace SioForgeCAD.Functions
                     btr.UpgradeOpen();
                     btr.PathName = newPath;
 
-                    ed.WriteMessage(
-                        $"\nXref mise à jour :\n{btr.PathName}\n→ {newPath}");
+                    Generic.WriteMessage($"Xref mise à jour :\n{btr.PathName}\n→ {newPath}");
                 }
 
                 tr.Commit();

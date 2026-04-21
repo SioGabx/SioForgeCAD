@@ -105,7 +105,7 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                ed.WriteMessage($"\n{createdEntities.Count} objets créés et sélectionnés.");
+                Generic.WriteMessage($"{createdEntities.Count} objets créés et sélectionnés.");
                 tr.Commit();
             }
 

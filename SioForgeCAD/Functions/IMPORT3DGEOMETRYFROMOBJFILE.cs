@@ -37,8 +37,10 @@ namespace SioForgeCAD.Functions
             vertices = new List<Point3d>();
             faces = new List<int[]>();
 
-            PromptOpenFileOptions pfo = new PromptOpenFileOptions("Sélectionnez un fichier OBJ à importer :");
-            pfo.Filter = "Fichiers OBJ (*.obj)|*.obj";
+            PromptOpenFileOptions pfo = new PromptOpenFileOptions("Sélectionnez un fichier OBJ à importer :")
+            {
+                Filter = "Fichiers OBJ (*.obj)|*.obj"
+            };
             PromptFileNameResult pfr = ed.GetFileNameForOpen(pfo);
             if (pfr.Status != PromptStatus.OK)
             {
@@ -48,7 +50,7 @@ namespace SioForgeCAD.Functions
             string filePath = pfr.StringResult;
             if (!File.Exists(filePath))
             {
-                ed.WriteMessage("\nFichier introuvable.");
+                Generic.WriteMessage("Fichier introuvable.");
                 return;
             }
 
@@ -120,7 +122,6 @@ namespace SioForgeCAD.Functions
         private static void Import3d(List<Point3d> vertices, List<int[]> faces)
         {
             Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -152,7 +153,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            ed.WriteMessage("\nImport terminé (polylignes 3D créées).");
+            Generic.WriteMessage("Import terminé (polylignes 3D créées).");
         }
 
     }

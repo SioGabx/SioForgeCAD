@@ -75,11 +75,11 @@ namespace SioForgeCAD.Functions
 
                             if (Layers.Rename(item.Original, item.Renamed))
                             {
-                                ed.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
+                                Generic.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
                             }
                             else
                             {
-                                ed.WriteMessage($"Erreur sur {item.Original}");
+                                Generic.WriteMessage($"Erreur sur {item.Original}");
                             }
 
                         }

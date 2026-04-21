@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 
 namespace SioForgeCAD.Functions
 {
-    internal class VEGBLOCEXPORTTOILLUSTRATOR
+    public static class VEGBLOCEXPORTTOILLUSTRATOR
     {
         private struct SymbolData
         {
@@ -84,14 +84,14 @@ namespace SioForgeCAD.Functions
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ExportPlanVeg.svg");
                 File.WriteAllText(path, finalSvg, Encoding.UTF8);
 
-                ed.WriteMessage($"\nExport réussi : {path}");
+                Generic.WriteMessage($"Export réussi : {path}");
             }
         }
 
         private static string GeneratePerimeterSvg(Polyline poly, double originX, double originY, double multiplier, Matrix3d wcsToUcs)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("    <polygon points=\"");
+            sb.Append("<polygon points=\"");
             for (int i = 0; i < poly.NumberOfVertices; i++)
             {
                 Point3d ucsPt = poly.GetPoint3dAt(i).TransformBy(wcsToUcs);
@@ -133,9 +133,9 @@ namespace SioForgeCAD.Functions
             };
 
             // On définit le symbole normalement (Y vers le haut)
-            svgDefs.AppendLine($"    <symbol id=\"{sData.Id}\" viewBox=\"{F(sData.MinX)} {F(sData.MinY)} {F(sData.Width)} {F(sData.Height)}\" overflow=\"visible\">");
+            svgDefs.AppendLine($"<symbol id=\"{sData.Id}\" viewBox=\"{F(sData.MinX)} {F(sData.MinY)} {F(sData.Width)} {F(sData.Height)}\" overflow=\"visible\">");
             svgDefs.Append(innerGeometries.ToString());
-            svgDefs.AppendLine("    </symbol>");
+            svgDefs.AppendLine("</symbol>");
 
             return sData;
         }
@@ -203,7 +203,7 @@ namespace SioForgeCAD.Functions
                 return pathData.ToString();
             }
 
-            return $"";
+            return string.Empty;
         }
 
         private static string GetEntColorHex(Entity ent)

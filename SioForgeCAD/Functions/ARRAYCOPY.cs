@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
                 DBObjectCollection finalEntities = RunInteractiveArrayLoop(sourceEntities, vec);
 
                 // 5. Validation finale (Injection dans la DB)
-                if (finalEntities != null && finalEntities.Count > 0)
+                if (finalEntities?.Count > 0)
                 {
                     CommitEntities(db, finalEntities);
                     finalEntities.DeepDispose(); // Nettoyage après écriture

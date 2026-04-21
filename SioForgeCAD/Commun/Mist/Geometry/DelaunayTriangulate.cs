@@ -56,13 +56,12 @@ namespace SioForgeCAD.Commun
         public static List<Polyline3d> Triangulate(List<DBPoint> PointsSet)
         {
             Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
             List<Polyline3d> Result = new List<Polyline3d>();
 
             int numberOfPoints = PointsSet.Count;
             if (numberOfPoints < 3)
             {
-                ed.WriteMessage("Minimum 3 points must be selected!");
+                Generic.WriteMessage("Minimum 3 points must be selected!");
                 return Result;
             }
             int PtsIndex, j, k, numberOfTriangles, numberOfEdges, thinTriangleFoundCount = 0, IgnoredPointWithSameCoordinatesCount = 0;
@@ -106,10 +105,7 @@ namespace SioForgeCAD.Commun
             }
             if (IgnoredPointWithSameCoordinatesCount > 0)
             {
-                ed.WriteMessage(
-                  "\nIgnored {0} point(s) with same coordinates.",
-                  IgnoredPointWithSameCoordinatesCount
-                );
+                Generic.WriteMessage($"Ignored {IgnoredPointWithSameCoordinatesCount} point(s) with same coordinates.");
             }
 
             // Supertriangle

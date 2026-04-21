@@ -51,7 +51,7 @@ namespace SioForgeCAD.Functions
                 }
                 catch (Exception ex)
                 {
-                    ed.WriteMessage($"\nErreur : {ex.Message}");
+                    Generic.WriteMessage($"Erreur : {ex.Message}");
                 }
             }
         }

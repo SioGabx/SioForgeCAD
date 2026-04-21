@@ -4,11 +4,9 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -19,43 +17,71 @@ namespace SioForgeCAD.Functions
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
 
+            var selRes = ed.GetSelectionRedraw("\nSélectionnez des courbes :", true, false, ed.GetCurvesFilter());
 
-            // 1. Demander à l'utilisateur de sélectionner une polyligne
-            PromptEntityOptions opt = new PromptEntityOptions("\nSélectionnez une polyligne : ");
-            opt.SetRejectMessage("\nL'objet doit être une polyligne.");
-            opt.AddAllowedClass(typeof(Polyline), exactMatch: true);
-
-            PromptEntityResult res = ed.GetEntity(opt);
-
-            if (res.Status != PromptStatus.OK) return;
+            if (selRes.Status != PromptStatus.OK) return;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 try
                 {
-                    // 2. Ouvrir la polyligne pour lecture
-                    Polyline pline = tr.GetObject(res.ObjectId, OpenMode.ForRead) as Polyline;
+                    int totalPoints = 0;
 
-                    if (pline != null)
+                    foreach (ObjectId id in selRes.Value.GetObjectIds())
                     {
-                        // 3. Ouvrir l'espace courant (Model Space) pour écriture
-                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
+                        // Cast to the base Curve class
+                        Curve ent = tr.GetObject(id, OpenMode.ForRead) as Curve;
+                        if (ent == null) continue;
 
-                        int vn = pline.NumberOfVertices;
-                        for (int i = 0; i < vn; i++)
+                        List<Point3d> pointsToCreate = new List<Point3d>();
+
+                        // 2. Determine points based on specific curve type
+                        if (ent is Polyline pline)
                         {
-                            Point3d pt = pline.GetPoint3dAt(i);
-                            DBPoint dbPoint = new DBPoint(pt);
-                            dbPoint.AddToDrawing();
+                            for (int i = 0; i < pline.NumberOfVertices; i++)
+                                pointsToCreate.Add(pline.GetPoint3dAt(i));
+                        }
+                        else if (ent is Polyline3d pline3d)
+                        {
+                            // For old-style 3D polylines
+                            foreach (ObjectId vId in pline3d)
+                            {
+                                var v3d = (PolylineVertex3d)tr.GetObject(vId, OpenMode.ForRead);
+                                pointsToCreate.Add(v3d.Position);
+                            }
+                        }
+                        else if (ent is Spline spline)
+                        {
+                            // For Splines, we usually want Control Points
+                            for (int i = 0; i < spline.NumControlPoints; i++)
+                                pointsToCreate.Add(spline.GetControlPointAt(i));
+                        }
+                        else
+                        {
+                            // For Line, Arc, Ellipse: Use Start and End points
+                            pointsToCreate.Add(ent.StartPoint);
+                            // Avoid adding the same point twice if it's a closed curve (like a Circle)
+                            if (!ent.Closed)
+                            {
+                                pointsToCreate.Add(ent.EndPoint);
+                            }
                         }
 
-                        tr.Commit();
-                        Generic.WriteMessage($"Succès : {vn} points ajoutés sur les sommets.");
+                        // 3. Create the points in the drawing
+                        foreach (Point3d pt in pointsToCreate)
+                        {
+                            DBPoint dbPoint = new DBPoint(pt);
+                            dbPoint.AddToDrawing();
+                            totalPoints++;
+                        }
                     }
+
+                    tr.Commit();
+                    Generic.WriteMessage($"\nSuccès : {totalPoints} points créés.");
                 }
                 catch (System.Exception ex)
                 {
-                    Generic.WriteMessage("Erreur : " + ex.Message);
+                    Generic.WriteMessage("\nErreur : " + ex.Message);
                     tr.Abort();
                 }
             }

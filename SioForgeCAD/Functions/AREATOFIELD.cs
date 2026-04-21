@@ -37,7 +37,7 @@ namespace SioForgeCAD.Functions
 
                 List<double> AreaList = new List<double>();
                 List<string> AcObjPropAreaList = new List<string>();
-                string ValueFormating = " \\f \"%lu2%pr2\"";
+                const string ValueFormating = " \\f \"%lu2%pr2\"";
 
                 foreach (ObjectId ObjId in AllSelectedObjectIds)
                 {

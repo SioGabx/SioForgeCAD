@@ -63,7 +63,7 @@ namespace SioForgeCAD.Functions
 
                     if (attributeTags.Count == 0)
                     {
-                        ed.WriteMessage("\nAucun attribut trouvé dans le()s bloc(s).");
+                        Generic.WriteMessage("\nAucun attribut trouvé dans le()s bloc(s).");
                         return;
                     }
 

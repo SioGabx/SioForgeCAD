@@ -174,7 +174,7 @@ namespace SioForgeCAD.Functions
             List<string> layoutNames = AllLayouts.ConvertAll(ele => $"{ele.LayoutName}");
             if (layoutNames.Count == 0)
             {
-                ed.WriteMessage("\nAucun layout disponible.");
+                Generic.WriteMessage("\nAucun layout disponible.");
                 return null;
             }
 

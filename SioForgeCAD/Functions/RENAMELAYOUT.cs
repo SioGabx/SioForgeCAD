@@ -12,7 +12,6 @@ namespace SioForgeCAD.Functions
     {
         public static void Rename()
         {
-            Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
 
             List<string> layoutNames = new List<string>();
@@ -33,7 +32,13 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            // Note : Les layouts acceptent presque tout, mais RepairSymbolName assure la compatibilité
+            ShowAndApply(layoutNames);
+        }
+
+        public static void ShowAndApply(List<string> layoutNames)
+        {
+            Editor ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
             using (var renameForm = new RenameDialog(layoutNames, (_, transformed) =>
             {
                 try
@@ -64,11 +69,11 @@ namespace SioForgeCAD.Functions
                             try
                             {
                                 lm.RenameLayout(item.Original, item.Renamed);
-                                ed.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
+                                Generic.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
                             }
                             catch (System.Exception ex)
                             {
-                                ed.WriteMessage($"Erreur lors du renommage de {item.Original} : {ex.Message}");
+                                Generic.WriteMessage($"Erreur lors du renommage de {item.Original} : {ex.Message}");
                             }
                         }
                         tr.Commit();
@@ -76,5 +81,7 @@ namespace SioForgeCAD.Functions
                 }
             }
         }
+
+
     }
 }

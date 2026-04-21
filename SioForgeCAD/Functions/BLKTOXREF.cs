@@ -34,7 +34,7 @@ namespace SioForgeCAD.Functions
                     BlockTableRecord blockTableRecord = tr.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
                     if (blockTableRecord == null)
                     {
-                        ed.WriteMessage("\nFailed to get the block table record.");
+                        Generic.WriteMessage("Failed to get the block table record.");
                         return;
                     }
 
@@ -58,7 +58,7 @@ namespace SioForgeCAD.Functions
                         db.Wblock(newDb, new ObjectIdCollection() { blockRefId }, Point3d.Origin, DuplicateRecordCloning.Replace);
 
                         newDb.SaveAs(dwgFileName, DwgVersion.Current);
-                        ed.WriteMessage($"\nBlock saved as {dwgFileName}");
+                        Generic.WriteMessage($"Block saved as {dwgFileName}");
                     }
 
                     const int MaxWaitMs = 5000;
@@ -74,7 +74,7 @@ namespace SioForgeCAD.Functions
                     ObjectId xg = db.AttachXref(dwgFileName, Path.GetFileNameWithoutExtension(dwgFileName));
                     if (xg == ObjectId.Null)
                     {
-                        Generic.WriteMessage("\nFailed to attach Xref.");
+                        Generic.WriteMessage("Failed to attach Xref.");
                         return;
                     }
                     var bref = new BlockReference(Point3d.Origin, xg);

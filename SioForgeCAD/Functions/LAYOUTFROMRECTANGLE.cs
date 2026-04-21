@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun;
 using System;
 
 namespace SioForgeCAD.Functions
@@ -26,10 +27,12 @@ namespace SioForgeCAD.Functions
             if (per.Status != PromptStatus.OK) return;
 
             // 2. Demander l'échelle
-            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez le dénominateur de l'échelle (ex: 500 pour 1/500e) : ");
-            pdo.AllowNegative = false;
-            pdo.AllowZero = false;
-            pdo.DefaultValue = 500;
+            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez le dénominateur de l'échelle (ex: 500 pour 1/500e) : ")
+            {
+                AllowNegative = false,
+                AllowZero = false,
+                DefaultValue = 500
+            };
 
             PromptDoubleResult pdr = ed.GetDouble(pdo);
             if (pdr.Status != PromptStatus.OK) return;
@@ -90,8 +93,8 @@ namespace SioForgeCAD.Functions
 
                 tr.Commit();
 
-                ed.WriteMessage($"\nSuccès ! Présentation '{layoutName}' créée.");
-                ed.WriteMessage($"\nDimensions Papier générées : {paperWidth:F2} x {paperHeight:F2} mm.");
+                Generic.WriteMessage($"Succès ! Présentation '{layoutName}' créée.");
+                Generic.WriteMessage($"Dimensions Papier générées : {paperWidth:F2} x {paperHeight:F2} mm.");
             }
         }
     }

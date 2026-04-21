@@ -117,7 +117,7 @@ namespace SioForgeCAD.Functions
             PromptResult strRes = ed.GetString(strOpts);
             if (strRes.Status != PromptStatus.OK || string.IsNullOrWhiteSpace(strRes.StringResult))
             {
-                ed.WriteMessage("\nEntrée invalide.");
+                Generic.WriteMessage("Entrée invalide.");
                 return null;
             }
 
@@ -132,7 +132,7 @@ namespace SioForgeCAD.Functions
             }
             catch
             {
-                ed.WriteMessage("\nErreur dans la saisie des distances.");
+                Generic.WriteMessage("Erreur dans la saisie des distances.");
                 return null;
             }
         }

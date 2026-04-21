@@ -261,7 +261,6 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
         public static void VEGBLOC() => Functions.VEGBLOC.Create();
 
-
         [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.UsePickSet)]
         public static void VEGBLOCEDIT() => Functions.VEGBLOCEDIT.Edit();
 
@@ -341,6 +340,7 @@ namespace SioForgeCAD
         public static void ADDPOINTSATPOLYLIGNEVERTICES() => Functions.ADDPOINTSATPOLYLIGNEVERTICES.Execute();
 
         [CommandMethod("SIOFORGECAD", "VIEWGEOMETRYVERTEX", CommandFlags.Redraw)]
+        //Overule to draw a circle at each vertex of the selected entities
         public static void VIEWGEOMETRYVERTEX() => Functions.VIEWGEOMETRYVERTEX.ToggleOverrule();
 
         [CommandMethod("SIOFORGECAD", "LINESAVERAGE", CommandFlags.UsePickSet)]
@@ -501,7 +501,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TEST.Attach();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]

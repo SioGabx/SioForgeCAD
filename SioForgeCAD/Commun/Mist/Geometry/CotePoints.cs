@@ -167,9 +167,6 @@ namespace SioForgeCAD.Commun
 
         public static double? ExtractDoubleInStringFromPoint(string OriginalString)
         {
-            var doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-            var ed = doc.Editor;
-
             if (OriginalString.Contains("%"))
             {
                 Generic.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être convertis en cote.");
@@ -206,7 +203,7 @@ namespace SioForgeCAD.Commun
                 bool IsValidNumber = double.TryParse(FinalNumberString, out double FinalNumberDouble);
                 if (IsValidNumber)
                 {
-                    ed.WriteMessage($"Côte détéctée : {FinalNumberString}\n");
+                    Generic.WriteMessage($"Côte détéctée : {FinalNumberString}\n");
                     return FinalNumberDouble;
                 }
                 else

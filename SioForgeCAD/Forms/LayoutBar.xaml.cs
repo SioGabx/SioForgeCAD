@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Windows.Data;
@@ -516,23 +517,41 @@ namespace SioForgeCAD.Forms
 
         private static string GenerateUniqueLayoutName(string baseName)
         {
-            string newName = $"{baseName} (Copie)";
-            for (int counter = 2; LayoutManager.Current.LayoutExists(newName); counter++)
+            if (!LayoutManager.Current.LayoutExists(baseName))
             {
-                newName = $"{baseName} (Copie {counter})";
+                return baseName;
             }
+
+            int counter = 1;
+            string newName;
+
+            do
+            {
+                newName = $"{baseName} ({counter})";
+                counter++;
+            }
+            while (LayoutManager.Current.LayoutExists(newName));
+
             return newName;
         }
 
         private string GenerateUniqueGroupName(string baseName)
         {
-            string newName = $"{baseName} (Copie)";
-
-            // On vérifie l'existence du nom dans les éléments de niveau racine (Items)
-            for (int counter = 2; Items.OfType<LayoutGroup>().Any(g => g.Title == newName); counter++)
+            if (!Items.OfType<LayoutGroup>().Any(g => g.Title == baseName))
             {
-                newName = $"{baseName} (Copie {counter})";
+                return baseName;
             }
+
+            int counter = 1;
+            string newName;
+
+            do
+            {
+                newName = $"{baseName} ({counter})";
+                counter++;
+            }
+            while (Items.OfType<LayoutGroup>().Any(g => g.Title == newName));
+
             return newName;
         }
 
@@ -598,6 +617,86 @@ namespace SioForgeCAD.Forms
             };
         }
 
+        private static List<(string Original, string Renamed)> ProcessRenamingUI(List<string> oldNames, string typeNameStr)
+        {
+            var results = new List<(string Original, string Renamed)>();
+            if (oldNames == null || oldNames.Count == 0)
+            {
+                return results;
+            }
+
+            // --- CAS 1 : Un seul élément sélectionné (InputDialogBox) ---
+            if (oldNames.Count == 1)
+            {
+                string oldName = oldNames[0];
+                bool isNameValid = false;
+
+                while (!isNameValid)
+                {
+                    using (Forms.InputDialogBox dialogBox = new Forms.InputDialogBox())
+                    {
+                        dialogBox.SetUserInputPlaceholder(oldName);
+                        dialogBox.SetPrompt($"Indiquez un nouveau nom pour {typeNameStr} \"{oldName}\"");
+                        dialogBox.SetCursorAtEnd();
+
+                        if (dialogBox.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                        {
+                            break;
+                        }
+
+                        string newName = dialogBox.GetUserInput();
+
+                        if (string.IsNullOrWhiteSpace(newName))
+                        {
+                            Generic.GetEditor().WriteMessage("\nImpossible de définir un nom vide.");
+                            continue; // Relance la boucle
+                        }
+
+                        newName = SymbolUtilityServices.RepairSymbolName(newName, false);
+
+                        // On ajoute aux résultats seulement si le nom a vraiment changé
+                        if (!string.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            results.Add((oldName, newName));
+                        }
+
+                        isNameValid = true;
+                    }
+                }
+            }
+            // --- CAS 2 : Plusieurs éléments sélectionnés (RenameDialog) ---
+            else
+            {
+                using (var renameForm = new RenameDialog(oldNames, (_, transformed) =>
+                {
+                    try
+                    {
+                        return SymbolUtilityServices.RepairSymbolName(transformed, false);
+                    }
+                    catch
+                    {
+                        return transformed;
+                    }
+                }))
+                {
+                    renameForm.UpdateMessage($"Les noms peuvent contenir jusqu'à 255 caractères et inclure des lettres, des chiffres, des espaces et plusieurs caractères spéciaux.\nIls ne peuvent pas contenir les caractères suivants : {"< > / \\ “ : ; ? * | = ‘".Replace(' ', '\u00A0')}");
+
+                    if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(renameForm) == System.Windows.Forms.DialogResult.OK)
+                    {
+                        var dialogResults = renameForm.GetRenamingResults();
+                        foreach (var item in dialogResults)
+                        {
+                            if (!string.Equals(item.Original, item.Renamed, StringComparison.OrdinalIgnoreCase))
+                            {
+                                results.Add((item.Original, item.Renamed));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
 
         #endregion
 
@@ -1256,11 +1355,42 @@ namespace SioForgeCAD.Forms
         private void ContextMenu_Renommer_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-            foreach (var tab in targetTabs)
+            if (targetTabs.Count == 0)
             {
-                Debug.WriteLine($"Renommer : {tab.Title}");
-                // Implémentation du renommage
+                return;
             }
+
+            var oldNames = targetTabs.ConvertAll(t => t.Title);
+            var renameResults = ProcessRenamingUI(oldNames, "la présentation");
+            if (renameResults.Count == 0)
+            {
+                return;
+            }
+
+            Editor ed = Generic.GetEditor();
+            Database db = Generic.GetDatabase();
+
+            using (Generic.GetLock())
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayoutManager lm = LayoutManager.Current;
+
+                foreach (var item in renameResults)
+                {
+                    try
+                    {
+                        lm.RenameLayout(item.Original, item.Renamed);
+                        Generic.WriteMessage($"Renommé : {item.Original} -> {item.Renamed}");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Generic.WriteMessage($"Erreur lors du renommage de {item.Original} : {ex.Message}");
+                    }
+                }
+                tr.Commit();
+            }
+            // Note: Pas besoin de rafraîchir manuellement les onglets ici si 
+            // l'événement LayoutManager.Current.LayoutRenamed est bien capté et appelle ReloadTabs().
         }
 
         private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer");
@@ -1295,7 +1425,7 @@ namespace SioForgeCAD.Forms
                 return;
             }
 
-            var newGroup = new LayoutGroup { Title = "Nouveau Groupe", IsExpanded = true };
+            var newGroup = new LayoutGroup { Title = GenerateUniqueGroupName("Nouveau Groupe"), IsExpanded = true };
 
             int insertIndex = Items.IndexOf(targetTabs.First());
             Items.Insert(insertIndex == -1 ? Items.Count : insertIndex, newGroup);
@@ -1310,7 +1440,46 @@ namespace SioForgeCAD.Forms
             SyncTabOrderToAutoCAD();
         }
 
-        private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Renommer Groupe");
+        private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Récupérer le ou les groupes ciblés
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+            if (targetGroups.Count == 0)
+            {
+                return;
+            }
+
+            var oldNames = targetGroups.ConvertAll(g => g.Title);
+
+            var renameResults = ProcessRenamingUI(oldNames, "le groupe");
+            if (renameResults.Count == 0)
+            {
+                return;
+            }
+
+            bool hasChanges = false;
+
+            foreach (var item in renameResults)
+            {
+                var groupToRename = targetGroups.FirstOrDefault(g => g.Title == item.Original);
+                if (groupToRename != null)
+                {
+                    // Vérification anti-doublon pour éviter que deux groupes aient le même nom
+                    bool nameExists = Items.OfType<LayoutGroup>().Any(g => g != groupToRename && g.Title.Equals(item.Renamed, StringComparison.OrdinalIgnoreCase));
+
+                    groupToRename.Title = nameExists ? GenerateUniqueGroupName(item.Renamed) : item.Renamed;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                // La méthode SyncTabOrderToAutoCAD va automatiquement parcourir les onglets 
+                // du groupe et mettre à jour leurs XData avec le nouveau group.Title
+                SyncTabOrderToAutoCAD();
+                ClearSelection();
+            }
+        }
 
         private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer Groupe");
 
@@ -1318,56 +1487,73 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_SupprimerGroupeSeul_Click(object sender, RoutedEventArgs e)
         {
-            var targetGroup = GetTargetedGroupForContextMenu(sender);
-            if (targetGroup == null)
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+            if (targetGroups == null || targetGroups.Count == 0)
             {
                 return;
             }
 
-            int groupIndex = Items.IndexOf(targetGroup);
-            if (groupIndex == -1)
+            bool hasChanges = false;
+
+            foreach (var targetGroup in targetGroups)
             {
-                return;
+                int groupIndex = Items.IndexOf(targetGroup);
+                if (groupIndex == -1)
+                {
+                    continue; // Si le groupe n'est pas trouvé à la racine, on passe au suivant
+                }
+                foreach (var tab in targetGroup.SubTabs.ToList())
+                {
+                    targetGroup.Remove(tab);
+                    Items.Insert(groupIndex++, tab);
+                }
+
+                // On supprime le groupe devenu vide
+                Items.Remove(targetGroup);
+                hasChanges = true;
             }
 
-            var tabsToExtract = targetGroup.SubTabs.ToList();
-            foreach (var tab in tabsToExtract)
+            if (hasChanges)
             {
-                targetGroup.Remove(tab);
-                Items.Insert(groupIndex++, tab);
+                SyncTabOrderToAutoCAD();
+                ClearSelection();
             }
-
-            Items.Remove(targetGroup);
-            SyncTabOrderToAutoCAD();
         }
-
         private void ContextMenu_SupprimerGroupeEtContenu_Click(object sender, RoutedEventArgs e)
         {
-            var targetGroup = GetTargetedGroupForContextMenu(sender);
-            if (targetGroup == null)
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+            if (targetGroups == null || targetGroups.Count == 0)
             {
                 return;
             }
 
-            var tabsToDelete = targetGroup.SubTabs.ToList();
-            if (tabsToDelete.Count == 0)
-            {
-                Items.Remove(targetGroup);
-                return;
-            }
+            bool hasChanges = false;
 
             using (Generic.GetLock())
             using (var tr = Generic.GetTrans())
             {
-                foreach (var tab in tabsToDelete)
+                foreach (var targetGroup in targetGroups)
                 {
-                    try { LayoutManager.Current.DeleteLayout(tab.Title); } catch { }
+                    var tabsToDelete = targetGroup.SubTabs.ToList();
+
+                    // Suppression des onglets dans AutoCAD
+                    foreach (var tab in tabsToDelete)
+                    {
+                        try { LayoutManager.Current.DeleteLayout(tab.Title); } catch { }
+                    }
+
+                    // Suppression du groupe dans l'interface WPF
+                    Items.Remove(targetGroup);
+                    hasChanges = true;
                 }
+
                 tr.Commit();
             }
 
-            Items.Remove(targetGroup);
-            ClearSelection();
+            if (hasChanges)
+            {
+                ClearSelection();
+            }
         }
 
         private void ContextMenu_Duplicate_Click(object sender, RoutedEventArgs e)
@@ -1464,10 +1650,10 @@ namespace SioForgeCAD.Forms
             }
             else
             {
-                var targetGroup = GetTargetedGroupForContextMenu(sender);
-                if (targetGroup != null)
+                var targetGroups = GetTargetedGroupsForContextMenu(sender);
+                if (targetGroups?.Count > 0)
                 {
-                    itemsToMove.Add(targetGroup);
+                    itemsToMove.AddRange(targetGroups);
                 }
                 else
                 {
@@ -1666,10 +1852,18 @@ namespace SioForgeCAD.Forms
             }
             return Targeted.ToList();
         }
-        private static LayoutGroup GetTargetedGroupForContextMenu(object sender)
+        private List<LayoutGroup> GetTargetedGroupsForContextMenu(object sender)
         {
-            var contextMenu = GetRootContextMenu(sender);
-            return GetRootLayoutItem(contextMenu) as LayoutGroup;
+            LayoutGroup clickedGroup = GetRootLayoutItem(GetRootContextMenu(sender)) as LayoutGroup;
+
+            // Si le clic a été fait sur un groupe spécifique qui n'est pas sélectionné
+            if (clickedGroup?.IsSelected == false)
+            {
+                return clickedGroup != null ? new List<LayoutGroup> { clickedGroup } : new List<LayoutGroup>();
+            }
+
+            // Sinon, on retourne la liste de tous les groupes sélectionnés à la racine
+            return Items.OfType<LayoutGroup>().Where(g => g.IsSelected).ToList();
         }
 
         private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate = null)
@@ -1690,6 +1884,7 @@ namespace SioForgeCAD.Forms
                     .Where(t => (t.IsSelected || t.IsCurrent) && predicate(t))
                     .ToList();
         }
+
 
         #endregion
     }

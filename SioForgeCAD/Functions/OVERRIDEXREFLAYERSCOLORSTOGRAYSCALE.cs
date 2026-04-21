@@ -25,7 +25,7 @@ namespace SioForgeCAD.Functions
                     BlockReference blockRef = blockRefId.GetDBObject() as BlockReference;
                     if (blockRef == null)
                     {
-                        ed.WriteMessage("\nFailed to get the block reference.");
+                        Generic.WriteMessage("Failed to get the block reference.");
                         return;
                     }
 

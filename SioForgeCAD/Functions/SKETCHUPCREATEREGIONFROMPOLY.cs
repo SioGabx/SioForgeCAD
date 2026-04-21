@@ -149,7 +149,7 @@ namespace SioForgeCAD.Functions
                     {
                         item.EraseObject();
                     }
-                    ed.WriteMessage($"\n{ForSketchupEntities.Count} région(s) transférée(s) dans le nouveau dessin.");
+                    Generic.WriteMessage($"{ForSketchupEntities.Count} région(s) transférée(s) dans le nouveau dessin.");
                 }
                 else
                 {
@@ -158,7 +158,7 @@ namespace SioForgeCAD.Functions
                         selObj.EraseObject();
                     }
 
-                    ed.WriteMessage($"\n{ForSketchupEntities.Count} région(s) créée(s).");
+                    Generic.WriteMessage($"{ForSketchupEntities.Count} région(s) créée(s).");
                 }
                 tr.Commit();
             }
