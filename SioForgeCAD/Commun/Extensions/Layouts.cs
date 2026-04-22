@@ -2,8 +2,13 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsSystem;
+using Autodesk.AutoCAD.PlottingServices;
+using Autodesk.AutoCAD.Runtime;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
@@ -44,7 +49,7 @@ namespace SioForgeCAD.Commun.Extensions
             descriptor.addRequirement(Autodesk.AutoCAD.UniqueString.Intern("3D Drawing"));
             GraphicsKernel kernel = Manager.AcquireGraphicsKernel(descriptor);
 
-            using (Transaction tr = lay.Database.TransactionManager.StartOpenCloseTransaction())
+            using (var tr = lay.Database.TransactionManager.StartOpenCloseTransaction())
             {
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(lay.BlockTableRecordId, OpenMode.ForRead);
 
@@ -102,7 +107,11 @@ namespace SioForgeCAD.Commun.Extensions
                     double realW = ext.MaxPoint.X - ext.MinPoint.X;
                     double realH = ext.MaxPoint.Y - ext.MinPoint.Y;
 
-                    if (realW <= 0.001 || realH <= 0.001) return null;
+                    if (realW <= 0.001 || realH <= 0.001)
+                    {
+                        return null;
+                    }
+
                     double ratio = Math.Min(512.0 / realW, 512.0 / realH);
 
                     bmpW = (int)(realW * ratio);
@@ -115,5 +124,109 @@ namespace SioForgeCAD.Commun.Extensions
             return new Bitmap(bmpW, bmpH);
         }
 
+        public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputPdfPath)
+        {
+            if (layouts?.Any() != true)
+            {
+                return;
+            }
+
+            bool isMultiPage = layouts.Count() > 1;
+
+            Document doc = Generic.GetDocument();
+            string dwgPath = doc.Name;
+            if (string.IsNullOrEmpty(dwgPath))
+            {
+                Generic.GetEditor().WriteMessage("Le dessin doit être sauvegardé avant d'être publié.");
+                return;
+            }
+
+            string dsdFilePath = Path.ChangeExtension(outputPdfPath, ".dsd");
+
+            using (DsdData dsdFileData = new DsdData())
+            using (DsdEntryCollection dsdEntries = new DsdEntryCollection())
+            {
+                foreach (var layout in layouts)
+                {
+                    var layoutName = layout.LayoutName;
+                    DsdEntry entry = new DsdEntry
+                    {
+                        DwgName = dwgPath,
+                        Layout = layoutName,
+                        Title = layoutName
+                    };
+                    dsdEntries.Add(entry);
+                }
+
+                dsdFileData.SetDsdEntryCollection(dsdEntries);
+                dsdFileData.ProjectPath = Path.GetDirectoryName(dwgPath);
+                dsdFileData.LogFilePath = Path.Combine(Path.GetDirectoryName(outputPdfPath), "publish.log");
+                dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
+                dsdFileData.DestinationName = outputPdfPath;
+                dsdFileData.IsHomogeneous = false;
+
+                if (File.Exists(dsdFilePath))
+                {
+                    File.Delete(dsdFilePath);
+                }
+
+                try
+                {
+                    PlotConfig plotConfig = null;
+                    if (true)
+                    {
+                        if (isMultiPage)
+                        {
+                            string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+                            string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
+
+                            if (!string.IsNullOrEmpty(currentProfile))
+                            {
+                                string regPath = $@"{sProdKey}\Profiles\{currentProfile}\Dialogs\AcPublishDlg";
+
+                                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(regPath))
+                                {
+                                    if (key != null)
+                                    {
+                                        object initialDirectory = key.GetValue("SelectedPdfPlotter");
+                                        if (initialDirectory != null)
+                                        {
+                                            var PlotConfigDevice = PlotConfigManager.Devices.
+                                                ToList<PlotConfigInfo>().
+                                                FirstOrDefault(t => Path.GetFileNameWithoutExtension(t.DeviceName) == initialDirectory.ToString());
+                                            plotConfig = PlotConfigManager.SetCurrentConfig(PlotConfigDevice.DeviceName);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var deviceName = layouts.FirstOrDefault().PlotConfigurationName;
+                            var availableDevices = PlotConfigManager.Devices.ToList<PlotConfigInfo>().ConvertAll(t => t.DeviceName);
+                            availableDevices.RemoveAt(0); //first one is none
+                            if (!string.IsNullOrEmpty(deviceName) && availableDevices.Contains(deviceName))
+                            {
+                                plotConfig = PlotConfigManager.SetCurrentConfig(deviceName);
+                            }
+                            else
+                            {
+                                throw new System.Exception($"Le périphérique de traçage \"{deviceName}\" n'est pas disponible. ");
+                            }
+                        }
+                    }
+
+                    Application.Publisher.PublishExecute(dsdFileData, plotConfig);
+                }
+                catch (System.Exception ex)
+                {
+                    Generic.WriteMessage(ex.Message);
+                }
+                finally
+                {
+                    Debug.WriteLine("End Publish");
+                }
+            }
+        }
     }
 }

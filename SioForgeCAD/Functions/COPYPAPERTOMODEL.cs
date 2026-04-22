@@ -25,8 +25,11 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            ed.SwitchToModelSpace();
-
+            try
+            {
+                ed.SwitchToModelSpace();
+            }
+            catch { }
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {

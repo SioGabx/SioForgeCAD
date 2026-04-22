@@ -52,7 +52,7 @@ namespace SioForgeCAD.Forms
         /// </summary>
         private bool IsSyncingFromWPF = false;
 
-        private Window _ghostWindow;
+        private System.Windows.Window _ghostWindow;
         private readonly DispatcherTimer _autoScrollTimer;
 
         private LayoutItem _currentItem;
@@ -234,19 +234,28 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private static void UpdateLayoutData(Transaction tr, LayoutTab tab, int order, string groupName, bool isExpanded)
+        public static Layout GetLayoutFromTab(Transaction tr, LayoutTab tab, OpenMode openMode)
         {
             if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
             {
-                if (tr.GetObject(layoutId, OpenMode.ForWrite) is Layout layout)
+                if (tr.GetObject(layoutId, openMode) is Layout layout)
                 {
-                    if (layout.TabOrder != order)
-                    {
-                        layout.TabOrder = order;
-                    }
-
-                    layout.SetLayoutUIState(tr, groupName, isExpanded, tab.IsPinned);
+                    return layout;
                 }
+            }
+            return null;
+        }
+
+        private static void UpdateLayoutData(Transaction tr, LayoutTab tab, int order, string groupName, bool isExpanded)
+        {
+            if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout)
+            {
+                if (layout.TabOrder != order)
+                {
+                    layout.TabOrder = order;
+                }
+
+                layout.SetLayoutUIState(tr, groupName, isExpanded, tab.IsPinned);
             }
         }
 
@@ -564,6 +573,10 @@ namespace SioForgeCAD.Forms
             if (targetItem is LayoutTab tab && tab.IsInGroup)
             {
                 targetGroup = tab.ParentGroup;
+            }
+            else if (targetItem is LayoutGroup lg) // Ajout : supporte la cible dynamique du menu
+            {
+                targetGroup = lg;
             }
 
             // Calculer l'index d'insertion
@@ -1183,7 +1196,7 @@ namespace SioForgeCAD.Forms
         private void TabScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             // Calculate the target position
-            double scrollStep = e.Delta * -2;
+            double scrollStep = e.Delta * -2.5;
             double targetOffset = TabScrollViewer.HorizontalOffset + scrollStep;
 
             targetOffset = Math.Max(0, Math.Min(targetOffset, TabScrollViewer.ScrollableWidth));
@@ -1283,11 +1296,11 @@ namespace SioForgeCAD.Forms
                             menuItem.IsEnabled = !tab.IsModel && ct <= 0;
                             break;
                         case "TabMenuItem_Duplicate":
-                            PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click);
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click, tab);
                             menuItem.IsEnabled = !tab.IsModel;
                             break;
                         case "TabMenuItem_Move":
-                            PopulatePositionSubMenu(menuItem, ContextMenu_Move_Click);
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Move_Click, tab);
                             menuItem.IsEnabled = !tab.IsModel;
                             break;
                     }
@@ -1393,7 +1406,39 @@ namespace SioForgeCAD.Forms
             // l'événement LayoutManager.Current.LayoutRenamed est bien capté et appelle ReloadTabs().
         }
 
-        private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer");
+        private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
+        {
+            var RecoverCurrentTab = _currentItem;
+            var TargetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+            if (TargetTabs.Count == 0) return;
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            string dwgDirectory = Path.GetDirectoryName(doc.Name);
+
+            if (string.IsNullOrEmpty(dwgDirectory))
+            {
+                MessageBox.Show("Veuillez d'abord enregistrer le dessin.", "Tracer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            using (var tr = Generic.GetTrans())
+            {
+                // On traite chaque onglet individuellement pour créer un fichier distinct
+
+                foreach (var tab in TargetTabs)
+                {
+                    string outputPath = Path.Combine(dwgDirectory, $"{tab.Title}.pdf");
+                    if (GetLayoutFromTab(tr, tab, OpenMode.ForRead) is Layout layout)
+                    {
+                        var layouts = new List<Layout>() { layout };
+                        layouts.PublishLayouts(outputPath);
+                    }
+                }
+                tr.Commit();
+            }
+            Generic.WriteMessage($"Impression de {TargetTabs.Count} présentation(s).");
+            SetCurrentItem(RecoverCurrentTab);
+            TargetTabs.ForEach(t => t.IsSelected = true);
+        }
 
         private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Publier");
 
@@ -1728,18 +1773,53 @@ namespace SioForgeCAD.Forms
             SyncTabOrderToAutoCAD();
         }
 
-        private void PopulatePositionSubMenu(MenuItem parentMenu, RoutedEventHandler clickHandler)
+        private void PopulatePositionSubMenu(MenuItem parentMenu, RoutedEventHandler clickHandler, LayoutTab sourceTab)
         {
             parentMenu.Items.Clear();
 
-            // --- Boutons de base ---
-            var btnBeginning = new MenuItem { Header = "Au début", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
-            btnBeginning.Click += clickHandler;
-            parentMenu.Items.Add(btnBeginning);
 
-            var btnEnd = new MenuItem { Header = "À la fin", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, null) };
-            btnEnd.Click += clickHandler;
-            parentMenu.Items.Add(btnEnd);
+
+            if (((sourceTab?.IsInGroup == true) ? sourceTab.ParentGroup : null) is LayoutGroup defaultTarget)
+            {
+                // --- Boutons de base contextuels ---
+                var btnBeginning = new MenuItem
+                {
+                    Header = "Au début du groupe",
+                    Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, defaultTarget)
+                };
+                btnBeginning.Click += clickHandler;
+                parentMenu.Items.Add(btnBeginning);
+
+                var btnEnd = new MenuItem
+                {
+                    Header = "À la fin du groupe",
+                    Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, defaultTarget)
+                };
+                btnEnd.Click += clickHandler;
+                parentMenu.Items.Add(btnEnd);
+
+                parentMenu.Items.Add(new Separator());
+
+                var btnRootBeginning = new MenuItem { Header = "Au début de la liste (hors groupe)", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
+                btnRootBeginning.Click += clickHandler;
+                parentMenu.Items.Add(btnRootBeginning);
+
+                var btnRootEnd = new MenuItem { Header = "À la fin de la liste (hors groupe)", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, null) };
+                btnRootEnd.Click += clickHandler;
+                parentMenu.Items.Add(btnRootEnd);
+            }
+            else
+            {
+                // --- Boutons de base ---
+                var btnBeginning = new MenuItem { Header = "Au début", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
+                btnBeginning.Click += clickHandler;
+                parentMenu.Items.Add(btnBeginning);
+
+                var btnEnd = new MenuItem { Header = "À la fin", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.End, null) };
+                btnEnd.Click += clickHandler;
+                parentMenu.Items.Add(btnEnd);
+            }
+
 
             parentMenu.Items.Add(new Separator());
 
@@ -1774,6 +1854,11 @@ namespace SioForgeCAD.Forms
                             groupMenuBefore.Items.Add(CreatePositionMenuItem(subTab, DuplicatePosition.Before, subTab.Title, clickHandler));
                             groupMenuAfter.Items.Add(CreatePositionMenuItem(subTab, DuplicatePosition.After, subTab.Title, clickHandler));
                         }
+                    }
+                    else
+                    {
+                        groupMenuBefore.Items.Add(CreatePositionMenuItem(group, DuplicatePosition.Beginning, "[Au début dans le groupe]", clickHandler));
+                        groupMenuAfter.Items.Add(CreatePositionMenuItem(group, DuplicatePosition.End, "[À la fin dans le groupe]", clickHandler));
                     }
 
                     menuBefore.Items.Add(groupMenuBefore);

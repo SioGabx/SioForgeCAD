@@ -150,11 +150,7 @@ namespace SioForgeCAD.Functions
         {
             string BlocDescription = BlkRef.GetDescription();
             var DataStoreFromJson = GetDataStore(BlocDescription);
-            if (DataStoreFromJson != null)
-            {
-                return DataStoreFromJson;
-            }
-            return GetLEGACYDataStore(BlkRef);
+            return DataStoreFromJson ?? GetLEGACYDataStore(BlkRef);
         }
         public static Dictionary<DataStore, string> GetDataStore(string BlocDescription)
         {

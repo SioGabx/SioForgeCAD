@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -17,5 +19,19 @@ namespace SioForgeCAD.Commun.Extensions
                 action(element);
             }
         }
+
+        /// <summary>
+        /// Convertit n'importe quel IEnumerable (non générique) en List de T.
+        /// Utile pour les anciennes API ou ICollection.
+        /// </summary>
+        public static List<T> ToList<T>(this IEnumerable source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            // Cast<T> transforme l'IEnumerable (objet) en IEnumerable<T> (typé)
+            // ce qui rend ensuite ToList() disponible.
+            return source.Cast<T>().ToList();
+        }
+
     }
 }
