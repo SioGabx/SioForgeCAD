@@ -198,7 +198,7 @@ namespace SioForgeCAD.Functions
                         pathData.Append(EntityToSvgNormal(item, multiplier, "none", 0, GetEntColorHex(hatch)));
                     }
                     ExternalCurves.DeepDispose();
-                    OtherCurves.DeepDispose();
+                    OtherCurves.ConvertAll(t=> t.curve).DeepDispose();
                 }
                 return pathData.ToString();
             }

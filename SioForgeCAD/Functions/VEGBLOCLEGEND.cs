@@ -64,7 +64,14 @@ namespace SioForgeCAD.Functions
                     string CartoucheLayerName = SymbolUtilityServices.RepairSymbolName($"{Settings.CADLayerPrefix}CARTOUCHE", false);
                     Layers.CreateLayer(CartoucheLayerName, Color.FromColorIndex(ColorMethod.ByAci, 7), LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(0), true);
                     Dictionary<string, DBObjectCollection> LegendeByCategories = new Dictionary<string, DBObjectCollection>();
-                    foreach (var Type in VegTypes.OrderBy(c => c.Key))
+                    foreach (var Type in VegTypes.OrderBy(c =>
+                    {
+                        if (System.Enum.TryParse(c.Key, true, out VEGBLOC.VegblocTypes vegEnum))
+                        {
+                            return (int)vegEnum;
+                        }
+                        return int.MaxValue;
+                    }).ThenBy(c => c.Key))
                     {
                         var LegendPart = new DBObjectCollection();
                         yPosition -= titleSpacing;
