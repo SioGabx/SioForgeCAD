@@ -14,5 +14,16 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return new Extents3d(new Point3d(ext.MinPoint.X, ext.MinPoint.Y, 0), new Point3d(ext.MaxPoint.X, ext.MaxPoint.Y, 0));
         }
+
+        public static Polyline GetGeometry(this Extents2d ext)
+        {
+            Polyline outline = new Polyline();
+            outline.AddVertexAt(0, ext.MinPoint, 0, 0, 0);
+            outline.AddVertexAt(1, new Point2d(ext.MaxPoint.X, ext.MinPoint.Y), 0, 0, 0);
+            outline.AddVertexAt(2, ext.MaxPoint, 0, 0, 0);
+            outline.AddVertexAt(3, new Point2d(ext.MinPoint.X, ext.MaxPoint.Y), 0, 0, 0);
+            outline.Closed = true;
+            return outline;
+        }
     }
 }

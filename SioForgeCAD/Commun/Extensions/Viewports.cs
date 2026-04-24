@@ -149,6 +149,56 @@ namespace SioForgeCAD.Commun.Extensions
             return ListOfViewPorts;
         }
 
+        /// <summary>
+        /// Vérifie si la Bounding Box de l'entité (projetée en espace papier) croise la Bounding Box du Viewport.
+        /// </summary>
+        public static bool IsEntityVisibleInViewport(this Viewport vp, Entity ent)
+        {
+            try
+            {
+                if (ent is null) return false;
+
+                Extents3d vpExtents = vp.GetExtents();
+                Extents3d extents = ent.GetExtents();
+                if (ent?.Bounds.HasValue == false) return true;
+
+                Point3d min = extents.MinPoint;
+                Point3d max = extents.MaxPoint;
+
+                Point3d[] corners = new Point3d[]
+                {
+                    new Point3d(min.X, min.Y, min.Z),
+                    new Point3d(max.X, min.Y, min.Z),
+                    new Point3d(max.X, max.Y, min.Z),
+                    new Point3d(min.X, max.Y, min.Z),
+                    new Point3d(min.X, min.Y, max.Z),
+                    new Point3d(max.X, min.Y, max.Z),
+                    new Point3d(max.X, max.Y, max.Z),
+                    new Point3d(min.X, max.Y, max.Z)
+                };
+
+                double eMinX = double.MaxValue, eMinY = double.MaxValue;
+                double eMaxX = double.MinValue, eMaxY = double.MinValue;
+
+                Matrix3d modelToPaper = vp.GetModelToPaperTransform();
+                foreach (Point3d corner in corners)
+                {
+                    Point3d pt = corner.TransformBy(modelToPaper);
+                    if (pt.X < eMinX) eMinX = pt.X;
+                    if (pt.Y < eMinY) eMinY = pt.Y;
+                    if (pt.X > eMaxX) eMaxX = pt.X;
+                    if (pt.Y > eMaxY) eMaxY = pt.Y;
+                }
+
+                return eMaxX >= vpExtents.MinPoint.X && eMinX <= vpExtents.MaxPoint.X &&
+                       eMaxY >= vpExtents.MinPoint.Y && eMinY <= vpExtents.MaxPoint.Y;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static Polyline GetBoundary(this Viewport viewport)
         {
             Database db = Generic.GetDatabase();

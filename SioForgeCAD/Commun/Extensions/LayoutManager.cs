@@ -82,5 +82,14 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return result;
         }
+
+
+        public static Layout GetCurrentLayout(this LayoutManager lm)
+        {
+            Database db = Generic.GetDatabase();
+            string currentLayoutName = lm.CurrentLayout;
+            DBDictionary layoutDict = (DBDictionary)db.LayoutDictionaryId.GetDBObject(OpenMode.ForRead);
+            return (Layout)layoutDict.GetAt(currentLayoutName).GetDBObject(OpenMode.ForRead);
+        }
     }
 }
