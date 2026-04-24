@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -173,7 +174,41 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static Dictionary<string, string> GetCustomProperties(this Database db)
+        {
+            var propsDict = new Dictionary<string, string>();
 
+            var summaryInfo = db.SummaryInfo;
+            {
+                var props = summaryInfo.CustomProperties;
+                if (props != null)
+                {
+                    var enumerator = db.SummaryInfo.CustomProperties;
+                    while (enumerator.MoveNext())
+                    {
+                        var entry = (KeyValuePair<string, string>)enumerator.Current;
+                        string key = entry.Key;
+                        string value = entry.Value;
+                        propsDict.Add(key, value);
+                    }
+                }
+            }
+            return propsDict;
+        }
+        public static void SetCustomProperties(this Database db, Dictionary<string, string> props)
+        {
+            var summaryInfoBuilder = new DatabaseSummaryInfoBuilder(db.SummaryInfo);
+            var table = summaryInfoBuilder.CustomPropertyTable;
+            int count = 0;
+
+            foreach (var kvp in props)
+            {
+                table[kvp.Key] = kvp.Value;
+                count++;
+            }
+
+            db.SummaryInfo = summaryInfoBuilder.ToDatabaseSummaryInfo();
+        }
 
 
         public static DwgVersion GetDwgVersion(this Database db)

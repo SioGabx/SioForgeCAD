@@ -1423,13 +1423,12 @@ namespace SioForgeCAD.Forms
             using (var tr = Generic.GetTrans())
             {
                 // On traite chaque onglet individuellement pour créer un fichier distinct
-
                 foreach (var tab in TargetTabs)
                 {
                     string outputPath = Path.Combine(dwgDirectory, $"{tab.Title}.pdf");
                     if (GetLayoutFromTab(tr, tab, OpenMode.ForRead) is Layout layout)
                     {
-                        var layouts = new List<Layout>() { layout };
+                        var layouts = new Layout[1] { layout };
                         layouts.PublishLayouts(outputPath);
                     }
                 }

@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3;
 using SioForgeCAD.Forms;
 using SioForgeCAD.Functions;
 using System.Collections.Generic;
@@ -501,16 +502,21 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            Functions.TEST.ExportLayoutComplet();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
+            var path = @"PATH.pc3";
+            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(path);
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
+            var path = @"PATH.txt";
+            SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(path, path + "_edited.pc3");
         }
 
         //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html

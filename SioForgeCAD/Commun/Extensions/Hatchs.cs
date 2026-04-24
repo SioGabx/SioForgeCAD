@@ -54,7 +54,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary)
+        public static double GetAssociatedBoundary(this Hatch Hachure, out Curve Boundary, bool RejectOnLockedLayer = true)
         {
             var objectIdCollection = Hachure.GetAssociatedObjectIds();
             Boundary = null;
@@ -62,7 +62,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 Boundary = objectIdCollection[0].GetNoTransactionDBObject(OpenMode.ForWrite) as Curve;
                 //If boundary is on a locked layer, we cannot give it back
-                if (Boundary.IsEntityOnLockedLayer())
+                if (RejectOnLockedLayer && Boundary.IsEntityOnLockedLayer())
                 {
                     return 0;
                 }

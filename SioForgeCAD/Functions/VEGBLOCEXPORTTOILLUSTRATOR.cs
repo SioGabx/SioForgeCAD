@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -109,10 +111,34 @@ namespace SioForgeCAD.Functions
             StringBuilder innerGeometries = new StringBuilder();
             Extents3d ext = new Extents3d();
             bool hasExt = false;
-            foreach (ObjectId entId in btr)
+
+            var entIds = btr.ToList<ObjectId>();
+            //Order first by Hatch, then Text, then MText, then others to ensure proper layering in SVG
+            entIds.Sort((a, b) =>
             {
+                int GetPriority(ObjectId EntId)
+                {
+                    if (EntId.IsDerivedFrom(typeof(Hatch))) return 1;
+                    return int.MaxValue;
+                }
+                return GetPriority(a).CompareTo(GetPriority(b));
+            });
+
+            HashSet<ObjectId> processedEnts = new HashSet<ObjectId>();
+            Dictionary<string, Layers.LayerStatus> LayersProps = Layers.GetAllLayersPropertiesInDrawing();
+
+            foreach (ObjectId entId in entIds)
+            {
+                if (processedEnts.Contains(entId)) continue; // Skip already processed entities (in case of duplicates)
+                processedEnts.Add(entId);
                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
-                if (!(ent is Hatch || ent is DBText || ent is MText)) { continue; }
+
+                if (!LayersProps[ent.Layer].WillPlot) { continue; }
+
+                if (ent is Hatch hatch && hatch.Associative && hatch.GetAssociatedBoundary(out var Boundary, false) > 0)
+                {
+                    processedEnts.Add(Boundary.ObjectId);
+                }
                 try
                 {
                     if (!hasExt) { ext = ent.GeometricExtents; hasExt = true; }
@@ -171,39 +197,69 @@ namespace SioForgeCAD.Functions
             else if (ent is DBText dbText)
             {
                 string text = SecurityElement.Escape(dbText.TextString);
-                double tx = dbText.Position.X * multiplier;
-                double ty = dbText.Position.Y * multiplier;
-                double fontSize = dbText.Height * multiplier;
-                return $"<text transform=\"translate({F(tx)} {F(ty)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
+                return GenerateWrappedText(dbText.TextString, dbText.Position.X, dbText.Position.Y, dbText.Height, strokeColor);
+            }
+            else if (ent is AttributeDefinition dbAttDef)
+            {
+                string text = SecurityElement.Escape(dbAttDef.TextString);
+                return GenerateWrappedText(dbAttDef.TextString, dbAttDef.Position.X, dbAttDef.Position.Y, dbAttDef.Height, strokeColor);
             }
             else if (ent is MText mText)
             {
                 // Nettoyage des codes de formatage AutoCAD (\P, \f, etc.)
                 string cleanText = Regex.Replace(mText.Contents, @"\\P|\\f[^;]*;|\\L|\\l|\\S[^;]*;|\\T[^;]*;|\\Q[^;]*;|\\W[^;]*;|\\A[^;]*;|\\H[^;]*;|\\C[^;]*;|[{}]", " ");
-                string text = SecurityElement.Escape(cleanText.Trim());
-
-                double tx = mText.Location.X * multiplier;
-                double ty = mText.Location.Y * multiplier;
-                double fontSize = mText.TextHeight * multiplier;
-
-                return $"<text transform=\"translate({F(tx)} {F(ty)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{strokeColor}\" text-anchor=\"middle\">{text}</text>";
+                return GenerateWrappedText(cleanText, mText.Location.X, mText.Location.Y, mText.TextHeight, strokeColor);
             }
             else if (ent is Hatch hatch)
             {
                 StringBuilder pathData = new StringBuilder();
                 if (hatch.GetHatchPolyline(out List<Curve> ExternalCurves, out List<(Curve curve, HatchLoopTypes looptype)> OtherCurves))
                 {
+                    var StrokeColor = "none";
+                    if (hatch.Associative && hatch.GetAssociatedBoundary(out Curve AssociatedBoundary, false) > 0)
+                    {
+                        StrokeColor = GetEntColorHex(AssociatedBoundary);
+                    }
+
                     foreach (var item in ExternalCurves.JoinMerge())
                     {
-                        pathData.Append(EntityToSvgNormal(item, multiplier, "none", 0, GetEntColorHex(hatch)));
+                        pathData.Append(EntityToSvgNormal(item, multiplier, StrokeColor, 0, GetEntColorHex(hatch)));
                     }
                     ExternalCurves.DeepDispose();
-                    OtherCurves.ConvertAll(t=> t.curve).DeepDispose();
+                    OtherCurves.ConvertAll(t => t.curve).DeepDispose();
                 }
                 return pathData.ToString();
             }
 
             return string.Empty;
+
+            string GenerateWrappedText(string rawText, double x, double y, double height, string color)
+            {
+                string textContent = SecurityElement.Escape(rawText.Trim());
+                // Découpage du texte en mots (vous pouvez ajuster la logique de découpage ici)
+                string[] words = textContent.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                double tx = x * multiplier;
+                double ty = y * multiplier;
+                double fontSize = height * multiplier;
+                double lineHeight = fontSize * 1.2; // Espacement de 120% entre les lignes
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append($"<text transform=\"translate({F(tx)} {F(ty)}) scale(1 -1)\" font-family=\"Arial\" font-size=\"{F(fontSize)}\" fill=\"{color}\" text-anchor=\"middle\">");
+
+                for (int i = 0; i < words.Length; i++)
+                {
+                    // Calcul du dy : 
+                    // Pour la première ligne, on remonte un peu pour centrer le bloc (-0.3em environ)
+                    // Pour les suivantes, on descend d'une hauteur de ligne
+                    string dy = (i == 0) ? $"-{F(lineHeight * 0.4)}" : F(lineHeight);
+
+                    sb.Append($"<tspan x=\"0\" dy=\"{dy}\">{words[i]}</tspan>");
+                }
+
+                sb.Append("</text>");
+                return sb.ToString();
+            }
         }
 
         private static string GetEntColorHex(Entity ent)

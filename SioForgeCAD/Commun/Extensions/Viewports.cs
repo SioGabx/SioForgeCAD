@@ -80,7 +80,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void PaperToModel(this IEnumerable<Entity> src, Viewport viewport)
         {
-            Matrix3d xform = GetModelToPaperTransform(viewport).Inverse();
+            Matrix3d xform = GetPaperToModelTransform(viewport);
             foreach (Entity ent in src)
             {
                 ent.TransformBy(xform);

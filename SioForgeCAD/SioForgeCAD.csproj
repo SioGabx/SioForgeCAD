@@ -147,6 +147,7 @@
     <Compile Include="Commun\Extensions\DBText.cs" />
     <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
+    <Compile Include="Commun\Extensions\Extends2d.cs" />
     <Compile Include="Commun\Extensions\FrameworkElement.cs" />
     <Compile Include="Commun\Extensions\GripDataCollection.cs" />
     <Compile Include="Commun\Extensions\IntegerCollection.cs" />

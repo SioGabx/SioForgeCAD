@@ -29,24 +29,7 @@ namespace SioForgeCAD.Functions
         public static void CopyDrawingCustomProperties()
         {
             Database db = Generic.GetDatabase();
-
-            var propsDict = new Dictionary<string, string>();
-
-            var summaryInfo = db.SummaryInfo;
-            {
-                var props = summaryInfo.CustomProperties;
-                if (props != null)
-                {
-                    var enumerator = db.SummaryInfo.CustomProperties;
-                    while (enumerator.MoveNext())
-                    {
-                        var entry = (KeyValuePair<string, string>)enumerator.Current;
-                        string key = entry.Key;
-                        string value = entry.Value;
-                        propsDict.Add(key, value);
-                    }
-                }
-            }
+            var propsDict = db.GetCustomProperties();
 
             if (propsDict.Count > 0)
             {
@@ -86,17 +69,7 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            var summaryInfoBuilder = new DatabaseSummaryInfoBuilder(db.SummaryInfo);
-            var table = summaryInfoBuilder.CustomPropertyTable;
-            int count = 0;
-
-            foreach (var kvp in props)
-            {
-                table[kvp.Key] = kvp.Value;
-                count++;
-            }
-
-            db.SummaryInfo = summaryInfoBuilder.ToDatabaseSummaryInfo();
+            db.SetCustomProperties(props);
         }
 
 

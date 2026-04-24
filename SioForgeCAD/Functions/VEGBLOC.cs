@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
 #pragma warning disable CS0618 
@@ -105,6 +106,11 @@ namespace SioForgeCAD.Functions
 
             string ShortType = Type.Trim().Substring(0, Math.Min(Type.Length, 4)).ToUpperInvariant();
             GetBlocDisplayName(Name, out string ShortName, out string CompleteName);
+            if (Type.RemoveDiacritics().IgnoreCaseEquals(nameof(VegblocTypes.CÉPÉES).RemoveDiacritics()))
+            {
+                ShortName += $" ({nameof(VegblocTypes.CÉPÉES).UcFirst()})";
+            }
+
             string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
             string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false);
 
@@ -145,7 +151,7 @@ namespace SioForgeCAD.Functions
             return data.ToJson();
         }
 
-      
+
         public static Dictionary<DataStore, string> GetDataStore(BlockReference BlkRef)
         {
             string BlocDescription = BlkRef.GetDescription();
@@ -524,12 +530,23 @@ namespace SioForgeCAD.Functions
             valueStr = valueStr.Replace("' ", "'");
             valueStr = valueStr.Replace("' ", "'");
 
-            //"ssp." == zoologie | "subsp." == botanique
-            valueStr = valueStr.Replace(" ssp", " subsp"); //(pour sub-species) pour une sous-espèce, ou subsp.
-            valueStr = valueStr.Replace(" spp", " subsp"); //species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
-            valueStr = valueStr.Replace(" sp", " subsp"); //species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
-            valueStr = valueStr.Replace(" sspp", " subspp"); //(pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
-            valueStr = valueStr.Replace(" subsp ", " subsp. ");
+            /*
+             * "ssp." == zoologie | "subsp." == botanique
+             * ssp = (pour sub-species) pour une sous-espèce, ou subsp.
+             * spp = species pluralis ou plurimae pour désigner plusieurs espèces ou l'ensemble des espèces d'un genre, 
+             * sp = species venant à la suite du nom du genre, pour une espèce indéterminée ou non décrite, 
+             * sspp = (pour sub-species pluralis) pour plusieurs ou l'ensemble des sous-espèces d'une espèce, ou subspp
+            */
+
+            // \b indique une limite de mot (début ou fin)
+            // (?=[ .]) est un "lookahead" qui vérifie si le caractère suivant est un espace ou un point
+            const string pattern = @"\b(ssp|spp|sp|sspp)(?=[ .])"; //avoid WRONG replace for veg like "Alnus spaethii" -> "Alnus subspaethii"
+            valueStr = Regex.Replace(valueStr, pattern, "subsp");
+
+            // Correction finale pour s'assurer que "subsp" est bien suivi d'un point
+            valueStr = valueStr.Replace("subsp ", "subsp. ");
+            valueStr = valueStr.Replace("subsp..", "subsp."); // Sécurité pour éviter les doubles points
+
 
             return valueStr;
         }

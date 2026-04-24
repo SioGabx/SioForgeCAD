@@ -101,7 +101,7 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                     else
                     {
-                        ext = layout.Extents;
+                        ext = layout.GetPaperExtents().ToExtents3d();
                     }
 
                     double realW = ext.MaxPoint.X - ext.MinPoint.X;
@@ -228,5 +228,57 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+
+        public static Extents2d GetPaperExtents(this Layout layout)
+        {
+            double paperWidth = layout.PlotPaperSize.X;
+            double paperHeight = layout.PlotPaperSize.Y;
+
+            Point2d marginMin = layout.PlotPaperMargins.MinPoint; // Marges (Gauche, Bas) en portrait
+            Point2d marginMax = layout.PlotPaperMargins.MaxPoint; // Marges (Droite, Haut) en portrait
+            Point2d origin = layout.PlotOrigin; // Décalage de l'origine (X, Y)
+
+            double minX;
+            double minY;
+
+            // L'origine exacte dépend de la rotation, car les marges "tournent" physiquement avec le papier
+            switch (layout.PlotRotation)
+            {
+                case PlotRotation.Degrees000: // Portrait
+                    minX = origin.X - marginMin.X;
+                    minY = origin.Y - marginMin.Y;
+                    break;
+
+                case PlotRotation.Degrees090: // Paysage
+                    paperWidth = layout.PlotPaperSize.Y;
+                    paperHeight = layout.PlotPaperSize.X;
+                    // Rotation anti-horaire à 90° :
+                    minX = origin.X - marginMax.Y; // L'ancienne marge du Haut devient la marge de Gauche
+                    minY = origin.Y - marginMin.X; // L'ancienne marge de Gauche devient la marge du Bas
+                    break;
+
+                case PlotRotation.Degrees180: // Portrait inversé
+                    minX = origin.X - marginMax.X;
+                    minY = origin.Y - marginMax.Y;
+                    break;
+
+                case PlotRotation.Degrees270: // Paysage inversé
+                    paperWidth = layout.PlotPaperSize.Y;
+                    paperHeight = layout.PlotPaperSize.X;
+                    minX = origin.X - marginMin.Y;
+                    minY = origin.Y - marginMax.X;
+                    break;
+
+                default:
+                    minX = origin.X - marginMin.X;
+                    minY = origin.Y - marginMin.Y;
+                    break;
+            }
+
+            double maxX = minX + paperWidth;
+            double maxY = minY + paperHeight;
+            return new Extents2d(minX, minY, maxX, maxY);
+        }
+
     }
 }

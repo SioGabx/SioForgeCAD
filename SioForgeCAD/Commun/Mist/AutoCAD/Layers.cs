@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
@@ -48,10 +49,112 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static DataItemCollection GetAllLayersInDrawing()
+        public static List<ObjectId> GetAllLayersInDrawing()
         {
-            return AcAp.UIBindings.Collections.Layers;
+            var db = Generic.GetDatabase();
+
+            List<ObjectId> layerIds = new List<ObjectId>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (ObjectId id in lt)
+                {
+                    layerIds.Add(id);
+                }
+
+                tr.Commit();
+            }
+            return layerIds;
         }
+
+        public class LayerStatus
+        {
+            public bool IsOff { get; set; }
+            public bool IsPlottable { get; set; }
+            public bool IsFrozenGlobal { get; set; }
+            public bool IsFrozenInVP { get; set; }
+
+            /// <summary>
+            /// Vrai si le calque est affiché à l'écran dans le Viewport ciblé.
+            /// </summary>
+            public bool IsVisible => !IsOff && !IsFrozenGlobal && !IsFrozenInVP;
+
+            /// <summary>
+            /// Vrai si le calque apparaîtra lors de l'impression de ce Viewport.
+            /// </summary>
+            public bool WillPlot => IsVisible && IsPlottable;
+        }
+
+        public static LayerStatus GetLayerProperties(string layerName, ObjectId viewportId = default)
+        {
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
+                if (lt?.Has(layerName) != true) return null;
+                ObjectId layerId = lt[layerName];
+                LayerTableRecord ltr = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
+                ObjectIdCollection frozenInVpIds = GetFrozenLayerIdsInViewport(tr, viewportId);
+                LayerStatus status = CreateLayerStatus(ltr, layerId, frozenInVpIds);
+
+                tr.Commit();
+                return status;
+            }
+        }
+        public static Dictionary<string, LayerStatus> GetAllLayersPropertiesInDrawing(ObjectId viewportId = default)
+        {
+            var db = Generic.GetDatabase();
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                IEnumerable<ObjectId> allLayersInDrawing = Layers.GetAllLayersInDrawing();
+                ObjectIdCollection frozenInVpIds = GetFrozenLayerIdsInViewport(tr, viewportId);
+                Dictionary<string, LayerStatus> layerData = new Dictionary<string, LayerStatus>();
+
+                foreach (ObjectId layerId in allLayersInDrawing)
+                {
+                    var x = tr.GetObject(layerId, OpenMode.ForRead);
+                    LayerTableRecord record = x as LayerTableRecord;
+
+                    if (record != null)
+                    {
+                        if (!layerData.ContainsKey(record.Name))
+                        {
+                            LayerStatus status = CreateLayerStatus(record, layerId, frozenInVpIds);
+                            layerData.Add(record.Name, status);
+                        }
+                    }
+                }
+
+                tr.Commit();
+                return layerData;
+            }
+        }
+
+        private static ObjectIdCollection GetFrozenLayerIdsInViewport(Transaction tr, ObjectId viewportId)
+        {
+            if (viewportId != ObjectId.Null)
+            {
+                Viewport vp = tr.GetObject(viewportId, OpenMode.ForRead) as Viewport;
+                if (vp != null)
+                {
+                    return vp.GetFrozenLayers();
+                }
+            }
+            return new ObjectIdCollection();
+        }
+
+        private static LayerStatus CreateLayerStatus(LayerTableRecord ltr, ObjectId layerId, ObjectIdCollection frozenInVpIds)
+        {
+            return new LayerStatus
+            {
+                IsOff = ltr.IsOff,
+                IsPlottable = ltr.IsPlottable,
+                IsFrozenGlobal = ltr.IsFrozen,
+                IsFrozenInVP = frozenInVpIds.Contains(layerId)
+            };
+        }
+
 
         public static bool IsEntityOnLockedLayer(ObjectId entity)
         {

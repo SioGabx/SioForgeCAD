@@ -17,13 +17,17 @@ namespace SioForgeCAD.Functions
             var ed = Generic.GetEditor();
             var db = Generic.GetDatabase();
 
-            Dictionary<string, List<string>> VegTypes = new Dictionary<string, List<string>>();
+            Dictionary<string, HashSet<string>> VegTypes = new Dictionary<string, HashSet<string>>();
 
             PromptSelectionResult selResult = ed.GetSelection();
             if (selResult.Status == PromptStatus.OK)
             {
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
+                    Matrix3d ucsMatrix = ed.CurrentUserCoordinateSystem;
+                    double ucsAngle = System.Math.Atan2(ucsMatrix.CoordinateSystem3d.Xaxis.Y, ucsMatrix.CoordinateSystem3d.Xaxis.X);
+                    Matrix3d ucsRotationMatrix = Matrix3d.Rotation(ucsAngle, Vector3d.ZAxis, Point3d.Origin);
+
                     foreach (SelectedObject selObj in selResult.Value)
                     {
                         if (selObj?.ObjectId.IsDerivedFrom(typeof(BlockReference)) == true)
@@ -36,15 +40,12 @@ namespace SioForgeCAD.Functions
                                 if (Infos is null) { continue; }
                                 string Type = Infos[VEGBLOC.DataStore.Type].UcFirst();
 
-                                if (!VegTypes.TryGetValue(Type, out List<string> value))
+                                if (!VegTypes.TryGetValue(Type, out HashSet<string> value))
                                 {
-                                    value = new List<string>();
+                                    value = new HashSet<string>();
                                     VegTypes[Type] = value;
                                 }
-                                if (!value.Contains(blockName))
-                                {
-                                    value.Add(blockName);
-                                }
+                                value.Add(blockName);
                             }
                         }
                     }
@@ -86,6 +87,7 @@ namespace SioForgeCAD.Functions
                             Attachment = AttachmentPoint.MiddleLeft,
                             Normal = Vector3d.ZAxis,
                             Layer = CartoucheLayerName,
+                            Rotation = -ucsAngle,
                             ColorIndex = 256
                         };
                         TextEditor te = TextEditor.CreateTextEditor(CategoryNameMText);
@@ -120,12 +122,14 @@ namespace SioForgeCAD.Functions
                                 Attachment = AttachmentPoint.MiddleLeft,
                                 Normal = Vector3d.ZAxis,
                                 Layer = Layer,
+                                Rotation = -ucsAngle,
                                 Transparency = Generic.GetTransparencyFromAlpha(0),
                                 ColorIndex = 256
                             });
 
                             var Extend = BlockReference.GetExtents();
-                            double scale = blockSizeInMetters / Extend.Size().Width;
+                            double blockWidth = Extend.Size().Width;
+                            double scale = blockWidth > Generic.LowTolerance.EqualPoint ? blockSizeInMetters / blockWidth : 1.0;
 
                             Matrix3d scaleMatrix = Matrix3d.Scaling(scale, BlockReference.Position);
                             BlockReference.TransformBy(scaleMatrix);
@@ -133,6 +137,10 @@ namespace SioForgeCAD.Functions
                             BlockReference.ColorIndex = 256;
                             LegendPart.Add(BlockReference);
                             yPosition -= rowSpacing;
+                        }
+                        foreach (Entity ent in LegendPart)
+                        {
+                            ent.TransformBy(ucsRotationMatrix);
                         }
 
                         LegendeByCategories.TryAdd(CategoryName, LegendPart);
