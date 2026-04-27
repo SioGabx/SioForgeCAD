@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                     EditDialog.NameInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
                     EditDialog.HeightInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Height);
                     EditDialog.WidthInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Width);
-                    EditDialog.TypeInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Type);
+                    EditDialog.TypeInput.Text = VEGBLOC.GetVegblocType(BlocData.TryGetValueString(VEGBLOC.DataStore.Type));
                 }
 
                 var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, EditDialog, true);

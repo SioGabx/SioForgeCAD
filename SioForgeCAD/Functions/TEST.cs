@@ -70,7 +70,7 @@ namespace SioForgeCAD.Functions
 
 
         /// <summary>
-        /// Imports the Model Space into a temporary block in the new database 
+        /// Imports the Model Space into a temporary block in the new database
         /// to speed up multiple clonings and avoid cross-database access.
         /// </summary>
         private static BlockTableRecord CreateModelCache(Database sourceDb, Transaction tr, Transaction newTr, BlockTable newBt, out ObjectIdCollection cachedModelIds)

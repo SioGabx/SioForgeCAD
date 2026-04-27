@@ -335,7 +335,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return new LineSegment2d(line.EndPoint, line.StartPoint);
             }
-            else if (segment is CircularArc2d arc)
+            else if (segment is CircularArc2d)
             {
                 return segment.GetReverseParameterCurve();
             }

@@ -47,8 +47,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                Polyline perimeter = tr.GetObject(perimeterId, OpenMode.ForRead) as Polyline;
-                if (perimeter == null) return;
+                if (!(tr.GetObject(perimeterId, OpenMode.ForRead) is Polyline perimeter)) return;
 
                 // Calcul de l'emprise (Bounding Box)
                 Extents3d ucsExtents = GetUcsExtents(perimeter, wcsToUcs);

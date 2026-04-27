@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Color = Autodesk.AutoCAD.Colors.Color;
 
@@ -60,7 +61,7 @@ namespace SioForgeCAD.Functions
                 string Name = Rows["NAME"];
                 string Height = Rows["HEIGHT"] ?? "0";
                 string Width = Rows["WIDTH"] ?? "1";
-                string Type = Rows["TYPE"] ?? "ARBRES";
+                string Type = Rows["TYPE"];
                 string BlocName = CreateBlockFromData(Name, Height, Width, Type, out _, out _);
                 if (string.IsNullOrEmpty(BlocName))
                 {
@@ -74,7 +75,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string Type, out string BlockData, out bool WasSuccessfullyCreated)
+        public static string CreateBlockFromData(string Name, string StrHeight, string StrWidth, string StrType, out string BlockData, out bool WasSuccessfullyCreated)
         {
             WasSuccessfullyCreated = false;
             BlockData = string.Empty;
@@ -98,6 +99,8 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage(string.Format(ErrorParseDoubleMessage, Name, StrWidth));
                 return string.Empty;
             }
+
+            var Type = GetVegblocType(StrType);
 
             if (Height > 0)
             {
@@ -135,6 +138,20 @@ namespace SioForgeCAD.Functions
             }
 
             return BlocName;
+        }
+
+        public static string GetVegblocType(object rowValue)
+        {
+            // 1. Get raw string and cleaned version
+            string rawInput = rowValue?.ToString() ?? Enum.GetNames(typeof(VegblocTypes)).FirstOrDefault();
+            string cleanInput = rawInput.RemoveDiacritics().ToUpper().Trim();
+
+            // 2. Try to find a match in the Enum by comparing "Cleaned" names
+            var match = Enum.GetNames(typeof(VegblocTypes))
+                .FirstOrDefault(name => name.RemoveDiacritics().Equals(cleanInput, StringComparison.OrdinalIgnoreCase));
+
+            // 3. Return nameof(Match) if found, otherwise the original raw string
+            return match ?? rawInput;
         }
 
         public static string GenerateDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
