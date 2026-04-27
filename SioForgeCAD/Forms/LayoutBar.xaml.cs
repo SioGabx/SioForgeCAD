@@ -1,9 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Internal;
-using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;

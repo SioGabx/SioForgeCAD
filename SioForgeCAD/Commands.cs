@@ -1,19 +1,9 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.LayerManager;
+﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Windows;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
-using SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3;
-using SioForgeCAD.Forms;
-using SioForgeCAD.Functions;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Windows.Forms;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 

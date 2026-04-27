@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using Control = System.Windows.Forms.Control;
 

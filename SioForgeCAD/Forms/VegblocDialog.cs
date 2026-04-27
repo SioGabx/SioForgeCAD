@@ -322,7 +322,7 @@ namespace SioForgeCAD.Forms
                 foreach (DataGridViewColumn col in DataGrid.Columns)
                 {
                     var cell = row.Cells[col.Index];
-                    
+
                     ColumnsValues.Add(col.Name, cell.Value?.ToString());
                 }
                 Rows.Add(ColumnsValues);

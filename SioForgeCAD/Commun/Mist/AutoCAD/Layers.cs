@@ -3,15 +3,12 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.LayerManager;
 using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Controls;
 using System.Windows.Forms;
-using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
 namespace SioForgeCAD.Commun
 {
     public static class Layers

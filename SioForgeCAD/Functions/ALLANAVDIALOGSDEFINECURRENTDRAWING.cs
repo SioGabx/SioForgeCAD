@@ -1,13 +1,9 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.ViewModel.HWTuner;
 using Microsoft.Win32;
-using SioForgeCAD.Commun;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
-using System.Windows.Input;
 using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions

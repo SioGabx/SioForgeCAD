@@ -128,7 +128,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-  
+
         private static void WriteLine(StringBuilder w, Point3d p1, Point3d p2)
         {
             w.AppendLine($"{Format(p1)} moveto");

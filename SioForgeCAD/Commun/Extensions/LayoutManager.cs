@@ -1,15 +1,8 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsSystem;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Internal;
-using Autodesk.AutoCAD.Runtime;
-using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Media.Imaging;
-using System.Xml.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -46,7 +39,7 @@ namespace SioForgeCAD.Commun.Extensions
                                 Layout layout = (Layout)transaction.GetObject(at, OpenMode.ForRead);
                                 bitmap = layout.Thumbnail;
                             }
-                            
+
                         }
                         catch { }
 

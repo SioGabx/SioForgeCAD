@@ -40,7 +40,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-       
+
 
         public static Bitmap GetLayoutSnapshot(this Layout lay, Extents3d ext, int width, int height)
         {
@@ -124,8 +124,8 @@ namespace SioForgeCAD.Commun.Extensions
                 finally { transaction.Commit(); }
             }
             return new Bitmap(bmpW, bmpH);
-        } 
-        
+        }
+
         public static bool IsModel(this Layout layout)
         {
             return layout.LayoutName == "Model";
