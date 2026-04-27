@@ -23,7 +23,7 @@ namespace SioForgeCAD.Functions
             {
                 //unlock all layers but keep trace
                 List<LayerTableRecord> list = new List<LayerTableRecord>();
-                foreach (ObjectId objectId in ((LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead)))
+                foreach (ObjectId objectId in (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead))
                 {
                     LayerTableRecord layerTableRecord = (LayerTableRecord)tr.GetObject(objectId, OpenMode.ForRead);
                     if (layerTableRecord.IsLocked)
@@ -125,7 +125,7 @@ namespace SioForgeCAD.Functions
                     foreach (object obj in tableIds)
                     {
                         ObjectId objectId = (ObjectId)obj;
-                        foreach (ObjectId objectId2 in ((SymbolTable)objectId.GetDBObject()))
+                        foreach (ObjectId objectId2 in (SymbolTable)objectId.GetDBObject())
                         {
                             if (!((SymbolTableRecord)objectId2.GetDBObject()).IsDependent)
                             {
@@ -136,7 +136,7 @@ namespace SioForgeCAD.Functions
                     foreach (object obj2 in dictIds)
                     {
                         ObjectId objectId3 = (ObjectId)obj2;
-                        foreach (DBDictionaryEntry dbdictionaryEntry in ((DBDictionary)objectId3.GetDBObject()))
+                        foreach (DBDictionaryEntry dbdictionaryEntry in (DBDictionary)objectId3.GetDBObject())
                         {
                             if (dbdictionaryEntry.Value.IsValid && !dbdictionaryEntry.Value.GetDBObject().IsAProxy)
                             {
@@ -161,7 +161,7 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     int NumberZeroLengthCurvesDeleted = 0;
-                    foreach (ObjectId objectId2 in ((BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead)))
+                    foreach (ObjectId objectId2 in (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead))
                     {
                         if (!objectId2.IsErased)
                         {
@@ -196,7 +196,7 @@ namespace SioForgeCAD.Functions
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     int NumberEmptyTextDeleted = 0;
-                    foreach (ObjectId objectId2 in ((BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead)))
+                    foreach (ObjectId objectId2 in (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead))
                     {
                         if (!objectId2.IsErased)
                         {
@@ -230,7 +230,7 @@ namespace SioForgeCAD.Functions
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     int NumberDetachedXREF = 0;
-                    foreach (ObjectId XrefId in ((BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead)))
+                    foreach (ObjectId XrefId in (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead))
                     {
                         if (!XrefId.IsErased)
                         {
@@ -256,7 +256,7 @@ namespace SioForgeCAD.Functions
                     if (dbdictionary.Contains("ACAD_MLEADERSTYLE"))
                     {
                         ObjectIdCollection MLeaderStyleObjectIdCollection = new ObjectIdCollection();
-                        foreach (DBDictionaryEntry MLeaderStyleEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_MLEADERSTYLE").GetDBObject()))
+                        foreach (DBDictionaryEntry MLeaderStyleEntry in (DBDictionary)dbdictionary.GetAt("ACAD_MLEADERSTYLE").GetDBObject())
                         {
                             MLeaderStyleObjectIdCollection.Add(MLeaderStyleEntry.Value);
                         }
@@ -291,7 +291,7 @@ namespace SioForgeCAD.Functions
                     if (dbdictionary.Contains("ACAD_DWFDEFINITIONS"))
                     {
                         ObjectIdCollection DwfDefinitionsObjectIdCollection = new ObjectIdCollection();
-                        foreach (DBDictionaryEntry DwfEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_DWFDEFINITIONS").GetDBObject()))
+                        foreach (DBDictionaryEntry DwfEntry in (DBDictionary)dbdictionary.GetAt("ACAD_DWFDEFINITIONS").GetDBObject())
                         {
                             DwfDefinitionsObjectIdCollection.Add(DwfEntry.Value);
                         }
@@ -326,7 +326,7 @@ namespace SioForgeCAD.Functions
                     if (dbdictionary.Contains("ACAD_PDFDEFINITIONS"))
                     {
                         ObjectIdCollection PdfDefinitionsObjectIdCollection = new ObjectIdCollection();
-                        foreach (DBDictionaryEntry PdfEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_PDFDEFINITIONS").GetDBObject()))
+                        foreach (DBDictionaryEntry PdfEntry in (DBDictionary)dbdictionary.GetAt("ACAD_PDFDEFINITIONS").GetDBObject())
                         {
                             PdfDefinitionsObjectIdCollection.Add(PdfEntry.Value);
                         }
@@ -361,7 +361,7 @@ namespace SioForgeCAD.Functions
                     if (dbdictionary.Contains("ACAD_DGNDEFINITIONS"))
                     {
                         ObjectIdCollection DgnDefinitionsObjectIdCollection = new ObjectIdCollection();
-                        foreach (DBDictionaryEntry DgnEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_DGNDEFINITIONS").GetDBObject()))
+                        foreach (DBDictionaryEntry DgnEntry in (DBDictionary)dbdictionary.GetAt("ACAD_DGNDEFINITIONS").GetDBObject())
                         {
                             DgnDefinitionsObjectIdCollection.Add(DgnEntry.Value);
                         }
@@ -395,7 +395,7 @@ namespace SioForgeCAD.Functions
                     DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                     if (dbdictionary.Contains("ACAD_IMAGE_DICT"))
                     {
-                        foreach (DBDictionaryEntry ImageEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_IMAGE_DICT").GetDBObject()))
+                        foreach (DBDictionaryEntry ImageEntry in (DBDictionary)dbdictionary.GetAt("ACAD_IMAGE_DICT").GetDBObject())
                         {
                             if (ImageEntry.Value.IsValid)
                             {
@@ -425,7 +425,7 @@ namespace SioForgeCAD.Functions
                     DBDictionary dbdictionary = (DBDictionary)db.NamedObjectsDictionaryId.GetDBObject();
                     if (dbdictionary.Contains("ACAD_SCALELIST"))
                     {
-                        foreach (DBDictionaryEntry ScaleEntry in ((DBDictionary)dbdictionary.GetAt("ACAD_SCALELIST").GetDBObject()))
+                        foreach (DBDictionaryEntry ScaleEntry in (DBDictionary)dbdictionary.GetAt("ACAD_SCALELIST").GetDBObject())
                         {
                             if (ScaleEntry.Key != "A0" && !tr.GetObject(ScaleEntry.Value, OpenMode.ForRead).IsAProxy)
                             {
@@ -448,7 +448,7 @@ namespace SioForgeCAD.Functions
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                    foreach (DBDictionaryEntry VisualStyleEntry in ((DBDictionary)tr.GetObject(db.VisualStyleDictionaryId, OpenMode.ForRead)))
+                    foreach (DBDictionaryEntry VisualStyleEntry in (DBDictionary)tr.GetObject(db.VisualStyleDictionaryId, OpenMode.ForRead))
                     {
                         if ((tr.GetObject(VisualStyleEntry.Value, OpenMode.ForRead) as DBVisualStyle).Type == VisualStyleType.Custom && !tr.GetObject(VisualStyleEntry.Value, OpenMode.ForRead).IsAProxy)
                         {
@@ -470,7 +470,7 @@ namespace SioForgeCAD.Functions
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                    foreach (DBDictionaryEntry MaterialEntry in ((DBDictionary)tr.GetObject(db.MaterialDictionaryId, OpenMode.ForRead, false)))
+                    foreach (DBDictionaryEntry MaterialEntry in (DBDictionary)tr.GetObject(db.MaterialDictionaryId, OpenMode.ForRead, false))
                     {
                         string key = MaterialEntry.Key;
                         if (key != "ByBlock" && key != "ByLayer" && key != "Global" && !tr.GetObject(MaterialEntry.Value, OpenMode.ForRead).IsAProxy)
@@ -493,7 +493,7 @@ namespace SioForgeCAD.Functions
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     ObjectIdCollection objectIdCollection = new ObjectIdCollection();
-                    foreach (ObjectId TextStyleTableId in ((TextStyleTable)tr.GetObject(db.TextStyleTableId, OpenMode.ForRead)))
+                    foreach (ObjectId TextStyleTableId in (TextStyleTable)tr.GetObject(db.TextStyleTableId, OpenMode.ForRead))
                     {
                         TextStyleTableRecord textStyleTableRecord = (TextStyleTableRecord)tr.GetObject(TextStyleTableId, OpenMode.ForRead);
                         if (textStyleTableRecord.IsShapeFile && textStyleTableRecord.Name != "" && !textStyleTableRecord.IsAProxy && !textStyleTableRecord.IsDependent)
@@ -516,7 +516,7 @@ namespace SioForgeCAD.Functions
                 using (var tr = db.TransactionManager.StartTransaction())
                 {
                     int CountDeleted = 0;
-                    foreach (DBDictionaryEntry GroupEntry in ((DBDictionary)tr.GetObject(db.GroupDictionaryId, OpenMode.ForRead, false)))
+                    foreach (DBDictionaryEntry GroupEntry in (DBDictionary)tr.GetObject(db.GroupDictionaryId, OpenMode.ForRead, false))
                     {
                         Group group = (Group)tr.GetObject(GroupEntry.Value, OpenMode.ForRead, false);
                         if (group.NumEntities < 2)

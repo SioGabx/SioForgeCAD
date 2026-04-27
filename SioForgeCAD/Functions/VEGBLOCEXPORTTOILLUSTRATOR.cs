@@ -37,7 +37,7 @@ namespace SioForgeCAD.Functions
                 return;
 
             // Facteur de conversion (72 DPI)
-            double multiplier = (1000.0 / scaleFactor) * (72.0 / 25.4);
+            double multiplier = 1000.0 / scaleFactor * (72.0 / 25.4);
 
             StringBuilder svgDefs = new StringBuilder();
             StringBuilder svgContent = new StringBuilder();

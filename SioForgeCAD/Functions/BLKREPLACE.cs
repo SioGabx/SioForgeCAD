@@ -20,7 +20,7 @@ namespace SioForgeCAD.Functions
                 if (!ed.GetBlocks(out ObjectId[] BlkToReplaceObjIds, "Sélectionnez un ou des types de blocs À REMPLACER :", false, true)) return;
                 if (!ed.GetBlock(out ObjectId BlkToReplacementObjId, "Sélectionnez le bloc DE REMPLACEMENT :", true)) return;
 
-                var BlkToReplacement = (BlkToReplacementObjId.GetDBObject() as BlockReference);
+                var BlkToReplacement = BlkToReplacementObjId.GetDBObject() as BlockReference;
                 string NewBlockName = BlkToReplacement.GetBlockReferenceName();
                 List<string> OldBlockNewRenameNames = new List<string>();
                 foreach (var item in BlkToReplaceObjIds)
@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
                 if (!ed.GetBlocks(out ObjectId[] BlkToReplaceObjIds, "Sélectionnez un ou plusieurs instances de blocs À REMPLACER :", false, true)) return;
                 if (!ed.GetBlock(out ObjectId BlkToReplacementObjId, "Sélectionnez le bloc DE REMPLACEMENT :", true)) return;
 
-                var BlkToReplacement = (BlkToReplacementObjId.GetDBObject() as BlockReference);
+                var BlkToReplacement = BlkToReplacementObjId.GetDBObject() as BlockReference;
                 string NewBlockName = BlkToReplacement.GetBlockReferenceName();
                 List<string> OldBlockNewRenameNames = new List<string>();
 

@@ -88,7 +88,7 @@ namespace SioForgeCAD.Commun
                 k = 0;
                 for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
                 {
-                    PointElement = (DBPoint)PointsSet[k];
+                    PointElement = PointsSet[k];
                     xCoordinates[PtsIndex] = PointElement.Position[0];
                     yCoordinates[PtsIndex] = PointElement.Position[1];
                     zCoordinates[PtsIndex] = PointElement.Position[2];

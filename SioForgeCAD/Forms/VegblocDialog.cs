@@ -241,7 +241,7 @@ namespace SioForgeCAD.Forms
                     }
                     string cellContent = rowContent[ModuloRowIndex];
                     DataGridViewColumn column = null;
-                    if ((selectedcolumns.Count) > colIndex)
+                    if (selectedcolumns.Count > colIndex)
                     {
                         column = DataGrid.Columns[selectedcolumns[colIndex]];
                     }

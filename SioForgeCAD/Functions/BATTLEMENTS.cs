@@ -75,7 +75,7 @@ namespace SioForgeCAD.Functions
 
                         Point3d LastDiagonalPoint = StartPoint;
                         Point3d LastDrawingPoint = StartPoint;
-                        double BaseLineHeight = (TriangleVectors.ABVector).FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, StartPoint).DistanceTo(BaseLine.EndPoint);
+                        double BaseLineHeight = TriangleVectors.ABVector.FindProjectedIntersection(BaseLine.EndPoint, TriangleVectors.BCVector, StartPoint).DistanceTo(BaseLine.EndPoint);
 
                         int NumberOfGrid = (int)Math.Ceiling(BaseLineHeight / Largeur);
 

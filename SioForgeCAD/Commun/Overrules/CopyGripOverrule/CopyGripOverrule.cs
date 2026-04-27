@@ -79,7 +79,7 @@ namespace SioForgeCAD.Commun.Overrules.CopyGripOverrule
                 var entityMiddleCenter = Extends.GetCenter();
                 var entityHeight = Extends.Size().Height;
 
-                var GripPoint = entityMiddleCenter.TransformBy(Matrix3d.Displacement(yAxis.SetLength((entityHeight / 2) * 0.35)));
+                var GripPoint = entityMiddleCenter.TransformBy(Matrix3d.Displacement(yAxis.SetLength(entityHeight / 2 * 0.35)));
 
                 var grip = new CopyGrip()
                 {

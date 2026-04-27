@@ -118,7 +118,7 @@ namespace SioForgeCAD.Functions
 
                 int NumberSelected = 0;
 
-                while ((((double)NumberSelected / NumberOfElement) * 100) < PavementFill)
+                while (((double)NumberSelected / NumberOfElement * 100) < PavementFill)
                 {
                     var SelectedPavement = randomSelector.SelectItem();
 

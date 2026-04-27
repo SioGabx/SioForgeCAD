@@ -91,7 +91,7 @@ namespace SioForgeCAD.Functions
                 if (LayerName is null) { return; }
 
                 List<string> Names = new List<string>();
-                foreach (var item in (LayerGrid.DataSource as IEnumerable))
+                foreach (var item in LayerGrid.DataSource as IEnumerable)
                 {
                     var itemName = item?.GetType()?.GetProperty("Name")?.GetValue(item)?.ToString();
                     if (!(itemName is null)) Names.Add(itemName);

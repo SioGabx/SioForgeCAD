@@ -115,7 +115,7 @@ namespace SioForgeCAD.Commun
 
         public static Transparency GetTransparencyFromAlpha(int Alpha)
         {
-            byte AlphaByte = ((byte)(255 * (100 - Alpha) / 100));
+            byte AlphaByte = (byte)(255 * (100 - Alpha) / 100);
             return new Transparency(AlphaByte);
         }
 

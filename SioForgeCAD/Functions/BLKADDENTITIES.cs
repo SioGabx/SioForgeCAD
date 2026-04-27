@@ -95,7 +95,7 @@ namespace SioForgeCAD.Functions
 
         private static void AddEntitiesToBlock(BlockReference BlockRef, ObjectId[] selectedIds)
         {
-            BlockTableRecord BlockDef = BlockRef.GetBlocDefinition(OpenMode.ForWrite) as BlockTableRecord;
+            BlockTableRecord BlockDef = BlockRef.GetBlocDefinition(OpenMode.ForWrite);
             Matrix3d blockTransform = BlockRef.BlockTransform;
             Matrix3d inverseTransform = blockTransform.Inverse();
 
@@ -135,7 +135,7 @@ namespace SioForgeCAD.Functions
 
         private static void AddEntitiesToXref(ObjectId BlockRefObjId, BlockReference XrefRef, ObjectId[] selectedIds)
         {
-            var XrefBtr = (XrefRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord);
+            var XrefBtr = XrefRef?.BlockTableRecord.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
             var Xref = XrefBtr.GetXrefDatabase(false);
 
             if (Xref is null || string.IsNullOrEmpty(Xref.Filename))

@@ -27,7 +27,7 @@ namespace SioForgeCAD.Commun.Overrules
         {
             var gripHeight = worldDraw.GetGripHeight(GripPoint, gripSizeInPixels);
             var offset = gripHeight / 2.0;
-            double Width = (gripHeight * 0.8) / 6;
+            double Width = gripHeight * 0.8 / 6;
 
             Point3d Origin = new Point3d(GripPoint.X, GripPoint.Y, 0.0);
 

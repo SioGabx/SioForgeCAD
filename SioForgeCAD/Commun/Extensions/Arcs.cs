@@ -44,7 +44,7 @@ namespace SioForgeCAD.Commun.Extensions
             // Clockwise : invert
             bool isClockwise = arc.Normal.Z < 0;
 
-            double deltaAngle = (isClockwise) ? arc.StartAngle - arc.EndAngle : arc.EndAngle - arc.StartAngle;
+            double deltaAngle = isClockwise ? arc.StartAngle - arc.EndAngle : arc.EndAngle - arc.StartAngle;
             if (deltaAngle <= 0) { deltaAngle += 2 * Math.PI; }
 
             double midAngle = isClockwise

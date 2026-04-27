@@ -27,7 +27,7 @@ namespace SioForgeCAD.Functions
                         bool WasNormalFixed = poly.FixNormals();
                         poly.Cleanup();
                         int NumberOfVerticesAfter = poly.NumberOfVertices;
-                        var NumberOfVerticesDeleted = (NumberOfVerticesBefore - NumberOfVerticesAfter);
+                        var NumberOfVerticesDeleted = NumberOfVerticesBefore - NumberOfVerticesAfter;
                         if (NumberOfVerticesDeleted > 0)
                         {
                             Generic.WriteMessage($"La polyline à été simplifiée en supprimant {NumberOfVerticesDeleted} point{(NumberOfVerticesDeleted > 1 ? "s" : "")}");

@@ -221,7 +221,7 @@ namespace SioForgeCAD.Commun
         {
             if (IsStaticDrawable)
             {
-                const byte Alpha = (255 * (100 - 50) / 100);
+                const byte Alpha = 255 * (100 - 50) / 100;
                 Drawable.Transparency = new Autodesk.AutoCAD.Colors.Transparency(Alpha);
             }
             return Drawable.Transparency;

@@ -252,8 +252,8 @@ namespace SioForgeCAD.Functions
             Point2d sp2d = arc2d.StartPoint;//arc2d.EvaluatePoint(startParam);
             Point2d ep2d = arc2d.EndPoint;//arc2d.EvaluatePoint(endParam);
             Point2d cp2d = arc2d.Center;
-            double startAngle = (new Line2d(cp2d, sp2d)).Direction.Angle;
-            double endAngle = (new Line2d(cp2d, ep2d)).Direction.Angle;
+            double startAngle = new Line2d(cp2d, sp2d).Direction.Angle;
+            double endAngle = new Line2d(cp2d, ep2d).Direction.Angle;
             return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2} {3} {4} {5}", Format(cp2d.X), Format(cp2d.Y), Format(arc2d.Radius), Format(RadToDeg(startAngle)), Format(RadToDeg(endAngle)), arc2d.IsClockWise ? "arcn" : "arc");
         }
 

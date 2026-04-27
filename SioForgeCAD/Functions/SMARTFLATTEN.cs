@@ -64,7 +64,7 @@ namespace SioForgeCAD.Functions
             PromptResult pkr = ed.GetKeywords(pko);
             if (pkr.Status != PromptStatus.OK && pkr.Status != PromptStatus.None) { return; }
 
-            bool processBlocks = (pkr.StringResult == "Oui");
+            bool processBlocks = pkr.StringResult == "Oui";
 
             FlatObjects(EntitiesSelection.Value.GetObjectIds(), processBlocks);
         }

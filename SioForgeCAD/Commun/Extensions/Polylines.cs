@@ -15,7 +15,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 return 0;
             }
-            int NumberOfVertices = (TargetPolyline.NumberOfVertices - 1);
+            int NumberOfVertices = TargetPolyline.NumberOfVertices - 1;
             if (TargetPolyline.Closed)
             {
                 NumberOfVertices++;
@@ -209,7 +209,7 @@ namespace SioForgeCAD.Commun.Extensions
                 InversePoly();
                 HasAVertexRemoved = false;
                 int index = 1;
-                while ((polyline.GetReelNumberOfVertices()) > index)
+                while (polyline.GetReelNumberOfVertices() > index)
                 {
                     Point3d lastPoint = polyline.GetPoint3dAt(index - 1);
                     Point3d currentPoint = polyline.GetPoint3dAt(index);

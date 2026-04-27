@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
                         if (ChangeEntitySelectedNotInsideBlock is null)
                         {
                             var askResult = ed.GetOptions("Des entités en dehors d'un bloc ont été sélectionnées. Voulez-vous effectuer l'opération sur ces entités également ?", false, "Oui", "Non");
-                            ChangeEntitySelectedNotInsideBlock = askResult.Status == PromptStatus.OK && askResult.StringResult == "Oui" ? true : false;
+                            ChangeEntitySelectedNotInsideBlock = askResult.Status == PromptStatus.OK && askResult.StringResult == "Oui";
                         }
                         if (ChangeEntitySelectedNotInsideBlock == true)
                         {

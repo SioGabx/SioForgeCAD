@@ -243,14 +243,14 @@ namespace SioForgeCAD.Commun.Extensions
             int counter = 0;
             int VertexCount = verts.Count;
             Point2d p1 = verts[0].ToPoint2d();
-            for (int index = 1; (index <= VertexCount); index++)
+            for (int index = 1; index <= VertexCount; index++)
             {
                 Point2d p2 = verts[index % VertexCount].ToPoint2d();
                 if (p.Y > Math.Min(p1.Y, p2.Y) && p.Y <= Math.Max(p1.Y, p2.Y) && p.X <= Math.Max(p1.X, p2.X))
                 {
                     if (p1.Y != p2.Y)
                     {
-                        double xinters = (((p.Y - p1.Y) * ((p2.X - p1.X) / (p2.Y - p1.Y))) + p1.X);
+                        double xinters = ((p.Y - p1.Y) * ((p2.X - p1.X) / (p2.Y - p1.Y))) + p1.X;
                         if ((p1.X == p2.X) || (p.X <= xinters))
                         {
                             counter++;
@@ -271,19 +271,19 @@ namespace SioForgeCAD.Commun.Extensions
 
             //get initial test bit for above/below X axis
             var vtx0 = verts[0];
-            var yflag0 = (vtx0[1] >= ty);
+            var yflag0 = vtx0[1] >= ty;
 
             bool inside_flag = false;
             for (int i = 1; i < verts.Count; i++)
             {
                 var vtx1 = verts[i];
 
-                var yflag1 = (vtx1[1] >= ty);
+                var yflag1 = vtx1[1] >= ty;
                 // check if endpoints straddle (are on opposite sides) of X axis
                 // (i.e. the Y's differ); if so, +X ray could intersect this edge.
                 if (yflag0 != yflag1)
                 {
-                    var xflag0 = (vtx0[0] >= tx);
+                    var xflag0 = vtx0[0] >= tx;
                     // check if endpoints are on same side of the Y axis (i.e. X's
                     // are the same); if so, it's easy to test if edge hits or misses.
                     if (xflag0 == (vtx1[0] >= tx))

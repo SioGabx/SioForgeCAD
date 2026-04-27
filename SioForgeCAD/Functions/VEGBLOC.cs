@@ -325,13 +325,13 @@ namespace SioForgeCAD.Functions
                 var TextBlocDisplayNameSize = TextBlocDisplayName.GetExplodedExtents().GetExtents().Size();
                 if (TextBlocDisplayNameMaxWidth < TextBlocDisplayNameSize.Width)
                 {
-                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxWidth / TextBlocDisplayNameSize.Width);
+                    TextBlocDisplayName.TextHeight *= TextBlocDisplayNameMaxWidth / TextBlocDisplayNameSize.Width;
                 }
 
                 TextBlocDisplayNameSize = TextBlocDisplayName.GetExplodedExtents().GetExtents().Size();
                 if (TextBlocDisplayNameMaxHeight < TextBlocDisplayNameSize.Height)
                 {
-                    TextBlocDisplayName.TextHeight *= (TextBlocDisplayNameMaxHeight / TextBlocDisplayNameSize.Height);
+                    TextBlocDisplayName.TextHeight *= TextBlocDisplayNameMaxHeight / TextBlocDisplayNameSize.Height;
                 }
 
                 if (Height > 0)

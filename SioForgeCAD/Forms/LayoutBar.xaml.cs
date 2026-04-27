@@ -1117,12 +1117,12 @@ namespace SioForgeCAD.Forms
 
             if (mousePos.X < leftVisibleEdge + scrollTolerance)
             {
-                dist += (mousePos.X - leftVisibleEdge);
+                dist += mousePos.X - leftVisibleEdge;
                 scrollLeft = true;
             }
             else if (mousePos.X > rightVisibleEdge - scrollTolerance)
             {
-                dist += (rightVisibleEdge - mousePos.X);
+                dist += rightVisibleEdge - mousePos.X;
             }
 
             if (dist != 0)

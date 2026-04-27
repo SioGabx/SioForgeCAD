@@ -240,10 +240,10 @@ namespace SioForgeCAD.Functions
 
         private static Point2d? GetExactIntersection2(Curve2d seg1, Curve2d seg2, Point2d originalVertex)
         {
-            Curve2d unb1 = seg1 is LineSegment2d ls1 ? (Curve2d)new Line2d(ls1.StartPoint, ls1.Direction) :
+            Curve2d unb1 = seg1 is LineSegment2d ls1 ? new Line2d(ls1.StartPoint, ls1.Direction) :
                            seg1 is CircularArc2d ca1 ? new CircularArc2d(ca1.Center, ca1.Radius, 0, Math.PI * 2, ca1.ReferenceVector, false) : seg1;
 
-            Curve2d unb2 = seg2 is LineSegment2d ls2 ? (Curve2d)new Line2d(ls2.StartPoint, ls2.Direction) :
+            Curve2d unb2 = seg2 is LineSegment2d ls2 ? new Line2d(ls2.StartPoint, ls2.Direction) :
                            seg2 is CircularArc2d ca2 ? new CircularArc2d(ca2.Center, ca2.Radius, 0, Math.PI * 2, ca2.ReferenceVector, false) : seg2;
 
             CurveCurveIntersector2d intersector = new CurveCurveIntersector2d(unb1, unb2);

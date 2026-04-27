@@ -233,7 +233,7 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 // Two points are enough for a line, we'll go with
                 // a higher number for other curves
-                int segs = (ent is Line ? 2 : 20);
+                int segs = ent is Line ? 2 : 20;
                 double param = cur.EndParam - cur.StartParam;
 
                 for (int i = 0; i < segs; i++)
@@ -467,7 +467,7 @@ namespace SioForgeCAD.Commun.Extensions
                 Matrix3d matWCS2DCS = Matrix3d.Rotation(-acView.ViewTwist, acView.ViewDirection, acView.Target) * Matrix3d.Displacement(acView.Target - Point3d.Origin) * Matrix3d.PlaneToWorld(acView.ViewDirection);
 
                 // Calculate the ratio between the width and height of the current view
-                double dViewRatio = (acView.Width / acView.Height);
+                double dViewRatio = acView.Width / acView.Height;
 
                 // Tranform the extents of the view
                 extents.TransformBy(matWCS2DCS.Inverse());
