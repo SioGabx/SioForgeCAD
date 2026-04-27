@@ -516,5 +516,68 @@ namespace SioForgeCAD.Commun.Extensions
                 return Curves.ToList();
             }
         }
+
+
+        /// <summary>
+        /// Coupe les Lignes et Polylignes en utilisant les intersections.
+        /// </summary>
+        public static void ClipCurve(this Curve curve, Curve boundary, Transaction tr, BlockTableRecord btr)
+        {
+            Point3dCollection intersectPts = new Point3dCollection();
+            curve.IntersectWith(boundary, Intersect.OnBothOperands, intersectPts, IntPtr.Zero, IntPtr.Zero);
+
+            if (intersectPts.Count > 0)
+            {
+                // Trier les points d'intersection le long de la courbe (requis par GetSplitCurves)
+                List<double> parameters = new List<double>();
+                foreach (Point3d pt in intersectPts)
+                {
+                    try
+                    {
+                        parameters.Add(curve.GetParameterAtPoint(curve.GetClosestPointTo(pt, false)));
+                    }
+                    catch { /* Ignorer les points incalculables */ }
+                }
+
+                parameters.Sort();
+                Point3dCollection splitPoints = new Point3dCollection();
+                foreach (double p in parameters)
+                {
+                    splitPoints.Add(curve.GetPointAtParameter(p));
+                }
+
+                try
+                {
+                    // Divise la courbe en plusieurs segments
+                    foreach (Curve segment in curve.GetSplitCurves(splitPoints))
+                    {
+                        Point3d midPt = segment.GetPointAtParameter((segment.StartParam + segment.EndParam) / 2.0);
+                        if (midPt.IsInsideCurveUsingRayCast(boundary))
+                        {
+                            btr.AppendEntity(segment);
+                            tr.AddNewlyCreatedDBObject(segment, true);
+                        }
+                        else
+                        {
+                            segment.Dispose();
+                        }
+                    }
+                    curve.Erase(); // Supprimer la courbe d'origine qui dépassait
+                }
+                catch
+                {
+                    // On laisse la courbe d'origine par sécurité
+                }
+            }
+            else
+            {
+                // Aucune intersection : on vérifie si la courbe est totalement à l'extérieur
+                if (!curve.StartPoint.IsInsideCurveUsingRayCast(boundary))
+                {
+                    curve.Erase();
+                }
+            }
+        }
+
     }
 }

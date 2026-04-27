@@ -491,6 +491,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "CUSTOMLAYOUTBAR", CommandFlags.Redraw)]
         public static void CUSTOMLAYOUTBAR() => Functions.CUSTOMLAYOUTBAR.Toggle();
 
+        [CommandMethod("SIOFORGECAD", "DRAWPAPERFRAME", CommandFlags.Redraw)]
+        public static void DRAWPAPERFRAME() => Functions.DRAWPAPERFRAME.Draw();
+
 
 
 #if DEBUG

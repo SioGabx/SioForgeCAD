@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -70,6 +71,45 @@ namespace SioForgeCAD.Commun.Extensions
                    a.MinPoint.Y >= b.MinPoint.Y &&
                    a.MaxPoint.Y <= b.MaxPoint.Y;
         }
+
+        /// <summary>
+        /// Détermine la relation spatiale entre une boîte englobante (Extents3d) et un contour fermé (Polyline).
+        /// </summary>
+        public static bool InsideOrIntersectWithPolyligne(this Extents3d ext, Curve boundary)
+        {
+            // 1. Créer une polyligne rectangulaire temporaire à partir de l'Extents3d (projetée en 2D sur Z=0)
+            using (Polyline extPoly = new Polyline())
+            {
+                extPoly.AddVertexAt(0, new Point2d(ext.MinPoint.X, ext.MinPoint.Y), 0, 0, 0);
+                extPoly.AddVertexAt(1, new Point2d(ext.MaxPoint.X, ext.MinPoint.Y), 0, 0, 0);
+                extPoly.AddVertexAt(2, new Point2d(ext.MaxPoint.X, ext.MaxPoint.Y), 0, 0, 0);
+                extPoly.AddVertexAt(3, new Point2d(ext.MinPoint.X, ext.MaxPoint.Y), 0, 0, 0);
+                extPoly.Closed = true;
+
+                // 2. Vérifier la collision (Intersection)
+                Point3dCollection intersections = new Point3dCollection();
+                boundary.IntersectWith(extPoly, Intersect.OnBothOperands, intersections, IntPtr.Zero, IntPtr.Zero);
+
+                if (intersections.Count > 0)
+                {
+                    //Intersecting
+                    return true;
+                }
+
+                // 3. Aucune intersection. L'extent est-il complètement à l'intérieur ?
+                // Puisqu'ils ne se croisent pas, si un seul point de l'extent est à l'intérieur, 
+                // alors la boîte entière est à l'intérieur.
+                if (ext.MinPoint.IsInsideCurveUsingRayCast(boundary))
+                {
+                    //Inside
+                    return true;
+                }
+
+                // 4. Par déduction, si aucune intersection et aucun point à l'intérieur :
+                return false;
+            }
+        }
+
 
         static readonly object _GetExtentsLock = new object();
         public static Extents3d GetExtents(this Entity entity)

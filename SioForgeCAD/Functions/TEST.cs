@@ -22,9 +22,7 @@ namespace SioForgeCAD.Functions
             Document doc = Generic.GetDocument();
             if (doc == null) return;
 
-            Editor ed = doc.Editor;
-
-            if (LayoutManager.Current.CurrentLayout == "Model")
+            if (LayoutManager.Current.CurrentLayoutIsModel())
             {
                 Generic.WriteMessage("Erreur : Veuillez vous placer sur une présentation (Layout).");
                 return;
@@ -62,8 +60,7 @@ namespace SioForgeCAD.Functions
             ObjectId newModelSpaceId = newBt[BlockTableRecord.ModelSpace];
 
             Layout layout = LayoutManager.Current.GetCurrentLayout();
-            BlockTableRecord layoutBtr = (BlockTableRecord)tr.GetObject(layout.BlockTableRecordId, OpenMode.ForRead);
-            ExtractLayoutEntities(tr, layoutBtr, out List<Viewport> viewports, out ObjectIdCollection paperIdsToClone);
+            layout.ExtractLayoutEntities(out List<Viewport> viewports, out ObjectIdCollection paperIdsToClone);
             if (paperIdsToClone.Count > 0)
             {
                 sourceDb.WblockCloneObjects(paperIdsToClone, newModelSpaceId, new IdMapping(), DuplicateRecordCloning.Ignore, false);
@@ -71,32 +68,10 @@ namespace SioForgeCAD.Functions
             BlockTableRecord cacheBtr = CreateModelCache(sourceDb, tr, newTr, newBt, out ObjectIdCollection cachedModelIds);
             ProcessViewports(newDb, newTr, newModelSpaceId, viewports, cachedModelIds);
             cacheBtr.Erase();
+
             DrawPaperFrame(newTr, newModelSpaceId, layout);
         }
 
-       
-
-        private static void ExtractLayoutEntities(Transaction tr, BlockTableRecord layoutBtr, out List<Viewport> viewports, out ObjectIdCollection paperIds)
-        {
-            viewports = new List<Viewport>();
-            paperIds = new ObjectIdCollection();
-
-            foreach (ObjectId entId in layoutBtr)
-            {
-                Entity ent = (Entity)tr.GetObject(entId, OpenMode.ForRead);
-                if (ent is Viewport vp)
-                {
-                    if (vp.Number != 1)
-                    {
-                        viewports.Add(vp);
-                    }
-                }
-                else
-                {
-                    paperIds.Add(entId);
-                }
-            }
-        }
 
         /// <summary>
         /// Imports the Model Space into a temporary block in the new database 
@@ -155,15 +130,22 @@ namespace SioForgeCAD.Functions
                 IdMapping vpMapping = new IdMapping();
                 newDb.DeepCloneObjects(vpIdsToClone, newModelSpaceId, vpMapping, false);
 
-                foreach (ObjectId cachedId in vpIdsToClone)
+                using (Curve vpBoundary = vp.GetBoundary())
                 {
-                    if (vpMapping.Contains(cachedId))
+                    foreach (ObjectId cachedId in vpIdsToClone)
                     {
-                        IdPair pair = vpMapping.Lookup(cachedId);
-                        if (pair.IsCloned)
+                        if (vpMapping.Contains(cachedId))
                         {
-                            Entity clonedEnt = (Entity)newTr.GetObject(pair.Value, OpenMode.ForWrite, false, true);
-                            clonedEnt.TransformBy(modelToPaper);
+                            IdPair pair = vpMapping.Lookup(cachedId);
+                            if (pair.IsCloned)
+                            {
+                                Entity clonedEnt = (Entity)newTr.GetObject(pair.Value, OpenMode.ForWrite, false, true);
+                                clonedEnt.TransformBy(modelToPaper);
+
+
+                                BlockTableRecord btr = (BlockTableRecord)newTr.GetObject(newModelSpaceId, OpenMode.ForWrite);
+                                ClipEntityToBoundary(newTr, btr, clonedEnt, vpBoundary);
+                            }
                         }
                     }
                 }
@@ -172,13 +154,30 @@ namespace SioForgeCAD.Functions
 
         private static void DrawPaperFrame(Transaction newTr, ObjectId newModelSpaceId, Layout layout)
         {
-            BlockTableRecord newModelBtrWrite = (BlockTableRecord)newTr.GetObject(newModelSpaceId, OpenMode.ForWrite);
-            var PaperExtents = layout.GetPaperExtents();
-            using (Polyline paperFrame = PaperExtents.GetGeometry())
+            using (Polyline paperFrame = layout.GetPaperFrame())
             {
                 paperFrame.ColorIndex = 1; // Rouge
+
+                BlockTableRecord newModelBtrWrite = (BlockTableRecord)newTr.GetObject(newModelSpaceId, OpenMode.ForWrite);
                 newModelBtrWrite.AppendEntity(paperFrame);
                 newTr.AddNewlyCreatedDBObject(paperFrame, true);
+            }
+        }
+
+        /// <summary>
+        /// Aiguillage selon le type d'entité pour appliquer la bonne méthode de découpe.
+        /// </summary>
+        private static void ClipEntityToBoundary(Transaction tr, BlockTableRecord btr, Entity ent, Curve boundary)
+        {
+            if (boundary == null) return;
+
+            if (ent is Line || ent is Polyline || ent is Arc)
+            {
+                ((Curve)ent).ClipCurve(boundary, tr, btr);
+            }
+            else if (ent is Hatch)
+            {
+                //TODO
             }
         }
     }

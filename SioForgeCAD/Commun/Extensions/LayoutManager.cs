@@ -91,5 +91,10 @@ namespace SioForgeCAD.Commun.Extensions
             DBDictionary layoutDict = (DBDictionary)db.LayoutDictionaryId.GetDBObject(OpenMode.ForRead);
             return (Layout)layoutDict.GetAt(currentLayoutName).GetDBObject(OpenMode.ForRead);
         }
+
+        public static bool CurrentLayoutIsModel(this LayoutManager lm)
+        {
+            return lm.CurrentLayout == "Model";
+        }
     }
 }

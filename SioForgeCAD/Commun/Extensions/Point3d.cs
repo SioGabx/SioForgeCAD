@@ -131,6 +131,24 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        /// <summary>
+        /// Algorithme de Ray-Casting pour déterminer si un point est dans un polygone fermé.
+        /// </summary>
+        public static bool IsInsideCurveUsingRayCast(this Point3d pt, Curve boundary)
+        {
+            using (Ray ray = new Ray())
+            {
+                ray.BasePoint = pt;
+                ray.UnitDir = Vector3d.XAxis; // Tirer un rayon vers l'Est (+X)
+
+                Point3dCollection pts = new Point3dCollection();
+                boundary.IntersectWith(ray, Intersect.OnBothOperands, pts, IntPtr.Zero, IntPtr.Zero);
+
+                // Un nombre impair d'intersections signifie que le point est à l'intérieur
+                return (pts.Count % 2) != 0;
+            }
+        }
+
         public static Matrix3d GetDisplacementMatrixTo(this Point3d Origin, Point3d Destination)
         {
             Vector3d DisplacementVector = Origin.GetVectorTo(Destination);

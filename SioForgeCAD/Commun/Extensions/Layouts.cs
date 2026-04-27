@@ -40,6 +40,8 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+       
+
         public static Bitmap GetLayoutSnapshot(this Layout lay, Extents3d ext, int width, int height)
         {
             Document doc = Application.DocumentManager.MdiActiveDocument;
@@ -122,6 +124,34 @@ namespace SioForgeCAD.Commun.Extensions
                 finally { transaction.Commit(); }
             }
             return new Bitmap(bmpW, bmpH);
+        } 
+        
+        public static bool IsModel(this Layout layout)
+        {
+            return layout.LayoutName == "Model";
+        }
+
+        public static void ExtractLayoutEntities(this Layout layout, out List<Viewport> viewports, out ObjectIdCollection paperIds)
+        {
+            viewports = new List<Viewport>();
+            paperIds = new ObjectIdCollection();
+
+            BlockTableRecord layoutBtr = (BlockTableRecord)layout.BlockTableRecordId.GetDBObject(OpenMode.ForRead);
+            foreach (ObjectId entId in layoutBtr)
+            {
+                Entity ent = (Entity)entId.GetDBObject(OpenMode.ForRead);
+                if (ent is Viewport vp)
+                {
+                    if (vp.Number != 1)
+                    {
+                        viewports.Add(vp);
+                    }
+                }
+                else
+                {
+                    paperIds.Add(entId);
+                }
+            }
         }
 
         public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputPdfPath)
@@ -278,6 +308,12 @@ namespace SioForgeCAD.Commun.Extensions
             double maxX = minX + paperWidth;
             double maxY = minY + paperHeight;
             return new Extents2d(minX, minY, maxX, maxY);
+        }
+
+        public static Polyline GetPaperFrame(this Layout layout)
+        {
+            var PaperExtents = layout.GetPaperExtents();
+            return PaperExtents.GetGeometry();
         }
 
     }
