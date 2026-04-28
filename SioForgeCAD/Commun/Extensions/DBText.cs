@@ -1,10 +1,29 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System;
 
 namespace SioForgeCAD.Commun.Extensions
 {
     public static class DBTextExtensions
     {
+        public static bool FixNormal(this DBText text)
+        {
+            if (text.Normal.IsEqualTo(Vector3d.ZAxis.MultiplyBy(-1)))
+            {
+                text.Normal = Vector3d.ZAxis;
+                text.Rotation = (Math.PI * 2) - text.Rotation;
+                return true;
+            }
+            else if (!text.Normal.IsEqualTo(Vector3d.ZAxis))
+            {
+                text.Normal = Vector3d.ZAxis;
+                return false;
+            }
+            return false;
+        }
+
+
+
         //From https://www.keanw.com/2011/02/gathering-points-defining-2d-autocad-geometry-using-net.html
         public static void ExtractBounds(this DBText txt, Point3dCollection pts)
         {

@@ -287,7 +287,7 @@ namespace SioForgeCAD.Commun.Extensions
             else if (entity is Polyline polyline)
             {
                 polyline.Elevation = 0;
-                polyline.FixNormals();
+                polyline.FixNormal();
                 polyline.Flatten();
             }
             else if (entity is Ellipse ellipse)
@@ -296,27 +296,28 @@ namespace SioForgeCAD.Commun.Extensions
             }
             else if (entity is BlockReference blockreference)
             {
+                blockreference.FixNormal();
                 blockreference.Position = blockreference.Position.Flatten();
             }
             else if (entity is Circle circle)
             {
+                circle.FixNormal();
                 circle.Center = circle.Center.Flatten();
             }
             else if (entity is Hatch hatch)
             {
+                hatch.FixNormal();
                 hatch.Elevation = 0;
             }
             else if (entity is DBText dbtext)
             {
+                dbtext.FixNormal();
                 dbtext.Position = dbtext.Position.Flatten();
             }
             else if (entity is DBPoint dbpoint)
             {
+                dbpoint.FixNormal();
                 dbpoint.Position = dbpoint.Position.Flatten();
-            }
-            else if (entity is Leader)
-            {
-                //not implemented
             }
             else if (entity is Line line)
             {
@@ -346,6 +347,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
             else if (entity is Arc arc)
             {
+                arc.FixNormal();
                 arc.Center = arc.Center.Flatten();
             }
             else if (entity is Spline spline)
@@ -384,118 +386,44 @@ namespace SioForgeCAD.Commun.Extensions
                 alignedDimension.XLine1Point = alignedDimension.XLine1Point.Flatten();
                 alignedDimension.XLine2Point = alignedDimension.XLine1Point.Flatten();
             }
-            /*
-
-                                else if (id_platf.ObjectClass.Name == "AcDbRotatedDimension")
-            {//Размер повернутый
-                RotatedDimension dim = (RotatedDimension)ent;
-
-                //Проверяем, имеют ли задающие точки размера ненулевую координату Z
-                if (dim.XLine1Point.Z != 0 || dim.XLine2Point.Z != 0 || dim.DimLinePoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
-                    dim.XLine1Point = new Point3d(dim.XLine1Point.X, dim.XLine1Point.Y, 0);
-                    dim.XLine2Point = new Point3d(dim.XLine2Point.X, dim.XLine2Point.Y, 0);
-                    dim.DimLinePoint = new Point3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, 0);
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: повернутый размер");
-
-                    result = true;
-                    dimcount++;
-                };
+            else if (entity is Point3AngularDimension point3AngularDimension)
+            {
+                point3AngularDimension.TextPosition = point3AngularDimension.TextPosition.Flatten();
+                point3AngularDimension.XLine1Point = point3AngularDimension.XLine1Point.Flatten();
+                point3AngularDimension.XLine2Point = point3AngularDimension.XLine1Point.Flatten();
+                point3AngularDimension.CenterPoint = point3AngularDimension.CenterPoint.Flatten();
             }
-            else if (id_platf.ObjectClass.Name == "AcDbPoint3AngularDimension")
-            {//Угловой размер по 3 точкам
-                Point3AngularDimension dim = (Point3AngularDimension)ent;
-                if (dim.XLine1Point.Z != 0 || dim.XLine2Point.Z != 0 || dim.CenterPoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
+            else if (entity is LineAngularDimension2 lineAngularDimension)
+            {
+                lineAngularDimension.XLine1Start = lineAngularDimension.XLine1Start.Flatten();
+                lineAngularDimension.XLine1End = lineAngularDimension.XLine1End.Flatten();
+                lineAngularDimension.XLine2Start = lineAngularDimension.XLine2Start.Flatten();
+                lineAngularDimension.XLine2End = lineAngularDimension.XLine2End.Flatten();
+                lineAngularDimension.ArcPoint = lineAngularDimension.ArcPoint.Flatten();
 
-                    dim.XLine1Point = new Point3d(dim.XLine1Point.X, dim.XLine1Point.Y, 0);
-                    dim.XLine2Point = new Point3d(dim.XLine2Point.X, dim.XLine2Point.Y, 0);
-                    dim.CenterPoint = new Point3d(dim.CenterPoint.X, dim.CenterPoint.Y, 0);
-
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: Угловой размер по трем точкам");
-
-                    result = true;
-                    dimcount++;
-                };
+                lineAngularDimension.TextPosition = lineAngularDimension.TextPosition.Flatten();
             }
-            else if (id_platf.ObjectClass.Name == "AcDbLineAngularDimension2")
-            {//Еще угловой размер по точкам
-                LineAngularDimension2 dim = (LineAngularDimension2)ent;
-
-                if (dim.XLine1Start.Z != 0 || dim.XLine1End.Z != 0 || dim.XLine1Start.Z != 0 || dim.XLine2End.Z != 0 || dim.ArcPoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
-
-                    dim.XLine1Start = new Point3d(dim.XLine1Start.X, dim.XLine1Start.Y, 0);
-                    dim.XLine1End = new Point3d(dim.XLine1End.X, dim.XLine1End.Y, 0);
-                    dim.XLine2Start = new Point3d(dim.XLine2Start.X, dim.XLine2Start.Y, 0);
-                    dim.XLine2End = new Point3d(dim.XLine2End.X, dim.XLine2End.Y, 0);
-                    dim.ArcPoint = new Point3d(dim.ArcPoint.X, dim.ArcPoint.Y, 0);
-
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: Угловой размер по 5 точкам");
-
-                    result = true;
-                    dimcount++;
-                };
+            else if (entity is DiametricDimension diametricDimension)
+            {
+                diametricDimension.FarChordPoint = diametricDimension.FarChordPoint.Flatten();
+                diametricDimension.ChordPoint = diametricDimension.ChordPoint.Flatten();
+                diametricDimension.TextPosition = diametricDimension.TextPosition.Flatten();
             }
-            else if (id_platf.ObjectClass.Name == "AcDbDiametricDimension")
-            {  //Размер диаметра окружности
-                DiametricDimension dim = (DiametricDimension)ent;
+            else if (entity is ArcDimension arcDimension)
+            {
 
-                if (dim.FarChordPoint.Z != 0 || dim.ChordPoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
-                    dim.FarChordPoint = new Point3d(dim.FarChordPoint.X, dim.FarChordPoint.Y, 0);
-                    dim.ChordPoint = new Point3d(dim.ChordPoint.X, dim.ChordPoint.Y, 0);
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: Диаметральный размер");
-
-                    result = true;
-                    dimcount++;
-                };
+                arcDimension.TextPosition = arcDimension.TextPosition.Flatten();
+                arcDimension.XLine1Point = arcDimension.XLine1Point.Flatten();
+                arcDimension.XLine2Point = arcDimension.XLine2Point.Flatten();
+                arcDimension.CenterPoint = arcDimension.CenterPoint.Flatten();
+                arcDimension.ArcPoint = arcDimension.ArcPoint.Flatten();
             }
-            else if (id_platf.ObjectClass.Name == "AcDbArcDimension")
-            {  //Дуговой размер
-                ArcDimension dim = (ArcDimension)ent;
-
-                if (dim.XLine1Point.Z != 0 || dim.XLine2Point.Z != 0 || dim.ArcPoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
-                    dim.XLine1Point = new Point3d(dim.XLine1Point.X, dim.XLine1Point.Y, 0);
-                    dim.XLine2Point = new Point3d(dim.XLine2Point.X, dim.XLine2Point.Y, 0);
-                    dim.ArcPoint = new Point3d(dim.ArcPoint.X, dim.ArcPoint.Y, 0);
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: Дуговой размер");
-
-                    result = true;
-                    dimcount++;
-                };
-
+            else if (entity is RadialDimension radialDimension)
+            {
+                radialDimension.Center = radialDimension.Center.Flatten();
+                radialDimension.ChordPoint = radialDimension.ChordPoint.Flatten();
+                radialDimension.TextPosition = radialDimension.TextPosition.Flatten();
             }
-            else if (id_platf.ObjectClass.Name == "AcDbRadialDimension")
-            {  //Радиальный размер
-                RadialDimension dim = (RadialDimension)ent;
-
-                if (dim.Center.Z != 0 || dim.ChordPoint.Z != 0 || dim.TextPosition.Z != 0)
-                {
-                    dim.Center = new Point3d(dim.Center.X, dim.Center.Y, 0);
-                    dim.ChordPoint = new Point3d(dim.ChordPoint.X, dim.ChordPoint.Y, 0);
-                    dim.TextPosition = new Point3d(dim.TextPosition.X, dim.TextPosition.Y, 0);
-
-                    //ed.WriteMessage("DEBUG: Преобразован объект: Радиальный размер");
-
-                    result = true;
-                    dimcount++;
-                };
-
-            }
-
-            */
             else if (entity is MLeader mLeader)
             {
                 //IN PROGRESS DOES NOT WORK ???
@@ -520,13 +448,14 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
             }
+            //else if (entity is Leader leader)
+            //{
+            //    //not implemented
+            //}
             else if (entity is Leader ld)
             {
-                if (ld.EndPoint.Z != 0 || ld.StartPoint.Z != 0)
-                {
-                    ld.EndPoint = new Point3d(ld.EndPoint.X, ld.EndPoint.Y, 0);
-                    ld.StartPoint = new Point3d(ld.StartPoint.X, ld.StartPoint.Y, 0);
-                }
+                ld.EndPoint = ld.EndPoint.Flatten();
+                ld.StartPoint = ld.StartPoint.Flatten();
             }
             else if (entity is Solid)
             {

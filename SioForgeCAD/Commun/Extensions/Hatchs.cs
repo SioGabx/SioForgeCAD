@@ -7,6 +7,16 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class HatchsExtensions
     {
+        public static bool FixNormal(this Hatch hatch)
+        {
+            if (!hatch.Normal.IsEqualTo(Vector3d.ZAxis))
+            {
+                hatch.Normal = Vector3d.ZAxis;
+                return true;
+            }
+            return false;
+        }
+
         public static bool GetPolyHole(this Hatch Hachure, out PolyHole polyHole)
         {
             polyHole = null;

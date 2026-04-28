@@ -10,6 +10,23 @@ namespace SioForgeCAD.Commun.Extensions
 {
     static class BlockReferenceExtensions
     {
+        public static bool FixNormal(this BlockReference block)
+        {
+            if (block.Normal.IsEqualTo(Vector3d.ZAxis.MultiplyBy(-1)))
+            {
+                block.Normal = Vector3d.ZAxis;
+                // Si on retourne le plan, il faut inverser la rotation pour conserver l'aspect visuel
+                block.Rotation = (Math.PI * 2) - block.Rotation;
+                return true;
+            }
+            else if (!block.Normal.IsEqualTo(Vector3d.ZAxis))
+            {
+                block.Normal = Vector3d.ZAxis;
+                return false;
+            }
+            return false;
+        }
+
         public static bool IsXref(this BlockReference blockRef)
         {
             return (blockRef?.BlockTableRecord.GetDBObject() as BlockTableRecord)?.IsFromExternalReference ?? false;

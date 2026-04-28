@@ -6,6 +6,16 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class CirclesExtensions
     {
+        public static bool FixNormal(this Circle circle)
+        {
+            if (circle.Normal.IsEqualTo(Vector3d.ZAxis.MultiplyBy(-1)))
+            {
+                circle.Normal = Vector3d.ZAxis;
+                return true;
+            }
+            return false;
+        }
+
         public static Polyline ToPolyline(this Circle circle)
         {
             return circle.ToPolyline2Pt();

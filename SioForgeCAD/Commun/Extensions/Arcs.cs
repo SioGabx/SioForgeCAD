@@ -35,6 +35,19 @@ namespace SioForgeCAD.Commun.Extensions
             return bulge;
         }
 
+        public static bool FixNormal(this Arc arc)
+        {
+            if (arc.Normal.IsEqualTo(Vector3d.ZAxis.MultiplyBy(-1)))
+            {
+                arc.Normal = Vector3d.ZAxis;
+                double temp = arc.StartAngle;
+                arc.StartAngle = (Math.PI * 2) - arc.EndAngle;
+                arc.EndAngle = (Math.PI * 2) - temp;
+                return true;
+            }
+            return false;
+        }
+
 
         public static CircularArc2d ToCircularArc2d(this Arc arc)
         {

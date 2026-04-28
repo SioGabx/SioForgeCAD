@@ -151,42 +151,5 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
         }
-
-        //public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName)
-        //{
-        //    Database db = Generic.GetDatabase();
-        //    Editor ed = Generic.GetEditor();
-
-        //    using (Transaction tr = db.TransactionManager.StartTransaction())
-        //    {
-        //        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-        //        BlockTableRecord btr = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-
-        //        foreach (ObjectId objId in btr)
-        //        {
-        //            Entity ent = objId.GetEntity(OpenMode.ForWrite);
-
-        //            if (ent is BlockReference br)
-        //            {
-        //                if (br.GetBlockReferenceName() == OldBlockName) // If the BlockReference matches the one to replace
-        //                {
-        //                    var newBrObjId = BlockReferences.InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), null, NewBlockName);
-        //                    var newBr = newBrObjId.GetDBObject() as BlockReference;
-        //                    newBr.ScaleFactors = br.ScaleFactors;
-        //                    if (!br.IsErased)
-        //                    {
-        //                        br.Erase(true);
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        BlockReferences.Purge(OldBlockName);
-        //        tr.Commit();
-        //    }
-        //}
-
-
-
     }
 }
