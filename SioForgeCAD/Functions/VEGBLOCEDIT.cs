@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -12,13 +13,23 @@ namespace SioForgeCAD.Functions
 {
     public static class VEGBLOCEDIT
     {
+        // Classe utilitaire pour transporter les données du formulaire proprement
+        private class VegblocEditData
+        {
+            public string Name { get; set; }
+            public string Width { get; set; }
+            public string Height { get; set; }
+            public string Type { get; set; }
+            public Autodesk.AutoCAD.Colors.Color SelectedColor { get; set; } // Ajustez le namespace de Color si besoin
+        }
+
         public static bool SelectBloc(out PromptSelectionResult promptResult)
         {
             Editor editor = Generic.GetEditor();
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = "Selectionnez un bloc",
+                MessageForAdding = "Sélectionnez un bloc",
                 SingleOnly = true,
                 SinglePickInSpace = true,
                 RejectObjectsOnLockedLayers = true
@@ -32,135 +43,171 @@ namespace SioForgeCAD.Functions
                 {
                     return false;
                 }
-                else if (promptResult.Status == PromptStatus.OK)
+
+                if (promptResult.Status == PromptStatus.OK && promptResult.Value.Count == 1)
                 {
-                    if (promptResult.Value.Count == 1)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
 
         public static void Edit()
         {
-            Database db = Generic.GetDatabase();
-
             if (!SelectBloc(out PromptSelectionResult promptResult))
             {
                 return;
             }
 
+            Database db = Generic.GetDatabase();
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                var EditObject = promptResult.Value.GetObjectIds().First();
-                BlockReference BlkRef = EditObject.GetDBObject() as BlockReference;
+                var editObjectId = promptResult.Value.GetObjectIds().First();
+                BlockReference blkRef = editObjectId.GetDBObject() as BlockReference;
 
-                VegblocEditDialog EditDialog = new VegblocEditDialog();
-
-                // Initialise la couleur avec celle du calque actuel du bloc
-                EditDialog.SetColor(Layers.GetLayerColor(BlkRef.Layer));
-
-                var BlocData = VEGBLOC.GetDataStore(BlkRef);
-                if (BlocData != null)
-                {
-                    if (BlocData.TryGetValueString(VEGBLOC.DataStore.BlocName) != BlkRef.GetBlockReferenceName())
-                    {
-                        Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Des données ont été trouvées mais sont incohérentes.. Le nom du bloc à peut-être été modifié en dehors de VEGBLOCEDIT");
-                    }
-                    EditDialog.NameInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
-                    EditDialog.HeightInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Height);
-                    EditDialog.WidthInput.Text = BlocData.TryGetValueString(VEGBLOC.DataStore.Width);
-                    EditDialog.TypeInput.Text = VEGBLOC.GetVegblocType(BlocData.TryGetValueString(VEGBLOC.DataStore.Type));
-                }
-
-                var DialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, EditDialog, true);
-                if (DialogResult != System.Windows.Forms.DialogResult.OK)
-                {
-                    return;
-                }
-
-                string Name = EditDialog.NameInput.Text;
-                string Width = EditDialog.WidthInput.Text;
-                string Height = EditDialog.HeightInput.Text;
-                string Type = EditDialog.TypeInput.Text;
-                var SelectedColor = EditDialog.SelectedColor; // Récupère la couleur choisie
-
-                if (BlkRef.IsEntityOnLockedLayer())
+                if (blkRef.IsEntityOnLockedLayer())
                 {
                     Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Le bloc sélectionné est sur un calque verrouillé");
                     return;
                 }
 
-                string OldBlockName = BlkRef.GetBlockReferenceName();
-                if (OldBlockName != BlkRef.Layer)
+                VegblocEditData userInput = ShowDialogAndGetData(blkRef);
+                if (userInput == null)
                 {
-                    var ContinueWithNotGoodLayerName = MessageBox.Show($"Le bloc n'est peut-être pas sur le bon calque, voulez-vous continuer l'opération ?\nEn continuant, le calque sera renommé sous le nouveau nom.\n\nBloc       : {OldBlockName}\nCalque : {BlkRef.Layer}", Generic.GetExtensionDLLName(), MessageBoxButton.YesNo);
-                    if (ContinueWithNotGoodLayerName != MessageBoxResult.Yes)
-                    {
-                        Generic.WriteMessage("Opération annulée");
-                        return;
-                    }
-                    var OldLayer = Layers.GetLayerTableRecordByName(BlkRef.Layer);
-
-                    // On utilise ici la nouvelle couleur sélectionnée lors de la création du nouveau calque
-                    var LayerId = Layers.CreateLayer(OldBlockName, SelectedColor, OldLayer.LineWeight, OldLayer.Transparency, OldLayer.IsPlottable);
-                    ObjectIdCollection objectIdCollection = BlockReferences.GetAllBlockReferenceInstances(OldBlockName, tr, db);
-                    foreach (ObjectId item in objectIdCollection)
-                    {
-                        if (item.GetDBObject(OpenMode.ForWrite) is BlockReference BlkRefInstance)
-                        {
-                            BlkRefInstance.LayerId = LayerId;
-                        }
-                    }
-                }
-                // On s'assure d'appliquer la couleur sélectionnée au calque AVANT DE recrée le bloc
-                Layers.SetLayerColor(OldBlockName, SelectedColor);
-
-                string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out string BlockData, out bool WasCreated);
-                if (string.IsNullOrWhiteSpace(NewBlockName))
-                {
+                    // L'utilisateur a annulé ou fermé la fenêtre
                     return;
                 }
 
-                BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-
-                // If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
-                if (!string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
+                // Correction du calque si nécessaire
+                if (!EnsureLayerConsistency(blkRef, userInput.SelectedColor, tr, db))
                 {
-                    BlockReferences.ReplaceAllBlockReference(OldBlockName, NewBlockName);
-                    OldBlockName = NewBlockName;
+                    return; // L'utilisateur a refusé de continuer après l'avertissement
                 }
 
-                string OldBlockNewRenameName = OldBlockName;
-
-                // If user is only changing size, -> the name dont change but we need to replace old references
-                if (string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    BlockTableRecord Renbtr = (BlockTableRecord)tr.GetObject(bt[OldBlockName], OpenMode.ForWrite);
-                    OldBlockNewRenameName = SymbolUtilityServices.RepairSymbolName(OldBlockName + "_" + DateTime.Now.Ticks.ToString(), false);
-                    Renbtr.Name = OldBlockNewRenameName;
-                    // Recreate the block;
-                    NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out BlockData, out _);
-                }
-                else
-                {
-                    // Not same layer, on garde l'ancienne transparence mais on applique la couleur choisie plus bas.
-                    Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
-                }
-
-                var BlkDef = db.GetBlocDefinition(NewBlockName);
-                BlkDef.UpgradeOpen();
-                BlkDef.Comments = BlockData;
-
-                BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, true, true);
-                Layers.Merge(OldBlockName, NewBlockName);
-
-                // On s'assure d'appliquer la couleur sélectionnée au calque de destination à la toute fin
-                Layers.SetLayerColor(NewBlockName, SelectedColor);
+                // Mise à jour ou recréation du bloc
+                UpdateBlockAndReferences(blkRef, userInput, tr, db);
 
                 tr.Commit();
             }
         }
+
+        private static VegblocEditData ShowDialogAndGetData(BlockReference blkRef)
+        {
+            VegblocEditDialog editDialog = new VegblocEditDialog();
+            editDialog.SetColor(Layers.GetLayerColor(blkRef.Layer));
+
+            var blocData = VEGBLOC.GetDataStore(blkRef);
+            if (blocData != null)
+            {
+                if (blocData.TryGetValueString(VEGBLOC.DataStore.BlocName) != blkRef.GetBlockReferenceName())
+                {
+                    Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Des données ont été trouvées mais sont incohérentes. Le nom du bloc a peut-être été modifié en dehors de VEGBLOCEDIT");
+                }
+                editDialog.NameInput.Text = blocData.TryGetValueString(VEGBLOC.DataStore.CompleteName);
+                editDialog.HeightInput.Text = blocData.TryGetValueString(VEGBLOC.DataStore.Height);
+                editDialog.WidthInput.Text = blocData.TryGetValueString(VEGBLOC.DataStore.Width);
+                editDialog.TypeInput.Text = VEGBLOC.GetVegblocType(blocData.TryGetValueString(VEGBLOC.DataStore.Type));
+            }
+
+            var dialogResult = Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(null, editDialog, true);
+
+            if (dialogResult != System.Windows.Forms.DialogResult.OK)
+            {
+                return null;
+            }
+
+            return new VegblocEditData
+            {
+                Name = editDialog.NameInput.Text,
+                Width = editDialog.WidthInput.Text,
+                Height = editDialog.HeightInput.Text,
+                Type = editDialog.TypeInput.Text,
+                SelectedColor = editDialog.SelectedColor
+            };
+        }
+
+        private static bool EnsureLayerConsistency(BlockReference blkRef, Color selectedColor, Transaction tr, Database db)
+        {
+            string oldBlockName = blkRef.GetBlockReferenceName();
+
+            if (oldBlockName == blkRef.Layer)
+            {
+                return true; // Tout est normal
+            }
+
+            var msg = $"Le bloc n'est peut-être pas sur le bon calque, voulez-vous continuer l'opération ?\nEn continuant, le calque sera renommé sous le nouveau nom.\n\nBloc : {oldBlockName}\nCalque : {blkRef.Layer}";
+            var result = MessageBox.Show(msg, Generic.GetExtensionDLLName(), MessageBoxButton.YesNo);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                Generic.WriteMessage("Opération annulée");
+                return false;
+            }
+
+            var oldLayer = Layers.GetLayerTableRecordByName(blkRef.Layer);
+            var layerId = Layers.CreateLayer(oldBlockName, selectedColor, oldLayer.LineWeight, oldLayer.Transparency, oldLayer.IsPlottable);
+
+            foreach (ObjectId item in BlockReferences.GetAllBlockReferenceInstances(oldBlockName, tr, db))
+            {
+                if (item.GetDBObject(OpenMode.ForWrite) is BlockReference blkRefInstance)
+                {
+                    blkRefInstance.LayerId = layerId;
+                }
+            }
+
+            return true;
+        }
+
+        private static void UpdateBlockAndReferences(BlockReference blkRef, VegblocEditData data, Transaction tr, Database db)
+        {
+            string oldBlockName = blkRef.GetBlockReferenceName();
+
+            // Appliquer la couleur avant de recréer le bloc
+            Layers.SetLayerColor(oldBlockName, data.SelectedColor);
+
+            string newBlockName = VEGBLOC.CreateBlockFromData(data.Name, data.Height, data.Width, data.Type, out string blockData, out bool wasCreated);
+
+            if (string.IsNullOrWhiteSpace(newBlockName))
+            {
+                return;
+            }
+
+            BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
+
+            // Remplacement si le bloc existe déjà sous un autre nom
+            if (!string.Equals(oldBlockName, newBlockName, StringComparison.CurrentCultureIgnoreCase) && !wasCreated && BlockReferences.IsBlockExist(newBlockName))
+            {
+                BlockReferences.ReplaceAllBlockReference(oldBlockName, newBlockName);
+                oldBlockName = newBlockName;
+            }
+
+            string oldBlockNewRenameName = oldBlockName;
+
+            // Logique si l'utilisateur modifie uniquement la taille (même nom)
+            if (string.Equals(oldBlockName, newBlockName, StringComparison.CurrentCultureIgnoreCase))
+            {
+                BlockTableRecord renBtr = (BlockTableRecord)tr.GetObject(bt[oldBlockName], OpenMode.ForWrite);
+                oldBlockNewRenameName = SymbolUtilityServices.RepairSymbolName(oldBlockName + "_" + DateTime.Now.Ticks.ToString(), false);
+                renBtr.Name = oldBlockNewRenameName;
+
+                // Recréer le bloc avec la nouvelle taille
+                newBlockName = VEGBLOC.CreateBlockFromData(data.Name, data.Height, data.Width, data.Type, out blockData, out _);
+            }
+            else
+            {
+                Layers.SetTransparency(newBlockName, Layers.GetTransparency(blkRef.Layer));
+            }
+
+            // Mise à jour de la définition du bloc
+            var blkDef = db.GetBlocDefinition(newBlockName);
+            blkDef.UpgradeOpen();
+            blkDef.Comments = blockData;
+
+            // Remplacement final et fusion des calques
+            BlockReferences.ReplaceAllBlockReference(oldBlockNewRenameName, newBlockName, true, true);
+            Layers.Merge(oldBlockName, newBlockName);
+            Layers.SetLayerColor(newBlockName, data.SelectedColor);
+        }
+
     }
 }
