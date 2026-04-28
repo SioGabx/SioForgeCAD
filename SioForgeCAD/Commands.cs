@@ -507,10 +507,10 @@ namespace SioForgeCAD
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
-        { 
-            var patha = @"PATH.pc3";
+        {
+            const string patha = "PATH.pc3";
             SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(patha);
-            var pathb = @"PATH.txt";
+            const string pathb = "PATH.txt";
             SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(pathb, pathb + "_edited.pc3");
         }
 

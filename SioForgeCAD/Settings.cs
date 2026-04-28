@@ -17,6 +17,8 @@ namespace SioForgeCAD
         public static string BlocNameAltimetrieCoupes = CADLayerPrefix + "CP_Altimetries";
         public static string BlocNamePente = CADLayerPrefix + "COTATIONS_Pentes";
 
+        public static string GabaritFile = @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt";
+
         public static int TransientPrimaryColorIndex = 252;
         public static int TransientSecondaryColorIndex = 255;
         public static string VegblocLayerHeightName = InfoLayerPrefix + "Hauteurs_végétaux";

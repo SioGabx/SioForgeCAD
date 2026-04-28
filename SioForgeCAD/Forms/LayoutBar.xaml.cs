@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Internal;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1234,13 +1235,123 @@ namespace SioForgeCAD.Forms
             }
         }
 
+        //private void AddBtn_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
+        //    {
+        //        TabScrollViewer.ScrollToRightEnd();
+        //        ClearSelection();
+        //    }
+        //}
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
+            if (!(sender is Button btn)) return;
+
+            ContextMenu cm = new ContextMenu();
+
+            // --- 1. Menu : Créer nouveau (vierge) ---
+            MenuItem newEmptyItem = new MenuItem { Header = "Créer nouveau (vierge)" };
+            newEmptyItem.Click += delegate
             {
-                TabScrollViewer.ScrollToRightEnd();
-                ClearSelection();
+                if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
+                {
+                    TabScrollViewer.ScrollToRightEnd();
+                    ClearSelection();
+                }
+            };
+            cm.Items.Add(newEmptyItem);
+
+            // --- 2. Menu : À partir d'un gabarit ---
+            MenuItem templateItem = new MenuItem { Header = "À partir d'un gabarit" };
+
+            // Remplacement par votre véritable appel à Settings.GabaritFile
+            string gabaritFile = Environment.ExpandEnvironmentVariables(Settings.GabaritFile);
+
+            if (!string.IsNullOrEmpty(gabaritFile) && File.Exists(gabaritFile))
+            {
+                var layoutNames = LayoutManager.Current.GetLayoutNamesFromFile(gabaritFile);
+                if (layoutNames.Count > 0)
+                {
+                    foreach (var layoutName in layoutNames)
+                    {
+                        MenuItem subItem = new MenuItem { Header = layoutName };
+                        subItem.Click += (s, args) =>
+                        {
+                            if (IsSyncingFromAutoCAD) return;
+
+                            string targetName = GenerateUniqueLayoutName(layoutName);
+
+                            if (LayoutManager.Current.CreateLayoutFromTemplate(gabaritFile, layoutName, targetName))
+                            {
+                                if (!LayoutManager.Current.LayoutExists(targetName)) return;
+                                using (Generic.GetLock())
+                                {
+                                    try
+                                    {
+                                        LayoutManager.Current.CurrentLayout = targetName;
+                                        TabScrollViewer.ScrollToRightEnd();
+                                        Generic.WriteMessage($"Présentation '{targetName}' importée avec succès.");
+                                        ReloadTabs(Generic.GetDocument());
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Generic.WriteMessage($"Erreur lors de l'activation de la présentation : {ex.Message}");
+                                    }
+                                }
+                            }
+
+                        };
+
+                        templateItem.Items.Add(subItem);
+                    }
+                }
+                else
+                {
+                    templateItem.Items.Add(new MenuItem { Header = "(Aucune présentation trouvée)", IsEnabled = false });
+                }
             }
+            else
+            {
+                templateItem.Items.Add(new MenuItem { Header = "(Fichier gabarit introuvable/non défini)", IsEnabled = false });
+            }
+
+            cm.Items.Add(templateItem);
+
+            // Affichage du menu sous le bouton
+            cm.PlacementTarget = btn;
+            cm.Placement = PlacementMode.Bottom;
+            cm.IsOpen = true;
+        }
+
+        private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!(sender is Button btn)) return;
+
+            ContextMenu cm = new ContextMenu();
+            MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
+
+            redefineItem.Click += delegate
+            {
+                Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
+                    Title = "Sélectionner un fichier de gabarit",
+                    InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath"),
+                };
+
+                if (ofd.ShowDialog() == true)
+                {
+                    Settings.GabaritFile = ofd.FileName;
+                }
+            };
+
+            cm.Items.Add(redefineItem);
+
+            cm.PlacementTarget = btn;
+            cm.Placement = PlacementMode.Bottom;
+            cm.IsOpen = true;
+
+            e.Handled = true; // Empêche l'événement de se propager
         }
 
         private void Item_ToolTipOpening(object sender, ToolTipEventArgs e)

@@ -118,7 +118,7 @@
                                 <ContentPresenter
                                     Margin="{TemplateBinding Padding}"
                                     ContentSource="Header"
-                                    RecognizesAccessKey="True" />
+                                    RecognizesAccessKey="False" />
 
                                 <Path
                                     x:Name="RightArrow"
@@ -517,7 +517,8 @@
                     VerticalContentAlignment="Center"
                     Click="AddBtn_Click"
                     Cursor="Hand"
-                    Foreground="{StaticResource TextInactive}">
+                    Foreground="{StaticResource TextInactive}"
+                    MouseRightButtonUp="AddBtn_MouseRightButtonUp">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -656,7 +657,7 @@
                                                         <ContentPresenter
                                                             Margin="{TemplateBinding Padding}"
                                                             ContentSource="Header"
-                                                            RecognizesAccessKey="True" />
+                                                            RecognizesAccessKey="False" />
 
                                                         <Path
                                                             x:Name="RightArrow"

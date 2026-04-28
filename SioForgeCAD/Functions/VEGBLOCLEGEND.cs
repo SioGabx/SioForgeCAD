@@ -152,34 +152,36 @@ namespace SioForgeCAD.Functions
                         EntsForTransients.AddRange(LegendPart.Value);
                     }
 
-                    VEGBLOC.GetVegBlocPointTransient insertionTransientPoints = new VEGBLOC.GetVegBlocPointTransient(EntsForTransients, null);
-                    var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Points.Null, false);
-                    EntsForTransients.DeepDispose();
-                    Points NewPointLocation = InsertionTransientPointsValues.Point;
-                    PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
-
-                    if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
+                    using (VEGBLOC.GetVegBlocPointTransient insertionTransientPoints = new VEGBLOC.GetVegBlocPointTransient(EntsForTransients, null))
                     {
-                        tr.Commit();
-                        return;
-                    }
+                        var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du bloc", Points.Null, false);
 
-                    Matrix3d DisplacementMatrix = Point3d.Origin.GetDisplacementMatrixTo(NewPointLocation.SCG);
-                    foreach (var LegendPart in LegendeByCategories)
-                    {
-                        ObjectIdCollection CategoryObjIdCollection = new ObjectIdCollection();
-                        foreach (var DbObjEnt in LegendPart.Value)
+                        Points NewPointLocation = InsertionTransientPointsValues.Point;
+                        PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
+
+                        if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
                         {
-                            if (DbObjEnt is Entity ent)
-                            {
-                                ent.TransformBy(DisplacementMatrix);
-                                CategoryObjIdCollection.Add(ent.AddToDrawingCurrentTransaction());
-                            }
+                            tr.Commit();
+                            return;
                         }
-                        Groups.Create(Settings.InfoLayerPrefix + "Legende_" + LegendPart.Key, "", CategoryObjIdCollection);
-                    }
 
-                    tr.Commit();
+                        Matrix3d DisplacementMatrix = Point3d.Origin.GetDisplacementMatrixTo(NewPointLocation.SCG);
+                        foreach (var LegendPart in LegendeByCategories)
+                        {
+                            ObjectIdCollection CategoryObjIdCollection = new ObjectIdCollection();
+                            foreach (var DbObjEnt in LegendPart.Value)
+                            {
+                                if (DbObjEnt is Entity ent)
+                                {
+                                    ent.TransformBy(DisplacementMatrix);
+                                    CategoryObjIdCollection.Add(ent.AddToDrawingCurrentTransaction());
+                                }
+                            }
+                            Groups.Create(Settings.InfoLayerPrefix + "Legende_" + LegendPart.Key, "", CategoryObjIdCollection);
+                        }
+
+                        tr.Commit();
+                    }
                 }
             }
         }

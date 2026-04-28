@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Microsoft.Win32;
+using SioForgeCAD.Commun.Mist.Helpers;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -119,34 +120,19 @@ namespace SioForgeCAD.Functions
                 return Path.GetDirectoryName(doc.Name);
             }
 
-            try
+
+            //Fallback find [HKEY_CURRENT_USER\Software\Autodesk\AutoCAD\RXX.X\ACAD-XXXX:XXX\Profiles\XXXXX\Dialogs\BrowseFolder]
+            string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+            string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
+
+            if (!string.IsNullOrEmpty(currentProfile))
             {
-                //Fallback find [HKEY_CURRENT_USER\Software\Autodesk\AutoCAD\RXX.X\ACAD-XXXX:XXX\Profiles\XXXXX\Dialogs\BrowseFolder]
-                string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
-                string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
-
-                if (!string.IsNullOrEmpty(currentProfile))
+                object initialDirectory = Registries.GetValue($@"{sProdKey}\Profiles\{currentProfile}\Dialogs\BrowseFolder", "InitialDirectory");
+                if (initialDirectory != null)
                 {
-                    string regPath = $@"{sProdKey}\Profiles\{currentProfile}\Dialogs\BrowseFolder";
-
-                    using (RegistryKey key = Registry.CurrentUser.OpenSubKey(regPath))
-                    {
-                        if (key != null)
-                        {
-                            object initialDirectory = key.GetValue("InitialDirectory");
-                            if (initialDirectory != null)
-                            {
-                                return initialDirectory.ToString();
-                            }
-                        }
-                    }
+                    return initialDirectory.ToString();
                 }
             }
-            catch (System.Exception ex)
-            {
-                Debug.WriteLine($"[Erreur ExtractPath] Impossible de lire le registre : {ex.Message}");
-            }
-
             // Fallback si rien n'est trouvé (ni DWG enregistré, ni registre valide)
             return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         }

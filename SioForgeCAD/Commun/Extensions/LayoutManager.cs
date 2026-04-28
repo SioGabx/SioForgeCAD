@@ -1,5 +1,8 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Internal;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Media.Imaging;
@@ -89,5 +92,103 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return lm.CurrentLayout == "Model";
         }
+
+
+
+        public static List<string> GetLayoutNamesFromFile(this LayoutManager _, string filePath)
+        {
+            List<string> layoutNames = new List<string>();
+            try
+            {
+                // On lit le fichier sans l'ouvrir visuellement dans AutoCAD
+                using (Database db = new Database(false, true))
+                {
+                    db.ReadDwgFile(filePath, FileOpenMode.OpenForReadAndAllShare, true, null);
+                    using (Transaction tr = db.TransactionManager.StartTransaction())
+                    {
+                        foreach (DBDictionaryEntry entry in (DBDictionary)tr.GetObject(db.LayoutDictionaryId, OpenMode.ForRead))
+                        {
+                            Layout layout = (Layout)tr.GetObject(entry.Value, OpenMode.ForRead);
+                            if (!layout.ModelType) // On exclut l'espace Objet
+                            {
+                                layoutNames.Add(layout.LayoutName);
+                            }
+                        }
+                        tr.Commit();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Erreur lors de la lecture du gabarit : " + ex.Message);
+            }
+            return layoutNames;
+        }
+
+        public static bool CreateLayoutFromTemplate(this LayoutManager lm, string filePath, string layoutName, string targetName)
+        {
+            if (string.IsNullOrEmpty(targetName)) targetName = layoutName;
+            Database destDb = Generic.GetDatabase();
+
+            using (Generic.GetLock())
+            {
+                try
+                {
+                    // true en 2ème paramètre = ouverture en mémoire, sans verrouiller le fichier physique
+                    using (Database srcDb = new Database(false, true))
+                    {
+                        srcDb.ReadDwgFile(filePath, FileOpenMode.OpenForReadAndAllShare, true, "");
+                        ObjectId srcLayoutId = ObjectId.Null;
+
+                        string tempLayoutName = $"TEMP_{Guid.NewGuid():N}";
+
+                        using (Transaction srcTr = srcDb.TransactionManager.StartTransaction())
+                        {
+                            DBDictionary layoutDict = (DBDictionary)srcTr.GetObject(srcDb.LayoutDictionaryId, OpenMode.ForRead);
+
+                            if (!layoutDict.Contains(layoutName))
+                            {
+                                return false; // Le gabarit ne contient pas la présentation demandée
+                            }
+
+                            srcLayoutId = layoutDict.GetAt(layoutName);
+                            Layout lay = (Layout)srcTr.GetObject(srcLayoutId, OpenMode.ForWrite);
+                            lay.LayoutName = tempLayoutName;
+                            lay.TabOrder = int.MaxValue;
+                            srcTr.Commit();
+                        }
+
+                        if (srcLayoutId != ObjectId.Null)
+                        {
+                            using (Transaction destTr = destDb.TransactionManager.StartTransaction())
+                            {
+                                ObjectIdCollection ids = new ObjectIdCollection { srcLayoutId };
+                                IdMapping idMap = new IdMapping();
+
+                                destDb.WblockCloneObjects(ids, destDb.LayoutDictionaryId, idMap, DuplicateRecordCloning.Ignore, false);
+
+                                if (!idMap.Contains(srcLayoutId) || !idMap[srcLayoutId].IsCloned)
+                                {
+                                    return false;
+                                }
+
+                                destTr.Commit();
+                            }
+                            lm.RenameLayout(tempLayoutName, targetName);
+
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Generic.WriteMessage($"Erreur lors de l'import du gabarit : {ex.Message}");
+                    return false;
+                }
+            }
+            return false;
+        }
+
+
     }
 }
