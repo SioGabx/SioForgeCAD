@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.PlottingServices;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,37 +11,36 @@ namespace SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3
     //https://github.com/znlgis/lightcad1/blob/master/src/LightCAD.UI.WinForm/Printer/PiaSerializer.cs
     public static class Files
     {
+
         public static List<string> GetPaperFormatsFromPc3(string pc3FileName)
         {
             List<string> formats = new List<string>();
 
             try
             {
-                // On crée un PlotSettings temporaire en mémoire pour interroger le validateur
                 using (PlotSettings ps = new PlotSettings(true))
                 {
                     PlotSettingsValidator psv = PlotSettingsValidator.Current;
                     psv.RefreshLists(ps);
-                    // Applique le nom du PC3 sélectionné. (null pour la taille de papier par défaut dans un premier temps)
+
+                    // Applique le nom du PC3 au PlotSettings
                     psv.SetPlotConfigurationName(ps, pc3FileName, null);
 
-                    // Récupère les noms systèmes (Canonical)
-                    var mediaNames = psv.GetCanonicalMediaNameList(ps);
-
-                    foreach (string media in mediaNames)
+                    //var mediaNames = psv.GetCanonicalMediaNameList(ps);
+                    PlotConfigManager.SetCurrentConfig(pc3FileName);
+                    PlotConfig plotConfig = PlotConfigManager.CurrentConfig;
+                    var CanonicalMediaNames = plotConfig.CanonicalMediaNames;
+                    foreach (string CanonicalName in CanonicalMediaNames)
                     {
-                        // Convertit le nom système en nom lisible (Local) et l'ajoute à la liste
-                        formats.Add(psv.GetLocaleMediaName(ps, media));
+                        // Convertit le nom système en nom lisible (Local)
+                        string localName = psv.GetLocaleMediaName(ps, CanonicalName);
+                        formats.Add(localName);
                     }
                 }
-
-                // Trie la liste par ordre alphabétique pour faciliter la recherche par l'utilisateur
                 formats.Sort();
             }
-            catch (Exception)
+            catch
             {
-                // En cas d'erreur (par exemple un PC3 corrompu ou un problème d'API)
-                // On renvoie une liste vide silencieusement (ou vous pouvez logger l'erreur)
             }
 
             return formats;
