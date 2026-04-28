@@ -22,18 +22,19 @@ namespace SioForgeCAD.Forms
         private void ColorSelectButton_Click(object sender, EventArgs e)
         {
             var colorDialog = new Autodesk.AutoCAD.Windows.ColorDialog();
-                if (SelectedColor != null)
-                {
-                    colorDialog.Color = SelectedColor;
-                }
+            if (SelectedColor != null)
+            {
+                colorDialog.Color = SelectedColor;
+            }
 
-                if (colorDialog.ShowDialog() == DialogResult.OK)
-                {
-                    SetColor(colorDialog.Color);
-                }
+            colorDialog.IncludeByBlockByLayer = false;
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                SetColor(colorDialog.Color);
+            }
         }
 
-        private static bool HasError(Control Ctrl)
+        private static bool HasError(Control Ctrl, Type TargetType)
         {
             string value = null;
             if (Ctrl is TextBox textbox)
@@ -44,18 +45,28 @@ namespace SioForgeCAD.Forms
             {
                 value = combobox.Text;
             }
+
             if (string.IsNullOrWhiteSpace(value))
             {
                 Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog("Veuillez completer l'ensemble des champs");
                 Ctrl.Focus();
                 return true;
             }
+
+            if (TargetType == typeof(double) && !double.TryParse(value, out _))
+            {
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.ShowAlertDialog($"La valeur de champ \"{value}\" n'est pas valide.\nUne valeur de type {TargetType.Name.ToLower()} attendue.\nEx : 1.5");
+                Ctrl.Focus();
+                return true;
+            }
+
+            
             return false;
         }
 
         private void PromptAcceptButton_Click(object sender, EventArgs e)
         {
-            if (HasError(NameInput) || HasError(HeightInput) || HasError(WidthInput) || HasError(TypeInput))
+            if (HasError(NameInput, typeof(string)) || HasError(HeightInput, typeof(double)) || HasError(WidthInput, typeof(double)) || HasError(TypeInput, typeof(string)))
             {
                 return;
             }

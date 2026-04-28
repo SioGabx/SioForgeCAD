@@ -29,7 +29,7 @@ namespace SioForgeCAD.Functions
             TypedValue[] filterList = new TypedValue[] { new TypedValue((int)DxfCode.Start, "INSERT") };
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
-                MessageForAdding = "Sélectionnez un bloc",
+                MessageForAdding = "Sélectionnez un végétal (VEGBLOC compactible)",
                 SingleOnly = true,
                 SinglePickInSpace = true,
                 RejectObjectsOnLockedLayers = true

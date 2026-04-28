@@ -5,20 +5,35 @@
 ## 🛠️ Installation
 
 1. Build the project as a `.dll`.
-2. Load the extension into AutoCAD using the `NETLOAD` command.
-3. Select the compiled `.dll` file.
-4. Once loaded, use the command prefix `SIOFORGECAD` followed by one of the available commands listed below.
+2. In add this to `"C:\Program Files\Autodesk\AutoCAD XXXX\acad.exe.config"`:   `<runtime><loadFromRemoteSources enabled="true"/></runtime>`
+3. Load the extension into AutoCAD using the `NETLOAD` command.
+4. Select the compiled `.dll` file.
+5. Once loaded, use the command prefix `SIOFORGECAD` followed by one of the available commands listed below.
 
 ONLY FOR AUTOCAD < 2025
--> https://gilecad.azurewebsites.net/Resources/Migration_NET_Core.pdf
-
+<!--
+> https://gilecad.azurewebsites.net/Resources/Migration_NET_Core.pdf
+-->
 ---
 
-## 🧭 Command Reference
+
 <!-- 
-Regex to get command name : \[(?:[^\]]*\s*,\s*)?"([^"]+)"
+Regex to get command name      : \[(?:[^\]]*\s*,\s*)?"([^"]+)"   
+Regex to get command name (V2) : \[(?:[^\]]*\s*,\s*)?"\K[^"]+(?=")
 Regex to get README command name : /`([^`]+?)`/g
+https://regex101.com/?regex=%5C%5B%28%3F%3A%5B%5E%5C%5D%5D*%5Cs*%2C%5Cs*%29%3F%22%5CK%5B%5E%22%5D%2B%28%3F%3D%22%29&testString=&flags=g&flavor=pcre2&delimiter=%2F
+
+
+Compléter mon fichier MD, génére moi le fichier en me mettant uniquement le lien de téléchargement.
+
+Toutes les commandes :  
+
+
+Commandes existantes fichier MD (à completer par les commandes manquantes, propose des description que tu met en commentaire)
+
+
 -->
+## 🧭 Command Reference
 
 | Command | Description |
 |---|---|
@@ -64,8 +79,6 @@ Regex to get README command name : /`([^`]+?)`/g
 | `SSE` | Select all entities with the same type. |
 | `SSBLK` | Select all instances of selected blocks. |
 | `SSCL` | Select all entities on the current layer. |
-| `SSOC` | Select entities within a crossing polyline. |
-| `SSOF` | Select entities strictly inside a polyline. |
 | `RRR` | Rotate entities around a base point. |
 | `RP2` | Rotate view to current UCS system. |
 | `FRAMESELECTED` | View : Frame selected entity. |
@@ -128,3 +141,35 @@ Regex to get README command name : /`([^`]+?)`/g
 | `REGIONFORSKETCHUP` | This command converts closed AutoCAD entities into Regions and optionally exports them into a new drawing, specifically to prepare geometry for SketchUp import or other 3D applications that require clean, planar region outlines. |
 | `REMOVEALLPROXIES` | Purges all proxy objects from the drawing |
 | `RENAMELAYOUT` | Renames all paper space layouts in the current drawing by replacing a specific substring in their names with a new one provided by the user. |
+| `BLKCREATE` | Create a new block from selected entities. |
+| `BLKSETDEFINITIONTOEXPLODABLE` | <!-- Set block definition to allow exploding. --> Set block definition to allow exploding. |
+| `BLKAPPLYSCALE` | Apply current scale to block internal entities and reset scale factor. |
+| `SSALLINSIDE` | Select all entities entirely inside a boundary. |
+| `SSALLSTRICTLYINSIDE` | Select all entities strictly inside a boundary. |
+| `VOLUMESTOCKAGEEP` | Calculate rainwater storage volume (Volume Stockage EP). |
+| `VEGBLOCCOUNTFILL` | Count and fill areas with vegetation blocks. |
+| `VEGBLOCEXPORTTOILLUSTRATOR` | Export vegetation blocks to Adobe Illustrator. |
+| `PERSPECTIVETRANSFORM` | BETA - Apply a perspective transformation to selected objects. |
+| `ADDPOINTSATPOLYLIGNEVERTICES` |Add a point entity at each vertex of selected polylines. |
+| `VIEWGEOMETRYVERTEX` | View the vertices of a all drawing geometry. |
+| `COPYPAPERTOMODEL` |  Copy selected objects from paper space to model space. |
+| `SKETCHUPCREATEREGIONFROMPOLY` | Create a SketchUp compatible region from a polyline. |
+| `SKETCHUPCREATETERRAINFROMPOINTS` | Create a 3D terrain mesh from elevation points for SketchUp. |
+| `EXTENDPOLY` | Extend a polyline at extremity by a specified distance . |
+| `RENAMELAYERS` | Batch rename layers based on user criteria. |
+| `MANAGESCU` | Manage User Coordinate Systems (UCS/SCU) : copy-paste between drawings. |
+| `UPDATEXREFS` | BETA - Reload and update all external references in the drawing. |
+| `ARRAYCOPY` | Copy entities in a customized array pattern. |
+| `POLYOUTLINE` |Generate an outline bounding box or contour around a polyline with a width. |
+| `LAYOUTFROMRECTANGLE` | Create a layout viewport matching a selected rectangle in model space. |
+| `CUSTOMLAYOUTBAR` | Display a custom toolbar for layout management. |
+| `DRAWPAPERFRAME` |Draw a visual frame representing the printed paper dimensions. |
+
+| `FIELDEDITOR` | Debug only - Open an advanced editor for dynamic fields. |
+| `TEST` | Debug only - Development/testing command 1. |
+| `TEST2` | Debug only - Development/testing command 2. |
+| `TEST3` | Debug only - Development/testing command 3. |
+| `GETOBJECTBYTESIZE` | Debug only - Calculate and display the memory size (in bytes) of selected objects. |
+| `TRIANGLECC` | Debug only - Create computation triangles between elevation points. |
+| `RANDOM_POINTS` | Debug only - Generate random point entities within a specific boundary. |
+| `DRAWRAINBOWLIGNES` | Debug only - Draw lines with an interpolated rainbow color gradient. |
