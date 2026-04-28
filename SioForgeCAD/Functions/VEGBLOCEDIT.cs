@@ -57,6 +57,10 @@ namespace SioForgeCAD.Functions
                 BlockReference BlkRef = EditObject.GetDBObject() as BlockReference;
 
                 VegblocEditDialog EditDialog = new VegblocEditDialog();
+
+                // Initialise la couleur avec celle du calque actuel du bloc
+                EditDialog.SetColor(Layers.GetLayerColor(BlkRef.Layer));
+
                 var BlocData = VEGBLOC.GetDataStore(BlkRef);
                 if (BlocData != null)
                 {
@@ -80,6 +84,7 @@ namespace SioForgeCAD.Functions
                 string Width = EditDialog.WidthInput.Text;
                 string Height = EditDialog.HeightInput.Text;
                 string Type = EditDialog.TypeInput.Text;
+                var SelectedColor = EditDialog.SelectedColor; // Récupère la couleur choisie
 
                 if (BlkRef.IsEntityOnLockedLayer())
                 {
@@ -90,14 +95,16 @@ namespace SioForgeCAD.Functions
                 string OldBlockName = BlkRef.GetBlockReferenceName();
                 if (OldBlockName != BlkRef.Layer)
                 {
-                    var ContinueWithNotGoodLayerName = MessageBox.Show($"Le bloc n'est peut-être pas sur le bon calque, voulez-vous continuer l'opération ?\nEn continuant, le calque sera renommé sous le nouveau nom.\n\nBloc        : {OldBlockName}\nCalque : {BlkRef.Layer}", Generic.GetExtensionDLLName(), MessageBoxButton.YesNo);
+                    var ContinueWithNotGoodLayerName = MessageBox.Show($"Le bloc n'est peut-être pas sur le bon calque, voulez-vous continuer l'opération ?\nEn continuant, le calque sera renommé sous le nouveau nom.\n\nBloc       : {OldBlockName}\nCalque : {BlkRef.Layer}", Generic.GetExtensionDLLName(), MessageBoxButton.YesNo);
                     if (ContinueWithNotGoodLayerName != MessageBoxResult.Yes)
                     {
                         Generic.WriteMessage("Opération annulée");
                         return;
                     }
                     var OldLayer = Layers.GetLayerTableRecordByName(BlkRef.Layer);
-                    var LayerId = Layers.CreateLayer(OldBlockName, OldLayer.Color, OldLayer.LineWeight, OldLayer.Transparency, OldLayer.IsPlottable);
+
+                    // On utilise ici la nouvelle couleur sélectionnée lors de la création du nouveau calque
+                    var LayerId = Layers.CreateLayer(OldBlockName, SelectedColor, OldLayer.LineWeight, OldLayer.Transparency, OldLayer.IsPlottable);
                     ObjectIdCollection objectIdCollection = BlockReferences.GetAllBlockReferenceInstances(OldBlockName, tr, db);
                     foreach (ObjectId item in objectIdCollection)
                     {
@@ -106,8 +113,9 @@ namespace SioForgeCAD.Functions
                             BlkRefInstance.LayerId = LayerId;
                         }
                     }
-
                 }
+                // On s'assure d'appliquer la couleur sélectionnée au calque AVANT DE recrée le bloc
+                Layers.SetLayerColor(OldBlockName, SelectedColor);
 
                 string NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out string BlockData, out bool WasCreated);
                 if (string.IsNullOrWhiteSpace(NewBlockName))
@@ -117,7 +125,7 @@ namespace SioForgeCAD.Functions
 
                 BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
 
-                //If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
+                // If block already exist and its not the actual name, we need to change to the existing one before trying to change maybe its size
                 if (!string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase) && !WasCreated && BlockReferences.IsBlockExist(NewBlockName))
                 {
                     BlockReferences.ReplaceAllBlockReference(OldBlockName, NewBlockName);
@@ -126,19 +134,18 @@ namespace SioForgeCAD.Functions
 
                 string OldBlockNewRenameName = OldBlockName;
 
-                //If user is only changing size, -> the name dont change but we need to replace old references
+                // If user is only changing size, -> the name dont change but we need to replace old references
                 if (string.Equals(OldBlockName, NewBlockName, StringComparison.CurrentCultureIgnoreCase))
                 {
                     BlockTableRecord Renbtr = (BlockTableRecord)tr.GetObject(bt[OldBlockName], OpenMode.ForWrite);
                     OldBlockNewRenameName = SymbolUtilityServices.RepairSymbolName(OldBlockName + "_" + DateTime.Now.Ticks.ToString(), false);
                     Renbtr.Name = OldBlockNewRenameName;
-                    //Recreate the block;
+                    // Recreate the block;
                     NewBlockName = VEGBLOC.CreateBlockFromData(Name, Height, Width, Type, out BlockData, out _);
                 }
                 else
                 {
-                    //Not same layer, we should copy properties of the old one
-                    Layers.SetLayerColor(NewBlockName, Layers.GetLayerColor(BlkRef.Layer));
+                    // Not same layer, on garde l'ancienne transparence mais on applique la couleur choisie plus bas.
                     Layers.SetTransparency(NewBlockName, Layers.GetTransparency(BlkRef.Layer));
                 }
 
@@ -148,6 +155,10 @@ namespace SioForgeCAD.Functions
 
                 BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, true, true);
                 Layers.Merge(OldBlockName, NewBlockName);
+
+                // On s'assure d'appliquer la couleur sélectionnée au calque de destination à la toute fin
+                Layers.SetLayerColor(NewBlockName, SelectedColor);
+
                 tr.Commit();
             }
         }

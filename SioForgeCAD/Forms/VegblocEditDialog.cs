@@ -5,10 +5,32 @@ namespace SioForgeCAD.Forms
 {
     public partial class VegblocEditDialog : Form
     {
+        public Autodesk.AutoCAD.Colors.Color SelectedColor { get; private set; }
+
         public VegblocEditDialog()
         {
             InitializeComponent();
             this.DialogResult = DialogResult.Cancel;
+        }
+
+        public void SetColor(Autodesk.AutoCAD.Colors.Color color)
+        {
+            SelectedColor = color;
+            ColorPreviewPanel.BackColor = color.ColorValue;
+        }
+
+        private void ColorSelectButton_Click(object sender, EventArgs e)
+        {
+            var colorDialog = new Autodesk.AutoCAD.Windows.ColorDialog();
+                if (SelectedColor != null)
+                {
+                    colorDialog.Color = SelectedColor;
+                }
+
+                if (colorDialog.ShowDialog() == DialogResult.OK)
+                {
+                    SetColor(colorDialog.Color);
+                }
         }
 
         private static bool HasError(Control Ctrl)

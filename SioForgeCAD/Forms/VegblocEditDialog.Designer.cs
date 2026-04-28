@@ -42,11 +42,20 @@ namespace SioForgeCAD.Forms
             this.PromptAcceptButton = new System.Windows.Forms.Button();
             this.NameLabel = new System.Windows.Forms.Label();
             this.PromptCancelButton = new System.Windows.Forms.Button();
+
+            // Nouveaux contrôles pour la couleur
+            this.ColorLabel = new System.Windows.Forms.Label();
+            this.ColorPreviewPanel = new System.Windows.Forms.Panel();
+            this.ColorSelectButton = new System.Windows.Forms.Button();
+
             this.ContentPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // ContentPanel
             // 
+            this.ContentPanel.Controls.Add(this.ColorSelectButton);
+            this.ContentPanel.Controls.Add(this.ColorPreviewPanel);
+            this.ContentPanel.Controls.Add(this.ColorLabel);
             this.ContentPanel.Controls.Add(this.TypeLabel);
             this.ContentPanel.Controls.Add(this.TypeInput);
             this.ContentPanel.Controls.Add(this.WidthInput);
@@ -61,7 +70,7 @@ namespace SioForgeCAD.Forms
             this.ContentPanel.Location = new System.Drawing.Point(0, 0);
             this.ContentPanel.Margin = new System.Windows.Forms.Padding(2);
             this.ContentPanel.Name = "ContentPanel";
-            this.ContentPanel.Size = new System.Drawing.Size(417, 190);
+            this.ContentPanel.Size = new System.Drawing.Size(417, 240); // Agrandissement
             this.ContentPanel.TabIndex = 2;
             // 
             // TypeLabel
@@ -85,6 +94,34 @@ namespace SioForgeCAD.Forms
             this.TypeInput.Name = "TypeInput";
             this.TypeInput.Size = new System.Drawing.Size(392, 21);
             this.TypeInput.TabIndex = 8;
+            // 
+            // ColorLabel
+            // 
+            this.ColorLabel.AutoSize = true;
+            this.ColorLabel.Location = new System.Drawing.Point(11, 145);
+            this.ColorLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.ColorLabel.Name = "ColorLabel";
+            this.ColorLabel.Size = new System.Drawing.Size(96, 13);
+            this.ColorLabel.TabIndex = 11;
+            this.ColorLabel.Text = "Couleur du calque";
+            // 
+            // ColorPreviewPanel
+            // 
+            this.ColorPreviewPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ColorPreviewPanel.Location = new System.Drawing.Point(11, 161);
+            this.ColorPreviewPanel.Name = "ColorPreviewPanel";
+            this.ColorPreviewPanel.Size = new System.Drawing.Size(40, 23);
+            this.ColorPreviewPanel.TabIndex = 12;
+            // 
+            // ColorSelectButton
+            // 
+            this.ColorSelectButton.Location = new System.Drawing.Point(57, 161);
+            this.ColorSelectButton.Name = "ColorSelectButton";
+            this.ColorSelectButton.Size = new System.Drawing.Size(75, 23);
+            this.ColorSelectButton.TabIndex = 13;
+            this.ColorSelectButton.Text = "Modifier...";
+            this.ColorSelectButton.UseVisualStyleBackColor = true;
+            this.ColorSelectButton.Click += new System.EventHandler(this.ColorSelectButton_Click);
             // 
             // WidthInput
             // 
@@ -139,7 +176,7 @@ namespace SioForgeCAD.Forms
             // PromptAcceptButton
             // 
             this.PromptAcceptButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.PromptAcceptButton.Location = new System.Drawing.Point(223, 152);
+            this.PromptAcceptButton.Location = new System.Drawing.Point(223, 200); // Déplacé vers le bas
             this.PromptAcceptButton.Margin = new System.Windows.Forms.Padding(2);
             this.PromptAcceptButton.Name = "PromptAcceptButton";
             this.PromptAcceptButton.Size = new System.Drawing.Size(88, 27);
@@ -161,7 +198,7 @@ namespace SioForgeCAD.Forms
             // PromptCancelButton
             // 
             this.PromptCancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.PromptCancelButton.Location = new System.Drawing.Point(315, 152);
+            this.PromptCancelButton.Location = new System.Drawing.Point(315, 200); // Déplacé vers le bas
             this.PromptCancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.PromptCancelButton.Name = "PromptCancelButton";
             this.PromptCancelButton.Size = new System.Drawing.Size(88, 27);
@@ -174,7 +211,7 @@ namespace SioForgeCAD.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(417, 190);
+            this.ClientSize = new System.Drawing.Size(417, 240); // Agrandissement
             this.Controls.Add(this.ContentPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.ImeMode = System.Windows.Forms.ImeMode.Disable;
@@ -201,5 +238,10 @@ namespace SioForgeCAD.Forms
         public System.Windows.Forms.TextBox NameInput;
         public System.Windows.Forms.TextBox WidthInput;
         public System.Windows.Forms.ComboBox TypeInput;
+
+        // Composants de couleur
+        private System.Windows.Forms.Label ColorLabel;
+        public System.Windows.Forms.Panel ColorPreviewPanel;
+        private System.Windows.Forms.Button ColorSelectButton;
     }
 }
