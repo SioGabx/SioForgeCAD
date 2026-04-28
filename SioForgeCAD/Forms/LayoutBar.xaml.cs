@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -1264,7 +1265,6 @@ namespace SioForgeCAD.Forms
             // --- 2. Menu : À partir d'un gabarit ---
             MenuItem templateItem = new MenuItem { Header = "À partir d'un gabarit" };
 
-            // Remplacement par votre véritable appel à Settings.GabaritFile
             string gabaritFile = Environment.ExpandEnvironmentVariables(Settings.GabaritFile);
 
             if (!string.IsNullOrEmpty(gabaritFile) && File.Exists(gabaritFile))
@@ -1299,9 +1299,7 @@ namespace SioForgeCAD.Forms
                                     }
                                 }
                             }
-
                         };
-
                         templateItem.Items.Add(subItem);
                     }
                 }
@@ -1323,13 +1321,212 @@ namespace SioForgeCAD.Forms
             cm.IsOpen = true;
         }
 
+        //private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (!(sender is Button btn)) return;
+
+        //    ContextMenu cm = new ContextMenu();
+
+        //    // ==========================================================
+        //    // Paramètres Présentation vierge
+        //    // ==========================================================
+        //    MenuItem settingsItem = new MenuItem { Header = "Paramètres Présentation vierge" };
+
+        //    // --- Sous-menu A : Définir le PC3 ---
+        //    MenuItem definePc3Item = new MenuItem { Header = "Définir le PC3" };
+        //    definePc3Item.Click += delegate
+        //    {
+        //        Microsoft.Win32.OpenFileDialog ofdPc3 = new Microsoft.Win32.OpenFileDialog
+        //        {
+        //            Filter = "Fichiers de configuration de traceur (*.pc3)|*.pc3|Tous les fichiers (*.*)|*.*",
+        //            Title = "Sélectionner un fichier PC3",
+        //            // Optionnel : Pointer vers le dossier par défaut des traceurs AutoCAD
+        //            InitialDirectory = @"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters"
+        //        };
+
+        //        if (ofdPc3.ShowDialog() == true)
+        //        {
+        //            Settings.Pc3File = ofdPc3.FileName; // Nécessite l'ajout d'une propriété Pc3File dans votre classe Settings
+        //            Settings.PaperFormat = null;        // Réinitialise le format papier quand le PC3 change
+        //            Generic.WriteMessage($"\nPC3 défini sur : {Settings.Pc3File}");
+        //        }
+        //    };
+        //    settingsItem.Items.Add(definePc3Item);
+
+        //    // --- Sous-menu B : Format Papier ---
+        //    MenuItem paperFormatItem = new MenuItem { Header = "Format Papier" };
+
+        //    // On vérifie si un PC3 est déjà défini et existe
+        //    string currentPc3 = Settings.Pc3File;
+        //    if (!string.IsNullOrEmpty(currentPc3) && File.Exists(currentPc3))
+        //    {
+        //        List<string> paperSizes = SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.GetPaperFormatsFromPc3(currentPc3);
+
+        //        if (paperSizes.Count > 0)
+        //        {
+        //            foreach (var paper in paperSizes)
+        //            {
+        //                MenuItem paperSubItem = new MenuItem
+        //                {
+        //                    Header = paper,
+        //                    IsChecked = Settings.PaperFormat?.ToString() == paper // Indique visuellement le format actuellement choisi
+        //                };
+
+        //                paperSubItem.Click += (s, args) =>
+        //                {
+        //                    Settings.PaperFormat = paper; // Nécessite l'ajout d'une propriété PaperFormat dans votre classe Settings
+        //                    Generic.WriteMessage($"\nFormat papier défini sur : {paper}");
+        //                };
+        //                paperFormatItem.Items.Add(paperSubItem);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            paperFormatItem.Items.Add(new MenuItem { Header = "(Aucun format trouvé dans le PC3)", IsEnabled = false });
+        //        }
+        //    }
+        //    else
+        //    {
+        //        paperFormatItem.Items.Add(new MenuItem { Header = "(Veuillez d'abord définir un PC3 valide)", IsEnabled = false });
+        //    }
+
+        //    settingsItem.Items.Add(paperFormatItem);
+        //    cm.Items.Add(settingsItem);
+
+        //    cm.Items.Add(new Separator()); // Séparateur visuel
+
+        //    // ==========================================================
+        //    // Redéfinir le fichier de gabarit
+        //    // ==========================================================
+        //    MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
+        //    redefineItem.Click += delegate
+        //    {
+        //        Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog
+        //        {
+        //            Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
+        //            Title = "Sélectionner un fichier de gabarit",
+        //            InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath"),
+        //        };
+
+        //        if (ofd.ShowDialog() == true)
+        //        {
+        //            Settings.GabaritFile = ofd.FileName;
+        //        }
+        //    };
+        //    cm.Items.Add(redefineItem);
+
+        //    // Affichage du menu
+        //    cm.PlacementTarget = btn;
+        //    cm.Placement = PlacementMode.Bottom;
+        //    cm.IsOpen = true;
+
+        //    e.Handled = true; // Empêche l'événement de se propager
+        //}
         private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (!(sender is Button btn)) return;
 
             ContextMenu cm = new ContextMenu();
-            MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
 
+            // ==========================================================
+            // 1. MENU : Paramètres Présentation vierge
+            // ==========================================================
+            MenuItem settingsItem = new MenuItem { Header = "Paramètres Présentation vierge" };
+
+            // --- Sous-menu A : Choisir le traceur (remplace la sélection de fichier) ---
+            MenuItem definePc3Item = new MenuItem { Header = "Choisir le traceur" };
+
+            try
+            {
+                using (PlotSettings ps = new PlotSettings(true))
+                {
+                    PlotSettingsValidator psv = PlotSettingsValidator.Current;
+                    psv.RefreshLists(ps); // Force le rafraîchissement de la liste des traceurs
+
+                    System.Collections.Specialized.StringCollection devices = psv.GetPlotDeviceList();
+
+                    if (devices != null && devices.Count > 0)
+                    {
+                        foreach (string device in devices)
+                        {
+                            // On ignore le traceur "Aucun" par défaut si on veut forcer un vrai choix, 
+                            // mais il est souvent utile de le laisser ("None" ou "Aucun").
+                            MenuItem deviceSubItem = new MenuItem
+                            {
+                                Header = device,
+                                IsChecked = (Settings.Pc3File == device) // Coche le traceur actuellement actif
+                            };
+
+                            deviceSubItem.Click += (s, args) =>
+                            {
+                                Settings.Pc3File = device;
+                                Settings.PaperFormat = null; // On réinitialise le format papier car le traceur a changé
+                                Generic.WriteMessage($"\nTraceur défini sur : {device}");
+                            };
+                            definePc3Item.Items.Add(deviceSubItem);
+                        }
+                    }
+                    else
+                    {
+                        definePc3Item.Items.Add(new MenuItem { Header = "(Aucun traceur trouvé)", IsEnabled = false });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                definePc3Item.Items.Add(new MenuItem { Header = "(Erreur de chargement)", IsEnabled = false });
+                Generic.WriteMessage($"\nErreur lors du chargement des traceurs : {ex.Message}");
+            }
+
+            settingsItem.Items.Add(definePc3Item);
+
+            // --- Sous-menu B : Format Papier ---
+            MenuItem paperFormatItem = new MenuItem { Header = "Format Papier" };
+
+            string currentPlotter = Settings.Pc3File;
+
+            // Plus besoin de File.Exists() car ce n'est plus forcément un chemin de fichier, mais un nom de périphérique.
+            if (!string.IsNullOrEmpty(currentPlotter))
+            {
+                List<string> paperSizes = SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.GetPaperFormatsFromPc3(currentPlotter);
+
+                if (paperSizes.Count > 0)
+                {
+                    foreach (var paper in paperSizes)
+                    {
+                        MenuItem paperSubItem = new MenuItem
+                        {
+                            Header = paper,
+                            IsChecked = (Settings.PaperFormat == paper)
+                        };
+
+                        paperSubItem.Click += (s, args) =>
+                        {
+                            Settings.PaperFormat = paper;
+                            Generic.WriteMessage($"\nFormat papier défini sur : {paper}");
+                        };
+                        paperFormatItem.Items.Add(paperSubItem);
+                    }
+                }
+                else
+                {
+                    paperFormatItem.Items.Add(new MenuItem { Header = "(Aucun format trouvé pour ce traceur)", IsEnabled = false });
+                }
+            }
+            else
+            {
+                paperFormatItem.Items.Add(new MenuItem { Header = "(Veuillez d'abord choisir un traceur)", IsEnabled = false });
+            }
+
+            settingsItem.Items.Add(paperFormatItem);
+            cm.Items.Add(settingsItem);
+
+            cm.Items.Add(new Separator());
+
+            // ==========================================================
+            // 2. MENU : Redéfinir le fichier de gabarit
+            // ==========================================================
+            MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
             redefineItem.Click += delegate
             {
                 Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog
@@ -1344,15 +1541,15 @@ namespace SioForgeCAD.Forms
                     Settings.GabaritFile = ofd.FileName;
                 }
             };
-
             cm.Items.Add(redefineItem);
 
             cm.PlacementTarget = btn;
             cm.Placement = PlacementMode.Bottom;
             cm.IsOpen = true;
 
-            e.Handled = true; // Empêche l'événement de se propager
+            e.Handled = true;
         }
+
 
         private void Item_ToolTipOpening(object sender, ToolTipEventArgs e)
         {

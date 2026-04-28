@@ -24,5 +24,8 @@ namespace SioForgeCAD
         public static string VegblocLayerHeightName = InfoLayerPrefix + "Hauteurs_végétaux";
         public static bool VegblocCopyGripDeselectAfterCopy = true;
         public static bool VegblocGeneratePeripheryCircles = false;
+
+        public static string Pc3File { get; internal set; }
+        public static object PaperFormat { get; internal set; }
     }
 }
