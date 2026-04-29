@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -31,6 +32,83 @@ namespace SioForgeCAD.Commun.Extensions
 
             return rtb;
         }
+
+        public static void ResetAllDataContexts(this DependencyObject target)
+        {
+            if (target is FrameworkElement fe)
+            {
+                fe.DataContext = null;
+            }
+
+            // Parcourir les enfants dans l'arbre visuel
+            int count = VisualTreeHelper.GetChildrenCount(target);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(target, i);
+                ResetAllDataContexts(child);
+            }
+        }
+
+        public static IEnumerable<T> GetVisualChildren<T>(this DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null) yield break;
+
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is T typedChild)
+                {
+                    yield return typedChild;
+                }
+
+                // Search deeper in the tree
+                foreach (T childOfChild in GetVisualChildren<T>(child))
+                {
+                    yield return childOfChild;
+                }
+            }
+        }
+
+        public static T GetVisualChild<T>(this DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null) return null;
+
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is T typedChild)
+                {
+                    return typedChild;
+                }
+
+                // Recursive call to search deeper
+                T result = GetVisualChild<T>(child);
+                if (result != null) return result;
+            }
+
+            return null;
+        }
+
+        public static void SetAllDataContexts(this DependencyObject target, object Context)
+        {
+            if (target is FrameworkElement fe)
+            {
+                fe.DataContext = Context;
+            }
+
+            // Parcourir les enfants dans l'arbre visuel
+            int count = VisualTreeHelper.GetChildrenCount(target);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(target, i);
+                SetAllDataContexts(child, Context);
+            }
+        }
+
 
         public static Cursor CreateCursorFromElement(this FrameworkElement element, Point hotspot)
         {

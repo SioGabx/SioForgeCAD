@@ -60,7 +60,7 @@ namespace SioForgeCAD.Forms
                 return true;
             }
 
-            
+
             return false;
         }
 

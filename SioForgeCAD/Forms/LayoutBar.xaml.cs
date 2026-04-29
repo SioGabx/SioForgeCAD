@@ -118,6 +118,7 @@ namespace SioForgeCAD.Forms
             ActiveTabChanged += LayoutBar_ActiveTabChanged;
             TabScrollViewer.ScrollChanged += TabScrollViewer_ScrollChanged;
             _autoScrollTimer.Tick += AutoScrollTimer_Tick;
+            LayoutTab.SelectionChanged += LayoutTab_SelectionChanged;
 
             ReloadTabs(Application.DocumentManager.MdiActiveDocument);
         }
@@ -135,12 +136,12 @@ namespace SioForgeCAD.Forms
             ActiveTabChanged -= LayoutBar_ActiveTabChanged;
             TabScrollViewer.ScrollChanged -= TabScrollViewer_ScrollChanged;
             _autoScrollTimer.Tick -= AutoScrollTimer_Tick;
+            LayoutTab.SelectionChanged -= LayoutTab_SelectionChanged;
         }
 
         #endregion
 
         #region Synchronisation AutoCAD <-> WPF
-
         private void OnDocumentActivated(object sender, DocumentCollectionEventArgs e) => ReloadTabs(e.Document);
 
         private void OnLayoutsChanged(object sender, LayoutEventArgs e)
@@ -189,6 +190,65 @@ namespace SioForgeCAD.Forms
                     LayoutManager.Current.CurrentLayout = e.Title;
                 }
                 tr.Commit();
+            }
+        }
+
+        private bool _isSyncSelectionScheduled = false;
+
+        private void LayoutTab_SelectionChanged()
+        {
+            // Évite la boucle infinie si AutoCAD est déjà en train de mettre à jour le WPF
+            if (IsSyncingFromAutoCAD || _isSyncSelectionScheduled) return;
+
+            _isSyncSelectionScheduled = true;
+
+            // On utilise le Dispatcher avec ContextIdle pour regrouper (batch) les requêtes.
+            // Si 50 onglets changent en même temps, ceci ne sera exécuté qu'une seule fois à la fin.
+            Dispatcher.InvokeAsync(() =>
+            {
+                _isSyncSelectionScheduled = false;
+                SyncSelectionToAutoCAD();
+            }, DispatcherPriority.ContextIdle);
+        }
+
+        private void SyncSelectionToAutoCAD()
+        {
+            if (IsSyncingFromAutoCAD) return;
+
+            var doc = Generic.GetDocument();
+            if (doc?.IsDisposed != false) return;
+
+            IsSyncingFromWPF = true;
+            try
+            {
+                using (doc.LockDocument())
+                using (var tr = doc.Database.TransactionManager.StartTransaction())
+                {
+                    Debug.WriteLine($"Update TabSelected from WPF ");
+                    foreach (var tab in GetVisibleItemsList(true).OfType<LayoutTab>().Distinct())
+                    {
+                        if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout
+                           )
+                        {
+                            bool ShouldBeTabSelected = tab.IsSelected || tab.IsCurrent;
+                            if (layout.TabSelected != ShouldBeTabSelected)
+                            {
+                                layout.TabSelected = ShouldBeTabSelected;
+                            }
+
+                        }
+                    }
+                    tr.Commit();
+                    Debug.WriteLine($"End Update TabSelected from WPF ");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Erreur lors de la synchro de sélection vers AutoCAD : {ex.Message}");
+            }
+            finally
+            {
+                IsSyncingFromWPF = false;
             }
         }
 
@@ -1236,320 +1296,139 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        //private void AddBtn_Click(object sender, RoutedEventArgs e)
-        //{
-        //    if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
-        //    {
-        //        TabScrollViewer.ScrollToRightEnd();
-        //        ClearSelection();
-        //    }
-        //}
-        private void AddBtn_Click(object sender, RoutedEventArgs e)
+        private void ExecuteLayoutCreation(string sourceFile, string templateName, string PreferedName, bool isFallbackEnabled)
         {
-            if (!(sender is Button btn)) return;
+            if (IsSyncingFromAutoCAD) return;
+            string targetName = GenerateUniqueLayoutName(PreferedName ?? "Présentation");
 
-            ContextMenu cm = new ContextMenu();
-
-            // --- 1. Menu : Créer nouveau (vierge) ---
-            MenuItem newEmptyItem = new MenuItem { Header = "Créer nouveau (vierge)" };
-            newEmptyItem.Click += delegate
+            // Tentative de création via gabarit
+            if (!string.IsNullOrEmpty(sourceFile) && LayoutManager.Current.CreateLayoutFromTemplate(sourceFile, templateName, targetName))
+            {
+                if (!LayoutManager.Current.LayoutExists(targetName)) return;
+                using (Generic.GetLock())
+                {
+                    try
+                    {
+                        LayoutManager.Current.CurrentLayout = targetName;
+                        TabScrollViewer.ScrollToRightEnd();
+                        Generic.WriteMessage($"Présentation '{targetName}' importée avec succès.");
+                        ReloadTabs(Generic.GetDocument());
+                    }
+                    catch (Exception ex)
+                    {
+                        Generic.WriteMessage($"Erreur lors de l'activation : {ex.Message}");
+                    }
+                }
+            }
+            // Comportement de secours (Fallback) uniquement si demandé
+            else if (isFallbackEnabled)
             {
                 if (TryCreateNewLayout($"Présentation_{DateTime.Now.Ticks}"))
                 {
                     TabScrollViewer.ScrollToRightEnd();
                     ClearSelection();
                 }
-            };
+            }
+        }
+        private void AddBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is Button btn)) return;
+            ContextMenu cm = new ContextMenu();
+
+            // --- 1. Menu : Créer nouveau (vierge) ---
+            MenuItem newEmptyItem = new MenuItem { Header = "Présentation vierge" };
+            newEmptyItem.Click += (s, args) => ExecuteLayoutCreation(Settings.EmptyLayoutGabaritFile, Settings.EmptyLayoutGabaritPresentationName, null, true); // Fallback activé ici
             cm.Items.Add(newEmptyItem);
 
             // --- 2. Menu : À partir d'un gabarit ---
             MenuItem templateItem = new MenuItem { Header = "À partir d'un gabarit" };
-
-            string gabaritFile = Environment.ExpandEnvironmentVariables(Settings.GabaritFile);
-
-            if (!string.IsNullOrEmpty(gabaritFile) && File.Exists(gabaritFile))
-            {
-                var layoutNames = LayoutManager.Current.GetLayoutNamesFromFile(gabaritFile);
-                if (layoutNames.Count > 0)
-                {
-                    foreach (var layoutName in layoutNames)
-                    {
-                        MenuItem subItem = new MenuItem { Header = layoutName };
-                        subItem.Click += (s, args) =>
-                        {
-                            if (IsSyncingFromAutoCAD) return;
-
-                            string targetName = GenerateUniqueLayoutName(layoutName);
-
-                            if (LayoutManager.Current.CreateLayoutFromTemplate(gabaritFile, layoutName, targetName))
-                            {
-                                if (!LayoutManager.Current.LayoutExists(targetName)) return;
-                                using (Generic.GetLock())
-                                {
-                                    try
-                                    {
-                                        LayoutManager.Current.CurrentLayout = targetName;
-                                        TabScrollViewer.ScrollToRightEnd();
-                                        Generic.WriteMessage($"Présentation '{targetName}' importée avec succès.");
-                                        ReloadTabs(Generic.GetDocument());
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Generic.WriteMessage($"Erreur lors de l'activation de la présentation : {ex.Message}");
-                                    }
-                                }
-                            }
-                        };
-                        templateItem.Items.Add(subItem);
-                    }
-                }
-                else
-                {
-                    templateItem.Items.Add(new MenuItem { Header = "(Aucune présentation trouvée)", IsEnabled = false });
-                }
-            }
-            else
-            {
-                templateItem.Items.Add(new MenuItem { Header = "(Fichier gabarit introuvable/non défini)", IsEnabled = false });
-            }
+            BuildLayoutSubMenu(templateItem, Settings.GabaritFile, (selectedName) => ExecuteLayoutCreation(Settings.GabaritFile, selectedName, selectedName, false));
 
             cm.Items.Add(templateItem);
-
-            // Affichage du menu sous le bouton
-            cm.PlacementTarget = btn;
-            cm.Placement = PlacementMode.Bottom;
-            cm.IsOpen = true;
+            ShowMenu(cm, btn);
         }
-
-        //private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        //{
-        //    if (!(sender is Button btn)) return;
-
-        //    ContextMenu cm = new ContextMenu();
-
-        //    // ==========================================================
-        //    // Paramètres Présentation vierge
-        //    // ==========================================================
-        //    MenuItem settingsItem = new MenuItem { Header = "Paramètres Présentation vierge" };
-
-        //    // --- Sous-menu A : Définir le PC3 ---
-        //    MenuItem definePc3Item = new MenuItem { Header = "Définir le PC3" };
-        //    definePc3Item.Click += delegate
-        //    {
-        //        Microsoft.Win32.OpenFileDialog ofdPc3 = new Microsoft.Win32.OpenFileDialog
-        //        {
-        //            Filter = "Fichiers de configuration de traceur (*.pc3)|*.pc3|Tous les fichiers (*.*)|*.*",
-        //            Title = "Sélectionner un fichier PC3",
-        //            // Optionnel : Pointer vers le dossier par défaut des traceurs AutoCAD
-        //            InitialDirectory = @"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters"
-        //        };
-
-        //        if (ofdPc3.ShowDialog() == true)
-        //        {
-        //            Settings.Pc3File = ofdPc3.FileName; // Nécessite l'ajout d'une propriété Pc3File dans votre classe Settings
-        //            Settings.PaperFormat = null;        // Réinitialise le format papier quand le PC3 change
-        //            Generic.WriteMessage($"\nPC3 défini sur : {Settings.Pc3File}");
-        //        }
-        //    };
-        //    settingsItem.Items.Add(definePc3Item);
-
-        //    // --- Sous-menu B : Format Papier ---
-        //    MenuItem paperFormatItem = new MenuItem { Header = "Format Papier" };
-
-        //    // On vérifie si un PC3 est déjà défini et existe
-        //    string currentPc3 = Settings.Pc3File;
-        //    if (!string.IsNullOrEmpty(currentPc3) && File.Exists(currentPc3))
-        //    {
-        //        List<string> paperSizes = SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.GetPaperFormatsFromPc3(currentPc3);
-
-        //        if (paperSizes.Count > 0)
-        //        {
-        //            foreach (var paper in paperSizes)
-        //            {
-        //                MenuItem paperSubItem = new MenuItem
-        //                {
-        //                    Header = paper,
-        //                    IsChecked = Settings.PaperFormat?.ToString() == paper // Indique visuellement le format actuellement choisi
-        //                };
-
-        //                paperSubItem.Click += (s, args) =>
-        //                {
-        //                    Settings.PaperFormat = paper; // Nécessite l'ajout d'une propriété PaperFormat dans votre classe Settings
-        //                    Generic.WriteMessage($"\nFormat papier défini sur : {paper}");
-        //                };
-        //                paperFormatItem.Items.Add(paperSubItem);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            paperFormatItem.Items.Add(new MenuItem { Header = "(Aucun format trouvé dans le PC3)", IsEnabled = false });
-        //        }
-        //    }
-        //    else
-        //    {
-        //        paperFormatItem.Items.Add(new MenuItem { Header = "(Veuillez d'abord définir un PC3 valide)", IsEnabled = false });
-        //    }
-
-        //    settingsItem.Items.Add(paperFormatItem);
-        //    cm.Items.Add(settingsItem);
-
-        //    cm.Items.Add(new Separator()); // Séparateur visuel
-
-        //    // ==========================================================
-        //    // Redéfinir le fichier de gabarit
-        //    // ==========================================================
-        //    MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
-        //    redefineItem.Click += delegate
-        //    {
-        //        Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog
-        //        {
-        //            Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
-        //            Title = "Sélectionner un fichier de gabarit",
-        //            InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath"),
-        //        };
-
-        //        if (ofd.ShowDialog() == true)
-        //        {
-        //            Settings.GabaritFile = ofd.FileName;
-        //        }
-        //    };
-        //    cm.Items.Add(redefineItem);
-
-        //    // Affichage du menu
-        //    cm.PlacementTarget = btn;
-        //    cm.Placement = PlacementMode.Bottom;
-        //    cm.IsOpen = true;
-
-        //    e.Handled = true; // Empêche l'événement de se propager
-        //}
         private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (!(sender is Button btn)) return;
-
             ContextMenu cm = new ContextMenu();
 
-            // ==========================================================
-            // 1. MENU : Paramètres Présentation vierge
-            // ==========================================================
+            // 1. Paramètres Présentation vierge
             MenuItem settingsItem = new MenuItem { Header = "Paramètres Présentation vierge" };
 
-            // --- Sous-menu A : Choisir le traceur (remplace la sélection de fichier) ---
-            MenuItem definePc3Item = new MenuItem { Header = "Choisir le traceur" };
-
-            try
+            // Sous-menu A : Choisir fichier
+            string currentViergeFile = Settings.EmptyLayoutGabaritFile;
+            MenuItem chooseFile = new MenuItem
             {
-                using (PlotSettings ps = new PlotSettings(true))
+                Header = string.IsNullOrEmpty(currentViergeFile) ? "Choisir un gabarit..." : $"Gabarit : {Path.GetFileName(currentViergeFile)}"
+            };
+            chooseFile.Click += (s, args) =>
+            {
+                string path = PromptFileSelection();
+                if (path != null)
                 {
-                    PlotSettingsValidator psv = PlotSettingsValidator.Current;
-                    psv.RefreshLists(ps); // Force le rafraîchissement de la liste des traceurs
-
-                    System.Collections.Specialized.StringCollection devices = psv.GetPlotDeviceList();
-
-                    if (devices != null && devices.Count > 0)
-                    {
-                        foreach (string device in devices)
-                        {
-                            // On ignore le traceur "Aucun" par défaut si on veut forcer un vrai choix, 
-                            // mais il est souvent utile de le laisser ("None" ou "Aucun").
-                            MenuItem deviceSubItem = new MenuItem
-                            {
-                                Header = device,
-                                IsChecked = (Settings.Pc3File == device) // Coche le traceur actuellement actif
-                            };
-
-                            deviceSubItem.Click += (s, args) =>
-                            {
-                                Settings.Pc3File = device;
-                                Settings.PaperFormat = null; // On réinitialise le format papier car le traceur a changé
-                                Generic.WriteMessage($"\nTraceur défini sur : {device}");
-                            };
-                            definePc3Item.Items.Add(deviceSubItem);
-                        }
-                    }
-                    else
-                    {
-                        definePc3Item.Items.Add(new MenuItem { Header = "(Aucun traceur trouvé)", IsEnabled = false });
-                    }
+                    Settings.EmptyLayoutGabaritFile = path;
+                    Settings.EmptyLayoutGabaritPresentationName = LayoutManager.Current.GetLayoutNamesFromFile(path).FirstOrDefault();
                 }
-            }
-            catch (Exception ex)
-            {
-                definePc3Item.Items.Add(new MenuItem { Header = "(Erreur de chargement)", IsEnabled = false });
-                Generic.WriteMessage($"\nErreur lors du chargement des traceurs : {ex.Message}");
-            }
+            };
+            settingsItem.Items.Add(chooseFile);
 
-            settingsItem.Items.Add(definePc3Item);
+            // Sous-menu B : Choix de la présentation
+            MenuItem layoutFormatItem = new MenuItem { Header = "Choix de la présentation" };
+            BuildLayoutSubMenu(layoutFormatItem, currentViergeFile, (name) => Settings.EmptyLayoutGabaritPresentationName = name, Settings.EmptyLayoutGabaritPresentationName);
+            settingsItem.Items.Add(layoutFormatItem);
 
-            // --- Sous-menu B : Format Papier ---
-            MenuItem paperFormatItem = new MenuItem { Header = "Format Papier" };
-
-            string currentPlotter = Settings.Pc3File;
-
-            // Plus besoin de File.Exists() car ce n'est plus forcément un chemin de fichier, mais un nom de périphérique.
-            if (!string.IsNullOrEmpty(currentPlotter))
-            {
-                List<string> paperSizes = SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.GetPaperFormatsFromPc3(currentPlotter);
-
-                if (paperSizes.Count > 0)
-                {
-                    foreach (var paper in paperSizes)
-                    {
-                        MenuItem paperSubItem = new MenuItem
-                        {
-                            Header = paper,
-                            IsChecked = (Settings.PaperFormat == paper)
-                        };
-
-                        paperSubItem.Click += (s, args) =>
-                        {
-                            Settings.PaperFormat = paper;
-                            Generic.WriteMessage($"\nFormat papier défini sur : {paper}");
-                        };
-                        paperFormatItem.Items.Add(paperSubItem);
-                    }
-                }
-                else
-                {
-                    paperFormatItem.Items.Add(new MenuItem { Header = "(Aucun format trouvé pour ce traceur)", IsEnabled = false });
-                }
-            }
-            else
-            {
-                paperFormatItem.Items.Add(new MenuItem { Header = "(Veuillez d'abord choisir un traceur)", IsEnabled = false });
-            }
-
-            settingsItem.Items.Add(paperFormatItem);
             cm.Items.Add(settingsItem);
-
             cm.Items.Add(new Separator());
 
-            // ==========================================================
-            // 2. MENU : Redéfinir le fichier de gabarit
-            // ==========================================================
+            // 2. Redéfinir le fichier de gabarit (Code existant conservé pour Settings.GabaritFile)
             MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
-            redefineItem.Click += delegate
+            redefineItem.Click += (s, args) =>
             {
-                Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog
-                {
-                    Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
-                    Title = "Sélectionner un fichier de gabarit",
-                    InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath"),
-                };
-
-                if (ofd.ShowDialog() == true)
-                {
-                    Settings.GabaritFile = ofd.FileName;
-                }
+                string path = PromptFileSelection();
+                if (path != null) Settings.GabaritFile = path;
             };
             cm.Items.Add(redefineItem);
 
-            cm.PlacementTarget = btn;
-            cm.Placement = PlacementMode.Bottom;
-            cm.IsOpen = true;
-
+            ShowMenu(cm, btn);
             e.Handled = true;
         }
 
+        private void BuildLayoutSubMenu(MenuItem parent, string filePath, Action<string> onClick, string checkedName = null)
+        {
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                var names = LayoutManager.Current.GetLayoutNamesFromFile(filePath);
+                if (names.Count > 0)
+                {
+                    foreach (var name in names.OrderBy(n => n))
+                    {
+                        var item = new MenuItem { Header = name, IsChecked = (name == checkedName) };
+                        item.Click += (s, e) => onClick(name);
+                        parent.Items.Add(item);
+                    }
+                    return;
+                }
+            }
+            parent.Items.Add(new MenuItem { Header = "(Aucun gabarit ou présentation)", IsEnabled = false });
+        }
+
+        private string PromptFileSelection()
+        {
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
+                Title = "Sélectionner un fichier de gabarit",
+                InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString()
+            };
+            return (ofd.ShowDialog() == true) ? ofd.FileName : null;
+        }
+
+        private void ShowMenu(ContextMenu cm, Button btn)
+        {
+            cm.PlacementTarget = btn;
+            cm.Placement = PlacementMode.Bottom;
+            cm.IsOpen = true;
+        }
 
         private void Item_ToolTipOpening(object sender, ToolTipEventArgs e)
         {
@@ -2347,6 +2226,8 @@ namespace SioForgeCAD.Forms
 
     public class LayoutTab : LayoutItem
     {
+        public static event Action SelectionChanged;
+
         private LayoutGroup _parentGroup;
         public LayoutGroup ParentGroup
         {
@@ -2357,7 +2238,15 @@ namespace SioForgeCAD.Forms
         public override bool IsSelected
         {
             get => base.IsSelected;
-            set { if (base.IsSelected != value) { base.IsSelected = value; ParentGroup?.EvaluateGroupSelection(); } }
+            set
+            {
+                if (base.IsSelected != value)
+                {
+                    base.IsSelected = value;
+                    ParentGroup?.EvaluateGroupSelection();
+                    SelectionChanged?.Invoke();
+                }
+            }
         }
         public bool IsModel { get; set; }
     }

@@ -113,6 +113,7 @@ namespace SioForgeCAD.Forms
             // TYPE
             // 
             this.TYPE.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            this.TYPE.AutoComplete = true;
             this.TYPE.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.TYPE.FillWeight = 100F;
             this.TYPE.HeaderText = "Type";

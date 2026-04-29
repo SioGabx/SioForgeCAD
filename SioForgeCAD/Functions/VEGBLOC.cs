@@ -38,6 +38,7 @@ namespace SioForgeCAD.Functions
             GRAMINÉES,
             VIVACES,
             FOUGÈRES,
+            COUVRE_SOLS,
             BULBEUSES
         }
         public static void Create()

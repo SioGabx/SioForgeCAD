@@ -1,9 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Microsoft.Win32;
-using System;
+﻿using Microsoft.Win32;
 using System.Diagnostics;
-using System.IO;
 
 namespace SioForgeCAD.Commun.Mist.Helpers
 {

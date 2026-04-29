@@ -71,6 +71,7 @@ namespace SioForgeCAD
             //Override
             Functions.LAYERMANAGERNEWLAYERDEFAULTNAME.Override();
             Functions.LAYERMANAGERHANDLEBETTEREDITING.Override();
+            Functions.CUSTOMLAYOUTBAR.Override();
         }
 
         public void Terminate()

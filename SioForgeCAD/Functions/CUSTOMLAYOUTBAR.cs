@@ -1,10 +1,15 @@
-﻿using SioForgeCAD.Commun.Extensions;
+﻿using Autodesk.AutoCAD.MacroRecorder;
+using Autodesk.AutoCAD.UserControls;
+using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace SioForgeCAD.Functions
 {
@@ -37,9 +42,9 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static void Attach()
+        public static void Override()
         {
-            Debug.WriteLine("Attach Custom Layout Bar");
+            Debug.WriteLine("Overrided Layout Bar");
             foreach (var LayoutSwitchControl in GetLayoutSwitchControl())
             {
                 if (InjectedLayoutBar is null)
@@ -68,12 +73,12 @@ namespace SioForgeCAD.Functions
 
         public static void Toggle()
         {
-            Debug.WriteLine("ToggleVisibility Layout Bar");
+            Debug.WriteLine("Toggle Visibility Layout Bar");
             foreach (var LayoutSwitchControl in GetLayoutSwitchControl())
             {
                 if (InjectedLayoutBar is null)
                 {
-                    Attach();
+                    Override();
                     return;
                 }
                 else if (InjectedLayoutBar.Visibility != Visibility.Visible)

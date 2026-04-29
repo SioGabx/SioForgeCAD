@@ -133,7 +133,16 @@ namespace SioForgeCAD.Forms
             this.TypeLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.TypeLabel.Text = "Type de végétal :";
 
-            this.TypeInput.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.TypeInput.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            this.TypeInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+
+            //var sug = new System.Windows.Forms.AutoCompleteStringCollection();
+            //sug.AddRange(Enum.GetNames(typeof(VegblocTypes)));
+            //this.TypeInput.AutoCompleteCustomSource = sug;
+            this.TypeInput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+
+
+
             this.TypeInput.Font = new System.Drawing.Font("Segoe UI", 9.75F);
             this.TypeInput.Margin = new System.Windows.Forms.Padding(3, 2, 3, 15);
             this.TypeInput.Dock = System.Windows.Forms.DockStyle.Fill;

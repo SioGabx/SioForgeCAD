@@ -17,7 +17,7 @@ namespace SioForgeCAD
         public static string BlocNameAltimetrieCoupes = CADLayerPrefix + "CP_Altimetries";
         public static string BlocNamePente = CADLayerPrefix + "COTATIONS_Pentes";
 
-        public static string GabaritFile = @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt";
+        
 
         public static int TransientPrimaryColorIndex = 252;
         public static int TransientSecondaryColorIndex = 255;
@@ -25,7 +25,8 @@ namespace SioForgeCAD
         public static bool VegblocCopyGripDeselectAfterCopy = true;
         public static bool VegblocGeneratePeripheryCircles = false;
 
-        public static string Pc3File { get; internal set; }
-        public static object PaperFormat { get; internal set; }
+        public static string EmptyLayoutGabaritFile = @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt";
+        public static string EmptyLayoutGabaritPresentationName = "";
+        public static string GabaritFile = @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt";
     }
 }

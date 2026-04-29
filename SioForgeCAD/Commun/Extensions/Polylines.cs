@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
@@ -98,6 +99,29 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
 
+        public static void ResetStyle(this Polyline polyline)
+        {
+            if (polyline == null) return;
+
+            // Récupérer la base de données active (soit celle de la poly, soit la globale)
+            Database db = polyline.Database ?? HostApplicationServices.WorkingDatabase;
+
+            polyline.LayerId = db.Clayer;
+
+            polyline.Color = Color.FromColorIndex(ColorMethod.ByLayer, 256);
+            polyline.Linetype = "ByLayer";
+            polyline.LinetypeScale = 1.0;
+            polyline.LineWeight = LineWeight.ByLayer;
+            polyline.Transparency = new Transparency(TransparencyMethod.ByLayer);
+
+            // 3. Réinitialisation de l'épaisseur 3D
+            polyline.Thickness = 0.0;
+            polyline.ConstantWidth = 0.0;
+
+            // 4. Mise à plat absolue (Z = 0)
+            polyline.Elevation = 0.0;
+            polyline.Normal = Vector3d.ZAxis;
+        }
         public static void Flatten(this Polyline polyline)
         {
             for (int i = 0; i < polyline.NumberOfVertices; i++)

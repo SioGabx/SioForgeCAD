@@ -1,8 +1,10 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using System.Collections.Generic;
+using System.Windows;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using Viewport = Autodesk.AutoCAD.DatabaseServices.Viewport;
 
@@ -214,7 +216,10 @@ namespace SioForgeCAD.Commun.Extensions
                         Entity clipEntity = viewport.NonRectClipEntityId.GetEntity(OpenMode.ForRead);
                         if (clipEntity is Curve clipEntCurve)
                         {
-                            return clipEntCurve.ToPolyline();
+                            var clipPoly = clipEntCurve.ToPolyline();
+                            clipPoly.ResetStyle();
+                            return clipPoly;
+
                         }
                         return null;
                     }
@@ -236,6 +241,7 @@ namespace SioForgeCAD.Commun.Extensions
                         polyline.AddVertexAt(2, upperRight.ToPoint2d(), 0, 0, 0);
                         polyline.AddVertexAt(3, upperLeft.ToPoint2d(), 0, 0, 0);
                         polyline.Closed = true;
+                        polyline.ResetStyle();
                         return polyline;
                     }
                 }

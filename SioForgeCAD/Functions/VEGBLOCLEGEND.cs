@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
                                 string blockName = blkRef.GetBlockReferenceName();
                                 var Infos = VEGBLOC.GetDataStore(blkRef);
                                 if (Infos is null) { continue; }
-                                string Type = Infos[VEGBLOC.DataStore.Type].UcFirst();
+                                string Type = VEGBLOC.GetVegblocType(Infos[VEGBLOC.DataStore.Type]).UcFirst();
 
                                 if (!VegTypes.TryGetValue(Type, out HashSet<string> value))
                                 {
