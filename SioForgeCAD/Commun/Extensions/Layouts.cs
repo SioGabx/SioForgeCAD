@@ -159,102 +159,133 @@ namespace SioForgeCAD.Commun.Extensions
         {
             new Layout[1] { layout }.PublishLayouts(outputPdfPath);
         }
+
         public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputPdfPath)
         {
-            if (layouts?.Any() != true)
+            if (layouts?.Any() != true) return;
+
+            Document doc = Generic.GetDocument();
+            Database db = Generic.GetDatabase();
+            string originalDocPath = doc.Name;
+            string drawingName = Path.GetFileNameWithoutExtension(doc.Name);
+            string outFileName = Path.GetFileNameWithoutExtension(outputPdfPath);
+
+            // 1. GESTION DU FICHIER TEMPORAIRE
+            string tempFileName = $"{drawingName}_PLOT_{DateTime.Now.Ticks}_{Guid.NewGuid()}";
+            string tempDwgPath = Path.Combine(Path.GetTempPath(), $"{tempFileName}.dwg");
+
+            try
             {
+                // On sauvegarde le fichier sous un nom temp pour que PublishExecute le trouve
+                db.SaveAs(tempDwgPath, DwgVersion.Current);
+            }
+            catch (System.Exception ex)
+            {
+                Generic.WriteMessage($"Erreur de sauvegarde temporaire : {ex.Message}");
                 return;
             }
 
-            Document doc = Generic.GetDocument();
-            string docPath = doc.Name;
-
             bool isMultiPage = layouts.Count() > 1;
+            string dsdFilePath = Path.ChangeExtension(tempDwgPath, ".dsd");
 
-            string dsdFilePath = Path.ChangeExtension(outputPdfPath, ".dsd");
+            // 2. FORCER LE TRACÉ AU PREMIER PLAN (Indispensable pour supprimer le tempDwg après)
+            short bgPlot = (short)Generic.GetSystemVariable("BACKGROUNDPLOT");
+            Generic.SetSystemVariable("BACKGROUNDPLOT", 0, false);
 
-            using (DsdData dsdFileData = new DsdData())
-            using (DsdEntryCollection dsdEntries = new DsdEntryCollection())
+            try
             {
-        
-                foreach (var layout in layouts)
+                using (DsdData dsdFileData = new DsdData())
+                using (DsdEntryCollection dsdEntries = new DsdEntryCollection())
                 {
-                    var layoutName = layout.LayoutName;
-                    DsdEntry entry = new DsdEntry
+                    foreach (var layout in layouts)
                     {
-                        DwgName = docPath,
-                        Layout = layoutName,
-                        Title = layoutName
-                    };
-                    dsdEntries.Add(entry);
-                }
-
-                dsdFileData.SetDsdEntryCollection(dsdEntries);
-                dsdFileData.ProjectPath = Path.GetDirectoryName(docPath);
-                dsdFileData.LogFilePath = Path.Combine(Path.GetDirectoryName(outputPdfPath), "publish.log");
-                dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
-                dsdFileData.DestinationName = outputPdfPath;
-                dsdFileData.IsHomogeneous = false;
-
-                if (File.Exists(dsdFilePath))
-                {
-                    File.Delete(dsdFilePath);
-                }
-
-                try
-                {
-                    PlotConfig plotConfig = null;
-                    if (true)
-                    {
-                        if (isMultiPage)
+                        DsdEntry entry = new DsdEntry
                         {
-                            string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
-                            string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
+                            DwgName = tempDwgPath,
+                            Layout = layout.LayoutName,
+                            Title = outFileName
+                        };
+                        dsdEntries.Add(entry);
+                    }
 
-                            if (!string.IsNullOrEmpty(currentProfile))
+                    dsdFileData.SetDsdEntryCollection(dsdEntries);
+                    dsdFileData.ProjectPath = Path.GetDirectoryName(outputPdfPath);
+                    dsdFileData.LogFilePath = Path.Combine(Path.GetTempPath(), $"{tempFileName}_publish.log");
+                    dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
+                    dsdFileData.DestinationName = outputPdfPath;
+                    dsdFileData.IsHomogeneous = false;
+
+                    // 3. EMPÊCHER LA BOÎTE DE DIALOGUE (Étape 1)
+                    dsdFileData.PromptForDwfName = false;
+
+                    if (File.Exists(dsdFilePath)) File.Delete(dsdFilePath);
+
+                    // ASTUCE DSD : Contournement du bug d'AutoCAD (Étape 2)
+                    // L'API ignore souvent "PromptForDwfName" pour les PDF. 
+                    // On écrit le fichier DSD, on le force en texte brut, puis on le relit.
+                    dsdFileData.WriteDsd(dsdFilePath);
+
+                    string dsdText = File.ReadAllText(dsdFilePath);
+                    if (dsdText.Contains("PromptForDwfName=TRUE"))
+                    {
+                        dsdText = dsdText.Replace("PromptForDwfName=TRUE", "PromptForDwfName=FALSE");
+                        File.WriteAllText(dsdFilePath, dsdText);
+                    }
+
+                    // On recharge le DSD modifié
+                    dsdFileData.ReadDsd(dsdFilePath);
+
+                    PlotConfig plotConfig = null;
+
+                    if (isMultiPage)
+                    {
+                        string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+                        string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
+
+                        if (!string.IsNullOrEmpty(currentProfile))
+                        {
+                            string regPath = $@"{sProdKey}\Profiles\{currentProfile}\Dialogs\AcPublishDlg";
+                            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(regPath))
                             {
-                                string regPath = $@"{sProdKey}\Profiles\{currentProfile}\Dialogs\AcPublishDlg";
-
-                                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(regPath))
+                                object initialDirectory = key?.GetValue("SelectedPdfPlotter");
+                                if (initialDirectory != null)
                                 {
-                                    if (key != null)
-                                    {
-                                        object initialDirectory = key.GetValue("SelectedPdfPlotter");
-                                        if (initialDirectory != null)
-                                        {
-                                            var PlotConfigDevice = PlotConfigManager.Devices.
-                                                ToList<PlotConfigInfo>().
-                                                FirstOrDefault(t => Path.GetFileNameWithoutExtension(t.DeviceName) == initialDirectory.ToString());
-                                            plotConfig = PlotConfigManager.SetCurrentConfig(PlotConfigDevice.DeviceName);
-                                        }
-                                    }
+                                    var configInfo = PlotConfigManager.Devices
+                                        .Cast<PlotConfigInfo>()
+                                        .FirstOrDefault(t => Path.GetFileNameWithoutExtension(t.DeviceName) == initialDirectory.ToString());
+
+                                    if (configInfo != null)
+                                        plotConfig = PlotConfigManager.SetCurrentConfig(configInfo.DeviceName);
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        var firstLayout = layouts.FirstOrDefault();
+                        if (firstLayout.IsPlotDeviceAvailable())
+                        {
+                            plotConfig = PlotConfigManager.SetCurrentConfig(firstLayout.PlotConfigurationName);
+                        }
                         else
                         {
-                            if (IsPlotDeviceAvailable(layouts.FirstOrDefault()))
-                            {
-                                var deviceName = layouts.FirstOrDefault().PlotConfigurationName;
-                                plotConfig = PlotConfigManager.SetCurrentConfig(deviceName);
-                            }
-                            else
-                            {
-                                return;
-                            }
+                            return;
                         }
                     }
 
+                    // Lancement de la publication
                     Application.Publisher.PublishExecute(dsdFileData, plotConfig);
                 }
-                catch (System.Exception ex)
-                {
-                    Generic.WriteMessage(ex.Message);
-                }
-                finally
-                {
-                    //Debug.WriteLine("End Publish");
-                }
+            }
+            catch (System.Exception ex)
+            {
+                Generic.WriteMessage(ex.Message);
+            }
+            finally
+            {
+                Generic.SetSystemVariable("BACKGROUNDPLOT", bgPlot, false);
+                //try { if (File.Exists(dsdFilePath)) File.Delete(dsdFilePath); } catch { }
+                try { if (File.Exists(tempDwgPath)) File.Delete(tempDwgPath); } catch { }
             }
         }
 

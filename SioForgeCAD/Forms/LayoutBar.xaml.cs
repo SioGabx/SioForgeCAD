@@ -517,13 +517,13 @@ namespace SioForgeCAD.Forms
 
         private void SetCurrentItem(LayoutItem item)
         {
+            Debug.WriteLine("SetCurrentItem");
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = false;
             }
 
             item = GetTabFromRegularList(item);
-
             _currentItem = item;
             _lastSelectedItem = item;
 
@@ -552,6 +552,7 @@ namespace SioForgeCAD.Forms
 
         private void ClearSelection()
         {
+            Debug.WriteLine("ClearSelection");
             foreach (var item in PinnedItems)
             {
                 item.IsSelected = false;
@@ -570,6 +571,18 @@ namespace SioForgeCAD.Forms
             }
         }
 
+        private static void SetSelection(IEnumerable<LayoutTab> layoutTabs)
+        {
+            Debug.WriteLine("SetSelection");
+            foreach (var item in layoutTabs)
+            {
+                if (item.IsCurrent) { continue; }
+
+                Debug.WriteLine($"Set {item.Title} to true");
+                item.IsSelected = true;
+            }
+        }
+
         private List<LayoutItem> GetVisibleItemsList(bool IncludePinnedItems = true)
         {
             List<LayoutItem> list = new List<LayoutItem>(IncludePinnedItems ? PinnedItems.ToList() : new List<LayoutItem>());
@@ -583,7 +596,6 @@ namespace SioForgeCAD.Forms
             }
             return list;
         }
-
 
         private static string GenerateUniqueLayoutName(string baseName)
         {
@@ -1596,127 +1608,140 @@ namespace SioForgeCAD.Forms
         {
             var recoverCurrentTab = _currentItem;
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-
-            if (targetTabs.Count == 0) return;
-
-            Document doc = Generic.GetDocument();
-            string docName = Path.GetFileNameWithoutExtension(doc.Name);
-            string dwgDirectory = Path.GetDirectoryName(docName);
-            using (var tr = Generic.GetTrans())
+            try
             {
-                try
+                if (targetTabs.Count == 0) return;
+
+                Document doc = Generic.GetDocument();
+                string docName = Path.GetFileNameWithoutExtension(doc.Name);
+                string dwgDirectory = Path.GetDirectoryName(docName);
+                using (var tr = Generic.GetTrans())
                 {
-                    List<Layout> LayoutListToPlot = new List<Layout>();
-                    for (int i = 0; i < targetTabs.Count; i++)
+                    try
                     {
-                        if (GetLayoutFromTab(tr, targetTabs[i], OpenMode.ForRead) is Layout layout)
+                        List<Layout> LayoutListToPlot = new List<Layout>();
+                        for (int i = 0; i < targetTabs.Count; i++)
                         {
-                            LayoutListToPlot.Add(layout);
-                        }
-                    }
-                    var PlotsDevicesErrors = LayoutListToPlot.IsPlotsDeviceAvailable();
-
-                    if (PlotsDevicesErrors.Count > 0)
-                    {
-                        foreach (var item in PlotsDevicesErrors)
-                        {
-                            Generic.WriteMessage($"Le périphérique de traçage \"{item.Device}\" pour la présentation \"{item.LayoutName}\" n'est pas disponible.");
-                        }
-                        Generic.WriteMessage("Traçage annulé. Veuillez corriger les erreurs");
-                        return;
-                    }
-
-                    // SCÉNARIO 1 : Un seul fichier à tracer
-                    if (LayoutListToPlot.Count == 1)
-                    {
-                        SaveFileDialog saveFileDialog = new SaveFileDialog
-                        {
-                            Title = "Enregistrer la présentation",
-                            Filter = "Fichier PDF (*.pdf)|*.pdf",
-                            FileName = $"{docName}_{LayoutListToPlot.FirstOrDefault().LayoutName}.pdf",
-                            InitialDirectory = dwgDirectory
-                        };
-
-                        if (saveFileDialog.ShowDialog() != true) return; // Annulation utilisateur
-
-                        LayoutListToPlot.PublishLayouts(saveFileDialog.FileName);
-                    }
-                    // SCÉNARIO 2 : Plusieurs fichiers à tracer
-                    else
-                    {
-                        var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog("Sélectionnez le dossier d'enregistrement", "", "", "jj", Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
-                        {
-                            if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return; // Annulation
-
-                            string selectedFolder = folderDialog.FileOrFoldername;
-
-                            // Préparation des chemins
-                            foreach (var tab in LayoutListToPlot)
+                            if (GetLayoutFromTab(tr, targetTabs[i], OpenMode.ForRead) is Layout layout)
                             {
-                                string fileName = Path.Combine(selectedFolder,$"{docName}_{tab.LayoutName}.pdf");
-
-                                tab.PublishLayouts(fileName);
+                                LayoutListToPlot.Add(layout);
                             }
-
                         }
-                    }
+                        var PlotsDevicesErrors = LayoutListToPlot.IsPlotsDeviceAvailable();
 
-                    Generic.WriteMessage($"\nImpression de {targetTabs.Count} présentation(s) terminée.");
-                }
-                finally
-                {
-                    tr.Commit();
+                        if (PlotsDevicesErrors.Count > 0)
+                        {
+                            foreach (var item in PlotsDevicesErrors)
+                            {
+                                Generic.WriteMessage($"Le périphérique de traçage \"{item.Device}\" pour la présentation \"{item.LayoutName}\" n'est pas disponible.");
+                            }
+                            Generic.WriteMessage("Traçage annulé. Veuillez corriger les erreurs");
+                            return;
+                        }
+
+                        // SCÉNARIO 1 : Un seul fichier à tracer
+                        if (LayoutListToPlot.Count == 1)
+                        {
+                            SaveFileDialog saveFileDialog = new SaveFileDialog
+                            {
+                                Title = "Enregistrer la présentation",
+                                Filter = "Fichier PDF (*.pdf)|*.pdf",
+                                FileName = $"{docName}_{LayoutListToPlot.FirstOrDefault().LayoutName}.pdf",
+                                InitialDirectory = dwgDirectory
+                            };
+
+                            if (saveFileDialog.ShowDialog() != true) return; // Annulation utilisateur
+
+                            LayoutListToPlot.PublishLayouts(saveFileDialog.FileName);
+                        }
+                        // SCÉNARIO 2 : Plusieurs fichiers à tracer
+                        else
+                        {
+                            var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog("Sélectionnez le dossier d'enregistrement", "", "", "jj", Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
+                            {
+                                if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return; // Annulation
+
+                                string selectedFolder = folderDialog.FileOrFoldername;
+
+                                // Préparation des chemins
+                                foreach (var tab in LayoutListToPlot)
+                                {
+                                    string fileName = Path.Combine(selectedFolder, $"{docName}_{tab.LayoutName}.pdf");
+
+                                    tab.PublishLayouts(fileName);
+                                }
+
+                            }
+                        }
+
+                        Generic.WriteMessage($"\nImpression de {targetTabs.Count} présentation(s) terminée.");
+                    }
+                    finally
+                    {
+                        tr.Commit();
+                    }
                 }
             }
-            SetCurrentItem(recoverCurrentTab);
-            targetTabs.ForEach(t => t.IsSelected = true);
+            finally
+            {
+                SetCurrentItem(recoverCurrentTab);
+                SetSelection(targetTabs);
+            }
+
         }
+
+
 
         private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
         {
             var recoverCurrentTab = _currentItem;
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-
-            if (targetTabs.Count == 0) return;
-
-            Document doc = Generic.GetDocument();
-            string docPath = Path.GetFileNameWithoutExtension(doc.Name);
-            string dwgDirectory = Path.GetDirectoryName(docPath);
-
-            // UX : Demander l'emplacement et le nom du carnet PDF
-            SaveFileDialog saveFileDialog = new SaveFileDialog
+            try
             {
-                Title = "Enregistrer la publication (Carnet)",
-                Filter = "Fichier PDF (*.pdf)|*.pdf",
-                FileName = $"{docPath}_Carnet.pdf",
-                InitialDirectory = dwgDirectory
-            };
+                if (targetTabs.Count == 0) return;
 
-            if (saveFileDialog.ShowDialog() != true) return; // Si l'utilisateur annule, on arrête là.
+                Document doc = Generic.GetDocument();
+                string docPath = Path.GetFileNameWithoutExtension(doc.Name);
+                string dwgDirectory = Path.GetDirectoryName(docPath);
 
-            string outputPath = saveFileDialog.FileName;
-
-            using (var tr = Generic.GetTrans())
-            {
-                var layouts = new List<Layout>();
-                foreach (var tab in targetTabs)
+                // UX : Demander l'emplacement et le nom du carnet PDF
+                SaveFileDialog saveFileDialog = new SaveFileDialog
                 {
-                    if (GetLayoutFromTab(tr, tab, OpenMode.ForRead) is Layout layout)
+                    Title = "Enregistrer la publication (Carnet)",
+                    Filter = "Fichier PDF (*.pdf)|*.pdf",
+                    FileName = $"{docPath}_Carnet.pdf",
+                    InitialDirectory = dwgDirectory
+                };
+
+                if (saveFileDialog.ShowDialog() != true) return; // Si l'utilisateur annule, on arrête là.
+
+                string outputPath = saveFileDialog.FileName;
+
+                using (var tr = Generic.GetTrans())
+                {
+                    var layouts = new List<Layout>();
+                    foreach (var tab in targetTabs)
                     {
-                        layouts.Add(layout);
+                        if (GetLayoutFromTab(tr, tab, OpenMode.ForRead) is Layout layout)
+                        {
+                            layouts.Add(layout);
+                        }
                     }
-                }
 
-                if (layouts.Count > 0)
-                {
-                    layouts.PublishLayouts(outputPath);
+                    if (layouts.Count > 0)
+                    {
+                        layouts.PublishLayouts(outputPath);
+                    }
+                    tr.Commit();
                 }
-                tr.Commit();
+                Generic.WriteMessage($"\nPublication de {targetTabs.Count} présentation(s) terminée.");
+            }
+            finally
+            {
+                SetCurrentItem(recoverCurrentTab);
+                SetSelection(targetTabs);
             }
 
-            Generic.WriteMessage($"\nPublication de {targetTabs.Count} présentation(s) terminée.");
-            SetCurrentItem(recoverCurrentTab);
-            targetTabs.ForEach(t => t.IsSelected = true);
         }
 
 
@@ -1945,7 +1970,7 @@ namespace SioForgeCAD.Forms
             finally
             {
                 IsSyncingFromWPF = false;
-                ReloadTabs(Application.DocumentManager.MdiActiveDocument);
+                ReloadTabs(Generic.GetDocument());
             }
         }
 
@@ -2309,7 +2334,15 @@ namespace SioForgeCAD.Forms
         public virtual bool IsSelected
         {
             get => _isSelected;
-            set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
+            set
+            {
+                if (_isSelected != value)
+                {
+                    Debug.WriteLine("Property Changed to " + value);
+                    _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public object AutoCadData { get; set; }
@@ -2334,9 +2367,12 @@ namespace SioForgeCAD.Forms
             get => base.IsSelected;
             set
             {
+                Debug.WriteLine($"[{this.GetHashCode()}] {Title} => Setter appelé avec value = {value}. Actuel base.IsSelected = {base.IsSelected}");
+
                 if (base.IsSelected != value)
                 {
                     base.IsSelected = value;
+                    Debug.WriteLine($"[{this.GetHashCode()}] {Title} => base.IsSelected défini à : {base.IsSelected}");
                     ParentGroup?.EvaluateGroupSelection();
                     SelectionChanged?.Invoke();
                 }
