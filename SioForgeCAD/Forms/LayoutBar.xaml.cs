@@ -297,15 +297,55 @@ namespace SioForgeCAD.Forms
 
         public static Layout GetLayoutFromTab(Transaction tr, LayoutTab tab, OpenMode openMode)
         {
-            if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+            if (tab.LayoutHandle is string handleStr)
             {
-                if (tr.GetObject(layoutId, openMode) is Layout layout)
+                try
                 {
-                    return layout;
+                    long lHandle = Convert.ToInt64(handleStr, 16);
+                    Handle handle = new Handle(lHandle);
+
+                    Database db = Generic.GetDatabase();
+
+                    if (db.TryGetObjectId(handle, out ObjectId layoutId) && !layoutId.IsNull)
+                    {
+                        return tr.GetObject(layoutId, openMode) as Layout;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Erreur de conversion de Handle : {ex.Message}");
                 }
             }
             return null;
         }
+
+        //private void SyncObservableCollection<T>(ObservableCollection<T> collection, List<T> targetList)
+        //{
+        //    // 1. Supprimer les éléments qui ne doivent plus être là
+        //    for (int i = collection.Count - 1; i >= 0; i--)
+        //    {
+        //        if (!targetList.Contains(collection[i]))
+        //        {
+        //            collection.RemoveAt(i);
+        //        }
+        //    }
+
+        //    // 2. Insérer les nouveaux ou déplacer ceux qui ont changé d'ordre
+        //    for (int i = 0; i < targetList.Count; i++)
+        //    {
+        //        var item = targetList[i];
+        //        int currentIndex = collection.IndexOf(item);
+
+        //        if (currentIndex == -1)
+        //        {
+        //            collection.Insert(i, item);
+        //        }
+        //        else if (currentIndex != i)
+        //        {
+        //            collection.Move(currentIndex, i);
+        //        }
+        //    }
+        //}
 
         private static void UpdateLayoutData(Transaction tr, LayoutTab tab, int order, string groupName, bool isExpanded)
         {
@@ -355,7 +395,7 @@ namespace SioForgeCAD.Forms
                             Title = layout.LayoutName,
                             IsModel = layout.ModelType,
                             IsPinned = layout.ModelType || isPinnedUI, // Le model est TOUJOURS épinglé
-                            AutoCadData = layout.ObjectId
+                            LayoutHandle = layout.Handle.ToString()
                         };
 
                         if (newTab.IsPinned)
@@ -395,6 +435,108 @@ namespace SioForgeCAD.Forms
                 }
             });
         }
+
+        //private void ReloadTabs(Document doc)
+        //{
+        //    if (doc == null) return;
+
+        //    Dispatcher.Invoke(() =>
+        //    {
+        //        using (doc.LockDocument())
+        //        using (var tr = doc.Database.TransactionManager.StartTransaction())
+        //        {
+        //            var layoutDict = (DBDictionary)tr.GetObject(doc.Database.LayoutDictionaryId, OpenMode.ForRead);
+        //            var layouts = new List<Layout>();
+
+        //            foreach (DBDictionaryEntry entry in layoutDict)
+        //            {
+        //                layouts.Add((Layout)tr.GetObject(entry.Value, OpenMode.ForRead));
+        //            }
+
+        //            // --- 1. Dictionnaires des instances existantes pour RECYCLAGE ---
+        //            var existingTabs = GetVisibleItemsList(true)
+        //                .OfType<LayoutTab>()
+        //                .Where(t => t.AutoCadData is string)
+        //                .Distinct()
+        //                .ToDictionary(t => (string)t.AutoCadData);
+
+        //            var existingGroups = Items.OfType<LayoutGroup>().ToDictionary(g => g.Title);
+
+        //            // --- 2. Listes de préparation pour le futur état visuel ---
+        //            var newPinnedItems = new List<LayoutTab>();
+        //            var newItems = new List<LayoutItem>();
+        //            var groupContents = new Dictionary<LayoutGroup, List<LayoutTab>>();
+
+        //            foreach (var layout in layouts.OrderBy(l => l.TabOrder))
+        //            {
+        //                string handleStr = layout.Handle.ToString(); // <-- Utilisation du Handle
+        //                var uiState = layout.GetLayoutUIState();
+        //                bool isPinnedUI = uiState?.IsPinned ?? false;
+
+        //                // Récupère l'onglet existant, ou en crée un nouveau
+        //                if (!existingTabs.TryGetValue(handleStr, out LayoutTab tab))
+        //                {
+        //                    tab = new LayoutTab { AutoCadData = handleStr };
+        //                }
+
+        //                // MISE A JOUR DES PROPRIETES (déclenche INotifyPropertyChanged)
+        //                tab.Title = layout.LayoutName;
+        //                tab.IsModel = layout.ModelType;
+        //                tab.IsPinned = layout.ModelType || isPinnedUI;
+
+        //                if (tab.IsPinned)
+        //                {
+        //                    newPinnedItems.Add(tab);
+        //                }
+
+        //                if (!tab.IsModel)
+        //                {
+        //                    string groupName = uiState?.GroupName;
+        //                    bool isExpanded = uiState?.IsExpanded ?? true;
+
+        //                    if (!string.IsNullOrEmpty(groupName))
+        //                    {
+        //                        if (!existingGroups.TryGetValue(groupName, out LayoutGroup group))
+        //                        {
+        //                            group = new LayoutGroup { Title = groupName };
+        //                            existingGroups[groupName] = group; // Ajout au cache local
+        //                        }
+        //                        group.IsExpanded = isExpanded;
+
+        //                        if (!groupContents.ContainsKey(group)) groupContents[group] = new List<LayoutTab>();
+        //                        groupContents[group].Add(tab);
+
+        //                        if (!newItems.Contains(group)) newItems.Add(group);
+        //                    }
+        //                    else
+        //                    {
+        //                        newItems.Add(tab);
+        //                    }
+        //                }
+
+        //                if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
+        //                {
+        //                    IsSyncingFromAutoCAD = true;
+        //                    SetCurrentTab(tab);
+        //                    IsSyncingFromAutoCAD = false;
+        //                }
+        //            }
+
+        //            // --- 3. Synchronisation finale des groupes et des collections principales ---
+        //            foreach (var kvp in groupContents)
+        //            {
+        //                kvp.Key.SyncSubTabs(kvp.Value);
+        //            }
+
+        //            // Les groupes qui n'ont plus d'onglets seront ignorés de newItems,
+        //            // et supprimés par SyncObservableCollection.
+        //            SyncObservableCollection(PinnedItems, newPinnedItems.Cast<LayoutItem>().ToList());
+        //            SyncObservableCollection(Items, newItems);
+
+        //            tr.Commit();
+        //        }
+        //    });
+        //}
 
         private static void ExpandLayoutItemGroup(LayoutItem item, bool IsExpanded)
         {
@@ -517,7 +659,6 @@ namespace SioForgeCAD.Forms
 
         private void SetCurrentItem(LayoutItem item)
         {
-            Debug.WriteLine("SetCurrentItem");
             if (_currentItem != null)
             {
                 _currentItem.IsCurrent = false;
@@ -542,7 +683,7 @@ namespace SioForgeCAD.Forms
 
         private LayoutItem GetTabFromRegularList(LayoutItem item)
         {
-            if (item is LayoutTab itemTab && itemTab.IsPinned)
+            if (item is LayoutTab itemTab)
             {
                 var RegularItemsList = GetVisibleItemsList(false);
                 return RegularItemsList.Where(t => t.Title == item.Title).DefaultIfEmpty(item).First();
@@ -571,16 +712,19 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private static void SetSelection(IEnumerable<LayoutTab> layoutTabs)
+        private void SetSelection(IEnumerable<LayoutTab> layoutTabs)
         {
-            Debug.WriteLine("SetSelection");
-            foreach (var item in layoutTabs)
+            var visibleTabs = GetVisibleItemsList(true);
+            var filteredTabs = visibleTabs
+                .Distinct()
+                .Where(visibleTab => layoutTabs.Any(targetTab => targetTab.Title == visibleTab.Title));
+            filteredTabs.ForEach(t =>
             {
-                if (item.IsCurrent) { continue; }
-
-                Debug.WriteLine($"Set {item.Title} to true");
-                item.IsSelected = true;
-            }
+                if (!t.IsCurrent)
+                {
+                    t.IsSelected = true;
+                }
+            });
         }
 
         private List<LayoutItem> GetVisibleItemsList(bool IncludePinnedItems = true)
@@ -596,6 +740,15 @@ namespace SioForgeCAD.Forms
             }
             return list;
         }
+
+        public List<LayoutTab> GetSelectedTabs()
+        {
+            return GetVisibleItemsList(true)
+                    .OfType<LayoutTab>()
+                    .Where(tab => tab.IsSelected).Distinct()
+                    .ToList();
+        }
+
 
         private static string GenerateUniqueLayoutName(string baseName)
         {
@@ -685,21 +838,20 @@ namespace SioForgeCAD.Forms
             InsertItems(newItems, targetGroup, insertIndex);
         }
 
-        private static LayoutTab DuplicateSingleTab(LayoutTab originalTab)
+        private static LayoutTab DuplicateSingleTab(Transaction tr, LayoutTab originalTab) // <--- Ajout Transaction
         {
             string newName = GenerateUniqueLayoutName(originalTab.Title);
-
-            // Clonage physique dans AutoCAD
             LayoutManager.Current.CloneLayout(originalTab.Title, newName, 0);
 
-            // Création de l'objet WPF
             var newLayoutId = LayoutManager.Current.GetLayoutId(newName);
+            var layout = tr.GetObject(newLayoutId, OpenMode.ForRead) as Layout; // <--- Lecture du Layout
+
             return new LayoutTab
             {
                 Title = newName,
                 IsModel = false,
                 IsPinned = false,
-                AutoCadData = newLayoutId
+                LayoutHandle = layout.Handle.ToString() // <--- Ajout du Handle
             };
         }
 
@@ -1525,10 +1677,9 @@ namespace SioForgeCAD.Forms
                         PinnedItems.Add(tab);
                     }
 
-                    if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                    if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout)
                     {
-                        var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
-                        layout?.SetLayoutUIState(tr, tab.ParentGroup?.Title, true, true);
+                        layout.SetLayoutUIState(tr, tab.ParentGroup?.Title, true, true); // (ou false pour Desepingler)
                     }
                 }
                 tr.Commit();
@@ -1552,9 +1703,8 @@ namespace SioForgeCAD.Forms
                     tab.IsPinned = false;
                     PinnedItems.Remove(tab);
 
-                    if (tab.AutoCadData is ObjectId layoutId && !layoutId.IsNull)
+                    if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout)
                     {
-                        var layout = tr.GetObject(layoutId, OpenMode.ForWrite) as Layout;
                         layout?.SetLayoutUIState(tr, tab.ParentGroup?.Title, true, false);
                     }
                 }
@@ -1604,10 +1754,12 @@ namespace SioForgeCAD.Forms
             // l'événement LayoutManager.Current.LayoutRenamed est bien capté et appelle ReloadTabs().
         }
 
-        private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
+
+
+        public void Plot(List<LayoutTab> targetTabs)
         {
             var recoverCurrentTab = _currentItem;
-            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+            var recoverSelectedTab = GetSelectedTabs();
             try
             {
                 if (targetTabs.Count == 0) return;
@@ -1674,7 +1826,7 @@ namespace SioForgeCAD.Forms
                             }
                         }
 
-                        Generic.WriteMessage($"\nImpression de {targetTabs.Count} présentation(s) terminée.");
+                        Generic.WriteMessage($"Impression de {targetTabs.Count} présentation(s) terminée.");
                     }
                     finally
                     {
@@ -1685,17 +1837,15 @@ namespace SioForgeCAD.Forms
             finally
             {
                 SetCurrentItem(recoverCurrentTab);
-                SetSelection(targetTabs);
+                SetSelection(recoverSelectedTab);
             }
 
         }
-
-
-
-        private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
+        public void Publish(List<LayoutTab> targetTabs)
         {
             var recoverCurrentTab = _currentItem;
-            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+            var recoverSelectedTab = GetSelectedTabs();
+            targetTabs.ForEach(t => Debug.WriteLine(t.Title));
             try
             {
                 if (targetTabs.Count == 0) return;
@@ -1734,17 +1884,24 @@ namespace SioForgeCAD.Forms
                     }
                     tr.Commit();
                 }
-                Generic.WriteMessage($"\nPublication de {targetTabs.Count} présentation(s) terminée.");
+                Generic.WriteMessage($"Publication de {targetTabs.Count} présentation(s) terminée.\n{outputPath}");
             }
             finally
             {
                 SetCurrentItem(recoverCurrentTab);
-                SetSelection(targetTabs);
+                SetSelection(recoverSelectedTab);
             }
-
         }
 
+        private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
+        {
+            Plot(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+        }
 
+        private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
+        {
+            Publish(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+        }
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
@@ -1829,9 +1986,25 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Tracer Groupe");
+        private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            var targetTabs = new List<LayoutTab>();
+            foreach (var targetGroup in GetTargetedGroupsForContextMenu(sender))
+            {
+                targetTabs.AddRange(targetGroup.SubTabs);
+            }
+            Plot(targetTabs);
+        }
 
-        private void ContextMenu_PublierGroupe_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Publier Groupe");
+        private void ContextMenu_PublierGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            var targetTabs = new List<LayoutTab>();
+            foreach (var targetGroup in GetTargetedGroupsForContextMenu(sender))
+            {
+                targetTabs.AddRange(targetGroup.SubTabs);
+            }
+            Publish(targetTabs);
+        }
 
         private void ContextMenu_SupprimerGroupeSeul_Click(object sender, RoutedEventArgs e)
         {
@@ -1937,7 +2110,7 @@ namespace SioForgeCAD.Forms
                     {
                         if (item is LayoutTab tab)
                         {
-                            newlyCreatedItems.Add(DuplicateSingleTab(tab));
+                            newlyCreatedItems.Add(DuplicateSingleTab(tr, tab));
                         }
                         else if (item is LayoutGroup group)
                         {
@@ -1949,7 +2122,7 @@ namespace SioForgeCAD.Forms
 
                             foreach (var subTab in group.SubTabs)
                             {
-                                var newSubTab = DuplicateSingleTab(subTab);
+                                var newSubTab = DuplicateSingleTab(tr, subTab);
                                 newGroup.Add(newSubTab);
                             }
 
@@ -2251,7 +2424,7 @@ namespace SioForgeCAD.Forms
             }
 
             // Sinon, on retourne la liste de tous les groupes sélectionnés à la racine
-            return Items.OfType<LayoutGroup>().Where(g => g.IsSelected).ToList();
+            return Items.OfType<LayoutGroup>().Where(g => g.IsSelected).Distinct().ToList();
         }
 
         private List<LayoutTab> GetTargetedTabsForContextMenu(object sender, Func<LayoutTab, bool> predicate = null)
@@ -2269,7 +2442,7 @@ namespace SioForgeCAD.Forms
             // Sinon, on retourne la liste de tous les éléments sélectionnés/courants
             return GetVisibleItemsList()
                     .OfType<LayoutTab>()
-                    .Where(t => (t.IsSelected || t.IsCurrent) && predicate(t))
+                    .Where(t => (t.IsSelected || t.IsCurrent) && predicate(t)).Distinct()
                     .ToList();
         }
 
@@ -2345,7 +2518,7 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        public object AutoCadData { get; set; }
+        public object LayoutHandle { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -2412,6 +2585,29 @@ namespace SioForgeCAD.Forms
                 }
             }
         }
+
+        //internal void SyncSubTabs(List<LayoutTab> targetList)
+        //{
+        //    for (int i = SubTabs_.Count - 1; i >= 0; i--)
+        //    {
+        //        if (!targetList.Contains(SubTabs_[i]))
+        //        {
+        //            SubTabs_[i].ParentGroup = null;
+        //            SubTabs_.RemoveAt(i);
+        //        }
+        //    }
+
+        //    for (int i = 0; i < targetList.Count; i++)
+        //    {
+        //        var tab = targetList[i];
+        //        tab.ParentGroup = this;
+        //        int currentIndex = SubTabs_.IndexOf(tab);
+
+        //        if (currentIndex == -1) SubTabs_.Insert(i, tab);
+        //        else if (currentIndex != i) SubTabs_.Move(currentIndex, i);
+        //    }
+        //    EvaluateGroupSelection();
+        //}
 
         internal void EvaluateGroupSelection()
         {
