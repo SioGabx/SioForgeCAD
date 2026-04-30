@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SioForgeCAD.Forms;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -93,6 +94,41 @@ namespace SioForgeCAD.Commun.Extensions
             return null;
         }
 
+        public static T GetVisualParent<T>(this DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            if (parentObject == null)
+            {
+                return null;
+            }
+
+            return parentObject as T ?? GetVisualParent<T>(parentObject);
+        }
+
+        public static FrameworkElement GetVisualContainerFromItem(this DependencyObject parent, object itemData)
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is FrameworkElement fe && fe.DataContext == itemData && !(fe.DataContext is LayoutGroup))
+                {
+                    return fe;
+                }
+
+                var result = GetVisualContainerFromItem(child, itemData);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
         public static void SetAllDataContexts(this DependencyObject target, object Context)
         {
             if (target is FrameworkElement fe)
@@ -108,7 +144,6 @@ namespace SioForgeCAD.Commun.Extensions
                 SetAllDataContexts(child, Context);
             }
         }
-
 
         public static Cursor CreateCursorFromElement(this FrameworkElement element, Point hotspot)
         {

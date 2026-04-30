@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -225,7 +224,6 @@ namespace SioForgeCAD.Forms
                 using (doc.LockDocument())
                 using (var tr = doc.Database.TransactionManager.StartTransaction())
                 {
-                    Debug.WriteLine($"Update TabSelected from WPF ");
                     foreach (var tab in GetVisibleItemsList(true).OfType<LayoutTab>().Distinct())
                     {
                         if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout
@@ -240,7 +238,6 @@ namespace SioForgeCAD.Forms
                         }
                     }
                     tr.Commit();
-                    Debug.WriteLine($"End Update TabSelected from WPF ");
                 }
             }
             catch (Exception ex)
@@ -435,108 +432,6 @@ namespace SioForgeCAD.Forms
                 }
             });
         }
-
-        //private void ReloadTabs(Document doc)
-        //{
-        //    if (doc == null) return;
-
-        //    Dispatcher.Invoke(() =>
-        //    {
-        //        using (doc.LockDocument())
-        //        using (var tr = doc.Database.TransactionManager.StartTransaction())
-        //        {
-        //            var layoutDict = (DBDictionary)tr.GetObject(doc.Database.LayoutDictionaryId, OpenMode.ForRead);
-        //            var layouts = new List<Layout>();
-
-        //            foreach (DBDictionaryEntry entry in layoutDict)
-        //            {
-        //                layouts.Add((Layout)tr.GetObject(entry.Value, OpenMode.ForRead));
-        //            }
-
-        //            // --- 1. Dictionnaires des instances existantes pour RECYCLAGE ---
-        //            var existingTabs = GetVisibleItemsList(true)
-        //                .OfType<LayoutTab>()
-        //                .Where(t => t.AutoCadData is string)
-        //                .Distinct()
-        //                .ToDictionary(t => (string)t.AutoCadData);
-
-        //            var existingGroups = Items.OfType<LayoutGroup>().ToDictionary(g => g.Title);
-
-        //            // --- 2. Listes de préparation pour le futur état visuel ---
-        //            var newPinnedItems = new List<LayoutTab>();
-        //            var newItems = new List<LayoutItem>();
-        //            var groupContents = new Dictionary<LayoutGroup, List<LayoutTab>>();
-
-        //            foreach (var layout in layouts.OrderBy(l => l.TabOrder))
-        //            {
-        //                string handleStr = layout.Handle.ToString(); // <-- Utilisation du Handle
-        //                var uiState = layout.GetLayoutUIState();
-        //                bool isPinnedUI = uiState?.IsPinned ?? false;
-
-        //                // Récupère l'onglet existant, ou en crée un nouveau
-        //                if (!existingTabs.TryGetValue(handleStr, out LayoutTab tab))
-        //                {
-        //                    tab = new LayoutTab { AutoCadData = handleStr };
-        //                }
-
-        //                // MISE A JOUR DES PROPRIETES (déclenche INotifyPropertyChanged)
-        //                tab.Title = layout.LayoutName;
-        //                tab.IsModel = layout.ModelType;
-        //                tab.IsPinned = layout.ModelType || isPinnedUI;
-
-        //                if (tab.IsPinned)
-        //                {
-        //                    newPinnedItems.Add(tab);
-        //                }
-
-        //                if (!tab.IsModel)
-        //                {
-        //                    string groupName = uiState?.GroupName;
-        //                    bool isExpanded = uiState?.IsExpanded ?? true;
-
-        //                    if (!string.IsNullOrEmpty(groupName))
-        //                    {
-        //                        if (!existingGroups.TryGetValue(groupName, out LayoutGroup group))
-        //                        {
-        //                            group = new LayoutGroup { Title = groupName };
-        //                            existingGroups[groupName] = group; // Ajout au cache local
-        //                        }
-        //                        group.IsExpanded = isExpanded;
-
-        //                        if (!groupContents.ContainsKey(group)) groupContents[group] = new List<LayoutTab>();
-        //                        groupContents[group].Add(tab);
-
-        //                        if (!newItems.Contains(group)) newItems.Add(group);
-        //                    }
-        //                    else
-        //                    {
-        //                        newItems.Add(tab);
-        //                    }
-        //                }
-
-        //                if (layout.LayoutName == LayoutManager.Current.CurrentLayout)
-        //                {
-        //                    IsSyncingFromAutoCAD = true;
-        //                    SetCurrentTab(tab);
-        //                    IsSyncingFromAutoCAD = false;
-        //                }
-        //            }
-
-        //            // --- 3. Synchronisation finale des groupes et des collections principales ---
-        //            foreach (var kvp in groupContents)
-        //            {
-        //                kvp.Key.SyncSubTabs(kvp.Value);
-        //            }
-
-        //            // Les groupes qui n'ont plus d'onglets seront ignorés de newItems,
-        //            // et supprimés par SyncObservableCollection.
-        //            SyncObservableCollection(PinnedItems, newPinnedItems.Cast<LayoutItem>().ToList());
-        //            SyncObservableCollection(Items, newItems);
-
-        //            tr.Commit();
-        //        }
-        //    });
-        //}
 
         private static void ExpandLayoutItemGroup(LayoutItem item, bool IsExpanded)
         {
@@ -1011,7 +906,7 @@ namespace SioForgeCAD.Forms
             }
 
             var targetElement = e.OriginalSource as FrameworkElement;
-            var targetContainer = UIHelper.GetVisualParent<ContentPresenter>(targetElement);
+            var targetContainer = targetElement.GetVisualParent<ContentPresenter>();
 
             if (targetContainer?.DataContext is LayoutItem targetItem)
             {
@@ -1037,7 +932,7 @@ namespace SioForgeCAD.Forms
                     if (!targetGrp.Contains(sTab))
                     {
                         // A. Si l'onglet source n'appartient pas encore à ce groupe (entrée dans un groupe)
-                        var placementTarget = (targetItem is LayoutGroup ? targetContainer : UIHelper.GetVisualParent<ContentPresenter>(VisualTreeHelper.GetParent(targetContainer))) ?? targetContainer;
+                        var placementTarget = (targetItem is LayoutGroup ? targetContainer : VisualTreeHelper.GetParent(targetContainer).GetVisualParent<ContentPresenter>()) ?? targetContainer;
                         ShowDragIndicator(placementTarget, -12, (placementTarget.ActualHeight / 2) + 4, -90, PlacementMode.Relative);
                     }
                     else if (targetItem is LayoutGroup)
@@ -1046,7 +941,7 @@ namespace SioForgeCAD.Forms
                         var firstTabItem = targetGrp.SubTabs.FirstOrDefault();
                         if (firstTabItem != null)
                         {
-                            var firstTabContainer = UIHelper.GetVisualContainerFromItem(targetContainer, firstTabItem);
+                            var firstTabContainer = targetContainer.GetVisualContainerFromItem(firstTabItem);
                             ShowDragIndicator(firstTabContainer ?? targetContainer, -5, -2, 0);
                         }
                     }
@@ -1059,7 +954,7 @@ namespace SioForgeCAD.Forms
 
                         if ((!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1))
                         {
-                            var sourceTabContainer = UIHelper.GetVisualContainerFromItem(VisualTreeHelper.GetParent(targetContainer), sTab);
+                            var sourceTabContainer = VisualTreeHelper.GetParent(targetContainer).GetVisualContainerFromItem(sTab);
                             if (sourceTabContainer != null)
                             {
                                 ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
@@ -1080,7 +975,7 @@ namespace SioForgeCAD.Forms
 
                     if ((!isRightHalf && sourceIndex == baseIndex - 1) || (isRightHalf && sourceIndex == baseIndex + 1))
                     {
-                        var sourceTabContainer = UIHelper.GetVisualContainerFromItem(VisualTreeHelper.GetParent(targetContainer), sourceItem);
+                        var sourceTabContainer = VisualTreeHelper.GetParent(targetContainer).GetVisualContainerFromItem(sourceItem);
                         if (sourceTabContainer != null)
                         {
                             ShowDragIndicator(sourceTabContainer, sourceTabContainer.ActualWidth / 2, -2, 0);
@@ -1114,8 +1009,8 @@ namespace SioForgeCAD.Forms
             try
             {
                 var targetElement = e.OriginalSource as FrameworkElement;
-                var targetContainer = UIHelper.GetVisualParent<ContentPresenter>(targetElement);
-                var targetParentContainer = UIHelper.GetVisualParent<ContentPresenter>(targetContainer);
+                var targetContainer = targetElement.GetVisualParent<ContentPresenter>();
+                var targetParentContainer = targetContainer.GetVisualParent<ContentPresenter>();
 
                 if (targetContainer?.DataContext is LayoutItem targetItem)
                 {
@@ -1374,7 +1269,7 @@ namespace SioForgeCAD.Forms
             Dispatcher.InvokeAsync(() =>
             {
                 var container = TabItemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement
-                                ?? UIHelper.GetVisualContainerFromItem(TabItemsControl, item);
+                                ?? TabItemsControl.GetVisualContainerFromItem(item);
 
                 if (container != null)
                 {
@@ -1510,7 +1405,9 @@ namespace SioForgeCAD.Forms
             BuildLayoutSubMenu(templateItem, Settings.GabaritFile, (selectedName) => ExecuteLayoutCreation(Settings.GabaritFile, selectedName, selectedName, false));
 
             cm.Items.Add(templateItem);
-            ShowMenu(cm, btn);
+            cm.PlacementTarget = btn;
+            cm.Placement = PlacementMode.Bottom;
+            cm.IsOpen = true;
         }
         private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
@@ -1553,12 +1450,14 @@ namespace SioForgeCAD.Forms
                 if (path != null) Settings.GabaritFile = path;
             };
             cm.Items.Add(redefineItem);
+            cm.PlacementTarget = btn;
+            cm.Placement = PlacementMode.Bottom;
+            cm.IsOpen = true;
 
-            ShowMenu(cm, btn);
             e.Handled = true;
         }
 
-        private void BuildLayoutSubMenu(MenuItem parent, string filePath, Action<string> onClick, string checkedName = null)
+        private static void BuildLayoutSubMenu(MenuItem parent, string filePath, Action<string> onClick, string checkedName = null)
         {
             if (!string.IsNullOrEmpty(filePath))
             {
@@ -1567,7 +1466,7 @@ namespace SioForgeCAD.Forms
                 {
                     foreach (var name in names.OrderBy(n => n))
                     {
-                        var item = new MenuItem { Header = name, IsChecked = (name == checkedName) };
+                        var item = new MenuItem { Header = name, IsChecked = name == checkedName };
                         item.Click += (s, e) => onClick(name);
                         parent.Items.Add(item);
                     }
@@ -1577,22 +1476,15 @@ namespace SioForgeCAD.Forms
             parent.Items.Add(new MenuItem { Header = "(Aucun gabarit ou présentation)", IsEnabled = false });
         }
 
-        private string PromptFileSelection()
+        private static string PromptFileSelection()
         {
             var ofd = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
                 Title = "Sélectionner un fichier de gabarit",
-                InitialDirectory = Registries.GetValue($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString()
+                InitialDirectory = Registries.GetValue<string>($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString()
             };
             return (ofd.ShowDialog() == true) ? ofd.FileName : null;
-        }
-
-        private void ShowMenu(ContextMenu cm, Button btn)
-        {
-            cm.PlacementTarget = btn;
-            cm.Placement = PlacementMode.Bottom;
-            cm.IsOpen = true;
         }
 
         private void Item_ToolTipOpening(object sender, ToolTipEventArgs e)
@@ -1751,7 +1643,7 @@ namespace SioForgeCAD.Forms
                 tr.Commit();
             }
             // Note: Pas besoin de rafraîchir manuellement les onglets ici si 
-            // l'événement LayoutManager.Current.LayoutRenamed est bien capté et appelle ReloadTabs().
+            // l'événement LayoutManager.Current.LayoutRenamed appel ReloadTabs().
         }
 
 
@@ -1815,7 +1707,6 @@ namespace SioForgeCAD.Forms
 
                                 string selectedFolder = folderDialog.FileOrFoldername;
 
-                                // Préparation des chemins
                                 foreach (var tab in LayoutListToPlot)
                                 {
                                     string fileName = Path.Combine(selectedFolder, $"{docName}_{tab.LayoutName}.pdf");
@@ -1947,7 +1838,6 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Récupérer le ou les groupes ciblés
             var targetGroups = GetTargetedGroupsForContextMenu(sender);
             if (targetGroups.Count == 0)
             {
@@ -1969,7 +1859,6 @@ namespace SioForgeCAD.Forms
                 var groupToRename = targetGroups.FirstOrDefault(g => g.Title == item.Original);
                 if (groupToRename != null)
                 {
-                    // Vérification anti-doublon pour éviter que deux groupes aient le même nom
                     bool nameExists = Items.OfType<LayoutGroup>().Any(g => g != groupToRename && g.Title.Equals(item.Renamed, StringComparison.OrdinalIgnoreCase));
 
                     groupToRename.Title = nameExists ? GenerateUniqueGroupName(item.Renamed) : item.Renamed;
@@ -2450,47 +2339,6 @@ namespace SioForgeCAD.Forms
         #endregion
     }
 
-    #region Classes Utilitaires (Visual Tree)
-
-    internal static class UIHelper
-    {
-        public static T GetVisualParent<T>(DependencyObject child) where T : DependencyObject
-        {
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null)
-            {
-                return null;
-            }
-
-            return parentObject as T ?? GetVisualParent<T>(parentObject);
-        }
-
-        public static FrameworkElement GetVisualContainerFromItem(DependencyObject parent, object itemData)
-        {
-            if (parent == null)
-            {
-                return null;
-            }
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is FrameworkElement fe && fe.DataContext == itemData && !(fe.DataContext is LayoutGroup))
-                {
-                    return fe;
-                }
-
-                var result = GetVisualContainerFromItem(child, itemData);
-                if (result != null)
-                {
-                    return result;
-                }
-            }
-            return null;
-        }
-    }
-
-    #endregion
 
     #region Modèles de Données (LayoutItems)
 
@@ -2511,7 +2359,6 @@ namespace SioForgeCAD.Forms
             {
                 if (_isSelected != value)
                 {
-                    Debug.WriteLine("Property Changed to " + value);
                     _isSelected = value;
                     OnPropertyChanged();
                 }
@@ -2540,12 +2387,9 @@ namespace SioForgeCAD.Forms
             get => base.IsSelected;
             set
             {
-                Debug.WriteLine($"[{this.GetHashCode()}] {Title} => Setter appelé avec value = {value}. Actuel base.IsSelected = {base.IsSelected}");
-
                 if (base.IsSelected != value)
                 {
                     base.IsSelected = value;
-                    Debug.WriteLine($"[{this.GetHashCode()}] {Title} => base.IsSelected défini à : {base.IsSelected}");
                     ParentGroup?.EvaluateGroupSelection();
                     SelectionChanged?.Invoke();
                 }
@@ -2586,29 +2430,6 @@ namespace SioForgeCAD.Forms
             }
         }
 
-        //internal void SyncSubTabs(List<LayoutTab> targetList)
-        //{
-        //    for (int i = SubTabs_.Count - 1; i >= 0; i--)
-        //    {
-        //        if (!targetList.Contains(SubTabs_[i]))
-        //        {
-        //            SubTabs_[i].ParentGroup = null;
-        //            SubTabs_.RemoveAt(i);
-        //        }
-        //    }
-
-        //    for (int i = 0; i < targetList.Count; i++)
-        //    {
-        //        var tab = targetList[i];
-        //        tab.ParentGroup = this;
-        //        int currentIndex = SubTabs_.IndexOf(tab);
-
-        //        if (currentIndex == -1) SubTabs_.Insert(i, tab);
-        //        else if (currentIndex != i) SubTabs_.Move(currentIndex, i);
-        //    }
-        //    EvaluateGroupSelection();
-        //}
-
         internal void EvaluateGroupSelection()
         {
             if (_isSyncing || SubTabs_.Count == 0)
@@ -2643,7 +2464,7 @@ namespace SioForgeCAD.Forms
 
     public static class XDataExtensions
     {
-        public static (string GroupName, bool IsExpanded, bool IsPinned)? GetLayoutUIState(this DBObject obj)
+        public static (string GroupName, bool IsExpanded, bool IsPinned)? GetLayoutUIState(this Layout obj)
         {
             string appName = Generic.GetExtensionDLLName();
             ResultBuffer rb = obj.GetXDataForApplication(appName);
@@ -2684,7 +2505,7 @@ namespace SioForgeCAD.Forms
             return null;
         }
 
-        public static void SetLayoutUIState(this DBObject obj, Transaction tr, string groupName, bool isExpanded, bool isPinned)
+        public static void SetLayoutUIState(this Layout obj, Transaction tr, string groupName, bool isExpanded, bool isPinned)
         {
             string appName = Generic.GetExtensionDLLName();
             Database db = obj.Database;

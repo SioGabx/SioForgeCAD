@@ -1,15 +1,10 @@
-﻿using Autodesk.AutoCAD.MacroRecorder;
-using Autodesk.AutoCAD.UserControls;
-using SioForgeCAD.Commun.Extensions;
+﻿using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace SioForgeCAD.Functions
 {

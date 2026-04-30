@@ -45,8 +45,10 @@ namespace SioForgeCAD.Functions
                                 new TypedValue((int)DxfCode.Start, "ATTDEF"),
                                 new TypedValue((int)DxfCode.Operator, "or>"),
                             });
-                            var promptSelectionOptions = new PromptSelectionOptions();
-                            promptSelectionOptions.MessageForAdding = "\nVeuillez selectionner des côtes inscrite dans des textes";
+                            var promptSelectionOptions = new PromptSelectionOptions
+                            {
+                                MessageForAdding = "\nVeuillez selectionner des côtes inscrite dans des textes"
+                            };
                             var sel = ed.GetSelection(promptSelectionOptions, filterList);
                             if (sel.Status != PromptStatus.OK) { return; }
 
@@ -66,7 +68,7 @@ namespace SioForgeCAD.Functions
                                         continue;
                                     }
                                     string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
-                                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, Location.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } });
+                                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), Location.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } });
                                 }
                             }
                             return;
@@ -116,7 +118,7 @@ namespace SioForgeCAD.Functions
 
                             Dictionary<string, string> ComputeValue(Points _) => new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
 
-                            DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(null));
+                            DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(null));
                             GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
                             var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point", Location.ToPoints(), false);
                             Points NewPointLocation = InsertionTransientPointsValues.Point;
@@ -126,7 +128,7 @@ namespace SioForgeCAD.Functions
                             {
                                 return;
                             }
-                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
                             return;
                         }
                     }

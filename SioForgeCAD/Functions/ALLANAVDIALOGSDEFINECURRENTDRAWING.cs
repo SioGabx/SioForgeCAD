@@ -127,7 +127,7 @@ namespace SioForgeCAD.Functions
 
             if (!string.IsNullOrEmpty(currentProfile))
             {
-                object initialDirectory = Registries.GetValue($@"{sProdKey}\Profiles\{currentProfile}\Dialogs\BrowseFolder", "InitialDirectory");
+                object initialDirectory = Registries.GetValue<string>($@"{sProdKey}\Profiles\{currentProfile}\Dialogs\BrowseFolder", "InitialDirectory");
                 if (initialDirectory != null)
                 {
                     return initialDirectory.ToString();

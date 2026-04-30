@@ -143,7 +143,6 @@ namespace SioForgeCAD.Commun.Drawing
                 BlockTable bt = db.BlockTableId.GetDBObject(OpenMode.ForWrite) as BlockTable;
                 string BlockName = Name;
                 if (string.IsNullOrWhiteSpace(BlockName)) { BlockName = "*U"; }
-                ;
                 if (BlockName != "*U") //if we dont create an anonymous block
                 {
                     BlockName = SymbolUtilityServices.RepairSymbolName(Name, false);
@@ -177,7 +176,7 @@ namespace SioForgeCAD.Commun.Drawing
                     {
                         if (objId.IsValid)
                         {
-                            DBObject obj = objId.GetObject(OpenMode.ForWrite);
+                            DBObject obj = objId.GetObject(OpenMode.ForWrite, false, true);
                             if (obj is Entity ent)
                             {
                                 ent.TransformBy(CounterRotation * DisplacementVector);
@@ -480,12 +479,15 @@ namespace SioForgeCAD.Commun.Drawing
         }
 
 
-        public static ObjectId InsertFromNameImportIfNotExist(string BlocName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
+        public static ObjectId InsertFromNameImportIfNotExist(string BlocName, string DrawingName, Points BlocLocation, double Angle = 0, Dictionary<string, string> AttributesValues = null, string Layer = null)
         {
             Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                ImportBlocFromBlocNameIfMissing(BlocName);
+                if (!string.IsNullOrWhiteSpace(DrawingName))
+                {
+                    ImportBlocFromBlocNameIfMissing(BlocName, DrawingName);
+                }
                 ObjectId blockRefObjectId = InsertFromName(BlocName, BlocLocation, Angle, AttributesValues, Layer);
                 tr.Commit();
                 return blockRefObjectId;
@@ -515,7 +517,7 @@ namespace SioForgeCAD.Commun.Drawing
             }
         }
 
-        public static DBObjectCollection InitForTransient(string BlocName, Dictionary<string, string> InitAttributesValues, string Layer = null)
+        public static DBObjectCollection InitForTransient(string BlocName, string BlocDrawingName, Dictionary<string, string> InitAttributesValues, string Layer = null)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -523,7 +525,7 @@ namespace SioForgeCAD.Commun.Drawing
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 //The first block is added for initialising the process and then deleted. Be sure to add a value.
-                ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, Points.Empty, ed.GetUSCRotation(AngleUnit.Radians), InitAttributesValues);
+                ObjectId blockRef = InsertFromNameImportIfNotExist(BlocName, BlocDrawingName, Points.Empty, ed.GetUSCRotation(AngleUnit.Radians), InitAttributesValues);
                 DBObject dBObject = blockRef.GetDBObject();
                 if (Layer != null && Layers.CheckIfLayerExist(Layer))
                 {
@@ -536,7 +538,7 @@ namespace SioForgeCAD.Commun.Drawing
             return ents;
         }
 
-        public static void ImportBlocFromBlocNameIfMissing(string BlocName)
+        public static void ImportBlocFromBlocNameIfMissing(string BlocName, string DrawingName)
         {
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -546,24 +548,42 @@ namespace SioForgeCAD.Commun.Drawing
                 if (!bt.Has(BlocName))
                 {
                     string TempFolderPath = System.IO.Path.GetTempPath();
-                    string TempFolderFilePath = System.IO.Path.Combine(TempFolderPath, $"{BlocName}.dwg");
-                    Generic.ReadWriteToFileResource(BlocName, TempFolderFilePath);
+                    string TempFolderFilePath = System.IO.Path.Combine(TempFolderPath, $"{DrawingName}.dwg");
+                    Generic.ReadWriteToFileResource(DrawingName, TempFolderFilePath);
 
-                    Database sourceDb = new Database(false, true); //Temporary database to hold data for block we want to import
-                    try
-                    {
-                        sourceDb.ReadDwgFile(TempFolderFilePath, System.IO.FileShare.Read, true, ""); //Read the DWG into a side database
-                        db.Insert(TempFolderFilePath, sourceDb, false);
-                    }
-                    catch (Autodesk.AutoCAD.Runtime.Exception ex)
-                    {
-                        Generic.WriteMessage("\nErreur : " + ex.Message);
-                    }
-                    finally
-                    {
-                        sourceDb.Dispose();
+                    using (Database sourceDb = new Database(false, true))
+                    { //Temporary database to hold data for block we want to import
+                        try
+                        {
+                            sourceDb.ReadDwgFile(TempFolderFilePath, System.IO.FileShare.Read, true, ""); //Read the DWG into a side database
+
+                            // --- RENOMMAGE DU BLOC DANS LA BASE TEMPORAIRE ---
+                            using (Transaction sourcetr = sourceDb.TransactionManager.StartTransaction())
+                            {
+                                BlockTable sourceBt = (BlockTable)sourcetr.GetObject(sourceDb.BlockTableId, OpenMode.ForRead);
+
+                                // Si le bloc d'origine existe bien dans le fichier temporaire, on le renomme
+                                if (sourceBt.Has(DrawingName))
+                                {
+                                    BlockTableRecord sourcebtr = (BlockTableRecord)sourcetr.GetObject(sourceBt[DrawingName], OpenMode.ForWrite);
+                                    sourcebtr.Name = BlocName;
+                                }
+
+                                // On valide la modification dans la base temporaire
+                                sourcetr.Commit();
+                            }
+
+
+                            db.Insert(TempFolderFilePath, sourceDb, false);
+                        }
+                        catch (Autodesk.AutoCAD.Runtime.Exception ex)
+                        {
+                            Generic.WriteMessage("\nErreur : " + ex.Message);
+                        }
                     }
                 }
+
+
                 tr.Commit();
             }
         }

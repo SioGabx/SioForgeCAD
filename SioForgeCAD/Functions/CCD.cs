@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
             {
                 Database db = Generic.GetDatabase();
                 Editor ed = Generic.GetEditor();
-                DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points));
+                DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(PointCote.Points));
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
@@ -75,7 +75,7 @@ namespace SioForgeCAD.Functions
                         {
                             var ComputedValue = ComputeValue(NewPointLocation);
                             Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
-                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
+                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
                         }
                         else
                         {

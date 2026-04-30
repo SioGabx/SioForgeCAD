@@ -40,7 +40,7 @@ namespace SioForgeCAD.Functions
             if (Entity is BlockReference BlkRef)
             {
                 //Check the layer name, because if we check a dynamic block real name, it slow down autocad
-                if (BlkRef.Layer.StartsWith(Settings.VegblocLayerPrefix))
+                if (BlkRef.Layer.StartsWith(Settings.PrefixVegblocLayer))
                 {
                     return true;
                 }

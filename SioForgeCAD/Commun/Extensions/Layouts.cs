@@ -6,11 +6,9 @@ using Autodesk.AutoCAD.PlottingServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -160,91 +158,6 @@ namespace SioForgeCAD.Commun.Extensions
             new Layout[1] { layout }.PublishLayouts(outputPdfPath);
         }
 
-
-        public static void TestPublish(this IEnumerable<Layout> layouts, string outputPdfPath)
-        {
-            Document doc = Generic.GetDocument();
-            Database db = Generic.GetDatabase();
-            string originalDocPath = doc.Name;
-            string drawingName = Path.GetFileNameWithoutExtension(doc.Name);
-            string outFileName = Path.GetFileNameWithoutExtension(outputPdfPath);
-
-            // 1. GESTION DU FICHIER TEMPORAIRE
-            string tempFileName = $"{drawingName.Truncate(100, "")}_PLOT_{DateTime.Now.Ticks}_{Guid.NewGuid()}";
-            string tempDwgPath = Path.Combine(Path.GetTempPath(), $"{tempFileName}.dwg");
-
-            try
-            {
-                // On sauvegarde le fichier sous un nom temp pour que PublishExecute le trouve
-                db.SaveAs(tempDwgPath, DwgVersion.Current);
-            }
-            catch (System.Exception ex)
-            {
-                Generic.WriteMessage($"Erreur de sauvegarde temporaire : {ex.Message}");
-                return;
-            }
-
-            using (DsdEntryCollection dsdDwgFiles = new DsdEntryCollection())
-            {
-                foreach (var layout in layouts)
-                {
-                    using (DsdEntry dsdDwgFile1 = new DsdEntry())
-                    {
-                        // Set the file name and layout
-                        dsdDwgFile1.DwgName = tempDwgPath;
-                        dsdDwgFile1.Layout = layout.LayoutName;
-                        dsdDwgFile1.Title = layout.LayoutName;
-
-                        // Set the page setup override
-                        dsdDwgFile1.Nps = "";
-                        dsdDwgFile1.NpsSourceDwg = "";
-
-                        dsdDwgFiles.Add(dsdDwgFile1);
-                    }
-                }
-
-                // Set the properties for the DSD file and then write it out
-                using (DsdData dsdFileData = new DsdData())
-                {
-                    // Set the target information for publishing
-                    dsdFileData.DestinationName = Path.GetTempPath() + "\\MyPublish2.pdf";
-                    dsdFileData.ProjectPath = Path.GetTempPath() + "\\";
-                    dsdFileData.SheetType = SheetType.MultiPdf;
-
-                    // Set the drawings that should be added to the publication
-                    dsdFileData.SetDsdEntryCollection(dsdDwgFiles);
-
-                    // Set the general publishing properties
-                    dsdFileData.LogFilePath = Path.GetTempPath() + "\\myBatch.txt";
-
-                    // Create the DSD file
-                    dsdFileData.WriteDsd(Path.GetTempPath() + "\\batchdrawings2.dsd");
-
-                    try
-                    {
-                        // Publish the specified drawing files in the DSD file, and
-                        // honor the behavior of the BACKGROUNDPLOT system variable
-
-                        using (DsdData dsdDataFile = new DsdData())
-                        {
-                            dsdDataFile.ReadDsd(Path.GetTempPath() + "\\batchdrawings2.dsd");
-
-                            // Get the DWG to PDF.pc3 and use it as a 
-                            // device override for all the layouts
-                            PlotConfig acPlCfg = PlotConfigManager.SetCurrentConfig("DWG to PDF.PC3");
-
-                            Application.Publisher.PublishExecute(dsdDataFile, acPlCfg);
-                        }
-                    }
-                    catch (Autodesk.AutoCAD.Runtime.Exception es)
-                    {
-                        System.Windows.Forms.MessageBox.Show(es.Message);
-                    }
-                }
-            }
-        }
-
-
         public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputPdfPath)
         {
             //TestPublish(layouts, outputPdfPath);
@@ -258,8 +171,17 @@ namespace SioForgeCAD.Commun.Extensions
             string outFileName = Path.GetFileNameWithoutExtension(outputPdfPath);
 
             // 1. GESTION DU FICHIER TEMPORAIRE
-            string tempFileName = $"{drawingName.Truncate(100, "")}_PLOT_{DateTime.Now.Ticks}_{Guid.NewGuid()}";
-            string tempDwgPath = Path.Combine(Path.GetTempPath(), $"{tempFileName}.dwg");
+            //string tempFileName = $"{drawingName.Truncate(100, "")}_PLOT_{DateTime.Now.Ticks}_{Guid.NewGuid()}";
+            //string tempDwgPath = Path.Combine(Path.GetTempPath(), $"{tempFileName}.dwg");
+            string tempFileName = $"{drawingName}_PlottingService";
+            string tempFolderName = $"{drawingName.Truncate(100, "")}_PLOT_{DateTime.Now.Ticks}_{Guid.NewGuid()}";
+            string tempFolderPath = Path.Combine(Path.GetTempPath(), tempFolderName);
+            System.IO.Directory.CreateDirectory(tempFolderPath);
+            string tempDwgPath = Path.Combine(tempFolderPath, $"{tempFileName}.dwg");
+
+
+
+
 
             try
             {
@@ -297,10 +219,10 @@ namespace SioForgeCAD.Commun.Extensions
                         {
                             dsdEntries.Add(entry);
                         }
- }
+                    }
                     dsdFileData.SetDsdEntryCollection(dsdEntries);
                     dsdFileData.ProjectPath = Path.GetDirectoryName(outputPdfPath);
-                    dsdFileData.LogFilePath = Path.Combine(Path.GetTempPath(), $"{tempFileName}_publish.log");
+                    dsdFileData.LogFilePath = Path.Combine(tempFolderPath, $"{tempFileName}_publish.log");
                     dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
                     dsdFileData.DestinationName = outputPdfPath;
                     dsdFileData.IsHomogeneous = false;
@@ -309,8 +231,6 @@ namespace SioForgeCAD.Commun.Extensions
 
                     if (File.Exists(dsdFilePath)) File.Delete(dsdFilePath);
 
-                    // ASTUCE DSD : Contournement du bug d'AutoCAD (Étape 2)
-                    // L'API ignore souvent "PromptForDwfName" pour les PDF. 
                     // On écrit le fichier DSD, on le force en texte brut, puis on le relit.
                     dsdFileData.WriteDsd(dsdFilePath);
 
@@ -386,7 +306,7 @@ namespace SioForgeCAD.Commun.Extensions
             finally
             {
                 Generic.SetSystemVariable("BACKGROUNDPLOT", bgPlot, false);
-                //try { if (File.Exists(dsdFilePath)) File.Delete(dsdFilePath); } catch { }
+                try { if (File.Exists(dsdFilePath)) File.Delete(dsdFilePath); } catch { }
                 try { if (File.Exists(tempDwgPath)) File.Delete(tempDwgPath); } catch { }
             }
         }

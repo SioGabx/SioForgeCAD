@@ -46,7 +46,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        public static void PolyClean2()
+        public static void PolyOptimize()
         {
             Editor ed = Generic.GetEditor();
             var db = Generic.GetDatabase();

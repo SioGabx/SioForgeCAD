@@ -1,10 +1,8 @@
-﻿using Autodesk.AutoCAD.Colors;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
 using System.Collections.Generic;
-using System.Windows;
 using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using Viewport = Autodesk.AutoCAD.DatabaseServices.Viewport;
 
@@ -132,7 +130,6 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return ed.IsInLayout() && !ed.IsInLayoutPaper();
         }
-
 
         public static List<ObjectId> GetAllViewportsInPaperSpace(this Editor _, BlockTableRecord btr)
         {

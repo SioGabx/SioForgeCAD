@@ -32,7 +32,7 @@ namespace SioForgeCAD.Functions
                     double y = RandomNumber(-50, 50);
                     double alti = RandomNumber(100, 120) + (RandomNumber(0, 99) * 0.01);
                     Point3d point = new Point3d(x, y, alti);
-                    BlockReferences.InsertFromNameImportIfNotExist("_APUd_COTATIONS_Altimetries", new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
+                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry,nameof(Settings.BlkAltimetry), new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
                 }
                 tr.Commit();
             }
@@ -63,8 +63,8 @@ namespace SioForgeCAD.Functions
                 // Ouverture de l'espace courant (Objet ou Papier) en écriture
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
-                double lineLength = 1.0;
-                double verticalSpacing = 0.2;
+                const double lineLength = 1.0;
+                const double verticalSpacing = 0.2;
 
                 // Boucle sur les 255 couleurs indexées d'AutoCAD
                 for (short i = 1; i <= 255; i++)
@@ -76,10 +76,11 @@ namespace SioForgeCAD.Functions
                     Point3d endPt = new Point3d(lineLength, yPosition, 0);
 
                     // Création de la ligne
-                    Line colorLine = new Line(startPt, endPt);
-
-                    // Assignation de la couleur
-                    colorLine.ColorIndex = i;
+                    Line colorLine = new Line(startPt, endPt)
+                    {
+                        // Assignation de la couleur
+                        ColorIndex = i
+                    };
 
                     // Ajout à la base de données
                     btr.AppendEntity(colorLine);

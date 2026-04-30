@@ -300,6 +300,7 @@
     <Compile Include="Functions\MANAGESCU.cs" />
     <Compile Include="Functions\LAYERMANAGERNEWLAYERDEFAULTNAME.cs" />
     <Compile Include="Functions\LAYERMANAGERCTXNEWLAYERFROMSELECTED.cs" />
+    <Compile Include="Functions\POLYOPTIMIZE.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\VEGBLOCEXPORTTOILLUSTRATOR.cs" />
@@ -420,9 +421,6 @@
       <Link>.editorconfig</Link>
     </None>
     <None Include="app.config" />
-    <EmbeddedResource Include="Ressources\Blocks\_APUd_COTATIONS_Altimetries.dwg" />
-    <EmbeddedResource Include="Ressources\Blocks\_APUd_COTATIONS_Pentes.dwg" />
-    <EmbeddedResource Include="Ressources\Blocks\_APUd_CP_Altimetries.dwg" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -431,6 +429,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
+    <EmbeddedResource Include="Ressources\Blocks\BlkAltimetry.dwg" />
+    <EmbeddedResource Include="Ressources\Blocks\BlkSectionAltimetry.dwg" />
+    <EmbeddedResource Include="Ressources\Blocks\BlkSlopePercentage.dwg" />
     <None Include="Ressources\Images\VEGBLOC_ColorRamp_HotToCold.png" />
     <None Include="Ressources\Images\Form_Validate.png" />
     <None Include="Ressources\Images\VEGBLOC_ColorRamp_ColdToHot.png" />

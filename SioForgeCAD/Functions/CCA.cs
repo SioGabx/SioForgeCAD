@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
 
                     var GetPointJig = new GetPointJig()
                     {
-                        Entities = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(PointCote.Points)),
+                        Entities = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(PointCote.Points)),
                         StaticEntities = new DBObjectCollection(),
                         UpdateFunction = UpdateFunction
                     };
@@ -79,7 +79,7 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                         return;
                     }
-                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(GetPointTransientResult.Point));
+                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(GetPointTransientResult.Point));
                     tr.Commit();
                 }
             }

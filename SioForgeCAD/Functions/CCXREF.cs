@@ -35,14 +35,14 @@ namespace SioForgeCAD.Functions
                         string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
 
                         Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                        if (BlockPosition.SCG.IsThereABlockReference(Settings.BlocNameAltimetrie, AltimetrieStr, out var BlkFound) && BlkFound.Layer == Layers.GetCurrentLayerName())
+                        if (BlockPosition.SCG.IsThereABlockReference(Settings.BlkAltimetry, AltimetrieStr, out var BlkFound) && BlkFound.Layer == Layers.GetCurrentLayerName())
                         {
                             Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
                         }
                         else
                         {
                             Generic.WriteMessage($"L'altimétrie {AltimetrieStr} à été ajoutée sur le calque {Layers.GetCurrentLayerName()}");
-                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, BlockPosition, USCRotation, AltimetrieValue);
+                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), BlockPosition, USCRotation, AltimetrieValue);
                         }
                     }
                     finally

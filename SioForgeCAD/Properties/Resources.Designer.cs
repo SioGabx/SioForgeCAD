@@ -63,9 +63,9 @@ namespace SioForgeCAD.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Byte[].
         /// </summary>
-        internal static byte[] _APUd_COTATIONS_Altimetries {
+        internal static byte[] BlkAltimetry {
             get {
-                object obj = ResourceManager.GetObject("_APUd_COTATIONS_Altimetries", resourceCulture);
+                object obj = ResourceManager.GetObject("BlkAltimetry", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace SioForgeCAD.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Byte[].
         /// </summary>
-        internal static byte[] _APUd_COTATIONS_Pentes {
+        internal static byte[] BlkSectionAltimetry {
             get {
-                object obj = ResourceManager.GetObject("_APUd_COTATIONS_Pentes", resourceCulture);
+                object obj = ResourceManager.GetObject("BlkSectionAltimetry", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace SioForgeCAD.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Byte[].
         /// </summary>
-        internal static byte[] _APUd_CP_Altimetries {
+        internal static byte[] BlkSlopePercentage {
             get {
-                object obj = ResourceManager.GetObject("_APUd_CP_Altimetries", resourceCulture);
+                object obj = ResourceManager.GetObject("BlkSlopePercentage", resourceCulture);
                 return ((byte[])(obj));
             }
         }

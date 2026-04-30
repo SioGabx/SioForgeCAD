@@ -32,7 +32,7 @@ namespace SioForgeCAD.Functions
                 }
 
                 var Values = ComputeValue();
-                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlocNamePente, Values);
+                DBObjectCollection ents = Commun.Drawing.BlockReferences.InitForTransient(Settings.BlkSlopePercentage, nameof(Settings.BlkSlopePercentage), Values);
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
                     HightLighter.UnhighlightAll();
@@ -47,7 +47,7 @@ namespace SioForgeCAD.Functions
                         if (Indermediaire != null && IndermediairePromptPointResultStatus == PromptStatus.OK)
                         {
                             Generic.WriteMessage($"Pente : {Values["PENTE"]}");
-                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNamePente, Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), Values);
+                            Commun.Drawing.BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkSlopePercentage, nameof(Settings.BlkSlopePercentage), Indermediaire, ed.GetUSCRotation(AngleUnit.Radians), Values);
                         }
                     }
                 }

@@ -62,7 +62,7 @@ namespace SioForgeCAD.Functions
 
                     double yPosition = Point3d.Origin.Y + titleSpacing;
                     double xPosition = Point3d.Origin.X + (blockSizeInMetters / 2);
-                    string CartoucheLayerName = SymbolUtilityServices.RepairSymbolName($"{Settings.CADLayerPrefix}CARTOUCHE", false);
+                    string CartoucheLayerName = SymbolUtilityServices.RepairSymbolName($"{Settings.PrefixCAD}CARTOUCHE", false);
                     Layers.CreateLayer(CartoucheLayerName, Color.FromColorIndex(ColorMethod.ByAci, 7), LineWeight.ByLineWeightDefault, Generic.GetTransparencyFromAlpha(0), true);
                     Dictionary<string, DBObjectCollection> LegendeByCategories = new Dictionary<string, DBObjectCollection>();
                     foreach (var Type in VegTypes.OrderBy(c =>
@@ -177,7 +177,7 @@ namespace SioForgeCAD.Functions
                                     CategoryObjIdCollection.Add(ent.AddToDrawingCurrentTransaction());
                                 }
                             }
-                            Groups.Create(Settings.InfoLayerPrefix + "Legende_" + LegendPart.Key, "", CategoryObjIdCollection);
+                            Groups.Create(Settings.PrefixInfoLayer + "Legende_" + LegendPart.Key, "", CategoryObjIdCollection);
                         }
 
                         tr.Commit();

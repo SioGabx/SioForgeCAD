@@ -1,11 +1,9 @@
-﻿using Autodesk.AutoCAD.Customization;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
-using SioForgeCAD.Functions;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -499,14 +497,14 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            //Functions.TEST.ExportLayoutComplet();
-            Generic.GetDatabase().SaveAs(@"C:\Users\AMPLITUDE PAYSAGE\Downloads\Nouveau dossier (17)\Test.dwg", DwgVersion.Current);
+            Functions.TEST.ExportLayoutComplet();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-            Functions.POLYCLEAN.PolyClean2();
+            Settings.PrefixCAD = "SIO_";
+            Settings.BlkAltimetry = "SIO_Nouveau_nom";
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]

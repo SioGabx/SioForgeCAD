@@ -110,11 +110,14 @@ namespace SioForgeCAD.Functions
                 {
                     continue;
                 }
+
+                var BlkAltitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId);
+                if (BlkAltitude is null) { continue; }
                 var TerrainPoint = new TerrainPoint()
                 {
                     StartPoint = BlkRefOnTerrainPosition,
                     Block = BlkRef,
-                    Altitude = CotePoints.GetAltitudeFromBloc(BlkRef.ObjectId) ?? 0,
+                    Altitude = BlkAltitude ?? 0,
                     DistanceFromTerrainStart = TerrainBasePolyline.StartPoint.Flatten().DistanceTo(BlkRefOnTerrainPosition.SCG.Flatten())
                 };
                 terrainPoints.Add(TerrainPoint);
@@ -205,7 +208,7 @@ namespace SioForgeCAD.Functions
                 string AltimetrieStr = CotePoints.FormatAltitude(terrainPoint.Altitude);
                 Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
 
-                var CotationBlockRefObjectId = BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrieCoupes, terrainPoint.EndPoint, USCRotation, AltimetrieValue);
+                var CotationBlockRefObjectId = BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkSectionAltimetry, nameof(Settings.BlkSectionAltimetry), terrainPoint.EndPoint, USCRotation, AltimetrieValue);
                 TerrainEntity.Add(CotationBlockRefObjectId.GetEntity().Clone() as Entity);
                 CotationBlockRefObjectId.EraseObject();
             }

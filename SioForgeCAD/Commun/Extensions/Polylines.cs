@@ -366,7 +366,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                     Point2d pStart = polyline.GetPoint2dAt(i);
                     Point2d pEnd = polyline.GetPoint2dAt(j);
-                    Point2d pMid = polyline.GetPoint2dAt(i + (j - i) / 2);
+                    Point2d pMid = polyline.GetPoint2dAt(i + ((j - i) / 2));
 
                     // Calcul de la corde
                     Line2d chord = new Line2d(pStart, pEnd);

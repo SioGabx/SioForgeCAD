@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Internal;
 using System;
 using System.Collections.Generic;
@@ -143,10 +142,12 @@ namespace SioForgeCAD.Commun.Extensions
             return layoutNames;
         }
 
-        public static HashSet<string> GetSelectedLayoutNames(this LayoutManager _, Database db)
+        public static HashSet<string> GetSelectedLayoutNames(this LayoutManager lm, Database db)
         {
-            HashSet<string> selected = new HashSet<string>();
-            selected.Add(_.CurrentLayout);
+            HashSet<string> selected = new HashSet<string>
+            {
+                lm.CurrentLayout
+            };
             // OpenCloseTransaction est beaucoup plus rapide et léger qu'une Transaction normale
             // Idéal pour une lecture rapide dans l'événement Idle.
             using (OpenCloseTransaction tr = db.TransactionManager.StartOpenCloseTransaction())

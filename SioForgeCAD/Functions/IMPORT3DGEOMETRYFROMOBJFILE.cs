@@ -111,7 +111,7 @@ namespace SioForgeCAD.Functions
                 foreach (var vertice in vertices)
                 {
                     string AltimetrieStr = CotePoints.FormatAltitude(vertice.Z);
-                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, vertice.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } });
+                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), vertice.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } });
 
                 }
                 tr.Commit();

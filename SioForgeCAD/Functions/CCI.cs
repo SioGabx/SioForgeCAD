@@ -74,7 +74,7 @@ namespace SioForgeCAD.Functions
 
                         using (var GetPointJig = new GetPointJig()
                         {
-                            Entities = BlockReferences.InitForTransient(Settings.BlocNameAltimetrie, ComputeValue(FirstPointCote.Points)),
+                            Entities = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(FirstPointCote.Points)),
                             StaticEntities = new DBObjectCollection(),
                             UpdateFunction = UpdateFunction
                         })
@@ -85,7 +85,7 @@ namespace SioForgeCAD.Functions
                             {
                                 var ComputedValue = ComputeValue(GetPointTransientResult.Point);
                                 Generic.WriteMessage($"Altimétrie : {ComputedValue["RAW_ALTIMETRIE"]}");
-                                BlockReferences.InsertFromNameImportIfNotExist(Settings.BlocNameAltimetrie, GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
+                                BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputedValue);
                             }
                             else if (GetPointTransientResult.PromptPointResult.Status == PromptStatus.Keyword)
                             {

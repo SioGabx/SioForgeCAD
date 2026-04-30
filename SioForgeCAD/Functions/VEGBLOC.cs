@@ -115,7 +115,7 @@ namespace SioForgeCAD.Functions
                 ShortName += $" ({nameof(VegblocTypes.CÉPÉES).UcFirst()})";
             }
 
-            string MaybeIllegalBlocName = $"{Settings.VegblocLayerPrefix}{ShortType}_{CompleteName}";
+            string MaybeIllegalBlocName = $"{Settings.PrefixVegblocLayer}{ShortType}_{CompleteName}";
             string BlocName = SymbolUtilityServices.RepairSymbolName(MaybeIllegalBlocName, false);
 
             Color BlocColor = GetBestUniqueRandomColorByDistance();
@@ -212,7 +212,7 @@ namespace SioForgeCAD.Functions
                         {DataStore.CompleteName, OldVeg[0]},
                         {DataStore.Width,OldVeg[1].Split(':')[1]},
                         {DataStore.Height,OldVeg[2].Split(':')[1]},
-                        {DataStore.Type, BlkRef.GetBlockReferenceName().Replace(Settings.VegblocLayerPrefix, "").Replace(OldVeg[0], "").Replace("_","") },
+                        {DataStore.Type, BlkRef.GetBlockReferenceName().Replace(Settings.PrefixVegblocLayer, "").Replace(OldVeg[0], "").Replace("_","") },
                     };
                 }
                 catch (Exception ex)
@@ -227,7 +227,7 @@ namespace SioForgeCAD.Functions
         {
             Editor ed = Generic.GetEditor();
             Database db = Generic.GetDatabase();
-            DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, Layer ?? BlocName);
+            DBObjectCollection ents = BlockReferences.InitForTransient(BlocName, null, null, Layer ?? BlocName);
             ObjectId BlkObjectId = ObjectId.Null;
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -242,7 +242,7 @@ namespace SioForgeCAD.Functions
                         tr.Commit();
                         return BlkObjectId;
                     }
-                    BlkObjectId = BlockReferences.InsertFromNameImportIfNotExist(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
+                    BlkObjectId = BlockReferences.InsertFromName(BlocName, NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), null, Layer ?? BlocName);
 
                     tr.Commit();
                 }
@@ -388,7 +388,7 @@ namespace SioForgeCAD.Functions
 
         private static ObjectId GetVegblocTextStyle()
         {
-            var TextStyleName = Settings.VegblocLayerPrefix + "TextStyle";
+            var TextStyleName = Settings.PrefixVegblocLayer + "TextStyle";
             var db = Generic.GetDatabase();
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -629,7 +629,7 @@ namespace SioForgeCAD.Functions
                 foreach (ObjectId layerId in layerTable)
                 {
                     LayerTableRecord layer = (LayerTableRecord)tr.GetObject(layerId, OpenMode.ForRead);
-                    if (layer.Name.StartsWith(Settings.VegblocLayerPrefix))
+                    if (layer.Name.StartsWith(Settings.PrefixVegblocLayer))
                     {
                         colors.Add(layer.Color);
                     }
