@@ -499,7 +499,8 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TEST.ExportLayoutComplet();
+            //Functions.TEST.ExportLayoutComplet();
+            Generic.GetDatabase().SaveAs(@"C:\Users\AMPLITUDE PAYSAGE\Downloads\Nouveau dossier (17)\Test.dwg", DwgVersion.Current);
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]

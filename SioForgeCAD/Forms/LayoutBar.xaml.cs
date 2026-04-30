@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Internal;
+using Microsoft.Win32;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.Helpers;
@@ -1593,38 +1594,131 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
         {
-            var RecoverCurrentTab = _currentItem;
-            var TargetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
-            if (TargetTabs.Count == 0) return;
+            var recoverCurrentTab = _currentItem;
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
 
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            string dwgDirectory = Path.GetDirectoryName(doc.Name);
+            if (targetTabs.Count == 0) return;
 
-            if (string.IsNullOrEmpty(dwgDirectory))
-            {
-                MessageBox.Show("Veuillez d'abord enregistrer le dessin.", "Tracer", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            Document doc = Generic.GetDocument();
+            string docName = Path.GetFileNameWithoutExtension(doc.Name);
+            string dwgDirectory = Path.GetDirectoryName(docName);
             using (var tr = Generic.GetTrans())
             {
-                // On traite chaque onglet individuellement pour créer un fichier distinct
-                foreach (var tab in TargetTabs)
+                try
                 {
-                    string outputPath = Path.Combine(dwgDirectory, $"{tab.Title}.pdf");
+                    List<Layout> LayoutListToPlot = new List<Layout>();
+                    for (int i = 0; i < targetTabs.Count; i++)
+                    {
+                        if (GetLayoutFromTab(tr, targetTabs[i], OpenMode.ForRead) is Layout layout)
+                        {
+                            LayoutListToPlot.Add(layout);
+                        }
+                    }
+                    var PlotsDevicesErrors = LayoutListToPlot.IsPlotsDeviceAvailable();
+
+                    if (PlotsDevicesErrors.Count > 0)
+                    {
+                        foreach (var item in PlotsDevicesErrors)
+                        {
+                            Generic.WriteMessage($"Le périphérique de traçage \"{item.Device}\" pour la présentation \"{item.LayoutName}\" n'est pas disponible.");
+                        }
+                        Generic.WriteMessage("Traçage annulé. Veuillez corriger les erreurs");
+                        return;
+                    }
+
+                    // SCÉNARIO 1 : Un seul fichier à tracer
+                    if (LayoutListToPlot.Count == 1)
+                    {
+                        SaveFileDialog saveFileDialog = new SaveFileDialog
+                        {
+                            Title = "Enregistrer la présentation",
+                            Filter = "Fichier PDF (*.pdf)|*.pdf",
+                            FileName = $"{docName}_{LayoutListToPlot.FirstOrDefault().LayoutName}.pdf",
+                            InitialDirectory = dwgDirectory
+                        };
+
+                        if (saveFileDialog.ShowDialog() != true) return; // Annulation utilisateur
+
+                        LayoutListToPlot.PublishLayouts(saveFileDialog.FileName);
+                    }
+                    // SCÉNARIO 2 : Plusieurs fichiers à tracer
+                    else
+                    {
+                        var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog("Sélectionnez le dossier d'enregistrement", "", "", "jj", Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
+                        {
+                            if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return; // Annulation
+
+                            string selectedFolder = folderDialog.FileOrFoldername;
+
+                            // Préparation des chemins
+                            foreach (var tab in LayoutListToPlot)
+                            {
+                                string fileName = Path.Combine(selectedFolder,$"{docName}_{tab.LayoutName}.pdf");
+
+                                tab.PublishLayouts(fileName);
+                            }
+
+                        }
+                    }
+
+                    Generic.WriteMessage($"\nImpression de {targetTabs.Count} présentation(s) terminée.");
+                }
+                finally
+                {
+                    tr.Commit();
+                }
+            }
+            SetCurrentItem(recoverCurrentTab);
+            targetTabs.ForEach(t => t.IsSelected = true);
+        }
+
+        private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
+        {
+            var recoverCurrentTab = _currentItem;
+            var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+
+            if (targetTabs.Count == 0) return;
+
+            Document doc = Generic.GetDocument();
+            string docPath = Path.GetFileNameWithoutExtension(doc.Name);
+            string dwgDirectory = Path.GetDirectoryName(docPath);
+
+            // UX : Demander l'emplacement et le nom du carnet PDF
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Title = "Enregistrer la publication (Carnet)",
+                Filter = "Fichier PDF (*.pdf)|*.pdf",
+                FileName = $"{docPath}_Carnet.pdf",
+                InitialDirectory = dwgDirectory
+            };
+
+            if (saveFileDialog.ShowDialog() != true) return; // Si l'utilisateur annule, on arrête là.
+
+            string outputPath = saveFileDialog.FileName;
+
+            using (var tr = Generic.GetTrans())
+            {
+                var layouts = new List<Layout>();
+                foreach (var tab in targetTabs)
+                {
                     if (GetLayoutFromTab(tr, tab, OpenMode.ForRead) is Layout layout)
                     {
-                        var layouts = new Layout[1] { layout };
-                        layouts.PublishLayouts(outputPath);
+                        layouts.Add(layout);
                     }
+                }
+
+                if (layouts.Count > 0)
+                {
+                    layouts.PublishLayouts(outputPath);
                 }
                 tr.Commit();
             }
-            Generic.WriteMessage($"Impression de {TargetTabs.Count} présentation(s).");
-            SetCurrentItem(RecoverCurrentTab);
-            TargetTabs.ForEach(t => t.IsSelected = true);
+
+            Generic.WriteMessage($"\nPublication de {targetTabs.Count} présentation(s) terminée.");
+            SetCurrentItem(recoverCurrentTab);
+            targetTabs.ForEach(t => t.IsSelected = true);
         }
 
-        private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e) => Debug.WriteLine("Publier");
 
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {

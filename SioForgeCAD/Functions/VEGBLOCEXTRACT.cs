@@ -74,8 +74,15 @@ namespace SioForgeCAD.Functions
                 }
 
                 var clipboardText = string.Join("\n", VegInstanceList
-                    .OrderBy(v => v.Type)
-                    .ThenBy(v => v.CompleteName)
+
+                    .OrderBy(c =>
+                    {
+                        if (System.Enum.TryParse(VEGBLOC.GetVegblocType(c.Type), true, out VEGBLOC.VegblocTypes vegEnum))
+                        {
+                            return (int)vegEnum;
+                        }
+                        return int.MaxValue;
+                    }).ThenBy(c => c.CompleteName)
                     .Select(v => $"\"{v.Type}\"\t\"{v.CompleteName}\"\t{v.Count}")
                 );
 

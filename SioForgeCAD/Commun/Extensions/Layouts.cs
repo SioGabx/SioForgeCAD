@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -154,6 +155,10 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static void PublishLayouts(this Layout layout, string outputPdfPath)
+        {
+            new Layout[1] { layout }.PublishLayouts(outputPdfPath);
+        }
         public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputPdfPath)
         {
             if (layouts?.Any() != true)
@@ -161,27 +166,23 @@ namespace SioForgeCAD.Commun.Extensions
                 return;
             }
 
-            bool isMultiPage = layouts.Count() > 1;
-
             Document doc = Generic.GetDocument();
-            string dwgPath = doc.Name;
-            if (string.IsNullOrEmpty(dwgPath))
-            {
-                Generic.GetEditor().WriteMessage("Le dessin doit être sauvegardé avant d'être publié.");
-                return;
-            }
+            string docPath = doc.Name;
+
+            bool isMultiPage = layouts.Count() > 1;
 
             string dsdFilePath = Path.ChangeExtension(outputPdfPath, ".dsd");
 
             using (DsdData dsdFileData = new DsdData())
             using (DsdEntryCollection dsdEntries = new DsdEntryCollection())
             {
+        
                 foreach (var layout in layouts)
                 {
                     var layoutName = layout.LayoutName;
                     DsdEntry entry = new DsdEntry
                     {
-                        DwgName = dwgPath,
+                        DwgName = docPath,
                         Layout = layoutName,
                         Title = layoutName
                     };
@@ -189,7 +190,7 @@ namespace SioForgeCAD.Commun.Extensions
                 }
 
                 dsdFileData.SetDsdEntryCollection(dsdEntries);
-                dsdFileData.ProjectPath = Path.GetDirectoryName(dwgPath);
+                dsdFileData.ProjectPath = Path.GetDirectoryName(docPath);
                 dsdFileData.LogFilePath = Path.Combine(Path.GetDirectoryName(outputPdfPath), "publish.log");
                 dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
                 dsdFileData.DestinationName = outputPdfPath;
@@ -232,16 +233,14 @@ namespace SioForgeCAD.Commun.Extensions
                         }
                         else
                         {
-                            var deviceName = layouts.FirstOrDefault().PlotConfigurationName;
-                            var availableDevices = PlotConfigManager.Devices.ToList<PlotConfigInfo>().ConvertAll(t => t.DeviceName);
-                            availableDevices.RemoveAt(0); //first one is none
-                            if (!string.IsNullOrEmpty(deviceName) && availableDevices.Contains(deviceName))
+                            if (IsPlotDeviceAvailable(layouts.FirstOrDefault()))
                             {
+                                var deviceName = layouts.FirstOrDefault().PlotConfigurationName;
                                 plotConfig = PlotConfigManager.SetCurrentConfig(deviceName);
                             }
                             else
                             {
-                                throw new System.Exception($"Le périphérique de traçage \"{deviceName}\" n'est pas disponible. ");
+                                return;
                             }
                         }
                     }
@@ -254,10 +253,32 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 finally
                 {
-                    Debug.WriteLine("End Publish");
+                    //Debug.WriteLine("End Publish");
                 }
             }
         }
+
+        public static bool IsPlotDeviceAvailable(this Layout lay)
+        {
+            var deviceName = lay.PlotConfigurationName;
+            var availableDevices = PlotConfigManager.Devices.ToList<PlotConfigInfo>().ConvertAll(t => t.DeviceName);
+            availableDevices.RemoveAt(0); //first one is none
+            return !string.IsNullOrEmpty(deviceName) && availableDevices.Contains(deviceName);
+        }
+
+        public static List<(string LayoutName, string Device)> IsPlotsDeviceAvailable(this IEnumerable<Layout> lays)
+        {
+            List<(string LayoutName, string Device)> list = new List<(string LayoutName, string Device)>();
+            foreach (var lay in lays)
+            {
+                if (!IsPlotDeviceAvailable(lay))
+                {
+                    list.Add((lay.LayoutName, lay.PlotConfigurationName));
+                }
+            }
+            return list;
+        }
+
 
         public static Extents2d GetPaperExtents(this Layout layout)
         {

@@ -67,7 +67,7 @@ namespace SioForgeCAD.Functions
                     Dictionary<string, DBObjectCollection> LegendeByCategories = new Dictionary<string, DBObjectCollection>();
                     foreach (var Type in VegTypes.OrderBy(c =>
                     {
-                        if (System.Enum.TryParse(c.Key, true, out VEGBLOC.VegblocTypes vegEnum))
+                        if (System.Enum.TryParse(VEGBLOC.GetVegblocType(c.Key), true, out VEGBLOC.VegblocTypes vegEnum))
                         {
                             return (int)vegEnum;
                         }

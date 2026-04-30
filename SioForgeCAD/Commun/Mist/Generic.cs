@@ -128,6 +128,11 @@ namespace SioForgeCAD.Commun
             Database db = Generic.GetDatabase();
             return db.TransactionManager.StartTransaction();
         }
+        public static Transaction GetOpenCloseTrans()
+        {
+            Database db = Generic.GetDatabase();
+            return db.TransactionManager.StartOpenCloseTransaction();
+        }
 
         public static DwgVersion GetSaveVersion()
         {
