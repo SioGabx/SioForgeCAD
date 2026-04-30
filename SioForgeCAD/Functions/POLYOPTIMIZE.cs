@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
-
     public static class POLYOPTIMIZE
     {
         public static void PolyOptimize()

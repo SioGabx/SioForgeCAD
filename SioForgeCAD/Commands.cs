@@ -349,6 +349,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "POLYCLEAN", CommandFlags.UsePickSet)]
         public static void POLYCLEAN() => Functions.POLYCLEAN.PolyClean();
 
+        [CommandMethod("SIOFORGECAD", "POLYOPTIMIZE", CommandFlags.UsePickSet)]
+        public static void POLYOPTIMIZE() => Functions.POLYOPTIMIZE.PolyOptimize();
+
         [CommandMethod("SIOFORGECAD", "PICKSTYLETRAY", CommandFlags.Transparent)]
         public static void PICKSTYLETRAY() => Functions.PICKSTYLETRAY.AddTray();
 
