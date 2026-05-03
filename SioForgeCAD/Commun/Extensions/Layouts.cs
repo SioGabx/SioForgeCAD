@@ -1,11 +1,13 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.PlottingServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -152,6 +154,292 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
         }
+        //https://github.com/cadwiki/cadwiki-nuget/blob/a98c59f2715ab9a3dc640986c8599ac47ce07be1/cadwiki-nuget/cadwiki.AC/Plotters/PlotterMultiPage.cs#L12
+        public static void MultiSheetPlotterOld(string outputFileName, ObjectIdCollection allLayouts)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            if (doc == null || doc.IsDisposed)
+            {
+                System.Windows.MessageBox.Show("Drawing is missing or failed to load. Cancelled.");
+                return;
+            }
+            Editor ed = doc.Editor;
+
+            Database db = doc.Database;
+            if (db == null || db.IsDisposed)
+            {
+                System.Windows.MessageBox.Show("Drawing database is missing or failed to load. Cancelled.");
+                return;
+            }
+            using (Transaction tr = db.TransactionManager.StartTransaction())// <--- TODO fix NullReferenceException 
+            {
+                if (tr == null || tr.IsDisposed)
+                {
+                    System.Windows.MessageBox.Show("Transaction is missing or failed to initialize. Cancelled.");
+                    return;
+                }
+                PlotInfoValidator plotInfoValidator = new PlotInfoValidator
+                {
+                    MediaMatchingPolicy = MatchingPolicy.MatchEnabled
+                };
+                if (PlotFactory.ProcessPlotState != ProcessPlotState.NotPlotting)
+                {
+                    ed.WriteMessage("\nCancelled. Printer is busy (another plot job is in progress).\n");
+                    tr.Commit();
+                    return;
+                }
+
+                using (PlotEngine plotEngine = PlotFactory.CreatePublishEngine())
+                {
+                    if (allLayouts == null || allLayouts.IsDisposed)
+                    {
+                        System.Windows.MessageBox.Show("\nPlot object is empty. Skipped.\n");
+                        plotEngine.Dispose();
+                        tr.Commit();
+                        return;
+                    }
+                    if (allLayouts.Count == 0)
+                    {
+                        System.Windows.MessageBox.Show("\nThe number of sheets to plot is zero. Skipped.\n");
+                        plotEngine.Dispose();
+                        tr.Commit();
+                        return;
+                    }
+                    int sheetCount = 0;
+                    ObjectIdCollection layoutsToPlot = new ObjectIdCollection();
+
+                    foreach (ObjectId btrId in allLayouts)
+                    {
+                        ObjectId obj = btrId;
+                        try
+                        {
+                            if (!db.TryGetObjectId(obj.Handle, out obj))
+                            {
+                                throw new System.Exception();
+                            }
+                        }
+                        catch (System.Exception e) // catch erased layout or whatever shit
+                        {
+                            char[] r = { '(', ')' };
+                            ed.WriteMessage($"\nSheet with id '{btrId.ToString().Trim(r)}' was deleted or created with errors. Removed from plot queue.\n");
+                            continue;
+                        }
+                        layoutsToPlot.Add(obj);
+                        sheetCount++;
+                    }
+
+                    ed.WriteMessage($"\nTotal sheets to plot: {sheetCount}, total: {allLayouts.Count}, sheets created: {layoutsToPlot.Count}.\n");
+
+                    bool printingError = false;
+
+                    using (PlotProgressDialog plotProcessDialog = new PlotProgressDialog(false, sheetCount, true))
+                    {
+                        int numSheet = 1;
+                        using (doc.LockDocument())
+                        {
+                            string globalDevice = "DWG To PDF.pc3";
+
+                            foreach (ObjectId btrId in layoutsToPlot)
+                            {
+                                Layout layout = tr.GetObject(btrId, OpenMode.ForRead) as Layout;
+
+                                // On récupère la taille du papier de la présentation
+                                string media = layout.CanonicalMediaName;
+
+                                // 1. Créer un nouveau PlotInfo pour chaque page
+                                PlotInfo pagePlotInfo = new PlotInfo();
+                                pagePlotInfo.Layout = btrId;
+
+                                // 2. Configurer les Overrides
+                                PlotSettings plotSettings = new PlotSettings(layout.ModelType);
+                                plotSettings.CopyFrom(layout);
+
+                                PlotSettingsValidator plotSettingsValidator = PlotSettingsValidator.Current;
+                                plotSettingsValidator.SetPlotType(plotSettings, Autodesk.AutoCAD.DatabaseServices.PlotType.Layout);
+                                plotSettingsValidator.SetUseStandardScale(plotSettings, true);
+                                plotSettingsValidator.SetStdScaleType(plotSettings, StdScaleType.ScaleToFit);
+
+                                // APPLIQUER LE MÊME TRACEUR À TOUTES LES PAGES
+                                try
+                                {
+                                    // On tente d'appliquer la taille de papier d'origine sur le traceur global
+                                    if (!string.IsNullOrEmpty(media))
+                                    {
+                                        plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, media);
+                                    }
+                                    else
+                                    {
+                                        // Si le media est vide, on force un format standard
+                                        plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, "ISO_A4_(210.00_x_297.00_MM)");
+                                    }
+                                }
+                                catch (Autodesk.AutoCAD.Runtime.Exception)
+                                {
+                                    // SÉCURITÉ : Si la taille de papier n'est pas supportée par le traceur global
+                                    // (ex: format exotique), on évite le crash en forçant un format A4 par défaut.
+                                    plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, "ISO_A4_(210.00_x_297.00_MM)");
+                                    ed.WriteMessage($"\nAttention : Format de papier '{media}' non supporté par {globalDevice}. Remplacement par A4 sur la feuille {numSheet}.\n");
+                                }
+
+                                LayoutManager.Current.CurrentLayout = layout.LayoutName;
+
+                                pagePlotInfo.OverrideSettings = plotSettings;
+                                plotInfoValidator.Validate(pagePlotInfo);
+
+                                if (numSheet == 1)
+                                {
+                                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.DialogTitle, "Custom Plot Progress");
+                                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelJobButtonMessage, "Cancel Job");
+                                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelSheetButtonMessage, "Cancel Sheet");
+                                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
+                                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
+                                    plotProcessDialog.LowerPlotProgressRange = 0;
+                                    plotProcessDialog.UpperPlotProgressRange = 100;
+                                    plotProcessDialog.PlotProgressPos = 0;
+
+                                    var file = new FileInfo(outputFileName);
+                                    if (file.Exists)
+                                    {
+                                        try
+                                        {
+                                            file.Delete();
+                                        }
+                                        catch (System.Exception)
+                                        {
+                                            System.Windows.MessageBox.Show("The output file is being used by another process. Cancelled.");
+                                            ed.WriteMessage($"\nError opening output file for plotting. Cancelled.\n");
+                                            printingError = true;
+                                            break;
+                                        }
+                                    }
+
+                                    plotProcessDialog.OnBeginPlot();
+                                    plotProcessDialog.IsVisible = true;
+                                    plotEngine.BeginPlot(plotProcessDialog, null);
+
+                                    // L'initialisation du document est maintenant verrouillée sur "DWG To PDF.pc3"
+                                    plotEngine.BeginDocument(pagePlotInfo, doc.Name, null, 1, true, outputFileName);
+                                }
+
+                                plotProcessDialog.StatusMsgString = "Plotting " +
+                                                                    doc.Name.Substring(doc.Name.LastIndexOf("\\") + 1) +
+                                                                    " - sheet " + numSheet.ToString() +
+                                                                    " of " +
+                                                                    layoutsToPlot.Count.ToString();
+
+                                plotProcessDialog.OnBeginSheet();
+                                plotProcessDialog.LowerSheetProgressRange = 0;
+                                plotProcessDialog.UpperSheetProgressRange = 100;
+                                plotProcessDialog.SheetProgressPos = 0;
+
+                                PlotPageInfo plotPageInfo = new PlotPageInfo();
+                                Debug.WriteLine($"\nTentative de tracé : {globalDevice} sur papier {media}");
+                                plotEngine.BeginPage(plotPageInfo, pagePlotInfo, (numSheet == layoutsToPlot.Count), null);
+                                plotEngine.BeginGenerateGraphics(null);
+                                plotProcessDialog.SheetProgressPos = 50;
+                                plotEngine.EndGenerateGraphics(null);
+                                plotEngine.EndPage(null);
+                                plotProcessDialog.SheetProgressPos = 100;
+                                plotProcessDialog.OnEndSheet();
+                                numSheet++;
+                                plotProcessDialog.PlotProgressPos = (int)Math.Floor((double)numSheet * 100 / layoutsToPlot.Count);
+                            }
+
+                            if (!printingError)
+                            {
+                                plotEngine.EndDocument(null);
+                                plotProcessDialog.PlotProgressPos = 100;
+                                plotProcessDialog.OnEndPlot();
+                                plotEngine.EndPlot(null);
+                            }
+                            ed.WriteMessage($"\nPlotting completed.\n");
+
+
+                            tr.Commit();
+                            bool AutoOpenFile = true;
+                            if (AutoOpenFile && !printingError)
+                                System.Diagnostics.Process.Start(outputFileName);
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+
+        /// <summary>
+        /// Récupère le nom du traceur PDF via le registre ou le premier layout
+        /// </summary>
+        private static string GetPdfDeviceName(IEnumerable<Layout> layouts)
+        {
+            string deviceName = string.Empty;
+            bool isMultiPage = layouts.Count() > 1;
+
+            if (isMultiPage)
+            {
+                string sProdKey = HostApplicationServices.Current.UserRegistryProductRootKey;
+                string currentProfile = Application.GetSystemVariable("CPROFILE") as string;
+
+                if (!string.IsNullOrEmpty(currentProfile))
+                {
+                    string regPath = $@"{sProdKey}\Profiles\{currentProfile}\Dialogs\AcPublishDlg";
+                    using (RegistryKey key = Registry.CurrentUser.OpenSubKey(regPath))
+                    {
+                        object selectedPlotter = key?.GetValue("SelectedPdfPlotter");
+                        if (selectedPlotter != null)
+                        {
+                            var configInfo = PlotConfigManager.Devices
+                                .Cast<PlotConfigInfo>()
+                                .FirstOrDefault(t => Path.GetFileNameWithoutExtension(t.DeviceName).Equals(selectedPlotter.ToString(), StringComparison.OrdinalIgnoreCase));
+
+                            if (configInfo != null)
+                                deviceName = configInfo.DeviceName;
+                        }
+                    }
+                }
+            }
+
+            // Fallback si multipage échoue ou si single page
+            if (string.IsNullOrEmpty(deviceName))
+            {
+                var firstLayout = layouts.FirstOrDefault();
+                if (firstLayout != null && firstLayout.IsPlotDeviceAvailable())
+                {
+                    deviceName = firstLayout.PlotConfigurationName;
+                }
+            }
+
+            return deviceName;
+        }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public static void PublishLayoutsNew(this Layout layout, string outputPdfPath)
+        {
+           // MultiSheetPlotterOld(outputPdfPath, new ObjectIdCollection() { layout.ObjectId });
+           
+
+        }
+
+        public static void PublishLayoutsNew(this IEnumerable<Layout> layouts, string outputPdfPath)
+        {
+           // MultiSheetPlotterOld(outputPdfPath, layouts.GetObjectIds().ToObjectIdCollection());
+        }
+
+
 
         public static void PublishLayouts(this Layout layout, string outputPdfPath)
         {
