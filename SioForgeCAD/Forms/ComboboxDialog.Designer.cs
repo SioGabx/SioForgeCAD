@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace SioForgeCAD.Forms
 {
@@ -22,13 +23,19 @@ namespace SioForgeCAD.Forms
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
 
+            this.components = new System.ComponentModel.Container();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.StripContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.ValidateButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.headerCheckBox = new System.Windows.Forms.CheckBox();
 
+            this.DeselectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.StripContextMenu.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
 
@@ -87,6 +94,7 @@ namespace SioForgeCAD.Forms
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.ColumnHeadersHeight = 35;
+            this.dataGridView1.ContextMenuStrip = this.StripContextMenu;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.White;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -111,6 +119,36 @@ namespace SioForgeCAD.Forms
             this.headerCheckBox.Size = new Size(15, 15);
             this.headerCheckBox.Name = "headerCheckBox";
 
+
+            // 
+            // StripContextMenu
+            // 
+            this.StripContextMenu.BackColor = System.Drawing.Color.White;
+            this.StripContextMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.StripContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.SelectToolStripMenuItem,
+                this.DeselectToolStripMenuItem});
+            this.StripContextMenu.Name = "StripContextMenu";
+            this.StripContextMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.StripContextMenu.ShowImageMargin = false;
+            this.StripContextMenu.Size = new System.Drawing.Size(174, 98);
+
+            // 
+            // sélectionToolStripMenuItem
+            // 
+            this.DeselectToolStripMenuItem.Name = "sélectionToolStripMenuItem";
+            this.DeselectToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.DeselectToolStripMenuItem.Text = "Déselectionner";
+            this.DeselectToolStripMenuItem.Click += new System.EventHandler(this.DeselectToolStripMenuItem_Click);
+            // 
+            // sélectionnerToolStripMenuItem
+            // 
+            this.SelectToolStripMenuItem.Name = "sélectionnerToolStripMenuItem";
+            this.SelectToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.SelectToolStripMenuItem.Text = "Sélectionner";
+            this.SelectToolStripMenuItem.Click += new System.EventHandler(this.SelectToolStripMenuItem_Click);
+
+
             // 
             // ComboboxDialog
             // 
@@ -124,11 +162,15 @@ namespace SioForgeCAD.Forms
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Sélection d'éléments";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.StripContextMenu.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
+
         }
+
 
         #endregion
 
@@ -137,5 +179,9 @@ namespace SioForgeCAD.Forms
         private System.Windows.Forms.ToolStripButton ValidateButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.CheckBox headerCheckBox;
+
+        private System.Windows.Forms.ContextMenuStrip StripContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem DeselectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem SelectToolStripMenuItem;
     }
 }

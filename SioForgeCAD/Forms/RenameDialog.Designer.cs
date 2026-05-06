@@ -22,8 +22,8 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.StripContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.CopyOriginal = new System.Windows.Forms.ToolStripMenuItem();
-            this.CopyRenamed = new System.Windows.Forms.ToolStripMenuItem();
+            this.CopyOriginalMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CopyRenamedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.headerCheckBox = new System.Windows.Forms.CheckBox();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.txtReplace = new System.Windows.Forms.TextBox();
@@ -34,6 +34,8 @@
             this.panelLeft = new System.Windows.Forms.Panel();
             this.flowControls = new System.Windows.Forms.FlowLayoutPanel();
             this.lblMessage = new System.Windows.Forms.Label();
+            this.DeselectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.StripContextMenu.SuspendLayout();
             this.panelLeft.SuspendLayout();
@@ -76,26 +78,46 @@
             // 
             // StripContextMenu
             // 
+            this.StripContextMenu.BackColor = System.Drawing.Color.White;
+            this.StripContextMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.StripContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.CopyOriginal,
-            this.CopyRenamed});
-            this.StripContextMenu.Name = "contextMenuStrip1";
+                this.CopyOriginalMenuItem,
+                this.CopyRenamedMenuItem,
+                new System.Windows.Forms.ToolStripSeparator(), 
+                this.SelectToolStripMenuItem,
+                this.DeselectToolStripMenuItem});
+            this.StripContextMenu.Name = "StripContextMenu";
+            this.StripContextMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.StripContextMenu.ShowImageMargin = false;
-            this.StripContextMenu.Size = new System.Drawing.Size(174, 48);
+            this.StripContextMenu.Size = new System.Drawing.Size(174, 98);
             // 
             // CopyOriginal
             // 
-            this.CopyOriginal.Name = "CopyOriginal";
-            this.CopyOriginal.Size = new System.Drawing.Size(173, 22);
-            this.CopyOriginal.Text = "Copier le nom original";
-            this.CopyOriginal.Click += new System.EventHandler(this.CopyOriginal_Click);
+            this.CopyOriginalMenuItem.Name = "CopyOriginal";
+            this.CopyOriginalMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.CopyOriginalMenuItem.Text = "Copier le nom original";
+            this.CopyOriginalMenuItem.Click += new System.EventHandler(this.CopyOriginalMenuItem_Click);
             // 
             // CopyRenamed
             // 
-            this.CopyRenamed.Name = "CopyRenamed";
-            this.CopyRenamed.Size = new System.Drawing.Size(173, 22);
-            this.CopyRenamed.Text = "Copier le nouveau nom";
-            this.CopyRenamed.Click += new System.EventHandler(this.CopyRenamed_Click);
+            this.CopyRenamedMenuItem.Name = "CopyRenamed";
+            this.CopyRenamedMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.CopyRenamedMenuItem.Text = "Copier le nouveau nom";
+            this.CopyRenamedMenuItem.Click += new System.EventHandler(this.CopyRenamedMenuItem_Click);
+            // 
+            // sélectionToolStripMenuItem
+            // 
+            this.DeselectToolStripMenuItem.Name = "sélectionToolStripMenuItem";
+            this.DeselectToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.DeselectToolStripMenuItem.Text = "Déselectionner";
+            this.DeselectToolStripMenuItem.Click += new System.EventHandler(this.DeselectToolStripMenuItem_Click);
+            // 
+            // sélectionnerToolStripMenuItem
+            // 
+            this.SelectToolStripMenuItem.Name = "sélectionnerToolStripMenuItem";
+            this.SelectToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.SelectToolStripMenuItem.Text = "Sélectionner";
+            this.SelectToolStripMenuItem.Click += new System.EventHandler(this.SelectToolStripMenuItem_Click);
             // 
             // headerCheckBox
             // 
@@ -249,7 +271,9 @@
         private System.Windows.Forms.FlowLayoutPanel flowControls;
         private System.Windows.Forms.Label lblMessage;
         private System.Windows.Forms.ContextMenuStrip StripContextMenu;
-        private System.Windows.Forms.ToolStripMenuItem CopyOriginal;
-        private System.Windows.Forms.ToolStripMenuItem CopyRenamed;
+        private System.Windows.Forms.ToolStripMenuItem CopyOriginalMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem CopyRenamedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem DeselectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem SelectToolStripMenuItem;
     }
 }

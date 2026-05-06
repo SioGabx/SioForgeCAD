@@ -166,7 +166,7 @@ namespace SioForgeCAD.Commun.Extensions
             return selected;
         }
 
-        public static bool CreateLayoutFromTemplate(this LayoutManager lm, string filePath, string layoutName, string targetName)
+        public static bool CreateLayoutFromTemplate(this LayoutManager lm, string filePath, string layoutName, string targetName, int TabOrder = int.MaxValue)
         {
             if (string.IsNullOrEmpty(targetName)) targetName = layoutName;
             Database destDb = Generic.GetDatabase();
@@ -214,11 +214,11 @@ namespace SioForgeCAD.Commun.Extensions
                                 {
                                     return false;
                                 }
-
+                                Layout lay = (Layout)destTr.GetObject(idMap[srcLayoutId].Value, OpenMode.ForWrite);
+                                lay.TabOrder = Math.Min(TabOrder, LayoutManager.Current.LayoutCount);
                                 destTr.Commit();
                             }
                             lm.RenameLayout(tempLayoutName, targetName);
-
                             return true;
                         }
                     }

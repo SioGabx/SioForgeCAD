@@ -213,11 +213,19 @@ namespace SioForgeCAD.Commun
 
         public static void Command(params object[] args)
         {
-            short cmdecho = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("CMDECHO");
-            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", 0);
-            Editor ed = GetEditor();
-            ed.Command(args);
-            Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", cmdecho);
+            //Editor.PauseToken
+            try
+            {
+                short cmdecho = (short)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("CMDECHO");
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", 0);
+                Editor ed = GetEditor();
+                ed.Command(args);
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.SetSystemVariable("CMDECHO", cmdecho);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.WriteLine($"Exception: {ex.Message}");
+            }
         }
 
         public static void Regen()

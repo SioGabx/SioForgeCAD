@@ -588,7 +588,7 @@ namespace SioForgeCAD.Forms
 
         private void ClearSelection()
         {
-            Debug.WriteLine("ClearSelection");
+            //Debug.WriteLine("ClearSelection");
             foreach (var item in PinnedItems)
             {
                 item.IsSelected = false;
@@ -1390,6 +1390,30 @@ namespace SioForgeCAD.Forms
                 }
             }
         }
+
+        public static void CreateNewFromTemplate()
+        {
+            var FileName = PromptFileSelection();
+            var LayoutNames = LayoutManager.Current.GetLayoutNamesFromFile(FileName);
+            if (LayoutNames.Count == 0) { return; }
+            var SelectLayoutsToImport = new ComboboxDialog(LayoutNames, $"Présentation dans le fichier \"{Path.GetFileName(FileName)}\"", false)
+            {
+                Text = "Selectionnez les présentations à importer dans le dessin"
+            };
+            if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(SelectLayoutsToImport) == System.Windows.Forms.DialogResult.OK)
+            {
+                List<string> SelectedLayouts = SelectLayoutsToImport.GetSelectedItems();
+                for (int i = 0; i < SelectedLayouts.Count; i++)
+                {
+                    string selectedLayout = SelectedLayouts[i];
+                    if (!string.IsNullOrEmpty(selectedLayout))
+                    {
+                        LayoutManager.Current.CreateLayoutFromTemplate(FileName, selectedLayout, GenerateUniqueLayoutName(selectedLayout), LayoutManager.Current.LayoutCount);
+                    }
+                }
+            }
+        }
+
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!(sender is Button btn)) return;
@@ -1400,15 +1424,20 @@ namespace SioForgeCAD.Forms
             newEmptyItem.Click += (s, args) => ExecuteLayoutCreation(Settings.EmptyLayoutGabaritFile, Settings.EmptyLayoutGabaritPresentationName, null, true); // Fallback activé ici
             cm.Items.Add(newEmptyItem);
 
-            // --- 2. Menu : À partir d'un gabarit ---
-            MenuItem templateItem = new MenuItem { Header = "À partir d'un gabarit" };
-            BuildLayoutSubMenu(templateItem, Settings.GabaritFile, (selectedName) => ExecuteLayoutCreation(Settings.GabaritFile, selectedName, selectedName, false));
+            MenuItem TemplateItem = new MenuItem { Header = "Depuis un autre dessin" };
+            TemplateItem.Click += (s, args) => CreateNewFromTemplate();
+            cm.Items.Add(TemplateItem);
 
-            cm.Items.Add(templateItem);
+            // --- 2. Menu : À partir d'un gabarit ---
+            MenuItem predefinedTemplateItem = new MenuItem { Header = "À partir du gabarit prédéfini" };
+            BuildLayoutSubMenu(predefinedTemplateItem, Settings.GabaritFile, (selectedName) => ExecuteLayoutCreation(Settings.GabaritFile, selectedName, selectedName, false));
+            cm.Items.Add(predefinedTemplateItem);
+
             cm.PlacementTarget = btn;
             cm.Placement = PlacementMode.Bottom;
             cm.IsOpen = true;
         }
+
         private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (!(sender is Button btn)) return;

@@ -149,6 +149,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "BLKAPPLYSCALE", CommandFlags.UsePickSet)]
         public static void BLKAPPLYSCALE() => Functions.BLKAPPLYSCALE.ApplyBlockScale();
 
+        [CommandMethod("SIOFORGECAD", "BLKMANAGEPOSITION", CommandFlags.UsePickSet)]
+        public static void BLKMANAGEPOSITION() => Functions.BLKMANAGEPOSITION.Menu();
+
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT() => Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
 

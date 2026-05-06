@@ -14,8 +14,6 @@ namespace SioForgeCAD.Forms
 {
     public partial class RenameDialog : Form
     {
-        // On déplace la classe à l'extérieur ou on la garde ici, 
-        // mais INotifyPropertyChanged est crucial pour le refresh auto du Grid
         public class RenameItem : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
@@ -50,7 +48,7 @@ namespace SioForgeCAD.Forms
         }
 
         private readonly BindingList<RenameItem> _items = new BindingList<RenameItem>();
-        private Func<string, string, string> _transformationLogic;
+        private readonly Func<string, string, string> _transformationLogic;
 
         public RenameDialog(List<string> filesToRename, Func<string, string, string> transformationLogic)
         {
@@ -103,7 +101,6 @@ namespace SioForgeCAD.Forms
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             };
 
-
             var originalCol = new DataGridViewTextBoxColumn
             {
                 HeaderText = "Original",
@@ -130,13 +127,9 @@ namespace SioForgeCAD.Forms
             headerCheckBox.Checked = true;
             headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
             dataGridView1.Controls.Add(headerCheckBox);
-
             dataGridView1.CellValueChanged += DataGridView1_CellValueChanged;
             dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
         }
-
-
-
 
         /// <summary>
         /// Logique principale de renommage (Cœur de PowerRename)
@@ -228,29 +221,78 @@ namespace SioForgeCAD.Forms
         private void BtnApply_Click(object sender, EventArgs e)
         {
             var results = _items.Where(x => x.Include && x.Original != x.Renamed).ToList();
-            // Ici, exécute ton System.IO.File.Move ou passe la liste à ton contrôleur
             this.DialogResult = DialogResult.OK;
         }
-
-        private void CopyOriginal_Click(object sender, EventArgs e)
-        {
-            if (dataGridView1.CurrentRow?.DataBoundItem is RenameItem item && !string.IsNullOrEmpty(item.Original))
-            {
-                Clipboard.SetText(item.Original);
-            }
-        }
-
-        private void CopyRenamed_Click(object sender, EventArgs e)
-        {
-            if (dataGridView1.CurrentRow?.DataBoundItem is RenameItem item && !string.IsNullOrEmpty(item.Renamed))
-            {
-                Clipboard.SetText(item.Renamed);
-            }
-        }
-
         private void RenameDialog_Shown(object sender, EventArgs e)
         {
             txtSearch.Focus();
         }
+
+        #region Context Menu Events
+
+        private void CopyOriginalMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                List<string> SelectedRowsOriginal = new List<string>();
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is RenameItem item)
+                    {
+                        SelectedRowsOriginal.Add(item.Original);
+                    }
+                }
+                Clipboard.SetText(string.Join(",\n", SelectedRowsOriginal));
+            }
+        }
+
+        private void CopyRenamedMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                List<string> SelectedRowsRenamed = new List<string>();
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is RenameItem item)
+                    {
+                        SelectedRowsRenamed.Add(item.Renamed);
+                    }
+                }
+                Clipboard.SetText(string.Join(",\n", SelectedRowsRenamed));
+            }
+        }
+
+        private void SelectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is RenameItem item)
+                    {
+                        item.Include = true;
+                    }
+                }
+                UpdateHeaderCheckBoxState();
+            }
+        }
+
+        private void DeselectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is RenameItem item)
+                    {
+                        item.Include = false;
+                    }
+                }
+                UpdateHeaderCheckBoxState();
+            }
+        }
+
+        #endregion
+
     }
 }

@@ -23,7 +23,7 @@ namespace SioForgeCAD.Functions
 
             var ptRes = ed.GetPoint("\nPoint de base : ");
             if (ptRes.Status != PromptStatus.OK) return;
-            Point3d basePt = ptRes.Value;
+            Point3d basePt = Points.ToSCGFromCurentSCU(ptRes.Value);
 
             // 2. Extraction des entités sources (Clonage initial)
             DBObjectCollection sourceEntities = GetSourceEntities(db, selRes.Value.GetObjectIds());
@@ -87,7 +87,6 @@ namespace SioForgeCAD.Functions
             {
                 ent.TransformBy(transMatrix);
             }
-
             using (var getPtTrans = new GetPointTransientNoColorChange(previewEntities, null))
             {
                 var targetRes = getPtTrans.GetPoint("Point de copie : ", basePt.ToPoints(), false);

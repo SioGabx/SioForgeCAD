@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using static SioForgeCAD.Forms.RenameDialog;
 
 namespace SioForgeCAD.Forms
 {
@@ -15,7 +16,11 @@ namespace SioForgeCAD.Forms
             private bool include = true;
             private string name = string.Empty;
 
-            public SelectionItem(string name) => this.name = name;
+            public SelectionItem(string name, bool initialCheck)
+            {
+                this.name = name;
+                this.include = initialCheck;
+            }
 
             public bool Include
             {
@@ -31,20 +36,20 @@ namespace SioForgeCAD.Forms
 
         private readonly BindingList<SelectionItem> _items = new BindingList<SelectionItem>();
 
-        public ComboboxDialog(List<string> dataList)
+        public ComboboxDialog(List<string> dataList, string ElementsNames = "Élément", bool CheckAllByDefault = true)
         {
             InitializeComponent();
-            SetupDataGridView();
+            SetupDataGridView(ElementsNames, CheckAllByDefault);
 
             foreach (var item in dataList)
             {
-                _items.Add(new SelectionItem(item));
+                _items.Add(new SelectionItem(item, CheckAllByDefault));
             }
 
             dataGridView1.DataSource = new BindingSource(_items, null);
         }
 
-        private void SetupDataGridView()
+        private void SetupDataGridView(string ElementsNames, bool CheckAllByDefault)
         {
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.Columns.Clear();
@@ -60,7 +65,7 @@ namespace SioForgeCAD.Forms
 
             var nameCol = new DataGridViewTextBoxColumn
             {
-                HeaderText = "Élément",
+                HeaderText = ElementsNames,
                 DataPropertyName = nameof(SelectionItem.Name),
                 ReadOnly = true,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
@@ -69,7 +74,7 @@ namespace SioForgeCAD.Forms
             dataGridView1.Columns.AddRange(includeCol, nameCol);
 
             // Checkbox d'en-tête (Tout sélectionner)
-            headerCheckBox.Checked = true;
+            headerCheckBox.Checked = CheckAllByDefault;
             headerCheckBox.CheckedChanged += (s, e) =>
             {
                 foreach (var item in _items) item.Include = headerCheckBox.Checked;
@@ -93,6 +98,36 @@ namespace SioForgeCAD.Forms
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void SelectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Agit sur toutes les lignes sélectionnées (surlignées en bleu)
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is SelectionItem item)
+                    {
+                        item.Include = true;
+                    }
+                }
+            }
+        }
+
+        private void DeselectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Agit sur toutes les lignes sélectionnées (surlignées en bleu)
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem is SelectionItem item)
+                    {
+                        item.Include = false;
+                    }
+                }
+            }
         }
     }
 }

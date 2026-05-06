@@ -107,11 +107,13 @@ namespace SioForgeCAD.Functions
                     // Vérifier si un SCU portant ce nom existe déjà pour éviter les doublons/erreurs
                     if (!ucsTable.Has(ucsData.Name))
                     {
-                        UcsTableRecord newUcs = new UcsTableRecord();
-                        newUcs.Name = ucsData.Name;
-                        newUcs.Origin = new Point3d(ucsData.Origin[0], ucsData.Origin[1], ucsData.Origin[2]);
-                        newUcs.XAxis = new Vector3d(ucsData.XAxis[0], ucsData.XAxis[1], ucsData.XAxis[2]);
-                        newUcs.YAxis = new Vector3d(ucsData.YAxis[0], ucsData.YAxis[1], ucsData.YAxis[2]);
+                        UcsTableRecord newUcs = new UcsTableRecord
+                        {
+                            Name = ucsData.Name,
+                            Origin = new Point3d(ucsData.Origin[0], ucsData.Origin[1], ucsData.Origin[2]),
+                            XAxis = new Vector3d(ucsData.XAxis[0], ucsData.XAxis[1], ucsData.XAxis[2]),
+                            YAxis = new Vector3d(ucsData.YAxis[0], ucsData.YAxis[1], ucsData.YAxis[2])
+                        };
 
                         // Ajout à la table et à la transaction
                         ucsTable.Add(newUcs);
