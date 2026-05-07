@@ -1973,10 +1973,10 @@ namespace SioForgeCAD.Forms
             {
                 foreach (var targetGroup in targetGroups)
                 {
-                    var tabsToDelete = targetGroup.SubTabs.ToList();
+                    
 
                     // Suppression des onglets dans AutoCAD
-                    foreach (var tab in tabsToDelete)
+                    foreach (var tab in targetGroup.SubTabs.ToList())
                     {
                         try { LayoutManager.Current.DeleteLayout(tab.Title); } catch { }
                     }
@@ -1992,6 +1992,23 @@ namespace SioForgeCAD.Forms
             if (hasChanges)
             {
                 ClearSelection();
+            }
+        }
+
+
+        private void SelectTabsInGroup_Click(object sender, RoutedEventArgs e)
+        {
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+            if (targetGroups == null || targetGroups.Count == 0)
+            {
+                return;
+            }
+            foreach (var targetGroup in targetGroups)
+            {
+                foreach (var tab in targetGroup.SubTabs)
+                {
+                    tab.IsSelected = true;
+                }
             }
         }
 
@@ -2366,6 +2383,7 @@ namespace SioForgeCAD.Forms
 
 
         #endregion
+
     }
 
 

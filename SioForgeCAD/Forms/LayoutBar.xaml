@@ -342,6 +342,7 @@
                                 <MenuItem Click="ContextMenu_SupprimerGroupeSeul_Click" Header="Le groupe seulement" />
                                 <MenuItem Click="ContextMenu_SupprimerGroupeEtContenu_Click" Header="Le groupe et son contenu" />
                             </MenuItem>
+                            <MenuItem Click="SelectTabsInGroup_Click" Header="Séléctionner les présentations" />
                         </ContextMenu>
                     </Grid.ContextMenu>
 
