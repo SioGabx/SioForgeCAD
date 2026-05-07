@@ -697,7 +697,12 @@ namespace SioForgeCAD.Forms
             }
             else if (targetItem is LayoutGroup lg) // Ajout : supporte la cible dynamique du menu
             {
-                targetGroup = lg;
+                // Uniquement si on insère À L'INTÉRIEUR du groupe.
+                // Si la position est Before ou After, la cible est la racine (donc targetGroup reste null).
+                if (pos == DuplicatePosition.Beginning || pos == DuplicatePosition.End)
+                {
+                    targetGroup = lg;
+                }
             }
 
             // Calculer l'index d'insertion
@@ -1393,7 +1398,7 @@ namespace SioForgeCAD.Forms
 
         public static void CreateNewFromTemplate()
         {
-            var FileName = PromptFileSelection();
+            var FileName = PromptFileSelection(Path.GetDirectoryName(Generic.GetDatabase().Filename));
             var LayoutNames = LayoutManager.Current.GetLayoutNamesFromFile(FileName);
             if (LayoutNames.Count == 0) { return; }
             var SelectLayoutsToImport = new ComboboxDialog(LayoutNames, $"Présentation dans le fichier \"{Path.GetFileName(FileName)}\"", false)
@@ -1443,6 +1448,7 @@ namespace SioForgeCAD.Forms
             if (!(sender is Button btn)) return;
             ContextMenu cm = new ContextMenu();
 
+            string PromptGabaritInitialDir = Registries.GetValue<string>($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString();
             // 1. Paramètres Présentation vierge
             MenuItem settingsItem = new MenuItem { Header = "Paramètres Présentation vierge" };
 
@@ -1454,7 +1460,7 @@ namespace SioForgeCAD.Forms
             };
             chooseFile.Click += (s, args) =>
             {
-                string path = PromptFileSelection();
+                string path = PromptFileSelection(PromptGabaritInitialDir);
                 if (path != null)
                 {
                     Settings.EmptyLayoutGabaritFile = path;
@@ -1475,7 +1481,7 @@ namespace SioForgeCAD.Forms
             MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
             redefineItem.Click += (s, args) =>
             {
-                string path = PromptFileSelection();
+                string path = PromptFileSelection(PromptGabaritInitialDir);
                 if (path != null) Settings.GabaritFile = path;
             };
             cm.Items.Add(redefineItem);
@@ -1505,13 +1511,13 @@ namespace SioForgeCAD.Forms
             parent.Items.Add(new MenuItem { Header = "(Aucun gabarit ou présentation)", IsEnabled = false });
         }
 
-        private static string PromptFileSelection()
+        private static string PromptFileSelection(string InitialDirectory)
         {
             var ofd = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "Gabarits AutoCAD (*.dwt;*.dwg)|*.dwt;*.dwg|Tous les fichiers (*.*)|*.*",
                 Title = "Sélectionner un fichier de gabarit",
-                InitialDirectory = Registries.GetValue<string>($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString()
+                InitialDirectory = InitialDirectory
             };
             return (ofd.ShowDialog() == true) ? ofd.FileName : null;
         }
@@ -1973,8 +1979,6 @@ namespace SioForgeCAD.Forms
             {
                 foreach (var targetGroup in targetGroups)
                 {
-                    
-
                     // Suppression des onglets dans AutoCAD
                     foreach (var tab in targetGroup.SubTabs.ToList())
                     {
@@ -2023,7 +2027,6 @@ namespace SioForgeCAD.Forms
             DuplicatePosition userChoicePosition = config.Item1;
             LayoutItem userChoiceTarget = config.Item2;
 
-
             var itemsToDuplicate = GetTargetedTabsAndGroupsForContextMenu(sender);
 
             if (itemsToDuplicate.Count == 0)
@@ -2040,6 +2043,18 @@ namespace SioForgeCAD.Forms
                 {
                     var newlyCreatedItems = new List<LayoutItem>();
 
+                    // Déterminer si nous allons insérer à l'intérieur d'un groupe existant
+                    LayoutGroup targetGroupForInsert = null;
+                    if (userChoiceTarget is LayoutTab t && t.IsInGroup)
+                    {
+                        targetGroupForInsert = t.ParentGroup;
+                    }
+                    else if (userChoiceTarget is LayoutGroup lg &&
+                            (userChoicePosition == DuplicatePosition.Beginning || userChoicePosition == DuplicatePosition.End))
+                    {
+                        targetGroupForInsert = lg;
+                    }
+
                     // 3. Traitement de chaque élément
                     foreach (var item in itemsToDuplicate)
                     {
@@ -2049,19 +2064,31 @@ namespace SioForgeCAD.Forms
                         }
                         else if (item is LayoutGroup group)
                         {
-                            var newGroup = new LayoutGroup
+                            // Si on insère à l'intérieur d'un groupe, on extrait seulement les tabs
+                            if (targetGroupForInsert != null)
                             {
-                                Title = GenerateUniqueGroupName(group.Title),
-                                IsExpanded = group.IsExpanded
-                            };
-
-                            foreach (var subTab in group.SubTabs)
-                            {
-                                var newSubTab = DuplicateSingleTab(tr, subTab);
-                                newGroup.Add(newSubTab);
+                                foreach (var subTab in group.SubTabs)
+                                {
+                                    newlyCreatedItems.Add(DuplicateSingleTab(tr, subTab));
+                                }
                             }
+                            else
+                            {
+                                // Sinon, on duplique le groupe normalement (ex: Duplicate Before/After)
+                                var newGroup = new LayoutGroup
+                                {
+                                    Title = GenerateUniqueGroupName(group.Title),
+                                    IsExpanded = group.IsExpanded
+                                };
 
-                            newlyCreatedItems.Add(newGroup);
+                                foreach (var subTab in group.SubTabs)
+                                {
+                                    var newSubTab = DuplicateSingleTab(tr, subTab);
+                                    newGroup.Add(newSubTab);
+                                }
+
+                                newlyCreatedItems.Add(newGroup);
+                            }
                         }
                     }
 

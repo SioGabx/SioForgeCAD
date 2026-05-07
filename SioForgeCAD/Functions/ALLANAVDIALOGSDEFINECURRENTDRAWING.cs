@@ -16,98 +16,19 @@ namespace SioForgeCAD.Functions
             public static void Attach()
             {
                 Detach();
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal += Application_EnterModal;
+            }
 
-                DocumentCollection docs = Application.DocumentManager;
-
-                // 1. S'abonner aux événements de création/destruction futurs
-                docs.DocumentCreated += Event_DocumentCreated;
-                docs.DocumentToBeDestroyed += Event_DocumentToBeDestroyed;
-
-                // 2. S'abonner manuellement aux documents DÉJÀ ouverts au moment du chargement
-                foreach (Document doc in docs)
-                {
-                    doc.CommandWillStart += Event_CommandWillStart;
-                }
+            private static void Application_EnterModal(object sender, EventArgs e)
+            {
+                Debug.WriteLine("ALLANAVDIALOGSDEFINECURRENTDRAWING : Enter Model");
+                UpdateRegistry();
             }
 
             public static void Detach()
             {
-                DocumentCollection docs = Application.DocumentManager;
-
-                docs.DocumentCreated -= Event_DocumentCreated;
-                docs.DocumentToBeDestroyed -= Event_DocumentToBeDestroyed;
-
-                foreach (Document doc in docs)
-                {
-                    doc.CommandWillStart -= Event_CommandWillStart;
-                }
+                Autodesk.AutoCAD.ApplicationServices.Core.Application.EnterModal -= Application_EnterModal;
             }
-
-            private static void Event_DocumentCreated(object sender, DocumentCollectionEventArgs e)
-            {
-                var doc = e.Document;
-                if (doc != null)
-                {
-                    doc.CommandWillStart += Event_CommandWillStart;
-                }
-            }
-
-            private static void Event_DocumentToBeDestroyed(object sender, DocumentCollectionEventArgs e)
-            {
-                var doc = e.Document;
-                if (doc != null)
-                {
-                    doc.CommandWillStart -= Event_CommandWillStart;
-                }
-            }
-
-            private static void Event_CommandWillStart(object sender, CommandEventArgs e)
-            {
-                Debug.WriteLine("CommandWillStart");
-
-                string cmd = e.GlobalCommandName.ToUpper();
-                Debug.WriteLine(cmd);
-                if (cmd == "OPEN" ||
-                    cmd == "SAVEAS" ||
-                    cmd == "LAYOUT_CONTROL" ||
-                    cmd == "PLOT" ||
-                    cmd == "QSAVE" ||
-                    cmd == "ETRANSMIT" ||
-                    cmd == "PUBLISH" ||
-                    cmd == "IMPORT" ||
-                    cmd == "EXPORT" ||
-                    cmd == "NETLOAD" ||
-                    cmd == "APPLOAD" ||
-                    cmd == "RECOVER" ||
-                    cmd == "WMFIN" ||
-                    cmd == "DXBIN" ||
-                    cmd == "ACISIN" ||
-                    cmd == "ATTACH" ||//from ruban
-                    cmd == "XATTACH" ||//in XREF menu
-                    cmd == "IMAGEATTACH" ||//in XREF menu
-                    cmd == "DWFATTACH" ||//in XREF menu
-                    cmd == "DGNATTACH" ||//in XREF menu
-                    cmd == "PDFATTACH" ||//in XREF menu
-                    cmd == "PDFIMPORT" ||//from ruban
-                    cmd == "GEOGRAPHICLOCATION" || //GEOGRAPHICLOCATION from file
-                    cmd == "POINTCLOUDATTACH" || //in XREF menu
-                    cmd == "COORDINATIONMODELATTACH" || //in XREF menu
-                    cmd == "EXPORTDWF" || //big A -> Export
-                    cmd == "EXPORTDWFX" || //big A -> Export
-                    cmd == "3DDWF" || //big A -> Export
-                    cmd == "EXPORTPDF" || //big A -> Export
-                    cmd == "DGNEXPORT" || //big A -> Export
-                    cmd == "ARCHIVE" ||
-                    cmd == "NEW" ||
-                    cmd == "QNEW" ||
-                    cmd == "EXPORT" ||
-                    cmd == "XREF")
-                {
-                    Debug.WriteLine(cmd);
-                    UpdateRegistry();
-                }
-            }
-
         }
 
         public static string ExtractPath()

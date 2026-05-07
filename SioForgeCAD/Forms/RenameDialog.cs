@@ -142,10 +142,9 @@ namespace SioForgeCAD.Forms
 
             foreach (var item in _items)
             {
-                string ItemRenamed = string.Empty;
+                string ItemOriginal;
                 if (string.IsNullOrEmpty(searchText))
                 {
-                    ItemRenamed = item.Original;
                     continue;
                 }
 
@@ -153,20 +152,20 @@ namespace SioForgeCAD.Forms
                 {
                     if (useRegex)
                     {
-                        ItemRenamed = Regex.Replace(item.Original, searchText, replaceText);
+                        ItemOriginal = Regex.Replace(item.Original, searchText, replaceText);
                     }
                     else
                     {
                         // Remplacement simple (insensible à la casse comme Windows)
-                        ItemRenamed = item.Original.Replace(searchText, replaceText);
+                        ItemOriginal = item.Original.Replace(searchText, replaceText);
                     }
                 }
                 catch
                 {
                     // En cas de Regex invalide pendant la saisie, on ne fait rien
-                    ItemRenamed = item.Original;
+                    ItemOriginal = item.Original;
                 }
-                item.Renamed = _transformationLogic(item.Original, ItemRenamed);
+                item.Renamed = _transformationLogic(item.Original, ItemOriginal);
             }
         }
 

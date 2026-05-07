@@ -6,6 +6,24 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
+        public static string ResolveAbsolutePath(string currentPath, string originalDir)
+        {
+            if (string.IsNullOrEmpty(currentPath) || Path.IsPathRooted(currentPath))
+            {
+                return currentPath;
+            }
+
+            try
+            {
+                string cleanRelPath = currentPath.Replace("/", "\\");
+                return Path.GetFullPath(Path.Combine(originalDir, cleanRelPath));
+            }
+            catch
+            {
+                return currentPath; // Sécurité anti-crash si le chemin est corrompu
+            }
+        }
+
         public static string FormatFileSizeFromByte(long ovalue, int odecimalPlaces = 1)
         {
             string[] SizeSuffixes =
@@ -85,6 +103,22 @@ namespace SioForgeCAD.Commun.Mist
             var localTime = TimeZoneInfo.ConvertTimeFromUtc(linkTimeUtc, tz);
 
             return localTime;
+        }
+
+        public static bool TryDeleteFile(string FileName)
+        {
+            if (File.Exists(FileName))
+            {
+                try
+                {
+                    File.Delete(FileName);
+                }
+                catch (System.Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     }

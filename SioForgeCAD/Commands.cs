@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -30,6 +31,7 @@ namespace SioForgeCAD
             switch (result.StringResult)
             {
                 case "About":
+                    new PluginHook().Initialize();
                     Assembly ExAssembly = Assembly.GetExecutingAssembly();
 
                     string[] About = new string[]
@@ -492,6 +494,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "DRAWPAPERFRAME", CommandFlags.Redraw)]
         public static void DRAWPAPERFRAME() => Functions.DRAWPAPERFRAME.Draw();
 
+        [CommandMethod("SIOFORGECAD", "PUBLISHSELECTEDLAYOUTS", CommandFlags.Redraw)]
+        public static void PUBLISHSELECTEDLAYOUTS() => Functions.PUBLISHSELECTEDLAYOUTS.ShowPublishDialog();
+
 
 
 #if DEBUG
@@ -503,14 +508,22 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TEST.ExportLayoutComplet();
+            Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
+        }
+
+        [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
+        public static void TEST1()
+        {
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-            Settings.PrefixCAD = "SIO_";
-            Settings.BlkAltimetry = "SIO_Nouveau_nom";
+            var Paths = Directory.GetFiles(@"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters");
+            foreach (var item in Paths)
+            {
+                SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(item);
+            }
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]

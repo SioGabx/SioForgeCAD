@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun.Mist;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,6 +19,103 @@ namespace SioForgeCAD.Commun.Extensions
             db.SaveAs(FilName, DwgVersion.Current);
             Document newDoc = docCol.Open(FilName, false);
             docCol.MdiActiveDocument = newDoc;
+        }
+
+        public static Database Duplicate(this Database db)
+        {
+            string tempFileName = $"DuplicateDatabase_{DateTime.Now.Ticks}_{DateTime.Now.Ticks}_{Guid.NewGuid()}.dwg";
+            string tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
+            db.SaveAs(tempFilePath, DwgVersion.Current);
+            Database newDb = new Database(false, true);
+            newDb.ReadDwgFile(tempFilePath, FileShare.Read, true, null);
+            Files.TryDeleteFile(tempFilePath);
+            return newDb;
+        }
+
+        public static void MakeXREFPathAbsolute(this Database db, string originalDwgDir = null)
+        {
+            if (!string.IsNullOrEmpty(db.Filename))
+            {
+                originalDwgDir = Path.GetDirectoryName(db.Filename);
+            }
+
+            // Ne tenter de corriger que si le fichier original avait un chemin physique
+            if (!string.IsNullOrEmpty(originalDwgDir))
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    //XREFS
+                    foreach (ObjectId btrId in (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead))
+                    {
+                        BlockTableRecord btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+                        if (btr.IsFromExternalReference)
+                        {
+                            string newPath = Files.ResolveAbsolutePath(btr.PathName, originalDwgDir);
+                            if (newPath != btr.PathName)
+                            {
+                                btr.UpgradeOpen();
+                                btr.PathName = newPath;
+                            }
+                        }
+                    }
+
+                    DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
+
+                    //Images
+                    if (nod.Contains("ACAD_IMAGE_DICT"))
+                    {
+                        foreach (DBDictionaryEntry entry in (DBDictionary)tr.GetObject(nod.GetAt("ACAD_IMAGE_DICT"), OpenMode.ForRead))
+                        {
+                            RasterImageDef imageDef = (RasterImageDef)tr.GetObject(entry.Value, OpenMode.ForRead);
+
+                            string newPath = Files.ResolveAbsolutePath(imageDef.SourceFileName, originalDwgDir);
+                            if (newPath != imageDef.SourceFileName)
+                            {
+                                imageDef.UpgradeOpen();
+                                imageDef.SourceFileName = newPath;
+                            }
+                        }
+                    }
+
+                    //DWG, PDF, DWF, DNG
+                    foreach (string dictName in new string[] { "ACAD_PDFDEFINITIONS", "ACAD_DWFDEFINITIONS", "ACAD_DGNDEFINITIONS" })
+                    {
+                        if (nod.Contains(dictName))
+                        {
+                            foreach (DBDictionaryEntry entry in (DBDictionary)tr.GetObject(nod.GetAt(dictName), OpenMode.ForRead))
+                            {
+                                // On utilise la classe de base UnderlayDefinition qui englobe Pdf, Dwf et Dgn
+                                UnderlayDefinition underlayDef = (UnderlayDefinition)tr.GetObject(entry.Value, OpenMode.ForRead);
+
+                                string newPath = Files.ResolveAbsolutePath(underlayDef.SourceFileName, originalDwgDir);
+                                if (newPath != underlayDef.SourceFileName)
+                                {
+                                    underlayDef.UpgradeOpen();
+                                    underlayDef.SourceFileName = newPath;
+                                }
+                            }
+                        }
+                    }
+
+                    if (nod.Contains("ACAD_POINTCLOUD_EX_DICT"))
+                    {
+                        DBDictionary pcDict = (DBDictionary)tr.GetObject(nod.GetAt("ACAD_POINTCLOUD_EX_DICT"), OpenMode.ForRead);
+                        foreach (DBDictionaryEntry entry in pcDict)
+                        {
+                            PointCloudDefEx pcDef = (PointCloudDefEx)tr.GetObject(entry.Value, OpenMode.ForRead);
+
+                            string newPath = Files.ResolveAbsolutePath(pcDef.SourceFileName, originalDwgDir);
+                            if (newPath != pcDef.SourceFileName)
+                            {
+                                pcDef.UpgradeOpen();
+                                pcDef.SourceFileName = newPath;
+                            }
+                        }
+                    }
+
+                    tr.Commit();
+                }
+            }
         }
 
         public static Dictionary<ObjectId, string> GetAllObjects(this Database db)
