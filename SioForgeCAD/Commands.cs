@@ -31,7 +31,6 @@ namespace SioForgeCAD
             switch (result.StringResult)
             {
                 case "About":
-                    new PluginHook().Initialize();
                     Assembly ExAssembly = Assembly.GetExecutingAssembly();
 
                     string[] About = new string[]
