@@ -101,7 +101,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void ResetStyle(this Polyline polyline)
         {
-            if (polyline == null) return;
+            if (polyline == null)
+            {
+                return;
+            }
 
             // Récupérer la base de données active (soit celle de la poly, soit la globale)
             Database db = polyline.Database ?? HostApplicationServices.WorkingDatabase;
@@ -216,128 +219,137 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static void Cleanup(this Polyline polyline)
+        public static void Cleanup(this Polyline polyline, double distanceTolerance = 1e-4, double bulgeTolerance = 1e-4)
         {
             if (polyline == null || polyline.NumberOfVertices <= 2)
             {
                 return;
             }
 
-            Tolerance tol = Tolerance.Global;
+            // Tolérance d'angle pour la colinéarité (environ 0.05 degrés)
+            Tolerance tol = new Tolerance(distanceTolerance, 1e-3);
 
-            // 1. Fermer proprement la polyligne si le point de départ et de fin se touchent
-            if (!polyline.Closed && polyline.NumberOfVertices > 2)
+            bool changed;
+            do
             {
-                Point2d startPt = polyline.GetPoint2dAt(0);
-                Point2d endPt = polyline.GetPoint2dAt(polyline.NumberOfVertices - 1);
+                changed = false;
 
-                if (startPt.IsEqualTo(endPt, tol))
+                // 1. Convertir les micro-arcs en lignes droites
+                for (int i = 0; i < polyline.NumberOfVertices; i++)
                 {
-                    polyline.RemoveVertexAt(polyline.NumberOfVertices - 1);
-                    polyline.Closed = true;
-                }
-            }
-
-            // 2. Supprimer les sommets en double (points de longueur nulle) avec transfert de Bulge
-            for (int i = polyline.NumberOfVertices - 1; i > 0; i--)
-            {
-                if (polyline.GetPoint2dAt(i).IsEqualTo(polyline.GetPoint2dAt(i - 1), tol))
-                {
-                    double bulgeToKeep = polyline.GetBulgeAt(i);
-                    polyline.SetBulgeAt(i - 1, bulgeToKeep);
-                    polyline.RemoveVertexAt(i);
-                }
-            }
-
-            if (polyline.Closed && polyline.NumberOfVertices > 2)
-            {
-                int lastIdx = polyline.NumberOfVertices - 1;
-                if (polyline.GetPoint2dAt(0).IsEqualTo(polyline.GetPoint2dAt(lastIdx), tol))
-                {
-                    polyline.RemoveVertexAt(lastIdx);
-                }
-            }
-
-            // 3. Fusionner les segments colinéaires (Lignes) ET les arcs continus (Arcs)
-            for (int i = polyline.NumberOfVertices - 1; i >= 0; i--)
-            {
-                if (polyline.NumberOfVertices <= 2)
-                {
-                    break;
-                }
-
-                int currIdx = i;
-                int prevIdx = (i == 0) ? polyline.NumberOfVertices - 1 : i - 1;
-                int nextIdx = (i == polyline.NumberOfVertices - 1) ? 0 : i + 1;
-
-                if (!polyline.Closed && (i == 0 || i == polyline.NumberOfVertices - 1))
-                {
-                    continue;
-                }
-
-                double bulgePrev = polyline.GetBulgeAt(prevIdx);
-                double bulgeCurr = polyline.GetBulgeAt(currIdx);
-
-                bool isPrevLine = Math.Abs(bulgePrev) < Generic.MediumTolerance.EqualPoint;
-                bool isCurrLine = Math.Abs(bulgeCurr) < Generic.MediumTolerance.EqualPoint;
-
-                // --- CAS A : Deux LIGNES DROITES colinéaires ---
-                if (isPrevLine && isCurrLine)
-                {
-                    Point2d pPrev = polyline.GetPoint2dAt(prevIdx);
-                    Point2d pCurr = polyline.GetPoint2dAt(currIdx);
-                    Point2d pNext = polyline.GetPoint2dAt(nextIdx);
-
-                    Vector2d v1 = pPrev.GetVectorTo(pCurr);
-                    Vector2d v2 = pCurr.GetVectorTo(pNext);
-
-                    if (v1.Length > Generic.MediumTolerance.EqualPoint && v2.Length > Generic.MediumTolerance.EqualPoint)
+                    double bulge = polyline.GetBulgeAt(i);
+                    if (Math.Abs(bulge) > 0 && Math.Abs(bulge) < bulgeTolerance)
                     {
-                        if (v1.GetNormal().IsParallelTo(v2.GetNormal(), tol))
-                        {
-                            polyline.RemoveVertexAt(currIdx);
-                        }
+                        polyline.SetBulgeAt(i, 0.0);
+                        changed = true;
                     }
                 }
-                // --- CAS B : Deux ARCS continus ---
-                else if (!isPrevLine && !isCurrLine)
+
+                // Supprimer les sommets trop proches (Micro-segments)
+                for (int i = polyline.NumberOfVertices - 1; i > 0; i--)
                 {
-                    try
+                    if (polyline.GetPoint2dAt(i).GetDistanceTo(polyline.GetPoint2dAt(i - 1)) < distanceTolerance)
                     {
-                        CircularArc2d arc1 = polyline.GetArcSegment2dAt(prevIdx);
-                        CircularArc2d arc2 = polyline.GetArcSegment2dAt(currIdx);
+                        double bulgeToKeep = polyline.GetBulgeAt(i);
+                        polyline.SetBulgeAt(i - 1, bulgeToKeep);
+                        polyline.RemoveVertexAt(i);
+                        changed = true;
+                    }
+                }
 
-                        // S'ils partagent le même centre, le même rayon, et tournent dans le même sens
-                        if (arc1.Center.IsEqualTo(arc2.Center, tol) &&
-                            Math.Abs(arc1.Radius - arc2.Radius) < Generic.MediumTolerance.EqualPoint &&
-                            Math.Sign(bulgePrev) == Math.Sign(bulgeCurr))
+                // Gérer les micro-segments sur le point de fermeture (seam)
+                if (polyline.Closed && polyline.NumberOfVertices > 2)
+                {
+                    int lastIdx = polyline.NumberOfVertices - 1;
+                    if (polyline.GetPoint2dAt(0).GetDistanceTo(polyline.GetPoint2dAt(lastIdx)) < distanceTolerance)
+                    {
+                        // Le dernier segment est nul, on enlève le dernier point
+                        polyline.RemoveVertexAt(lastIdx);
+                        changed = true;
+                    }
+                }
+
+                // Fusionner les segments colinéaires et les arcs continus
+                for (int i = polyline.NumberOfVertices - 1; i >= 0; i--)
+                {
+                    if (polyline.NumberOfVertices <= 2)
+                    {
+                        break;
+                    }
+
+                    int currIdx = i;
+                    int prevIdx = (i == 0) ? polyline.NumberOfVertices - 1 : i - 1;
+                    int nextIdx = (i == polyline.NumberOfVertices - 1) ? 0 : i + 1;
+
+                    // Ne pas évaluer les extrémités si la polyligne est ouverte
+                    if (!polyline.Closed && (i == 0 || i == polyline.NumberOfVertices - 1))
+                    {
+                        continue;
+                    }
+
+                    double bulgePrev = polyline.GetBulgeAt(prevIdx);
+                    double bulgeCurr = polyline.GetBulgeAt(currIdx);
+
+                    bool isPrevLine = Math.Abs(bulgePrev) == 0.0; 
+                    bool isCurrLine = Math.Abs(bulgeCurr) == 0.0;
+
+                    // --- CAS A : Deux LIGNES DROITES colinéaires ---
+                    if (isPrevLine && isCurrLine)
+                    {
+                        Point2d pPrev = polyline.GetPoint2dAt(prevIdx);
+                        Point2d pCurr = polyline.GetPoint2dAt(currIdx);
+                        Point2d pNext = polyline.GetPoint2dAt(nextIdx);
+
+                        Vector2d v1 = pPrev.GetVectorTo(pCurr);
+                        Vector2d v2 = pCurr.GetVectorTo(pNext);
+
+                        if (v1.Length > distanceTolerance && v2.Length > distanceTolerance)
                         {
-                            // Calcul des angles inclus à partir des bulges : theta = 4 * atan(bulge)
-                            double theta1 = 4 * Math.Atan(bulgePrev);
-                            double theta2 = 4 * Math.Atan(bulgeCurr);
-                            double thetaNew = theta1 + theta2;
-
-                            // Règle géométrique d'AutoCAD : Un seul segment d'arc ne peut pas faire 360° ou plus
-                            // Si la somme dépasse un cercle complet, on ne les fusionne pas.
-                            if (Math.Abs(thetaNew) < (Math.PI * 2) - Generic.MediumTolerance.EqualPoint)
+                            if (v1.GetNormal().IsParallelTo(v2.GetNormal(), tol))
                             {
-                                // Calcul du nouveau bulge fusionné
-                                double newBulge = Math.Tan(thetaNew / 4);
-
                                 polyline.RemoveVertexAt(currIdx);
-
-                                // Ajustement d'index : si on a supprimé le point 0, le point de fin (N-1) est devenu N-2 !
-                                int targetIdx = (prevIdx > currIdx) ? prevIdx - 1 : prevIdx;
-                                polyline.SetBulgeAt(targetIdx, newBulge);
+                                changed = true;
                             }
                         }
                     }
-                    catch
+                    // --- CAS B : Deux ARCS continus ---
+                    else if (!isPrevLine && !isCurrLine)
                     {
-                        // Sécurité au cas où GetArcSegment2dAt échoue sur un arc dégénéré
+                        try
+                        {
+                            CircularArc2d arc1 = polyline.GetArcSegment2dAt(prevIdx);
+                            CircularArc2d arc2 = polyline.GetArcSegment2dAt(currIdx);
+
+                            // S'ils partagent le même centre, le même rayon, et tournent dans le même sens
+                            if (arc1.Center.IsEqualTo(arc2.Center, tol) &&
+                                Math.Abs(arc1.Radius - arc2.Radius) < distanceTolerance &&
+                                Math.Sign(bulgePrev) == Math.Sign(bulgeCurr))
+                            {
+                                // Calcul des angles inclus à partir des bulges : theta = 4 * atan(bulge)
+                                double theta1 = 4 * Math.Atan(bulgePrev);
+                                double theta2 = 4 * Math.Atan(bulgeCurr);
+                                double thetaNew = theta1 + theta2;
+
+                                // Règle géométrique d'AutoCAD : Un seul segment d'arc ne peut pas faire 360° ou plus
+                                // Si la somme dépasse un cercle complet, on ne les fusionne pas.
+                                if (Math.Abs(thetaNew) < (Math.PI * 2) - tol.EqualVector)
+                                {
+                                    // Calcul du nouveau bulge fusionné
+                                    double newBulge = Math.Tan(thetaNew / 4);
+                                    polyline.RemoveVertexAt(currIdx);
+
+                                    // Ajustement d'index : si on a supprimé le point 0, le point de fin (N-1) est devenu N-2 !
+                                    int targetIdx = (prevIdx > currIdx) ? prevIdx - 1 : prevIdx;
+                                    polyline.SetBulgeAt(targetIdx, newBulge);
+                                    changed = true;
+                                }
+                            }
+                        }
+                        catch { /* Ignorer les arcs dégénérés */ }
                     }
                 }
             }
+            while (changed && polyline.NumberOfVertices > 2); // Recommencer tant qu'on a nettoyé quelque chose
         }
 
         /// <summary>
@@ -349,7 +361,10 @@ namespace SioForgeCAD.Commun.Extensions
         /// <param name="minSegmentsToFormArc">Le nombre minimum de segments de ligne successifs requis pour autoriser la conversion en un arc (Défaut: 3).</param>
         public static void OptimizeFacetsToArcs(this Polyline polyline, double tolerance = 0.01, int minSegmentsToFormArc = 3)
         {
-            if (polyline == null || polyline.NumberOfVertices <= minSegmentsToFormArc) return;
+            if (polyline == null || polyline.NumberOfVertices <= minSegmentsToFormArc)
+            {
+                return;
+            }
 
             int i = 0;
             while (i <= polyline.NumberOfVertices - minSegmentsToFormArc - 1)
@@ -362,7 +377,10 @@ namespace SioForgeCAD.Commun.Extensions
                 // Exploration pour trouver l'arc le plus long possible
                 for (int j = i + minSegmentsToFormArc; j < polyline.NumberOfVertices; j++)
                 {
-                    if (Math.Abs(polyline.GetBulgeAt(j - 1)) > 1e-6) break;
+                    if (Math.Abs(polyline.GetBulgeAt(j - 1)) > 1e-6)
+                    {
+                        break;
+                    }
 
                     Point2d pStart = polyline.GetPoint2dAt(i);
                     Point2d pEnd = polyline.GetPoint2dAt(j);
@@ -370,7 +388,10 @@ namespace SioForgeCAD.Commun.Extensions
 
                     // Calcul de la corde
                     Line2d chord = new Line2d(pStart, pEnd);
-                    if (chord.GetDistanceTo(pMid) < 1e-6) break;
+                    if (chord.GetDistanceTo(pMid) < 1e-6)
+                    {
+                        break;
+                    }
 
                     CircularArc2d arc;
                     try { arc = new CircularArc2d(pStart, pMid, pEnd); }
@@ -409,14 +430,24 @@ namespace SioForgeCAD.Commun.Extensions
                         bestEndIdx = j;
                         // Calcul précis du Bulge
                         double alpha = arc.EndAngle - arc.StartAngle;
-                        if (alpha < 0) alpha += Math.PI * 2;
-                        if (alpha > Math.PI * 2) alpha -= Math.PI * 2;
+                        if (alpha < 0)
+                        {
+                            alpha += Math.PI * 2;
+                        }
+
+                        if (alpha > Math.PI * 2)
+                        {
+                            alpha -= Math.PI * 2;
+                        }
 
                         // Si l'arc fait plus de 180°, le calcul du bulge doit rester cohérent
                         double b = Math.Tan(alpha / 4.0);
                         bestBulge = arc.IsClockWise ? -b : b;
                     }
-                    else break;
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (bestEndIdx != -1)
@@ -428,7 +459,10 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                     i++;
                 }
-                else i++;
+                else
+                {
+                    i++;
+                }
             }
         }
 
