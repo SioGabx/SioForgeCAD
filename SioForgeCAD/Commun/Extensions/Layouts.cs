@@ -232,12 +232,12 @@ namespace SioForgeCAD.Commun.Extensions
             });
             bool PlotSuccess = false;
 
-            if (HaveSamePaperFormat || true)
+            if (HaveSamePaperFormat)
             {
                 PlotSuccess = PublishLayoutsWithSamePaperFormats(layouts, outputFilePath);
             }
 
-            if (!PlotSuccess) //if PublishLayoutsWithSamePaperFormats fails, we run your 
+            if (!PlotSuccess) //if PublishLayoutsWithSamePaperFormats fails, we run your PublishLayoutsWithDifferentsPaperFormats
             {
                 PlotSuccess = PublishLayoutsWithDifferentsPaperFormats(layouts, outputFilePath);
             }
@@ -493,8 +493,6 @@ namespace SioForgeCAD.Commun.Extensions
                     dsdFileData.ProjectPath = Path.GetDirectoryName(outputFilePath);
                     dsdFileData.LogFilePath = Path.Combine(tempFolderPath, "publish.log");
                     dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
-
-                    // On utilise le fichier PDF temporaire comme destination
                     dsdFileData.DestinationName = tempOutputPdfPath;
 
                     dsdFileData.IsHomogeneous = false;
@@ -509,21 +507,20 @@ namespace SioForgeCAD.Commun.Extensions
                         return false;
                     }
 
-                    // On écrit le fichier DSD, on le force en texte brut, puis on le relit.
                     dsdFileData.WriteDsd(dsdFilePath);
 
-                    string dsdText = File.ReadAllText(dsdFilePath);
-                    dsdText = dsdText.Replace("PromptForDwfName=TRUE", "PromptForDwfName=FALSE");
-                    File.WriteAllText(dsdFilePath, dsdText);
+                    //string dsdText = File.ReadAllText(dsdFilePath);
+                    //dsdText = dsdText.Replace("PromptForDwfName=TRUE", "PromptForDwfName=FALSE");
+                    //File.WriteAllText(dsdFilePath, dsdText);
 
-                    // On recharge le DSD modifié
-                    dsdFileData.ReadDsd(dsdFilePath);
+                    //// On recharge le DSD modifié
+                    //dsdFileData.ReadDsd(dsdFilePath);
 
                     PlotConfig plotConfig = PlotConfigManager.SetCurrentConfig(GetPlotDeviceName(layouts));
 
                     using (PlotProgressDialog plotProcessDialog = new PlotProgressDialog(false, layouts.Count(), true))
                     {
-                        Application.Publisher.PublishDsd(dsdFilePath, plotProcessDialog);
+                        Autodesk.AutoCAD.ApplicationServices.Core.Application.Publisher.PublishDsd(dsdFilePath, plotProcessDialog);
                     }
                 }
 
