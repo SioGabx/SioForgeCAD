@@ -7,6 +7,7 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -40,7 +41,7 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
             }
 
-            using (var renameForm = new RenameDialog(layerNames, (original, transformed) =>
+            using (var renameForm = new RenameDialog(layerNames.OrderBy(t => t, StringComparer.OrdinalIgnoreCase).ToList(), (original, transformed) =>
             {
                 if (!string.Equals(original, transformed, StringComparison.Ordinal))
                 {
