@@ -6,6 +6,13 @@ namespace SioForgeCAD.Commun.Mist
 {
     public static class Files
     {
+        public static string GetATempFolder(string ProcessName)
+        {
+            string uniqueId = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N").Substring(0, 6)}";
+            string tempFolderPath = Path.Combine(Path.GetTempPath(), $"{ProcessName}_{uniqueId}");
+            return tempFolderPath;
+        }
+
         public static string ResolveAbsolutePath(string currentPath, string originalDir)
         {
             if (string.IsNullOrEmpty(currentPath) || Path.IsPathRooted(currentPath))
@@ -112,6 +119,22 @@ namespace SioForgeCAD.Commun.Mist
                 try
                 {
                     File.Delete(FileName);
+                }
+                catch (System.Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool TryDeleteDirectory(string FileName, bool Recursive = true)
+        {
+            if (Directory.Exists(FileName))
+            {
+                try
+                {
+                    Directory.Delete(FileName, Recursive);
                 }
                 catch (System.Exception)
                 {
