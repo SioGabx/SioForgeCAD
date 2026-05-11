@@ -223,14 +223,22 @@ namespace SioForgeCAD.Commun.Extensions
             }
 
             string firstMedia = layouts.First().CanonicalMediaName ?? string.Empty;
-            bool HaveSamePaperFormat = layouts.All(l => string.Equals(l.CanonicalMediaName ?? string.Empty, firstMedia, StringComparison.OrdinalIgnoreCase));
-            bool PlotSuccess;
-
-            if (HaveSamePaperFormat)
+            PlotRotation plotRotation = layouts.First().PlotRotation;
+            bool HaveSamePaperFormat = layouts.All(l =>
             {
+                return string.Equals(l.CanonicalMediaName ?? string.Empty, firstMedia, StringComparison.OrdinalIgnoreCase) &&
+                plotRotation == l.PlotRotation;
+            });
+            bool PlotSuccess = false;
+
+            if (HaveSamePaperFormat || true)
+            {
+                //PlotSuccess = true;
+                //PublishLayoutsWithSamePaperFormatsOld(outputFilePath, layouts.Select(l=> l.ObjectId).ToObjectIdCollection());
                 PlotSuccess = PublishLayoutsWithSamePaperFormats(layouts, outputFilePath);
             }
-            else
+
+            if (!PlotSuccess) //if PublishLayoutsWithSamePaperFormats fails, we run your 
             {
                 PlotSuccess = PublishLayoutsWithDifferentsPaperFormats(layouts, outputFilePath);
             }
@@ -240,6 +248,7 @@ namespace SioForgeCAD.Commun.Extensions
                 Process.Start(outputFilePath); //System.Diagnostics.Process.Start
             }
         }
+
 
         //https://github.com/cadwiki/cadwiki-nuget/blob/a98c59f2715ab9a3dc640986c8599ac47ce07be1/cadwiki-nuget/cadwiki.AC/Plotters/PlotterMultiPage.cs#L12
         private static bool PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
@@ -257,6 +266,9 @@ namespace SioForgeCAD.Commun.Extensions
                 Generic.WriteMessage("The output file is being used by another process. Cancelled.");
                 return false;
             }
+
+            Database db = doc.Database;
+
 
             PlotInfoValidator plotInfoValidator = new PlotInfoValidator
             {
@@ -277,96 +289,115 @@ namespace SioForgeCAD.Commun.Extensions
             })
             using (Generic.GetLock())
             {
-                plotProcessDialog.set_PlotMsgString(PlotMessageIndex.DialogTitle, "Custom Plot Progress");
-                plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelJobButtonMessage, "Cancel Job");
-                plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelSheetButtonMessage, "Cancel Sheet");
-                plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
-                plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
-
-
-                string globalDevice = GetPlotDeviceName(layouts);
-
-
-                for (int layoutIndex = 0; layoutIndex < layouts.Count(); layoutIndex++)
+                try
                 {
-                    var layout = layouts.ElementAt(layoutIndex);
+                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.DialogTitle, $"{Generic.GetExtensionDLLName()} - Plot Progress");
+                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelJobButtonMessage, "Cancel Job");
+                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.CancelSheetButtonMessage, "Cancel Sheet");
+                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
+                    plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
 
-                    // 1. Créer un nouveau PlotInfo pour chaque page
-                    PlotInfo pagePlotInfo = new PlotInfo
+
+                    string globalDevice = GetPlotDeviceName(layouts);
+
+                    foreach (var (layout, layoutIndex) in layouts.Select((val, i) => (val, i + 1)))
                     {
-                        Layout = layout.ObjectId
-                    };
-
-                    // 2. Configurer les Overrides
-                    PlotSettings plotSettings = new PlotSettings(layout.ModelType);
-                    plotSettings.CopyFrom(layout);
-
-                    PlotSettingsValidator plotSettingsValidator = PlotSettingsValidator.Current;
-                    plotSettingsValidator.SetPlotType(plotSettings, Autodesk.AutoCAD.DatabaseServices.PlotType.Layout);
-                    plotSettingsValidator.SetUseStandardScale(plotSettings, true);
-                    plotSettingsValidator.SetStdScaleType(plotSettings, StdScaleType.ScaleToFit);
-
-                    // APPLIQUER LE MÊME TRACEUR À TOUTES LES PAGES
-                    string media = layout.CanonicalMediaName;
-                    try
-                    {
-                        // On tente d'appliquer la taille de papier d'origine sur le traceur global
-                        if (!string.IsNullOrEmpty(media))
+                        // 1. Créer un nouveau PlotInfo pour chaque page
+                        PlotInfo pagePlotInfo = new PlotInfo
                         {
-                            plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, media);
-                        }
-                        else
+                            Layout = layout.ObjectId
+                        };
+
+                        // 2. Configurer les Overrides
+                        using (PlotSettings plotSettings = new PlotSettings(layout.ModelType))
                         {
-                            Generic.WriteMessage($"Attention : Format de papier n'est pas indiqué pour la présentation {layout.LayoutName}");
-                            return false;
+                            plotSettings.CopyFrom(layout);
+
+                            PlotSettingsValidator plotSettingsValidator = PlotSettingsValidator.Current;
+                            plotSettingsValidator.RefreshLists(plotSettings);
+                            plotSettingsValidator.SetPlotType(plotSettings, Autodesk.AutoCAD.DatabaseServices.PlotType.Layout);
+
+                            plotSettingsValidator.SetUseStandardScale(plotSettings, true);
+                            plotSettingsValidator.SetStdScaleType(plotSettings, StdScaleType.ScaleToFit);
+                            plotSettingsValidator.SetPlotRotation(plotSettings, layout.PlotRotation);
+
+                            // APPLIQUER LE MÊME TRACEUR À TOUTES LES PAGES
+                            string media = layout.CanonicalMediaName;
+                            try
+                            {
+                                // On tente d'appliquer la taille de papier d'origine sur le traceur global
+                                if (!string.IsNullOrEmpty(media))
+                                {
+                                    plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, media);
+                                }
+                                else
+                                {
+                                    Generic.WriteMessage($"Attention : Format de papier n'est pas indiqué pour la présentation {layout.LayoutName}");
+                                    return false;
+                                }
+                            }
+                            catch (Autodesk.AutoCAD.Runtime.Exception)
+                            {
+                                Generic.WriteMessage($"Attention : Format de papier '{media}' non supporté par {globalDevice} pour la présentation {layout.LayoutName}.");
+                                return false;
+                            }
+
+                            LayoutManager.Current.CurrentLayout = layout.LayoutName;
+                            pagePlotInfo.OverrideSettings = plotSettings;
+                            plotInfoValidator.Validate(pagePlotInfo);
+
+                            if (layoutIndex == 1)
+                            {
+                                plotProcessDialog.OnBeginPlot();
+                                plotProcessDialog.IsVisible = true;
+                                plotEngine.BeginPlot(plotProcessDialog, null);
+
+                                // L'initialisation du document est maintenant verrouillée sur "DWG To PDF.pc3"
+                                plotEngine.BeginDocument(pagePlotInfo, doc.Name, null, 1, true, outputFilePath);
+                            }
+
+                            plotProcessDialog.StatusMsgString = $"Plotting {docName} - présentation {layoutIndex} / {layouts.Count()}";
+                            plotProcessDialog.OnBeginSheet();
+                            plotProcessDialog.LowerSheetProgressRange = 0;
+                            plotProcessDialog.UpperSheetProgressRange = 100;
+                            plotProcessDialog.SheetProgressPos = 0;
+
+
+                            PlotPageInfo plotPageInfo = new PlotPageInfo();
+                            Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}, rotation : {layout.PlotRotation}");
+
+                            plotEngine.BeginPage(plotPageInfo, pagePlotInfo, layoutIndex == layouts.Count(), null);
+                          
+                            plotEngine.BeginGenerateGraphics(null);
+                            plotProcessDialog.SheetProgressPos = 50;
+                            plotEngine.EndGenerateGraphics(null);
+
+                            plotEngine.EndPage(null);
+                            plotProcessDialog.SheetProgressPos = 100;
+                            plotProcessDialog.OnEndSheet();
+
+                            plotProcessDialog.PlotProgressPos = (int)Math.Floor((double)layoutIndex * 100 / layouts.Count());
                         }
                     }
-                    catch (Autodesk.AutoCAD.Runtime.Exception)
-                    {
-                        Generic.WriteMessage($"Attention : Format de papier '{media}' non supporté par {globalDevice} pour la présentation {layout.LayoutName}.");
-                        return false;
-                    }
-
-                    LayoutManager.Current.CurrentLayout = layout.LayoutName;
-
-                    pagePlotInfo.OverrideSettings = plotSettings;
-                    plotInfoValidator.Validate(pagePlotInfo);
-
-                    if (layoutIndex == 0)
-                    {
-                        plotProcessDialog.OnBeginPlot();
-                        plotProcessDialog.IsVisible = true;
-                        plotEngine.BeginPlot(plotProcessDialog, null);
-
-                        // L'initialisation du document est maintenant verrouillée sur "DWG To PDF.pc3"
-                        plotEngine.BeginDocument(pagePlotInfo, doc.Name, null, 1, true, outputFilePath);
-                    }
-
-                    plotProcessDialog.StatusMsgString = $"Plotting {docName} - présentation {layoutIndex} / {layouts.Count()}";
-                    plotProcessDialog.OnBeginSheet();
-                    plotProcessDialog.LowerSheetProgressRange = 0;
-                    plotProcessDialog.UpperSheetProgressRange = 100;
-                    plotProcessDialog.SheetProgressPos = 0;
-
-                    PlotPageInfo plotPageInfo = new PlotPageInfo();
-                    Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}");
-                    plotEngine.BeginPage(plotPageInfo, pagePlotInfo, layoutIndex == layouts.Count(), null);
-                    plotEngine.BeginGenerateGraphics(null);
-                    plotProcessDialog.SheetProgressPos = 50;
-                    plotEngine.EndGenerateGraphics(null);
-                    plotEngine.EndPage(null);
-                    plotProcessDialog.SheetProgressPos = 100;
-                    plotProcessDialog.OnEndSheet();
-                    plotProcessDialog.PlotProgressPos = (int)Math.Floor((double)layoutIndex * 100 / layouts.Count());
+                    Generic.WriteMessage("Plotting completed.");
                 }
-
-                //end plot
-                plotEngine.EndDocument(null);
-                plotProcessDialog.PlotProgressPos = 100;
-                plotProcessDialog.OnEndPlot();
-                plotEngine.EndPlot(null);
-                Generic.WriteMessage("Plotting completed.");
+                catch (System.Exception ex)
+                {
+                    Generic.WriteMessage("Plotting failed.");
+                    Debug.WriteLine(ex.ToString());
+                    return false;
+                }
+                finally
+                {
+                    //end plot, even if we have erros
+                    plotEngine.EndDocument(null);
+                    plotProcessDialog.PlotProgressPos = 100;
+                    plotProcessDialog.OnEndPlot();
+                    plotEngine.EndPlot(null);
+                }
             }
+
+
             return true;
         }
 
@@ -444,6 +475,9 @@ namespace SioForgeCAD.Commun.Extensions
                     dsdFileData.IsHomogeneous = false;
                     dsdFileData.PromptForDwfName = false;
                     dsdFileData.PlotStampOn = false;
+                    dsdFileData.SetUnrecognizedData("PromptForDwfName", "FALSE");
+                    dsdFileData.SetUnrecognizedData("IncludeLayer", "TRUE");
+                    dsdFileData.SetUnrecognizedData("PromptForPwd", "FALSE");
 
                     if (!Files.TryDeleteFile(dsdFilePath))
                     {
