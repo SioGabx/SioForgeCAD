@@ -1,15 +1,16 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
     public static class SAVEFILEATCLOSE
     {
-
         public static class Event
         {
             public static bool IsActive { get; private set; }
@@ -50,20 +51,22 @@ namespace SioForgeCAD.Functions
         public static void Execute(object senderObj, DocumentCollectionEventArgs docColDocActEvtArgs)
         {
             Document doc = docColDocActEvtArgs.Document;
-            string FileName = "AutoSave_" + Path.GetFileNameWithoutExtension(doc.Name) + "_" + DateTime.Now.ToString("yyMMdd_HHmmss") + ".dwg";
-            string tempFileName = Path.Combine(Path.GetTempPath(), FileName);
-            Debug.WriteLine("NumberOfSaves : " + doc.Database.NumberOfSaves);
+            string baseName = Path.GetFileNameWithoutExtension(doc.Name);
+            string projectName = baseName.SplitByListString("-", "_").FirstOrDefault();
+            string timeStamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string targetDirectory = Settings.SaveFileAtCloseDirectory;
+            string finalDwgName = $"{baseName}_AutoSave_at_{timeStamp}.dwg";
+            string finalFilePath = Path.Combine(targetDirectory, finalDwgName);
+
             try
             {
-                if (!System.IO.File.Exists(tempFileName))
-                {
-                    doc.Database.SaveAs(tempFileName, false, DwgVersion.Current, null);
-                    Generic.WriteMessage("Sauvegarde temporaire créée à : " + tempFileName);
-                }
+                doc.Database.SaveAs(finalFilePath, false, DwgVersion.Current, null);
+                Debug.WriteLine($"Sauvegarde effectuée : {finalDwgName}");
+
             }
             catch (System.Exception ex)
             {
-                Debug.WriteLine("Erreur lors de la sauvegarde temporaire : " + ex.Message);
+                Debug.WriteLine("Erreur lors de la sauvegarde : " + ex.Message);
             }
         }
     }

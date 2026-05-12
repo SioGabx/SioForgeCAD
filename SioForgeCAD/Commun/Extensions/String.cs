@@ -89,6 +89,11 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static string[] SplitByListString(this string input, IEnumerable<string> delimiters)
         {
+            return SplitByListString(input, delimiters.ToArray());
+        }
+
+        public static string[] SplitByListString(this string input, params string[] delimiters)
+        {
             return input.Split(delimiters.ToArray(), StringSplitOptions.RemoveEmptyEntries);
         }
 

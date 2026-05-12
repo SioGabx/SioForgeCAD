@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -15,7 +16,7 @@ namespace SioForgeCAD
         //Ordinateur\HKEY_CURRENT_USER\Software\Autodesk\AutoCAD\R24.0\ACAD-4101:40C\Applications\SioForgeCAD\Settings
         private static readonly ConcurrentDictionary<string, object> _RegistryValuesCache = new ConcurrentDictionary<string, object>();
 
-        private static string RegistryPath
+        public static string RegistryPath
         {
             get
             {
@@ -25,18 +26,46 @@ namespace SioForgeCAD
             }
         }
 
+        public static void CreateAllRegistryKeys()
+        {
+            var properties = typeof(Settings)
+                .GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => p.CanWrite && p.SetMethod?.IsPublic == true);
+
+            foreach (var prop in properties)
+            {
+                Debug.WriteLine(prop.Name);
+                try
+                {
+                    object value = prop.GetValue(null);
+                    prop.SetValue(null, value);
+                    Debug.WriteLine($"Value set for : {prop.Name}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Erreur {prop.Name} : {ex.Message}");
+                }
+            }
+        }
+
         private static T GetValue<T>(string name, T defaultValue)
         {
             //On vérifie si la valeur est déjà en cache (ultra-rapide)
-            if (_RegistryValuesCache.TryGetValue(name, out object cachedValue))
+            if (false && _RegistryValuesCache.TryGetValue(name, out object cachedValue))
             {
                 return (T)cachedValue;
             }
 
-            // Si elle n'y est pas (premier appel), on lit le registre +stocke la valeur dans le cache pour les prochains appels
+            // Lecture registre
             T regValue = Registries.GetValue(RegistryPath, name, defaultValue);
+
+            // Si la valeur == valeur par défaut => on supprime l'entrée du registre
+            if (Registries.KeyExist(RegistryPath, name) && EqualityComparer<T>.Default.Equals(regValue, defaultValue))
+            {
+                Registries.DeleteValue(RegistryPath, name);
+            }
+
             _RegistryValuesCache[name] = regValue;
-            //SetValue(name, regValue);
             return regValue;
         }
 
@@ -141,6 +170,12 @@ namespace SioForgeCAD
         {
             get => GetValue(nameof(GabaritFile), @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt");
             set => SetValue(nameof(GabaritFile), value);
+        }
+
+        public static string SaveFileAtCloseDirectory
+        {
+            get => GetValue(nameof(SaveFileAtCloseDirectory), Path.GetTempPath());
+            set => SetValue(nameof(SaveFileAtCloseDirectory), value);
         }
     }
 }

@@ -229,10 +229,10 @@ namespace SioForgeCAD.Commun.Extensions
             // Tolérance d'angle pour la colinéarité (environ 0.05 degrés)
             Tolerance tol = new Tolerance(distanceTolerance, 1e-3);
 
-            bool changed;
+            bool HasGeometryChanges;
             do
             {
-                changed = false;
+                HasGeometryChanges = false;
 
                 // 1. Convertir les micro-arcs en lignes droites
                 for (int i = 0; i < polyline.NumberOfVertices; i++)
@@ -241,7 +241,7 @@ namespace SioForgeCAD.Commun.Extensions
                     if (Math.Abs(bulge) > 0 && Math.Abs(bulge) < bulgeTolerance)
                     {
                         polyline.SetBulgeAt(i, 0.0);
-                        changed = true;
+                        HasGeometryChanges = true;
                     }
                 }
 
@@ -253,7 +253,7 @@ namespace SioForgeCAD.Commun.Extensions
                         double bulgeToKeep = polyline.GetBulgeAt(i);
                         polyline.SetBulgeAt(i - 1, bulgeToKeep);
                         polyline.RemoveVertexAt(i);
-                        changed = true;
+                        HasGeometryChanges = true;
                     }
                 }
 
@@ -265,7 +265,7 @@ namespace SioForgeCAD.Commun.Extensions
                     {
                         // Le dernier segment est nul, on enlève le dernier point
                         polyline.RemoveVertexAt(lastIdx);
-                        changed = true;
+                        HasGeometryChanges = true;
                     }
                 }
 
@@ -308,7 +308,7 @@ namespace SioForgeCAD.Commun.Extensions
                             if (v1.GetNormal().IsParallelTo(v2.GetNormal(), tol))
                             {
                                 polyline.RemoveVertexAt(currIdx);
-                                changed = true;
+                                HasGeometryChanges = true;
                             }
                         }
                     }
@@ -341,7 +341,7 @@ namespace SioForgeCAD.Commun.Extensions
                                     // Ajustement d'index : si on a supprimé le point 0, le point de fin (N-1) est devenu N-2 !
                                     int targetIdx = (prevIdx > currIdx) ? prevIdx - 1 : prevIdx;
                                     polyline.SetBulgeAt(targetIdx, newBulge);
-                                    changed = true;
+                                    HasGeometryChanges = true;
                                 }
                             }
                         }
@@ -349,7 +349,7 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                 }
             }
-            while (changed && polyline.NumberOfVertices > 2); // Recommencer tant qu'on a nettoyé quelque chose
+            while (HasGeometryChanges && polyline.NumberOfVertices > 2); // Recommencer tant qu'on a nettoyé quelque chose
         }
 
         /// <summary>

@@ -4,6 +4,9 @@ using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
+using SioForgeCAD.Commun.Mist.Helpers;
+using SioForgeCAD.Functions;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -24,6 +27,7 @@ namespace SioForgeCAD
                 AppendKeywordsToMessage = true
             };
             promptKeywordOptions.Keywords.Add("About");
+            promptKeywordOptions.Keywords.Add("Settings");
             promptKeywordOptions.Keywords.Add("Register");
             promptKeywordOptions.Keywords.Add("Unregister");
             promptKeywordOptions.Keywords.Add("LoadCUIX");
@@ -42,6 +46,10 @@ namespace SioForgeCAD
                     };
                     Generic.WriteMessage("\n");
                     Generic.WriteMessage(string.Join("\n", About));
+                    break;
+                case "Settings":
+                    Settings.CreateAllRegistryKeys();
+                    Registries.OpenRegEditAtKey(Settings.RegistryPath);
                     break;
                 case "Register":
                     PluginRegister.Register();
@@ -507,12 +515,12 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
         public static void TEST1()
         {
+            Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
