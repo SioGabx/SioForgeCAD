@@ -512,9 +512,16 @@ namespace SioForgeCAD
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
+        [CommandMethod("DEBUG", "SMARTLEGEND", CommandFlags.Redraw)]
+        public static void SMARTLEGEND()
+        {
+            Functions.SMARTLEGEND.Test();
+        }
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            Debug.WriteLine(Generic.GetDatabase().Filename);
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]

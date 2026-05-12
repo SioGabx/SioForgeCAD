@@ -1693,7 +1693,7 @@ namespace SioForgeCAD.Forms
 
                 Document doc = Generic.GetDocument();
                 string docName = Path.GetFileNameWithoutExtension(doc.Name);
-                string dwgDirectory = Path.GetDirectoryName(docName);
+                string dwgDirectory = doc.GetPath();
                 using (var tr = Generic.GetTrans())
                 {
                     try
@@ -1726,7 +1726,8 @@ namespace SioForgeCAD.Forms
                                 Title = "Enregistrer la présentation",
                                 Filter = "Fichier PDF (*.pdf)|*.pdf",
                                 FileName = $"{docName}_{LayoutListToPlot.FirstOrDefault().LayoutName}.pdf",
-                                InitialDirectory = dwgDirectory
+                                InitialDirectory = dwgDirectory,
+                                RestoreDirectory = false
                             };
 
                             if (saveFileDialog.ShowDialog() != true) return; // Annulation utilisateur

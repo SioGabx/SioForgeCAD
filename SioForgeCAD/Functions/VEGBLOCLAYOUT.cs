@@ -140,10 +140,22 @@ namespace SioForgeCAD.Functions
                 BaseLayout.CloneLayout(CloneName);
                 var Layout = ed.GetLayoutFromName(CloneName);
                 var ViewPort = GetViewport(Layout);
+
                 if (!ViewPort.IsWriteEnabled) { ViewPort.UpgradeOpen(); }
 
                 ViewPort.Locked = false;
-                ViewPort.ViewCenter = ViewPort.ViewCenter.TransformBy(Matrix2d.Displacement(vector.ToVector2d()));
+
+                //  On définit la matrice de transformation du WCS vers le DCS
+                // On prend en compte la direction de vue, la cible et l'angle de torsion (Twist)
+                Matrix3d matWcsToDcs = Matrix3d.PlaneToWorld(ViewPort.ViewDirection);
+                matWcsToDcs = Matrix3d.Displacement(ViewPort.ViewTarget - Point3d.Origin) * matWcsToDcs;
+                matWcsToDcs = Matrix3d.Rotation(-ViewPort.TwistAngle, ViewPort.ViewDirection, ViewPort.ViewTarget) * matWcsToDcs;
+                matWcsToDcs = matWcsToDcs.Inverse();
+                // On transforme le vecteur de déplacement (WCS -> DCS)
+                Vector3d dcsVector = vector.TransformBy(matWcsToDcs);
+
+                // On applique le déplacement sur le ViewCenter (en 2D)
+                ViewPort.ViewCenter = ViewPort.ViewCenter.Add(new Vector2d(dcsVector.X, dcsVector.Y)); 
                 ViewPort.Locked = true;
             }
         }

@@ -21,8 +21,7 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static void CloneLayout(this Layout sourceLayout, string newLayoutName)
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
+            Database db = Generic.GetDatabase();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -43,8 +42,6 @@ namespace SioForgeCAD.Commun.Extensions
                 tr.Commit();
             }
         }
-
-
 
         public static Bitmap GetLayoutSnapshot(this Layout lay, Extents3d ext, int width, int height)
         {
@@ -248,8 +245,6 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-
-        //https://github.com/cadwiki/cadwiki-nuget/blob/a98c59f2715ab9a3dc640986c8599ac47ce07be1/cadwiki-nuget/cadwiki.AC/Plotters/PlotterMultiPage.cs#L12
         private static bool PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             Document doc = Generic.GetDocument();
@@ -260,18 +255,15 @@ namespace SioForgeCAD.Commun.Extensions
                 return false;
             }
 
-            // 1. Fail-fast : Vérifier tout de suite si le fichier final est verrouillé
             if (!Files.TryDeleteFile(outputFilePath))
             {
                 Generic.WriteMessage("The output file is being used by another process. Cancelled.");
                 return false;
             }
 
-            // 2. Définir un chemin temporaire pour le tracé
             string tempFolderPath = Files.GetATempFolder("AcPublish");
             string outFileName = Path.GetFileNameWithoutExtension(outputFilePath);
             string tempOutputPdfPath = Path.Combine(tempFolderPath, $"{outFileName}.pdf");
-            
 
             Database db = doc.Database;
 
@@ -279,7 +271,6 @@ namespace SioForgeCAD.Commun.Extensions
             {
                 MediaMatchingPolicy = MatchingPolicy.MatchEnabled
             };
-
             if (PlotFactory.ProcessPlotState != ProcessPlotState.NotPlotting)
             {
                 Generic.WriteMessage("Cancelled. Printer is busy (another plot job is in progress).");
@@ -303,12 +294,18 @@ namespace SioForgeCAD.Commun.Extensions
                     plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetSetProgressCaption, "Sheet Set Progress");
                     plotProcessDialog.set_PlotMsgString(PlotMessageIndex.SheetProgressCaption, "Sheet Progress");
 
+
                     string globalDevice = GetPlotDeviceName(layouts);
 
                     foreach (var (layout, layoutIndex) in layouts.Select((val, i) => (val, i + 1)))
                     {
-                        PlotInfo pagePlotInfo = new PlotInfo { Layout = layout.ObjectId };
+                        // 1. Créer un nouveau PlotInfo pour chaque page
+                        PlotInfo pagePlotInfo = new PlotInfo
+                        {
+                            Layout = layout.ObjectId
+                        };
 
+                        // 2. Configurer les Overrides
                         using (PlotSettings plotSettings = new PlotSettings(layout.ModelType))
                         {
                             plotSettings.CopyFrom(layout);
@@ -321,9 +318,11 @@ namespace SioForgeCAD.Commun.Extensions
                             plotSettingsValidator.SetStdScaleType(plotSettings, StdScaleType.ScaleToFit);
                             plotSettingsValidator.SetPlotRotation(plotSettings, layout.PlotRotation);
 
+                            // APPLIQUER LE MÊME TRACEUR À TOUTES LES PAGES
                             string media = layout.CanonicalMediaName;
                             try
                             {
+                                // On tente d'appliquer la taille de papier d'origine sur le traceur global
                                 if (!string.IsNullOrEmpty(media))
                                 {
                                     plotSettingsValidator.SetPlotConfigurationName(plotSettings, globalDevice, media);
@@ -350,7 +349,7 @@ namespace SioForgeCAD.Commun.Extensions
                                 plotProcessDialog.IsVisible = true;
                                 plotEngine.BeginPlot(plotProcessDialog, null);
 
-                                // On pointe vers le Fichier Temporaire
+                                // L'initialisation du document est maintenant verrouillée sur "DWG To PDF.pc3"
                                 plotEngine.BeginDocument(pagePlotInfo, doc.Name, null, 1, true, tempOutputPdfPath);
                             }
 
@@ -359,6 +358,7 @@ namespace SioForgeCAD.Commun.Extensions
                             plotProcessDialog.LowerSheetProgressRange = 0;
                             plotProcessDialog.UpperSheetProgressRange = 100;
                             plotProcessDialog.SheetProgressPos = 0;
+
 
                             PlotPageInfo plotPageInfo = new PlotPageInfo();
                             Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}, rotation : {layout.PlotRotation}");
@@ -377,7 +377,7 @@ namespace SioForgeCAD.Commun.Extensions
                         }
                     }
                     Generic.WriteMessage("Plotting completed.");
-                    }
+                }
                 catch (System.Exception ex)
                 {
                     Generic.WriteMessage("Plotting failed.");
@@ -392,9 +392,9 @@ namespace SioForgeCAD.Commun.Extensions
                     plotProcessDialog.OnEndPlot();
                     try { plotEngine.EndPlot(null); } catch { }
                 }
-            } // Fin des using : AutoCAD a relâché les handles sur le fichier tempOutputFilePath
+            }
 
-            // 3. Déplacer le fichier temporaire vers la destination finale en toute sécurité
+            // Déplacer le fichier temporaire vers la destination finale en toute sécurité
             if (File.Exists(tempOutputPdfPath))
             {
                 try
@@ -409,12 +409,25 @@ namespace SioForgeCAD.Commun.Extensions
                 }
                 finally
                 {
+#if !DEBUG
                     Files.TryDeleteDirectory(tempFolderPath);
+#endif
                 }
             }
 
-            return false;
+            return true;
         }
+
+
+
+
+
+
+
+
+
+
+
 
         private static bool PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
@@ -440,16 +453,15 @@ namespace SioForgeCAD.Commun.Extensions
             string tempFolderPath = Files.GetATempFolder("AcPublish");
             string tempDwgPath = Path.Combine(tempFolderPath, $"{cleanName}.dwg");
             string tempOutputPdfPath = Path.Combine(tempFolderPath, $"{outFileName}.pdf"); // Fichier PDF temporaire
+            string originalDwgDir = string.IsNullOrEmpty(db.Filename) ? string.Empty : Path.GetDirectoryName(db.Filename);
 
             try
             {
-                Directory.CreateDirectory(tempFolderPath);
                 db.SaveAs(tempDwgPath, DwgVersion.Current);
                 // On utilise 'false' pour buildDefaultDrawing car on va lire un fichier existant
                 using (Database dbSide = new Database(false, true))
                 {
                     dbSide.ReadDwgFile(tempDwgPath, FileShare.ReadWrite, true, null);
-                    string originalDwgDir = string.IsNullOrEmpty(db.Filename) ? string.Empty : Path.GetDirectoryName(db.Filename);
                     if (!string.IsNullOrEmpty(originalDwgDir))
                     {
                         dbSide.MakeXREFPathAbsolute(originalDwgDir);
@@ -490,7 +502,7 @@ namespace SioForgeCAD.Commun.Extensions
                         }
                     }
                     dsdFileData.SetDsdEntryCollection(dsdEntries);
-                    dsdFileData.ProjectPath = Path.GetDirectoryName(outputFilePath);
+                    dsdFileData.ProjectPath = tempFolderPath;
                     dsdFileData.LogFilePath = Path.Combine(tempFolderPath, "publish.log");
                     dsdFileData.SheetType = isMultiPage ? SheetType.MultiPdf : SheetType.SinglePdf;
                     dsdFileData.DestinationName = tempOutputPdfPath;
@@ -543,7 +555,9 @@ namespace SioForgeCAD.Commun.Extensions
             finally
             {
                 Generic.SetSystemVariable("BACKGROUNDPLOT", bgPlot, false);
-                Files.TryDeleteDirectory(tempFolderPath);
+#if !DEBUG
+                    Files.TryDeleteDirectory(tempFolderPath);
+#endif
             }
             return true;
         }

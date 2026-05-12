@@ -150,6 +150,7 @@
     <Compile Include="Commun\Extensions\DBPoint.cs" />
     <Compile Include="Commun\Extensions\DBText.cs" />
     <Compile Include="Commun\Extensions\Dimension.cs" />
+    <Compile Include="Commun\Extensions\Document.cs" />
     <Compile Include="Commun\Extensions\Double.cs" />
     <Compile Include="Commun\Extensions\Ellipses.cs" />
     <Compile Include="Commun\Extensions\Extends2d.cs" />
@@ -308,6 +309,7 @@
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\PUBLISHSELECTEDLAYOUTS.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
+    <Compile Include="Functions\SMARTLEGEND.cs" />
     <Compile Include="Functions\TEST.cs" />
     <Compile Include="Functions\VEGBLOCEXPORTTOILLUSTRATOR.cs" />
     <Compile Include="Functions\VIEWGEOMETRYVERTEX.cs" />

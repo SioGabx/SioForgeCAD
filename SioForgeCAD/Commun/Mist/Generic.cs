@@ -55,7 +55,9 @@ namespace SioForgeCAD.Commun
         public static void WriteMessage(object message)
         {
             Editor ed = GetEditor();
-            ed?.WriteMessage($"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n");
+            string FormatedMessage = $"\n{message.ToString().Replace('\n', '\u2028').Replace("\r", "")}\n";
+            ed?.WriteMessage(FormatedMessage);
+            Debug.WriteLine(FormatedMessage);
         }
 
         public static void WriteInfoCenterBalloonMessage(object message)
@@ -168,9 +170,20 @@ namespace SioForgeCAD.Commun
             return doc?.LockDocument();
         }
 
-        public static Database GetDatabase()
+        public static Database GetWorkingDatabase()
         {
             return HostApplicationServices.WorkingDatabase;
+        }
+
+        public static void SetWorkingDatabase(Database db)
+        {
+            HostApplicationServices.WorkingDatabase = db;
+        }
+
+        public static Database GetDatabase()
+        {
+            var doc = GetDocument();
+            return doc.Database;
         }
 
         public static BlockTableRecord GetCurrentSpaceBlockTableRecord(Transaction acTrans, OpenMode openMode = OpenMode.ForWrite)

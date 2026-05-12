@@ -35,7 +35,7 @@ namespace SioForgeCAD.Commun
 
         public static string GetEntityPathInChildXref(this PromptNestedEntityResult res)
         {
-            Database db = HostApplicationServices.WorkingDatabase;
+            Database db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 List<string> Path = new List<string>();

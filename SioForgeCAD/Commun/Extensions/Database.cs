@@ -34,7 +34,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static void MakeXREFPathAbsolute(this Database db, string originalDwgDir = null)
         {
-            if (!string.IsNullOrEmpty(db.Filename))
+            if (string.IsNullOrEmpty(originalDwgDir) && !string.IsNullOrEmpty(db.Filename))
             {
                 originalDwgDir = Path.GetDirectoryName(db.Filename);
             }

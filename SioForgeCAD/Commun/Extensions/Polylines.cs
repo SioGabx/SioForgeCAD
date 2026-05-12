@@ -107,7 +107,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
 
             // Récupérer la base de données active (soit celle de la poly, soit la globale)
-            Database db = polyline.Database ?? HostApplicationServices.WorkingDatabase;
+            Database db = polyline.Database ?? Generic.GetWorkingDatabase();
 
             polyline.LayerId = db.Clayer;
 

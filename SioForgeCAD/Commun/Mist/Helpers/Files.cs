@@ -10,6 +10,7 @@ namespace SioForgeCAD.Commun.Mist
         {
             string uniqueId = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N").Substring(0, 6)}";
             string tempFolderPath = Path.Combine(Path.GetTempPath(), $"{ProcessName}_{uniqueId}");
+            Directory.CreateDirectory(tempFolderPath);
             return tempFolderPath;
         }
 

@@ -56,6 +56,8 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static Matrix3d GetModelToPaperTransform(this Viewport vport)
         {
+            //CenterPoint = C'est la position du rectangle du Viewport sur votre mise en page (Paper Space).
+            //ViewCenter : C'est le centre de ce que vous voyez à l'intérieur du cadre (DCS).
             //https://www.theswamp.org/index.php?action=post;quote=477118;topic=42503.0;last_msg=596197
             Point3d center = new Point3d(vport.ViewCenter.X, vport.ViewCenter.Y, 0.0);
             return Matrix3d.Displacement(new Vector3d(vport.CenterPoint.X - center.X, vport.CenterPoint.Y - center.Y, 0.0))
