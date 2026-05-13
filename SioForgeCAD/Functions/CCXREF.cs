@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                         string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
 
                         Dictionary<string, string> AltimetrieValue = new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-                        if (BlockPosition.SCG.IsThereABlockReference(Settings.BlkAltimetry, AltimetrieStr, out var BlkFound) && BlkFound.Layer == Layers.GetCurrentLayerName())
+                        if (BlockPosition.SCG.IsThereABlockReference(Settings.BlkAltimetry, AltimetrieStr, out var BlkFound) && BlkFound?.Layer == Layers.GetCurrentLayerName())
                         {
                             Generic.WriteMessage("Un bloc ayant la même valeur existe déja à cette position");
                         }

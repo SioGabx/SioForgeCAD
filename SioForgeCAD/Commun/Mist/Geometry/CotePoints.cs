@@ -165,11 +165,11 @@ namespace SioForgeCAD.Commun
             return null;
         }
 
-        public static double? ExtractDoubleInStringFromPoint(string OriginalString)
+        public static double? ExtractDoubleInStringFromPoint(string OriginalString, bool Print = true)
         {
             if (OriginalString.Contains("%"))
             {
-                Generic.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être convertis en cote.");
+                if (Print) Generic.WriteMessage("Par mesure de sécurité, les textes contenant des % ne peuvent être convertis en cote.");
                 return null;
             }
 
@@ -203,7 +203,7 @@ namespace SioForgeCAD.Commun
                 bool IsValidNumber = double.TryParse(FinalNumberString, out double FinalNumberDouble);
                 if (IsValidNumber)
                 {
-                    Generic.WriteMessage($"Côte détéctée : {FinalNumberString}\n");
+                    if (Print) Generic.WriteMessage($"Côte détéctée : {FinalNumberString}\n");
                     return FinalNumberDouble;
                 }
                 else

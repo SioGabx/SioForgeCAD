@@ -311,6 +311,7 @@
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\SMARTLEGEND.cs" />
     <Compile Include="Functions\TEST.cs" />
+    <Compile Include="Functions\TRYCONVERTACADPROXYENTALTIMETRYTOBLK.cs" />
     <Compile Include="Functions\VEGBLOCEXPORTTOILLUSTRATOR.cs" />
     <Compile Include="Functions\VIEWGEOMETRYVERTEX.cs" />
     <Compile Include="Functions\VOLUMESTOCKAGEEP.cs" />

@@ -518,10 +518,16 @@ namespace SioForgeCAD
             Functions.SMARTLEGEND.Test();
         }
 
+        [CommandMethod("DEBUG", "TRYCONVERTACADPROXYENTALTIMETRYTOBLK", CommandFlags.Redraw)]
+        public static void TRYCONVERTACADPROXYENTALTIMETRYTOBLK()
+        {
+            Functions.TRYCONVERTACADPROXYENTALTIMETRYTOBLK.Convert();
+        }
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Debug.WriteLine(Generic.GetDatabase().Filename);
+            Functions.TEST.AddAltimetryBlocksAtVertices();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]

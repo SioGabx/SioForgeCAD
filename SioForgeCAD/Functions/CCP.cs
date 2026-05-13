@@ -70,73 +70,146 @@ namespace SioForgeCAD.Functions
             };
         }
 
+        //private (string AnglePente, string SensPente) GetPenteBlocSettings()
+        //{
+        //    double NormalizeDegrees(double AngleInDegreesToNormalize)
+        //    {
+        //        double NormalizedAngle = AngleInDegreesToNormalize;
+        //        if (NormalizedAngle > 360)
+        //        {
+        //            NormalizedAngle -= 360;
+        //        }
+        //        else if (NormalizedAngle < 0)
+        //        {
+        //            NormalizedAngle = 360 - AngleInDegreesToNormalize;
+        //        }
+        //        return NormalizedAngle;
+        //    }
+
+        //    double PointsAngleVectorInRadians = 0;
+
+        //    Point3d StartPoint;
+        //    Point3d EndPoint;
+
+        //    Point3d FirstPointCoteLocation = FirstPointCote.Points.SCG.Flatten();
+        //    Point3d SecondPointCoteLocation = SecondPointCote.Points.SCG.Flatten();
+        //    if (FirstPointCote.Altitude > SecondPointCote.Altitude)
+        //    {
+        //        StartPoint = FirstPointCoteLocation;
+        //        EndPoint = SecondPointCoteLocation;
+        //    }
+        //    else
+        //    {
+        //        StartPoint = SecondPointCoteLocation;
+        //        EndPoint = FirstPointCoteLocation;
+        //    }
+
+        //    using (Line acLine = new Line(StartPoint, EndPoint))
+        //    {
+        //        try
+        //        {
+        //            PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(StartPoint), Vector3d.ZAxis);
+        //        }
+        //        catch (Exception)
+        //        {
+        //            PointsAngleVectorInRadians = -1;
+        //        }
+        //    }
+
+        //    int BlocInverseState = 0;
+
+        //    double DegreesAngles = PointsAngleVectorInRadians * 180 / Math.PI;
+        //    double USCRotation = Generic.GetEditor().GetUSCRotation(AngleUnit.Degrees);
+        //    DegreesAngles -= 1 * USCRotation;
+        //    if (DegreesAngles > 90 + USCRotation && DegreesAngles < 270 + USCRotation)
+        //    {
+        //        if (BlocInverseState == 0)
+        //        {
+        //            BlocInverseState = 1;
+        //        }
+        //        else
+        //        {
+        //            BlocInverseState = 0;
+        //        }
+
+        //        DegreesAngles += 180;
+        //        DegreesAngles = NormalizeDegrees(DegreesAngles);
+        //    }
+        //    double RadiansAngle = DegreesAngles * Math.PI / 180;
+        //    return (RadiansAngle.ToString(), BlocInverseState.ToString());
+        //}
+
+        // Fonction principale qui orchestre la logique
         private (string AnglePente, string SensPente) GetPenteBlocSettings()
         {
-            double NormalizeDegrees(double AngleInDegreesToNormalize)
+            // 1. Déterminer les points de départ et de fin en fonction de l'altitude
+            (Point3d startPoint, Point3d endPoint) = GetOrderedPointsByAltitude(FirstPointCote, SecondPointCote);
+
+            // 2. Calculer l'angle brut du vecteur en radians
+            double angleInRadians = CalculateVectorAngle(startPoint, endPoint);
+
+            // 4. Ajuster l'angle et déterminer si le bloc doit être inversé
+            (double finalRadians, int blocInverseState) = AdjustAngleAndInversion(angleInRadians);
+
+            return (finalRadians.ToString(), blocInverseState.ToString());
+        }
+
+        private static (Point3d StartPoint, Point3d EndPoint) GetOrderedPointsByAltitude(CotePoints pt1, CotePoints pt2)
+        {
+            Point3d loc1 = pt1.Points.SCG.Flatten();
+            Point3d loc2 = pt2.Points.SCG.Flatten();
+
+            // Le point le plus haut devient le StartPoint
+            if (pt1.Altitude > pt2.Altitude)
             {
-                double NormalizedAngle = AngleInDegreesToNormalize;
-                if (NormalizedAngle > 360)
-                {
-                    NormalizedAngle -= 360;
-                }
-                else if (NormalizedAngle < 0)
-                {
-                    NormalizedAngle = 360 - AngleInDegreesToNormalize;
-                }
-                return NormalizedAngle;
+                return (loc1, loc2);
+            }
+            return (loc2, loc1);
+        }
+
+        private static double CalculateVectorAngle(Point3d startPoint, Point3d endPoint)
+        {
+            try
+            {
+                Vector3d direction = endPoint - startPoint;
+                return Vector3d.XAxis.GetAngleTo(direction, Vector3d.ZAxis);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
+        public static (double AdjustedAngleRadians, int BlocInverseState) AdjustAngleAndInversion(double radiansAngle)
+        {
+            int blocInverseState = 0;
+            double degreesAngle = radiansAngle * (180.0 / Math.PI);
+
+            double uscRotation = Generic.GetEditor().GetUSCRotation(AngleUnit.Degrees);
+
+            degreesAngle -= uscRotation;
+
+            // Si le texte/bloc se retrouve à l'envers par rapport à la vue
+            if (degreesAngle > (90 + uscRotation) && degreesAngle < (270 + uscRotation))
+            {
+                blocInverseState = 1; // Simplification du toggle 0/1
+                degreesAngle += 180;
+                degreesAngle = NormalizeDegrees(degreesAngle);
             }
 
-            double PointsAngleVectorInRadians = 0;
+            double finalRadians = degreesAngle * (Math.PI / 180.0);
+            return (finalRadians, blocInverseState);
+        }
 
-            Point3d StartPoint;
-            Point3d EndPoint;
-
-            Point3d FirstPointCoteLocation = FirstPointCote.Points.SCG.Flatten();
-            Point3d SecondPointCoteLocation = SecondPointCote.Points.SCG.Flatten();
-            if (FirstPointCote.Altitude > SecondPointCote.Altitude)
+        private static double NormalizeDegrees(double angleInDegrees)
+        {
+            // Normalisation d'angle plus robuste (ramène n'importe quel angle entre 0 et 360)
+            double normalizedAngle = angleInDegrees % 360.0;
+            if (normalizedAngle < 0)
             {
-                StartPoint = FirstPointCoteLocation;
-                EndPoint = SecondPointCoteLocation;
+                normalizedAngle += 360.0;
             }
-            else
-            {
-                StartPoint = SecondPointCoteLocation;
-                EndPoint = FirstPointCoteLocation;
-            }
-
-            using (Line acLine = new Line(StartPoint, EndPoint))
-            {
-                try
-                {
-                    PointsAngleVectorInRadians = Vector3d.XAxis.GetAngleTo(acLine.GetFirstDerivative(StartPoint), Vector3d.ZAxis);
-                }
-                catch (Exception)
-                {
-                    PointsAngleVectorInRadians = -1;
-                }
-            }
-
-            int BlocInverseState = 0;
-
-            double DegreesAngles = PointsAngleVectorInRadians * 180 / Math.PI;
-            double USCRotation = Generic.GetEditor().GetUSCRotation(AngleUnit.Degrees);
-            DegreesAngles -= 1 * USCRotation;
-            if (DegreesAngles > 90 + USCRotation && DegreesAngles < 270 + USCRotation)
-            {
-                if (BlocInverseState == 0)
-                {
-                    BlocInverseState = 1;
-                }
-                else
-                {
-                    BlocInverseState = 0;
-                }
-
-                DegreesAngles += 180;
-                DegreesAngles = NormalizeDegrees(DegreesAngles);
-            }
-            double RadiansAngle = DegreesAngles * Math.PI / 180;
-            return (RadiansAngle.ToString(), BlocInverseState.ToString());
+            return normalizedAngle;
         }
     }
 }

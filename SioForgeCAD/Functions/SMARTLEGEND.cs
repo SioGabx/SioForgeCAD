@@ -45,7 +45,7 @@ namespace SioForgeCAD.Functions
             {
                 Legend.UnmergeCells(HeaderRow);
             }
-            
+
             for (int r = 0; r < Legend.Rows.Count; r++)
             {
                 for (int c = -1; c < Legend.Columns.Count; c++)
@@ -55,7 +55,7 @@ namespace SioForgeCAD.Functions
                     cell.DataType = new DataTypeParameter(DataType.General, UnitType.Unitless);
                     cell.IsMergeAllEnabled = false;
                     cell.Style = ""; //To "suppress" the title and header, style of "Title" or "Header" -> set it to ""
-                    cell.TextHeight = 0.25; 
+                    cell.TextHeight = 0.25;
                     cell.Borders.Horizontal.Margin = 0.25;
                     cell.Borders.Vertical.Margin = 0.25;
 
