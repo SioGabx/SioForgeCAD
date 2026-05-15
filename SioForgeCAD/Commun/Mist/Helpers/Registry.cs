@@ -45,6 +45,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             }
             return false;
         }
+
         public static T GetValue<T>(string RegistryPath, string name, T defaultValue = default)
         {
             try

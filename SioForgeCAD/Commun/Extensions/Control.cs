@@ -44,7 +44,6 @@ namespace SioForgeCAD.Commun.Extensions
 
             foreach (Control child in parent.Controls)
             {
-                Debug.WriteLine(child.GetType().Name);
                 if (child.GetType().Name == typeName)
                 {
                     return child;

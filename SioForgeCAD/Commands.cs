@@ -28,9 +28,17 @@ namespace SioForgeCAD
             };
             promptKeywordOptions.Keywords.Add("About");
             promptKeywordOptions.Keywords.Add("Settings");
-            promptKeywordOptions.Keywords.Add("Register");
-            promptKeywordOptions.Keywords.Add("Unregister");
+            if (PluginRegister.IsAlreadyRegister())
+            {
+                promptKeywordOptions.Keywords.Add("Unregister");
+            }
+            else
+            {
+                promptKeywordOptions.Keywords.Add("Register");
+            }
+
             promptKeywordOptions.Keywords.Add("LoadCUIX");
+
             var result = ed.GetKeywords(promptKeywordOptions);
             switch (result.StringResult)
             {
