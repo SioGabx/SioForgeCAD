@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace SioForgeCAD.Functions
@@ -155,7 +156,7 @@ namespace SioForgeCAD.Functions
                 Vector3d dcsVector = vector.TransformBy(matWcsToDcs);
 
                 // On applique le déplacement sur le ViewCenter (en 2D)
-                ViewPort.ViewCenter = ViewPort.ViewCenter.Add(new Vector2d(dcsVector.X, dcsVector.Y)); 
+                ViewPort.ViewCenter = ViewPort.ViewCenter.Add(new Vector2d(dcsVector.X, dcsVector.Y));
                 ViewPort.Locked = true;
             }
         }
@@ -182,15 +183,15 @@ namespace SioForgeCAD.Functions
         private static string PromptForLayoutName()
         {
             Editor ed = Generic.GetEditor();
-            List<Layout> AllLayouts = ed.GetAllLayout();
-            List<string> layoutNames = AllLayouts.ConvertAll(ele => $"{ele.LayoutName}");
-            if (layoutNames.Count == 0)
+            List<Layout> AllLayouts = ed.GetAllLayout().OrderBy(ele => ele.TabOrder).ToList();
+            List<string> LayoutsNames = AllLayouts.ConvertAll(ele => $"{ele.LayoutName}");
+            if (LayoutsNames.Count == 0)
             {
-                Generic.WriteMessage("\nAucun layout disponible.");
+                Generic.WriteMessage("Aucun layout disponible.");
                 return null;
             }
 
-            var res = ed.GetOptions("Sélectionnez le layout cible :", true, layoutNames.ToArray());
+            var res = ed.GetOptions("Sélectionnez le layout cible :", true, LayoutsNames.ToArray());
             string SelectedLayoutName = res.StringResult ?? string.Empty;
 
             return res.Status == PromptStatus.OK ? SelectedLayoutName : null;

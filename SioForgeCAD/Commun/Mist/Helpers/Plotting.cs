@@ -194,6 +194,10 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                                 Generic.WriteMessage($"Attention : Format de papier '{media}' non supporté par {globalDevice} pour la présentation {layout.LayoutName}.");
                                 return false;
                             }
+                            if (!plotProcessDialog.IsVisible)
+                            {
+                                plotProcessDialog.IsVisible = true;
+                            }
 
                             LayoutManager.Current.CurrentLayout = layout.LayoutName;
                             pagePlotInfo.OverrideSettings = plotSettings;
@@ -202,10 +206,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             if (layoutIndex == 1)
                             {
                                 plotProcessDialog.OnBeginPlot();
-                                plotProcessDialog.IsVisible = true;
                                 plotEngine.BeginPlot(plotProcessDialog, null);
-
-                                // L'initialisation du document est maintenant verrouillée sur "DWG To PDF.pc3"
                                 plotEngine.BeginDocument(pagePlotInfo, doc.Name, null, 1, true, tempOutputPdfPath);
                             }
 

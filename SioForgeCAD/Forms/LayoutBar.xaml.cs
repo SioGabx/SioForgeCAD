@@ -1779,7 +1779,7 @@ namespace SioForgeCAD.Forms
 
                 Document doc = Generic.GetDocument();
                 string docPath = Path.GetFileNameWithoutExtension(doc.Name);
-                string dwgDirectory = Path.GetDirectoryName(docPath);
+                string dwgDirectory = doc.GetPath();
 
                 // UX : Demander l'emplacement et le nom du carnet PDF
                 SaveFileDialog saveFileDialog = new SaveFileDialog
@@ -1787,7 +1787,8 @@ namespace SioForgeCAD.Forms
                     Title = "Enregistrer la publication (Carnet)",
                     Filter = "Fichier PDF (*.pdf)|*.pdf",
                     FileName = $"{docPath}_Carnet.pdf",
-                    InitialDirectory = dwgDirectory
+                    InitialDirectory = dwgDirectory,
+                    RestoreDirectory = false,
                 };
 
                 if (saveFileDialog.ShowDialog() != true) return; // Si l'utilisateur annule, on arrête là.
