@@ -6,6 +6,7 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 
 
 namespace SioForgeCAD.Functions
@@ -90,7 +91,7 @@ namespace SioForgeCAD.Functions
             {
                 while (true)
                 {
-                    var res = jig.GetPoint("Indiquez les emplacements des présentations", "Terminer", "Annuler précédent");
+                    var res = jig.GetPoint("Indiquez les emplacements des présentations", "Terminer", "Modifier", "Annuler précédent");
 
                     if (res.PromptPointResult.Status == PromptStatus.OK)
                     {

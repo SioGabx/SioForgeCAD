@@ -4,25 +4,49 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun.Mist;
+using System;
 
 namespace SioForgeCAD.Functions
 {
-    public static class SETSELECTEDENTITIESCOLORTOGRAYSCALE
+    public static class SETSELECTEDENTITIESSATURATION
     {
+        static double LastSaturationValue = 100;
+
         public static void Set()
         {
             Document doc = Generic.GetDocument();
             Editor ed = Generic.GetEditor();
             var PromptSelectEntitiesOptions = new PromptSelectionOptions()
             {
-                MessageForAdding = "Selectionnez les entités"
+                MessageForAdding = "Sélectionnez les entités"
             };
+
             var AllSelectedObject = ed.GetSelectionRedraw(PromptSelectEntitiesOptions);
             //var AllSelectedObject = ed.GetSelection(PromptSelectEntitiesOptions);
 
             if (AllSelectedObject.Status != PromptStatus.OK)
             {
                 return;
+            }
+
+            while (true)
+            {
+                var PromptDouble = new PromptDoubleOptions("\nDéfinir le pourcentage de saturation")
+                {
+                    AllowNegative = false,
+                    AllowZero = true,
+                    DefaultValue = LastSaturationValue,
+                    UseDefaultValue = true
+                };
+
+                var SaturationValue = ed.GetDouble(PromptDouble);
+                if (SaturationValue.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+                LastSaturationValue = SaturationValue.Value;
+                break;
             }
 
             using (var tr = doc.TransactionManager.StartTransaction())
@@ -47,20 +71,30 @@ namespace SioForgeCAD.Functions
             {
                 BaseColor = Layers.GetLayerColor(LayerTableRecordObjId);
             }
-            SelectedEntity.Color = BaseColor.ConvertColorToGray();
+            SelectedEntity.Color = SetSaturation(BaseColor);
 
             if (SelectedEntity is Hatch SelectedEntityHatch)
             {
                 if (SelectedEntityHatch.BackgroundColor.IsByLayer)
                 {
                     var LayerColor = Layers.GetLayerColor(LayerTableRecordObjId);
-                    SelectedEntityHatch.BackgroundColor = LayerColor.ConvertColorToGray();
+                    SelectedEntityHatch.BackgroundColor = SetSaturation(LayerColor);
                 }
                 else
                 {
-                    SelectedEntityHatch.BackgroundColor = SelectedEntityHatch.BackgroundColor.ConvertColorToGray();
+                    SelectedEntityHatch.BackgroundColor = SetSaturation(SelectedEntityHatch.BackgroundColor);
                 }
             }
+        }
+
+        public static Color SetSaturation(Color BaseColor)
+        {
+            var hsv = Colors.ColorToHSV(BaseColor);
+            // Multiplicateur basé sur le pourcentage (100 = 1.0, 50 = 0.5, 200 = 2.0)
+            double SaturationFactor = LastSaturationValue / 100.0;
+            double newSaturation = hsv.saturation * SaturationFactor;
+            newSaturation = Math.Max(0.0, Math.Min(1.0, newSaturation));
+            return Colors.FromHSV(hsv.hue, newSaturation, hsv.value);
         }
     }
 }

@@ -79,73 +79,73 @@ namespace SioForgeCAD
             }
         }
 
-        [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
         //Compute an intermediate point between two elevation points.
+        [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
         public static void CCI() => new Functions.CCI().Compute();
 
-        [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
         //Compute slope value between two elevation points.
+        [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
         public static void CCP() => new Functions.CCP().Compute();
 
-        [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
         //Calculate a point from a known elevation point using a slope.
+        [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
         public static void CCD() => new Functions.CCD().Compute();
 
-        [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
         //Add or subtract an elevation value to/from a point.
+        [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
         public static void CCA() => Functions.CCA.Compute();
 
-        [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]
         //Create a block from a text-based elevation value
+        [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]
         public static void CCFROMTEXT() => Functions.CCFROMTEXT.CreateCotationBlocFromText();
 
-        [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
         //Move a XREF elevation point into the drawing.
+        [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
         public static void CCXREF() => Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
 
-        [CommandMethod("SIOFORGECAD", "RENBLK", CommandFlags.Redraw)]
         //Allow user to rename a block
+        [CommandMethod("SIOFORGECAD", "RENBLK", CommandFlags.Redraw)]
         public static void RENBLK() => Functions.RENBLK.RenameBloc();
 
-        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUE", CommandFlags.Redraw)]
         //Makes the block instance unique. If several of the selected blocks have the same name, they will then share a new common instance
-        public static void BLKMAKEUNIQUE() => new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
+        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUE", CommandFlags.Redraw)]
+       public static void BLKMAKEUNIQUE() => new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
 
-        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
         //Makes the block instance unique. If several of the selected blocks have the same name, they will NOT share a new common instance
+        [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
         public static void BLKMAKEUNIQUEEACH() => new Functions.BLKMAKEUNIQUE(false).MakeUniqueBlockReferences();
 
-        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
         //Convert all entity values in the block to BYBLOCK
-        public static void BLKSETTOBYBBLOCK() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Include);
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
+      public static void BLKSETTOBYBBLOCK() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Include);
 
-        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
         //Convert all entity values in the block to BYBLOCK, ignoring HATCH
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
         public static void BLKSETTOBYBBLOCKIGNOREHATCH() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Ignore);
 
-        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKHATCHSETTOWHITE", CommandFlags.Redraw)]
         //Convert all entity values in the block to BYBLOCK, HATCH to white (rgb 255,255,255)
-        public static void BLKSETTOBYBBLOCKHATCHSETTOWHITE() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.SetToWhite);
+        [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKHATCHSETTOWHITE", CommandFlags.Redraw)]
+       public static void BLKSETTOBYBBLOCKHATCHSETTOWHITE() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.SetToWhite);
 
+        //Allow user to redefine the basepoint of a block instance without moving it
         [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "INSEDIT", CommandFlags.UsePickSet)]
-        //Allow user to redefine the basepoint of a block instance without moving it
         public static void BLKINSEDIT() => Functions.BLKINSEDIT.MoveBasePoint();
 
-        [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         //Convert dynamic block to static block
+        [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK() => Functions.BLKTOSTATICBLOCK.Convert();
 
-        [CommandMethod("SIOFORGECAD", "BLKCREATE", CommandFlags.Redraw)]
         //Create  block reference from selection
+        [CommandMethod("SIOFORGECAD", "BLKCREATE", CommandFlags.Redraw)]
         public static void BLKCREATE() => Functions.BLKCREATE.Create();
 
-        [CommandMethod("SIOFORGECAD", "BLKCREATEANONYMOUS", CommandFlags.Redraw)]
         //Create anonymous block reference from selection
+        [CommandMethod("SIOFORGECAD", "BLKCREATEANONYMOUS", CommandFlags.Redraw)]
         public static void BLKCREATEANONYMOUS() => Functions.BLKCREATEANONYMOUS.Create();
 
-        [CommandMethod("SIOFORGECAD", "BLKTOXREF", CommandFlags.UsePickSet)]
         //Convert a block to a XREF
+        [CommandMethod("SIOFORGECAD", "BLKTOXREF", CommandFlags.UsePickSet)]
         public static void BLKTOXREF() => Functions.BLKTOXREF.Convert();
 
         [CommandMethod("SIOFORGECAD", "BLKADDENTITIES", CommandFlags.UsePickSet)]
@@ -197,20 +197,24 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "DRAWCPORDERGRADIENT", CommandFlags.UsePickSet)]
         public static void DRAWCPORDERGRADIENT() => Functions.DRAWCPORDERGRADIENT.Compute();
 
-        [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.Redraw)]
         //Force layer color to selected entities (changes "BYLAYER" to layer color)
+        [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.Redraw)]
         public static void FORCELAYERCOLORTOENTITY() => Functions.FORCELAYERCOLORTOENTITY.Convert();
 
+        //
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCOLORTOGRAYSCALE", CommandFlags.Redraw)]
-        //Force layer color to selected entities (changes "BYLAYER" to layer color)
-        public static void SETSELECTEDENTITIESCOLORTOGRAYSCALE() => Functions.SETSELECTEDENTITIESCOLORTOGRAYSCALE.Convert();
+        public static void SETSELECTEDENTITIESCOLORTOGRAYSCALE() => Functions.SETSELECTEDENTITIESCOLORTOGRAYSCALE.Set();
 
+        //
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESBRIGHTNESS", CommandFlags.Redraw)]
-        //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void SETSELECTEDENTITIESBRIGHTNESS() => Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
 
+        //
+        [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESSATURATION", CommandFlags.Redraw)]
+        public static void SETSELECTEDENTITIESSATURATION() => Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
+
+        //
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCONTRAST", CommandFlags.Redraw)]
-        //Force layer color to selected entities (changes "BYLAYER" to layer color)
         public static void SETSELECTEDENTITIESCONTRAST() => Functions.SETSELECTEDENTITIESCONTRAST.Set();
 
         [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
@@ -228,12 +232,12 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "SSE", CommandFlags.Redraw)]
         public static void SSE() => Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTypes();
 
-        [CommandMethod("SIOFORGECAD", "SSBLK", CommandFlags.Redraw)]
         //Select all block instance of selected blocks
+        [CommandMethod("SIOFORGECAD", "SSBLK", CommandFlags.Redraw)]
         public static void SSBLK() => Functions.SPECIALSSELECTIONS.AllBlockWithSelectedBlocksNames();
 
-        [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
         //Select all entities on current layer
+        [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
         public static void SSCL() => Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
 
         [CommandMethod("SIOFORGECAD", "SSALLINSIDE", CommandFlags.Redraw)]
@@ -316,24 +320,24 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "REMOVEALLENTITIESXDATA", CommandFlags.Modal)]
         public static void REMOVEALLENTITIESXDATA() => Functions.ENTITIESXDATA.RemoveAll();
 
-        [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
         //Cut a hatch in half or more (cut with a existing polyline)
+        [CommandMethod("SIOFORGECAD", "CUTHATCH", CommandFlags.UsePickSet)]
         public static void CUTHATCH() => Functions.CUTHATCH.CutHoleHatch();
 
-        [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
         //Merge two hatches together
+        [CommandMethod("SIOFORGECAD", "MERGEHATCH", CommandFlags.UsePickSet)]
         public static void MERGEHATCH() => Functions.MERGEHATCH.Merge();
 
-        [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves
+        [CommandMethod("SIOFORGECAD", "SCALEBY", CommandFlags.UsePickSet)]
         public static void SCALEBY() => Functions.SCALEBY.ScaleBy();
 
-        [CommandMethod("SIOFORGECAD", "SCALEFIT", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves to fit a specified size
+        [CommandMethod("SIOFORGECAD", "SCALEFIT", CommandFlags.UsePickSet)]
         public static void SCALEFIT() => Functions.SCALEFIT.ScaleFit();
 
-        [CommandMethod("SIOFORGECAD", "SCALERANDOM", CommandFlags.UsePickSet)]
         //Scale each of the selected objects relative to themselves to fit a random size between a range
+        [CommandMethod("SIOFORGECAD", "SCALERANDOM", CommandFlags.UsePickSet)]
         public static void SCALERANDOM() => Functions.SCALERANDOM.Scale();
 
         [CommandMethod("SIOFORGECAD", "GETINNERCENTROID", CommandFlags.UsePickSet)]
@@ -385,43 +389,45 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "COPYPAPERTOMODEL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYPAPERTOMODEL() => Functions.COPYPAPERTOMODEL.ChangeSpace();
 
+        //Outline (in model space) the selected viewport
         [CommandMethod("SIOFORGECAD", "VPO", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTOUTLINE", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
-        //Outline (in model space) the selected viewport
         public static void VIEWPORTOUTLINE() => Functions.VIEWPORTOUTLINE.OutlineSelected();
 
+        //Outline (in model space) all viewport in the drawing
         [CommandMethod("SIOFORGECAD", "VPOALL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTOUTLINEALL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
-        //Outline (in model space) all viewport in the drawing
         public static void VIEWPORTOUTLINEALL() => Functions.VIEWPORTOUTLINE.OutlineAll(false);
-        [CommandMethod("SIOFORGECAD", "VPOSELECTEDLAYOUTTAB", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+
+
         //Outline (in model space) all viewport  in current layout tab
+        [CommandMethod("SIOFORGECAD", "VPOSELECTEDLAYOUTTAB", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPOSELECTEDLAYOUTTAB() => Functions.VIEWPORTOUTLINE.OutlineAll(true);
 
-        [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
         //Delete groups inside of a larger groups
+        [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
         public static void DELETESUBGROUP() => Functions.DELETESUBGROUP.Delete();
 
-        [CommandMethod("SIOFORGECAD", "LIMITNUMBERINSELECTION", CommandFlags.Redraw)]
         //Limit the number of selected entities.
+        [CommandMethod("SIOFORGECAD", "LIMITNUMBERINSELECTION", CommandFlags.Redraw)]
         public static void LIMITNUMBERINSELECTION() => Functions.LIMITNUMBERINSELECTION.Limit();
 
-        [CommandMethod("SIOFORGECAD", "ROTATEONSINGLEAXIS", CommandFlags.UsePickSet)]
         //Rotate selected entities along a single axis (X, Y, Z)
+        [CommandMethod("SIOFORGECAD", "ROTATEONSINGLEAXIS", CommandFlags.UsePickSet)]
         public static void ROTATEONSINGLEAXIS() => Functions.ROTATEONSINGLEAXIS.Rotate();
 
+        //Draw the bounding box of selected entities
         [CommandMethod("SIOFORGECAD", "DRAWBOUNDINGBOX", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "DRAWEXTENDS", CommandFlags.UsePickSet)]
-        //Draw the bounding box of selected entities
         public static void DRAWBOUNDINGBOX() => Functions.DRAWBOUNDINGBOX.Draw();
 
-        [CommandMethod("SIOFORGECAD", "DXFIMPORT", CommandFlags.UsePickSet)]
         //Allow user to import multiples DXF or DWG at once
+        [CommandMethod("SIOFORGECAD", "DXFIMPORT", CommandFlags.UsePickSet)]
         public static void DXFIMPORT() => Functions.DXFIMPORT.Import();
 
+        //Recreate the polyline arround each selected hatch
         [CommandMethod("SIOFORGECAD", "RECREATEASSOCIATIVEHATCHBOUNDARY", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "HATCHRECREATEMISSINGBOUNDARIES", CommandFlags.UsePickSet)]
-        //Recreate the polyline arround each selected hatch
         public static void HATCHRECREATEMISSINGBOUNDARIES() => Functions.HATCHRECREATEMISSINGBOUNDARIES.Recreate();
 
         [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHINVALIDAREA", CommandFlags.Redraw)]
@@ -436,20 +442,20 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER", CommandFlags.Redraw)]
         public static void FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER() => Functions.FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.Search();
 
-        [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
         //Flatten Each Entity
+        [CommandMethod("SIOFORGECAD", "SMARTFLATTEN", CommandFlags.UsePickSet)]
         public static void SMARTFLATTEN() => Functions.SMARTFLATTEN.Flatten();
 
-        [CommandMethod("SIOFORGECAD", "SMARTFLATTENEVERYTHINGS", CommandFlags.UsePickSet)]
         //Flatten Each Entity
+        [CommandMethod("SIOFORGECAD", "SMARTFLATTENEVERYTHINGS", CommandFlags.UsePickSet)]
         public static void SMARTFLATTENEVERYTHINGS() => Functions.SMARTFLATTEN.FlattenAll();
 
-        [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
         //
+        [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
         public static void STRIPTEXTFORMATING() => Functions.STRIPTEXTFORMATING.Strip();
 
-        [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         //Fix possible issues in drawing
+        [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         public static void FIXDRAWING() => Functions.FIXDRAWING.Fix();
 
         [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]

@@ -131,9 +131,10 @@ namespace SioForgeCAD.Functions
                 Color HeightColorIndicator = GetColorFromHeight(Height);
                 //If the layer arealdy exist; we need to get the real color
                 BlocColor = Layers.GetLayerColor(BlocName);
+                var LayerTransparency = Layers.GetTransparency(BlocName);
                 string Description = GenerateDataStore(BlocName, CompleteName, Height, Width, Type);
                 var blkId = BlockReferences.Create(BlocName, Description, new DBObjectCollection(), Points.Empty, false, BlockScaling.Uniform);
-                PopulateBlocGeometry(blkId, ShortName, Width, Height, BlocColor, HeightColorIndicator);
+                PopulateBlocGeometry(blkId, ShortName, Width, Height, BlocColor, LayerTransparency, HeightColorIndicator);
                 BlockData = Description;
                 WasSuccessfullyCreated = true;
             }
@@ -266,7 +267,7 @@ namespace SioForgeCAD.Functions
             return Color.FromRgb(R, G, B);
         }
 
-        private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, double WidthDiameter, double Height, Color BlocColor, Color HeightColorIndicator)
+        private static void PopulateBlocGeometry(ObjectId blockDefinitionId, string DisplayName, double WidthDiameter, double Height, Color BlocColor, Transparency LayerTransparency, Color HeightColorIndicator)
         {
             var db = Generic.GetDatabase();
             using (var tr = db.TransactionManager.StartTransaction())
@@ -332,7 +333,7 @@ namespace SioForgeCAD.Functions
                     TextHeight = WidthRadius * TextBlocDisplayNameSizeReduceRatios,
                     TextStyleId = VegblocTextStyle,
                     Transparency = new Transparency(255),
-                    Color = GetTextColorFromBackgroundColor(BlocColor),
+                    Color = GetTextColorFromBackgroundColor(BlocColor, LayerTransparency),
                     Width = TextBlocDisplayNameMaxWidth,
                     LineWeight = LineWeight.ByBlock,
                 };
@@ -424,18 +425,26 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static Color GetTextColorFromBackgroundColor(Color BlocColor)
+        private static Color GetTextColorFromBackgroundColor(Color BlocColor, Transparency LayerTransparency)
         {
-            double IsContrasted = ((299 * BlocColor.Red) + (587 * BlocColor.Green) + (114 * BlocColor.Blue)) / 1000;
+            double alpha = LayerTransparency.Alpha / 255.0;
 
-            if (IsContrasted > 160)
-            {
-                return Color.FromRgb(0, 0, 0);
-            }
-            else
-            {
-                return Color.FromRgb(255, 255, 255);
-            }
+            const double backgroundLuminance = 255.0; // Blanc
+            // Calcul des couleurs effectives avec l'Alpha Blending
+            // Formule : (Couleur * Alpha) + (Fond * (1 - Alpha))
+            double effectiveRed = (BlocColor.Red * alpha) + (backgroundLuminance * (1 - alpha));
+            double effectiveGreen = (BlocColor.Green * alpha) + (backgroundLuminance * (1 - alpha));
+            double effectiveBlue = (BlocColor.Blue * alpha) + (backgroundLuminance * (1 - alpha));
+
+            // Calcul de la luminance perçue (Formule standard W3C / NTSC)
+            double luminance = ((299 * effectiveRed) + (587 * effectiveGreen) + (114 * effectiveBlue)) / 1000.0;
+
+            // Le seuil de 160 (au lieu de 128) favorise légèrement l'apparition du texte blanc, ce qui est souvent plus lisible.
+            const double Threshold = 160.0;
+
+            return luminance > Threshold
+                ? Color.FromRgb(0, 0, 0)
+                : Color.FromRgb(255, 255, 255);
         }
 
         private static void GetBlocDisplayName(string OriginalName, out string ShortName, out string CompleteName)
