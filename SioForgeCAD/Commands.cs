@@ -517,7 +517,12 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "PUBLISHSELECTEDLAYOUTS", CommandFlags.Redraw)]
         public static void PUBLISHSELECTEDLAYOUTS() => Functions.PUBLISHSELECTEDLAYOUTS.ShowPublishDialog();
-
+        
+        [CommandMethod("SIOFORGECAD", "CREATECONTOURSLINESFROMPOINTS", CommandFlags.Redraw)]
+        public static void CREATECONTOURSLINESFROMPOINTS()
+        {
+            Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
+        }
 
 
 #if DEBUG
@@ -541,7 +546,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TEST.AddAltimetryBlocksAtVertices();
+            Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
@@ -615,7 +620,7 @@ namespace SioForgeCAD
         public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
 
         [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
-        public static void TRIANGLECC() => Functions.DEBUG.DEBUG_RANDOM_POINTS();
+        public static void TRIANGLECC() => Functions.DEBUG.TRIANGLECC();
 
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS() => Functions.DEBUG.DEBUG_RANDOM_POINTS();

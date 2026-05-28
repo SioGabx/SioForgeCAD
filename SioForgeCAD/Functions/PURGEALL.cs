@@ -481,7 +481,11 @@ namespace SioForgeCAD.Functions
                     db.Purge(objectIdCollection);
                     foreach (ObjectId objid in objectIdCollection)
                     {
-                        objid.GetDBObject(OpenMode.ForWrite).Erase();
+                        try
+                        {
+                            objid.GetDBObject(OpenMode.ForWrite).Erase();
+                        }
+                        catch { }
                     }
                     tr.Commit();
                     return objectIdCollection.Count;

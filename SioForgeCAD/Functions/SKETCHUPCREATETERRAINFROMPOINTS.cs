@@ -26,8 +26,8 @@ namespace SioForgeCAD.Functions
             using (Generic.GetLock())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
+                //BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                //BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
                 List<ObjectId> createdEntities = new List<ObjectId>();
                 List<DBPoint> PointsSet = new List<DBPoint>();
@@ -59,6 +59,7 @@ namespace SioForgeCAD.Functions
                 if (PointsSet.Count < 3)
                 {
                     Generic.WriteMessage("Vous devez selectionner au moins 3 points");
+                    PointsSet.DeepDispose();
                     tr.Abort();
                     ed.SetImpliedSelection(ObjIds);
                     return;
@@ -86,10 +87,10 @@ namespace SioForgeCAD.Functions
                                 Debug.WriteLine(ex.Message);
                             }
                         }
-                        Poly3D.Dispose();
                     }
                 }
 
+                PointsSet.DeepDispose();
 
 
                 // circle has 32 edges
