@@ -6,326 +6,257 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun
 {
     public static class DelaunayTriangulate
     {
-        public static void TriangulateCommand()
+        public struct Triangle3d
         {
-            Document doc = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
-            TypedValue[] PointTypedValue = { new TypedValue(0, "POINT") };
-            SelectionFilter PointSelectionFilter = new SelectionFilter(PointTypedValue);
-            PromptSelectionOptions SelectPointsPromptOption = new PromptSelectionOptions
-            {
-                MessageForAdding = "Select Points:",
-                AllowDuplicates = false
-            };
-            PromptSelectionResult pointSelectionResult = ed.GetSelection(SelectPointsPromptOption, PointSelectionFilter);
-            if (pointSelectionResult.Status == PromptStatus.Error)
-            {
-                return;
-            }
+            public Point3d Vertex1 { get; }
+            public Point3d Vertex2 { get; }
+            public Point3d Vertex3 { get; }
 
-            if (pointSelectionResult.Status == PromptStatus.Cancel)
+            public Triangle3d(Point3d v1, Point3d v2, Point3d v3)
             {
-                return;
+                Vertex1 = v1;
+                Vertex2 = v2;
+                Vertex3 = v3;
             }
-
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                List<DBPoint> PointsSet = new List<DBPoint>();
-                foreach (var PointSelectionSet in pointSelectionResult.Value.GetObjectIds())
-                {
-                    PointsSet.Add(PointSelectionSet.GetDBObject(OpenMode.ForRead) as DBPoint);
-                }
-
-                foreach (var poly in Triangulate(PointsSet))
-                {
-                    poly.AddToDrawing();
-                }
-                tr.Commit();
-            }
-            Autodesk.AutoCAD.ApplicationServices.Core.Application.UpdateScreen();
         }
 
-
-        public static List<Polyline3d> Triangulate(List<DBPoint> PointsSet)
+        // Internal helper structure to keep the algorithm fast and clean
+        private struct InternalTriangle
         {
-            Database db = Generic.GetDatabase();
-            List<Polyline3d> Result = new List<Polyline3d>();
+            public int P1, P2, P3;
+            public double CentroidX, CentroidY, RadiusSq;
+            public bool IsValid;
+        }
 
-            int numberOfPoints = PointsSet.Count;
-            if (numberOfPoints < 3)
-            {
-                Generic.WriteMessage("Minimum 3 points must be selected!");
-                return Result;
-            }
-            int PtsIndex, j, k, numberOfTriangles, numberOfEdges, thinTriangleFoundCount = 0, IgnoredPointWithSameCoordinatesCount = 0;
+        private struct Edge
+        {
+            public int P1, P2;
+            public Edge(int p1, int p2) { P1 = p1; P2 = p2; }
+        }
 
-            // Point coordinates
-            double[] xCoordinates = new double[numberOfPoints + 3];
-            double[] yCoordinates = new double[numberOfPoints + 3];
-            double[] zCoordinates = new double[numberOfPoints + 3];
-            // Triangle definitions
-            int[] vertexPoint1 = new int[(numberOfPoints * 2) + 1];
-            int[] vertexPoint2 = new int[(numberOfPoints * 2) + 1];
-            int[] vertexPoint3 = new int[(numberOfPoints * 2) + 1];
-            // Circumscribed circle
-            double[] centerXValues = new double[(numberOfPoints * 2) + 1];
-            double[] centerYValues = new double[(numberOfPoints * 2) + 1];
-            double[] radiusValues = new double[(numberOfPoints * 2) + 1];
-            double xMin, yMin, xMax, yMax, deltaX, deltaY, xMid, yMid;
-            int[] edge1 = new int[(numberOfPoints * 2) + 1];
-            int[] edge2 = new int[(numberOfPoints * 2) + 1];
-            Transaction tr;
-            using (tr = db.TransactionManager.StartTransaction())
+        public static void TriangulateCommand()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+
+            TypedValue[] filterVal = { new TypedValue(0, "POINT") };
+            PromptSelectionResult selResult = ed.GetSelection(new PromptSelectionOptions { MessageForAdding = "Sélectionnez les points :" }, new SelectionFilter(filterVal));
+            if (selResult.Status != PromptStatus.OK) return;
+
+            List<Point3d> Nuage = new List<Point3d>();
+
+            using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
             {
-                DBPoint PointElement;
-                k = 0;
-                for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
+                foreach (ObjectId id in selResult.Value.GetObjectIds())
                 {
-                    PointElement = PointsSet[k];
-                    xCoordinates[PtsIndex] = PointElement.Position[0];
-                    yCoordinates[PtsIndex] = PointElement.Position[1];
-                    zCoordinates[PtsIndex] = PointElement.Position[2];
-                    for (j = 0; j < PtsIndex; j++)
+                    if (tr.GetObject(id, OpenMode.ForRead) is DBPoint point)
                     {
-                        if ((xCoordinates[PtsIndex] == xCoordinates[j]) && (yCoordinates[PtsIndex] == yCoordinates[j]))
-                        {
-                            PtsIndex--; numberOfPoints--; IgnoredPointWithSameCoordinatesCount++;
-                        }
-                    }
-                    k++;
-                }
-                tr.Commit();
-            }
-            if (IgnoredPointWithSameCoordinatesCount > 0)
-            {
-                Generic.WriteMessage($"Ignored {IgnoredPointWithSameCoordinatesCount} point(s) with same coordinates.");
-            }
-
-            // Supertriangle
-            xMin = xCoordinates[0]; xMax = xMin;
-            yMin = yCoordinates[0]; yMax = yMin;
-            for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
-            {
-                if (xCoordinates[PtsIndex] < xMin)
-                {
-                    xMin = xCoordinates[PtsIndex];
-                }
-
-                if (xCoordinates[PtsIndex] > xMax)
-                {
-                    xMax = xCoordinates[PtsIndex];
-                }
-
-                if (yCoordinates[PtsIndex] < xMin)
-                {
-                    yMin = yCoordinates[PtsIndex];
-                }
-
-                if (yCoordinates[PtsIndex] > xMin)
-                {
-                    yMax = yCoordinates[PtsIndex];
-                }
-            }
-            deltaX = xMax - xMin; deltaY = yMax - yMin;
-            xMid = (xMin + xMax) / 2; yMid = (yMin + yMax) / 2;
-            PtsIndex = numberOfPoints;
-            xCoordinates[PtsIndex] = xMid - (90 * (deltaX + deltaY)) - 100;
-            yCoordinates[PtsIndex] = yMid - (50 * (deltaX + deltaY)) - 100;
-            zCoordinates[PtsIndex] = 0;
-            vertexPoint1[0] = PtsIndex;
-            PtsIndex++;
-            xCoordinates[PtsIndex] = xMid + (90 * (deltaX + deltaY)) + 100;
-            yCoordinates[PtsIndex] = yMid - (50 * (deltaX + deltaY)) - 100;
-            zCoordinates[PtsIndex] = 0;
-            vertexPoint2[0] = PtsIndex;
-            PtsIndex++;
-            xCoordinates[PtsIndex] = xMid;
-            yCoordinates[PtsIndex] = yMid + (100 * (deltaX + deltaY + 1));
-            zCoordinates[PtsIndex] = 0;
-            vertexPoint3[0] = PtsIndex;
-            numberOfTriangles = 1;
-            CalculateCircumscribedCircle(
-              xCoordinates[vertexPoint1[0]], yCoordinates[vertexPoint1[0]], xCoordinates[vertexPoint2[0]],
-              yCoordinates[vertexPoint2[0]], xCoordinates[vertexPoint3[0]], yCoordinates[vertexPoint3[0]],
-              ref centerXValues[0], ref centerYValues[0], ref radiusValues[0]
-            );
-
-            // main loop
-            for (PtsIndex = 0; PtsIndex < numberOfPoints; PtsIndex++)
-            {
-                numberOfEdges = 0;
-                xMin = xCoordinates[PtsIndex]; yMin = yCoordinates[PtsIndex];
-                j = 0;
-                while (j < numberOfTriangles)
-                {
-                    deltaX = centerXValues[j] - xMin; deltaY = centerYValues[j] - yMin;
-                    if (((deltaX * deltaX) + (deltaY * deltaY)) < radiusValues[j])
-                    {
-                        edge1[numberOfEdges] = vertexPoint1[j]; edge2[numberOfEdges] = vertexPoint2[j];
-                        numberOfEdges++;
-                        edge1[numberOfEdges] = vertexPoint2[j]; edge2[numberOfEdges] = vertexPoint3[j];
-                        numberOfEdges++;
-                        edge1[numberOfEdges] = vertexPoint3[j]; edge2[numberOfEdges] = vertexPoint1[j];
-                        numberOfEdges++;
-                        numberOfTriangles--;
-                        vertexPoint1[j] = vertexPoint1[numberOfTriangles];
-                        vertexPoint2[j] = vertexPoint2[numberOfTriangles];
-                        vertexPoint3[j] = vertexPoint3[numberOfTriangles];
-                        centerXValues[j] = centerXValues[numberOfTriangles];
-                        centerYValues[j] = centerYValues[numberOfTriangles];
-                        radiusValues[j] = radiusValues[numberOfTriangles];
-                        j--;
-                    }
-                    j++;
-                }
-
-                for (j = 0; j < numberOfEdges - 1; j++)
-                {
-                    for (k = j + 1; k < numberOfEdges; k++)
-                    {
-                        if ((edge1[j] == edge2[k]) && (edge2[j] == edge1[k]))
-                        {
-                            edge1[j] = -1; edge2[j] = -1; edge1[k] = -1; edge2[k] = -1;
-                        }
+                        Nuage.Add(point.Position);
                     }
                 }
-                for (j = 0; j < numberOfEdges; j++)
-                {
-                    if ((edge1[j] >= 0) && (edge2[j] >= 0))
-                    {
-                        vertexPoint1[numberOfTriangles] = edge1[j]; vertexPoint2[numberOfTriangles] = edge2[j]; vertexPoint3[numberOfTriangles] = PtsIndex;
-                        bool IsThinTriangle =
-                          CalculateCircumscribedCircle(
-                            xCoordinates[vertexPoint1[numberOfTriangles]], yCoordinates[vertexPoint1[numberOfTriangles]], xCoordinates[vertexPoint2[numberOfTriangles]],
-                            yCoordinates[vertexPoint2[numberOfTriangles]], xCoordinates[vertexPoint3[numberOfTriangles]], yCoordinates[vertexPoint3[numberOfTriangles]],
-                            ref centerXValues[numberOfTriangles], ref centerYValues[numberOfTriangles], ref radiusValues[numberOfTriangles]
-                          );
-                        if (!IsThinTriangle)
-                        {
-                            thinTriangleFoundCount++;
-                        }
-                        numberOfTriangles++;
-                    }
-                }
-            }
 
-            //removal of outer triangles
-            PtsIndex = 0;
-            while (PtsIndex < numberOfTriangles)
-            {
-                if ((vertexPoint1[PtsIndex] >= numberOfPoints) || (vertexPoint2[PtsIndex] >= numberOfPoints) || (vertexPoint3[PtsIndex] >= numberOfPoints))
-                {
-                    numberOfTriangles--;
-                    vertexPoint1[PtsIndex] = vertexPoint1[numberOfTriangles];
-                    vertexPoint2[PtsIndex] = vertexPoint2[numberOfTriangles];
-                    vertexPoint3[PtsIndex] = vertexPoint3[numberOfTriangles];
-                    centerXValues[PtsIndex] = centerXValues[numberOfTriangles];
-                    centerYValues[PtsIndex] = centerYValues[numberOfTriangles];
-                    radiusValues[PtsIndex] = radiusValues[numberOfTriangles];
-                    PtsIndex--;
-                }
-                PtsIndex++;
-            }
+                List<Triangle3d> trianglesCalcules = Triangulate(Nuage);
 
-            using (tr = db.TransactionManager.StartTransaction())
-            {
-                BlockTable bt =
-                  (BlockTable)tr.GetObject(
-                    db.BlockTableId,
-                    OpenMode.ForRead,
-                    false
-                  );
-                BlockTableRecord btr = Generic.GetCurrentSpaceBlockTableRecord(tr);
+                ed.WriteMessage($"\nCalcul terminé. Nombre de triangles générés en mémoire : {trianglesCalcules.Count}");
 
-                for (PtsIndex = 0; PtsIndex < numberOfTriangles; PtsIndex++)
+                foreach (var triangle in trianglesCalcules)
                 {
-                    Point3d vertex1 = new Point3d(xCoordinates[vertexPoint1[PtsIndex]], yCoordinates[vertexPoint1[PtsIndex]], zCoordinates[vertexPoint1[PtsIndex]]);
-                    Point3d vertex2 = new Point3d(xCoordinates[vertexPoint2[PtsIndex]], yCoordinates[vertexPoint2[PtsIndex]], zCoordinates[vertexPoint2[PtsIndex]]);
-                    Point3d vertex3 = new Point3d(xCoordinates[vertexPoint3[PtsIndex]], yCoordinates[vertexPoint3[PtsIndex]], zCoordinates[vertexPoint3[PtsIndex]]);
                     using (Polyline3d poly = new Polyline3d())
                     {
                         poly.AddToDrawingCurrentTransaction();
-                        poly.AddVertex(vertex1);
-                        poly.AddVertex(vertex2);
-                        poly.AddVertex(vertex3);
+                        poly.AddVertex(triangle.Vertex1);
+                        poly.AddVertex(triangle.Vertex2);
+                        poly.AddVertex(triangle.Vertex3);
                         poly.Closed = true;
-                        Result.Add(poly.Clone() as Polyline3d);
-                        poly.Erase();
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
+        public static List<Triangle3d> Triangulate(List<Point3d> nuagePoints)
+        {
+            List<Triangle3d> Resultat = new List<Triangle3d>();
+
+            // Clean up duplicates
+            List<Point3d> PtsFiltres = nuagePoints
+                .GroupBy(p => new { p.X, p.Y })
+                .Select(g => g.First())
+                .ToList();
+
+            int numberOfPoints = PtsFiltres.Count;
+            if (numberOfPoints < 3)
+            {
+                return Resultat;
+            }
+
+            // Coordinate arrays containing input points + 3 points for the super-triangle
+            double[] xCoordinates = new double[numberOfPoints + 3];
+            double[] yCoordinates = new double[numberOfPoints + 3];
+            double[] zCoordinates = new double[numberOfPoints + 3];
+
+            for (int i = 0; i < numberOfPoints; i++)
+            {
+                xCoordinates[i] = PtsFiltres[i].X;
+                yCoordinates[i] = PtsFiltres[i].Y;
+                zCoordinates[i] = PtsFiltres[i].Z;
+            }
+
+            // Calculate Super-Triangle bounds
+            double xMin = xCoordinates[0], xMax = xMin;
+            double yMin = yCoordinates[0], yMax = yMin;
+            for (int i = 1; i < numberOfPoints; i++)
+            {
+                if (xCoordinates[i] < xMin) xMin = xCoordinates[i];
+                if (xCoordinates[i] > xMax) xMax = xCoordinates[i];
+                if (yCoordinates[i] < yMin) yMin = yCoordinates[i];
+                if (yCoordinates[i] > yMax) yMax = yCoordinates[i];
+            }
+
+            double deltaX = xMax - xMin;
+            double deltaY = yMax - yMin;
+            double xMid = (xMin + xMax) / 2;
+            double yMid = (yMin + yMax) / 2;
+            double dMax = Math.Max(deltaX, deltaY);
+
+            // Append Super-Triangle coordinates at the end of our coordinate arrays
+            int stIdx1 = numberOfPoints;
+            int stIdx2 = numberOfPoints + 1;
+            int stIdx3 = numberOfPoints + 2;
+
+            xCoordinates[stIdx1] = xMid - 20 * dMax; yCoordinates[stIdx1] = yMid - dMax; zCoordinates[stIdx1] = 0;
+            xCoordinates[stIdx2] = xMid; yCoordinates[stIdx2] = yMid + 20 * dMax; zCoordinates[stIdx2] = 0;
+            xCoordinates[stIdx3] = xMid + 20 * dMax; yCoordinates[stIdx3] = yMid - dMax; zCoordinates[stIdx3] = 0;
+
+            // Using a dynamic List of structs prevents IndexOutOfRange errors completely
+            List<InternalTriangle> triangles = new List<InternalTriangle>();
+
+            // Create initial super-triangle
+            InternalTriangle superTriangle = new InternalTriangle { P1 = stIdx1, P2 = stIdx2, P3 = stIdx3, IsValid = true };
+            CalculateCircumscribedCircle(
+                xCoordinates[stIdx1], yCoordinates[stIdx1],
+                xCoordinates[stIdx2], yCoordinates[stIdx2],
+                xCoordinates[stIdx3], yCoordinates[stIdx3],
+                ref superTriangle.CentroidX, ref superTriangle.CentroidY, ref superTriangle.RadiusSq
+            );
+            triangles.Add(superTriangle);
+
+            List<Edge> edgeBuffer = new List<Edge>();
+
+            // Main loop: Incremental insertion
+            for (int i = 0; i < numberOfPoints; i++)
+            {
+                double px = xCoordinates[i];
+                double py = yCoordinates[i];
+                edgeBuffer.Clear();
+
+                // 1. Identify and invalidate triangles whose circumcircles contain the current point
+                for (int j = 0; j < triangles.Count; j++)
+                {
+                    InternalTriangle t = triangles[j];
+                    if (!t.IsValid) continue;
+
+                    double dx = t.CentroidX - px;
+                    double dy = t.CentroidY - py;
+                    if ((dx * dx + dy * dy) < t.RadiusSq)
+                    {
+                        // Add edges to buffer
+                        edgeBuffer.Add(new Edge(t.P1, t.P2));
+                        edgeBuffer.Add(new Edge(t.P2, t.P3));
+                        edgeBuffer.Add(new Edge(t.P3, t.P1));
+
+                        t.IsValid = false;
+                        triangles[j] = t; // Struct updating
                     }
                 }
 
-                tr.Commit();
+                // 2. Remove duplicate edges (shared edges within the polygonal hole)
+                for (int j = 0; j < edgeBuffer.Count - 1; j++)
+                {
+                    for (int k = j + 1; k < edgeBuffer.Count; k++)
+                    {
+                        Edge e1 = edgeBuffer[j];
+                        Edge e2 = edgeBuffer[k];
+                        if ((e1.P1 == e2.P2 && e1.P2 == e2.P1) || (e1.P1 == e2.P1 && e1.P2 == e2.P2))
+                        {
+                            e1.P1 = -1; e1.P2 = -1;
+                            e2.P1 = -1; e2.P2 = -1;
+                            edgeBuffer[j] = e1;
+                            edgeBuffer[k] = e2;
+                        }
+                    }
+                }
+
+                // 3. Form new triangles from unique boundary edges to the new point
+                for (int j = 0; j < edgeBuffer.Count; j++)
+                {
+                    Edge e = edgeBuffer[j];
+                    if (e.P1 < 0 || e.P2 < 0) continue;
+
+                    InternalTriangle newTri = new InternalTriangle { P1 = e.P1, P2 = e.P2, P3 = i, IsValid = true };
+                    CalculateCircumscribedCircle(
+                        xCoordinates[e.P1], yCoordinates[e.P1],
+                        xCoordinates[e.P2], yCoordinates[e.P2],
+                        xCoordinates[i], yCoordinates[i],
+                        ref newTri.CentroidX, ref newTri.CentroidY, ref newTri.RadiusSq
+                    );
+                    triangles.Add(newTri);
+                }
+
+                // Clean up invalid items to keep memory footprint low
+                triangles.RemoveAll(t => !t.IsValid);
             }
-            if (thinTriangleFoundCount > 0)
+
+            // 4. Convert internal valid triangles back to AutoCAD Point3d elements, ignoring super-triangle vertices
+            foreach (var t in triangles)
             {
-                Debug.WriteLine($"Warning! {thinTriangleFoundCount} thin triangle(s) found! Wrong result possible!");
+                if (t.IsValid && t.P1 < numberOfPoints && t.P2 < numberOfPoints && t.P3 < numberOfPoints)
+                {
+                    Point3d v1 = new Point3d(xCoordinates[t.P1], yCoordinates[t.P1], zCoordinates[t.P1]);
+                    Point3d v2 = new Point3d(xCoordinates[t.P2], yCoordinates[t.P2], zCoordinates[t.P2]);
+                    Point3d v3 = new Point3d(xCoordinates[t.P3], yCoordinates[t.P3], zCoordinates[t.P3]);
+                    Resultat.Add(new Triangle3d(v1, v2, v3));
+                }
             }
-            return Result;
+
+            return Resultat;
         }
 
-        public static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
+        private static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
         {
-            // Calculation of circumscribed circle coordinates and
-            // squared radius
             const double eps = 1e-6;
-            bool result = true;
-            double m1, m2, mx1, mx2, my1, my2, dx, dy;
+            double m1, m2, mx1, mx2, my1, my2;
 
-            if ((Math.Abs(y1 - y2) < eps) && (Math.Abs(y2 - y3) < eps))
+            if (Math.Abs(y2 - y1) < eps)
             {
-                result = false;
-                xc = x1; yc = y1;
+                m2 = -(x3 - x2) / (y3 - y2);
+                mx2 = (x2 + x3) / 2; my2 = (y2 + y3) / 2;
+                xc = (x2 + x1) / 2; yc = (m2 * (xc - mx2)) + my2;
+            }
+            else if (Math.Abs(y3 - y2) < eps)
+            {
+                m1 = -(x2 - x1) / (y2 - y1);
+                mx1 = (x1 + x2) / 2; my1 = (y1 + y2) / 2;
+                xc = (x3 + x2) / 2; yc = (m1 * (xc - mx1)) + my1;
             }
             else
             {
-                if (Math.Abs(y2 - y1) < eps)
-                {
-                    m2 = -(x3 - x2) / (y3 - y2);
-                    mx2 = (x2 + x3) / 2;
-                    my2 = (y2 + y3) / 2;
-                    xc = (x2 + x1) / 2;
-                    yc = (m2 * (xc - mx2)) + my2;
-                }
-                else if (Math.Abs(y3 - y2) < eps)
-                {
-                    m1 = -(x2 - x1) / (y2 - y1);
-                    mx1 = (x1 + x2) / 2;
-                    my1 = (y1 + y2) / 2;
-                    xc = (x3 + x2) / 2;
-                    yc = (m1 * (xc - mx1)) + my1;
-                }
-                else
-                {
-                    m1 = -(x2 - x1) / (y2 - y1);
-                    m2 = -(x3 - x2) / (y3 - y2);
-                    if (Math.Abs(m1 - m2) < eps)
-                    {
-                        result = false;
-                        xc = x1;
-                        yc = y1;
-                    }
-                    else
-                    {
-                        mx1 = (x1 + x2) / 2;
-                        mx2 = (x2 + x3) / 2;
-                        my1 = (y1 + y2) / 2;
-                        my2 = (y2 + y3) / 2;
-                        xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
-                        yc = (m1 * (xc - mx1)) + my1;
-                    }
-                }
+                m1 = -(x2 - x1) / (y2 - y1);
+                m2 = -(x3 - x2) / (y3 - y2);
+                if (Math.Abs(m1 - m2) < eps) { xc = x1; yc = y1; return false; }
+                mx1 = (x1 + x2) / 2; mx2 = (x2 + x3) / 2;
+                my1 = (y1 + y2) / 2; my2 = (y2 + y3) / 2;
+                xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
+                yc = (m1 * (xc - mx1)) + my1;
             }
-            dx = x2 - xc;
-            dy = y2 - yc;
-            r = (dx * dx) + (dy * dy);
-            return result;
+            r = ((x2 - xc) * (x2 - xc)) + ((y2 - yc) * (y2 - yc));
+            return true;
         }
     }
 }

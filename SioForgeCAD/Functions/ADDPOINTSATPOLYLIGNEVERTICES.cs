@@ -28,8 +28,7 @@ namespace SioForgeCAD.Functions
                     foreach (ObjectId id in selRes.Value.GetObjectIds())
                     {
                         // Cast to the base Curve class
-                        Curve ent = tr.GetObject(id, OpenMode.ForRead) as Curve;
-                        if (ent == null) continue;
+                        if (!(tr.GetObject(id, OpenMode.ForRead) is Curve ent)) continue;
 
                         List<Point3d> pointsToCreate = new List<Point3d>();
 

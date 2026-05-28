@@ -224,7 +224,7 @@ namespace SioForgeCAD.Functions
                 var mainBlkInEnts = GetEntitiesInBlockNoTr(mainBlk);
                 BlockReference BlkPTTransformedEnts = mainBlkInEnts.OfType<BlockReference>().FirstOrDefault(br => !br.Transparency.IsByAlpha);
                 var BlkPTTransformedEntsInEnts = GetEntitiesInBlockNoTr(BlkPTTransformedEnts);
-                var Poly = BlkPTTransformedEntsInEnts.OfType<Polyline>().FirstOrDefault().Clone() as Polyline;
+                var Poly = BlkPTTransformedEntsInEnts.OfType<Polyline>().FirstOrDefault()?.Clone() as Polyline;
                 mainBlkInEnts.DeepDispose();
                 BlkPTTransformedEntsInEnts.DeepDispose();
                 return Poly;
@@ -285,7 +285,7 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            private static Point2dCollection StretchPoint(Polyline poly, Point3d gripPt, PolyGripOverrule.ModeIdAction action)
+            private static Point2dCollection StretchPoint(Polyline poly, Point3d gripPt, PolyGripOverrule.ModeIdAction _)
             {
                 var origVerts = new Point2dCollection(poly.GetPoints().Select(p => p.ToPoint2d()).ToArray());
                 using (var jigPoly = new Polyline { Closed = true })

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using static SioForgeCAD.Commun.DelaunayTriangulate;
 
 namespace SioForgeCAD.Functions
 {
@@ -30,7 +31,7 @@ namespace SioForgeCAD.Functions
                 //BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
                 List<ObjectId> createdEntities = new List<ObjectId>();
-                List<DBPoint> PointsSet = new List<DBPoint>();
+                List<Point3d> PointsSet = new List<Point3d>();
                 foreach (var selObj in ObjIds)
                 {
                     if (!(tr.GetObject(selObj, OpenMode.ForRead) is BlockReference blockRef)) continue;
@@ -47,7 +48,7 @@ namespace SioForgeCAD.Functions
                             double z = (double)Convert.ToDouble(text);
 
                             // Création du point à l'altitude Z
-                            DBPoint point = new DBPoint(new Point3d(blockRef.Position.X, blockRef.Position.Y, z));
+                            Point3d point = new Point3d(blockRef.Position.X, blockRef.Position.Y, z);
                             //createdEntities.Add(point.AddToDrawing());
 
                             PointsSet.Add(point);
@@ -66,34 +67,30 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                using (var Polys3D = DelaunayTriangulate.Triangulate(PointsSet).ToDBObjectCollection())
+                var DelaunayTriangles = DelaunayTriangulate.Triangulate(PointsSet);
+                foreach (var Triangle in DelaunayTriangles)
                 {
-                    foreach (Entity Poly3D in Polys3D)
+                    Point3dCollection pts = new Point3dCollection(new[] { Triangle.Vertex1, Triangle.Vertex2, Triangle.Vertex3 });
+                    using (var tempPoly = new Polyline3d(Poly3dType.SimplePoly, pts, true))
+                    using (var Surf = new DBObjectCollection { tempPoly })
                     {
-                        using (var Surf = new DBObjectCollection { Poly3D })
+                        try
                         {
-                            try
+                            using (var Poly3DRegions = Region.CreateFromCurves(Surf))
                             {
-                                using (var Poly3DRegions = Region.CreateFromCurves(Surf))
+                                foreach (Region reg in Poly3DRegions)
                                 {
-                                    foreach (Region reg in Poly3DRegions)
-                                    {
-                                        createdEntities.Add(reg.AddToDrawingCurrentTransaction());
-                                    }
+                                    createdEntities.Add(reg.AddToDrawingCurrentTransaction());
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine(ex.Message);
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.Message);
                         }
                     }
 
-                    Polys3D.DeepDispose();
-                    PointsSet.DeepDispose();
                 }
-
-
 
                 // circle has 32 edges
                 if (createdEntities.Count > 0)

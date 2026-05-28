@@ -21,17 +21,19 @@ namespace SioForgeCAD.Functions
             var selRes = ed.GetBlocks(out var ObjIds, "Sélectionnez des côtes", false, true);
             if (!selRes) return;
 
-            // 1. Demander l'intervalle des courbes
-            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'intervalle des courbes de niveau : ");
-            pdo.DefaultValue = 1.0;
-            pdo.AllowNegative = false;
-            pdo.AllowZero = false;
+            // Demander l'intervalle des courbes
+            PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'intervalle des courbes de niveau : ")
+            {
+                DefaultValue = 1.0,
+                AllowNegative = false,
+                AllowZero = false
+            };
             PromptDoubleResult pdr = ed.GetDouble(pdo);
 
             if (pdr.Status != PromptStatus.OK) return;
             double intervalle = pdr.Value;
+            double intervallePrincipal = (intervalle < 1.0) ? 1.0 : 5.0;
 
-            // 2. Demander si on veut transformer les polylignes en Splines
             PromptKeywordOptions pko = new PromptKeywordOptions("\nVoulez-vous lisser les courbes de niveau (Splines) ? [Oui/Non] : ", "Oui Non");
             pko.Keywords.Default = "Non";
             PromptResult pkr = ed.GetKeywords(pko);
@@ -43,7 +45,7 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 List<ObjectId> createdEntities = new List<ObjectId>();
-                List<DBPoint> PointsSet = new List<DBPoint>();
+                List<Point3d> PointsSet = new List<Point3d>();
 
                 foreach (var selObj in ObjIds)
                 {
@@ -58,7 +60,7 @@ namespace SioForgeCAD.Functions
                         if (Regex.IsMatch(text, @"^\d+\.\d{2,}$"))
                         {
                             double z = Convert.ToDouble(text);
-                            DBPoint point = new DBPoint(new Point3d(blockRef.Position.X, blockRef.Position.Y, z));
+                            Point3d point = new Point3d(blockRef.Position.X, blockRef.Position.Y, z);
                             PointsSet.Add(point);
                             break;
                         }
@@ -77,103 +79,84 @@ namespace SioForgeCAD.Functions
                 // Dictionnaire pour stocker les segments non connectés par élévation (Z)
                 Dictionary<double, List<Tuple<Point3d, Point3d>>> segmentsByZ = new Dictionary<double, List<Tuple<Point3d, Point3d>>>();
 
-                using (var Polys3D = DelaunayTriangulate.Triangulate(PointsSet).ToDBObjectCollection())
+                var DelaunayTriangles = DelaunayTriangulate.Triangulate(PointsSet);
+
+                foreach (var Triangle in DelaunayTriangles)
                 {
-                    foreach (Entity Poly3D in Polys3D)
+                    try
                     {
-                        try
+                        Point3d p1 = Triangle.Vertex1;
+                        Point3d p2 = Triangle.Vertex2;
+                        Point3d p3 = Triangle.Vertex3;
+
+                        // Obtenir les vrais Min et Max du triangle (en double)
+                        double trueMinZ = Math.Min(p1.Z, Math.Min(p2.Z, p3.Z));
+                        double trueMaxZ = Math.Max(p1.Z, Math.Max(p2.Z, p3.Z));
+
+                        // Calculer le premier et le dernier Z en fonction de l'intervalle
+                        double startZ = Math.Ceiling(trueMinZ / intervalle) * intervalle;
+                        double endZ = Math.Floor(trueMaxZ / intervalle) * intervalle;
+
+                        // Ajout d'une marge de tolérance (1e-6) pour les problèmes d'arrondi sur la condition d'arrêt
+                        for (double z = startZ; z <= endZ + 1e-6; z += intervalle)
                         {
-                            List<Point3d> vertices = new List<Point3d>();
+                            // Arrondir la clé Z pour le dictionnaire 
+                            double zKey = Math.Round(z, 4);
 
-                            if (Poly3D is Polyline3d poly3d)
+                            var intersections = GetTriangleContourIntersections(p1, p2, p3, z);
+
+                            if (intersections.Count == 2)
                             {
-                                int limit = (int)Math.Floor(poly3d.EndParam);
-                                for (int i = 0; i <= limit; i++)
-                                {
-                                    vertices.Add(poly3d.GetPointAtParameter(i));
-                                }
-                            }
+                                if (!segmentsByZ.ContainsKey(zKey))
+                                    segmentsByZ[zKey] = new List<Tuple<Point3d, Point3d>>();
 
-                            if (vertices.Count >= 3)
-                            {
-                                Point3d p1 = vertices[0];
-                                Point3d p2 = vertices[1];
-                                Point3d p3 = vertices[2];
-
-                                // 1. Obtenir les vrais Min et Max du triangle (en double)
-                                double trueMinZ = Math.Min(p1.Z, Math.Min(p2.Z, p3.Z));
-                                double trueMaxZ = Math.Max(p1.Z, Math.Max(p2.Z, p3.Z));
-
-                                // 2. Calculer le premier et le dernier Z en fonction de l'intervalle
-                                double startZ = Math.Ceiling(trueMinZ / intervalle) * intervalle;
-                                double endZ = Math.Floor(trueMaxZ / intervalle) * intervalle;
-
-                                // Ajout d'une marge de tolérance (1e-6) pour les problèmes d'arrondi sur la condition d'arrêt
-                                for (double z = startZ; z <= endZ + 1e-6; z += intervalle)
-                                {
-                                    // 3. Arrondir la clé Z pour le dictionnaire afin d'éviter la dérive des flottants
-                                    double zKey = Math.Round(z, 4);
-
-                                    var intersections = GetTriangleContourIntersections(p1, p2, p3, z);
-
-                                    if (intersections.Count == 2)
-                                    {
-                                        if (!segmentsByZ.ContainsKey(zKey))
-                                            segmentsByZ[zKey] = new List<Tuple<Point3d, Point3d>>();
-
-                                        segmentsByZ[zKey].Add(new Tuple<Point3d, Point3d>(intersections[0], intersections[1]));
-                                    }
-                                }
+                                segmentsByZ[zKey].Add(new Tuple<Point3d, Point3d>(intersections[0], intersections[1]));
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex.Message);
-                        }
+
                     }
-                    Polys3D.DeepDispose();
-                    PointsSet.DeepDispose();
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
                 }
+                DelaunayTriangles.DeepDispose();
+                PointsSet.DeepDispose();
 
-                // 3. Chaînage des segments en Polylignes / Splines
+
+                // Chaînage des segments en Polylignes / Splines
                 foreach (var kvp in segmentsByZ)
                 {
-                    List<Point3dCollection> chainedPaths = ChainSegments(kvp.Value);
+                    double reste = Math.Abs(kvp.Key % intervallePrincipal);
+                    bool estCourbePrincipale = reste < 1e-4 || Math.Abs(reste - intervallePrincipal) < 1e-4;
 
-                    foreach (Point3dCollection path in chainedPaths)
+                    LineWeight epaisseurTrait = estCourbePrincipale ? LineWeight.LineWeight050 : LineWeight.LineWeight000;
+
+                    foreach (Point3dCollection path in ChainSegments(kvp.Value))
                     {
                         if (path.Count < 2) continue;
 
-                        if (createSplines && path.Count > 2)
-                        {
-                            Vector3d startTangent = new Vector3d(0,0,0);
-                            Vector3d endTangent = new Vector3d(2,2,2);
+                        Poly3dType polyType = createSplines ? Poly3dType.QuadSplinePoly : Poly3dType.SimplePoly;
 
-                            // Création de la Spline (Ordre 4 = Spline cubique standard)
-                            Spline spl = new Spline(path, startTangent, endTangent, KnotParameterizationEnum.SqrtChord, 3, 0.0);
-                            
-                            createdEntities.Add(spl.AddToDrawingCurrentTransaction());
-                        }
-                        else
+                        bool isClosed = path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
+                        if (isClosed && path.Count > 2)
                         {
-                            // Vérifie la fermeture pour les Polylignes (le début et la fin se touchent)
-                            bool isClosed = path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
-                            if (isClosed && path.Count > 2)
-                            {
-                                path.RemoveAt(path.Count - 1); // Enlever le point en double pour la fermeture
-                            }
-
-                            Polyline3d poly = new Polyline3d(Poly3dType.SimplePoly, path, isClosed);
-                            createdEntities.Add(poly.AddToDrawingCurrentTransaction());
+                            path.RemoveAt(path.Count - 1); // Enlever le point en double pour la fermeture
                         }
+
+                        Polyline3d poly = new Polyline3d(polyType, path, isClosed)
+                        {
+                            LineWeight = epaisseurTrait
+                        };
+                        createdEntities.Add(poly.AddToDrawingCurrentTransaction());
                     }
                 }
 
                 if (createdEntities.Count > 0)
                 {
                     var BlkDefId = BlockReferences.CreateFromExistingEnts(
-                        typeof(SKETCHUPCREATETERRAINFROMPOINTS).Name + "_" + DateTime.Now.Ticks, // Assurez-vous que c'est bien la classe voulue ici
-                        $"Terrain généré à partir de {Generic.GetExtensionDLLName()} pour SketchUp.",
+                        typeof(CREATECONTOURSLINESFROMPOINTS).Name + "_" + DateTime.Now.Ticks, // Assurez-vous que c'est bien la classe voulue ici
+                        $"Courbes généré à partir de {Generic.GetExtensionDLLName()}.",
                         createdEntities.ToObjectIdCollection(),
                         Points.Empty,
                         true,
@@ -187,8 +170,8 @@ namespace SioForgeCAD.Functions
                     ed.SetImpliedSelection(new ObjectId[1] { BlkRef.ObjectId });
                 }
 
-                string typeEntity = createSplines ? "Splines" : "Polylignes 3D";
-                Generic.WriteMessage($"\n{createdEntities.Count} {typeEntity} de courbes de niveau créées.");
+                string typeEntity = createSplines ? "Splines" : "Polylignes";
+                Generic.WriteMessage($"{createdEntities.Count} {typeEntity} de courbes de niveau créées.");
                 tr.Commit();
             }
         }
@@ -199,7 +182,7 @@ namespace SioForgeCAD.Functions
         private static List<Point3dCollection> ChainSegments(List<Tuple<Point3d, Point3d>> segments)
         {
             List<Point3dCollection> polylines = new List<Point3dCollection>();
-            double tol = 1e-5; // Tolérance d'accrochage
+            const double tol = 1e-5;
 
             List<Tuple<Point3d, Point3d>> pool = new List<Tuple<Point3d, Point3d>>(segments);
 
@@ -241,7 +224,7 @@ namespace SioForgeCAD.Functions
         private static List<Point3d> GetTriangleContourIntersections(Point3d p1, Point3d p2, Point3d p3, double z)
         {
             List<Point3d> pts = new List<Point3d>();
-            double eps = 1e-6; // Tolérance pour les erreurs d'arrondi (virgule flottante)
+            const double eps = 1e-6; // Tolérance pour les erreurs d'arrondi (virgule flottante)
 
             // Fonction locale pour éviter d'ajouter des points en double 
             // (par ex. si z coupe exactement un sommet partagé par deux arêtes)
@@ -280,7 +263,7 @@ namespace SioForgeCAD.Functions
                 {
                     // L'arête traverse le plan (croisement franc)
                     double t = (z - a.Z) / (b.Z - a.Z);
-                    AddPt(new Point3d(a.X + t * (b.X - a.X), a.Y + t * (b.Y - a.Y), z));
+                    AddPt(new Point3d(a.X + (t * (b.X - a.X)), a.Y + (t * (b.Y - a.Y)), z));
                 }
             }
 

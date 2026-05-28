@@ -517,7 +517,7 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "PUBLISHSELECTEDLAYOUTS", CommandFlags.Redraw)]
         public static void PUBLISHSELECTEDLAYOUTS() => Functions.PUBLISHSELECTEDLAYOUTS.ShowPublishDialog();
-        
+
         [CommandMethod("SIOFORGECAD", "CREATECONTOURSLINESFROMPOINTS", CommandFlags.Redraw)]
         public static void CREATECONTOURSLINESFROMPOINTS()
         {
