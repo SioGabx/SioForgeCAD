@@ -44,7 +44,7 @@ namespace SioForgeCAD.Functions
             using (Generic.GetLock())
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<ObjectId> createdEntities = new List<ObjectId>();
+                List<Entity> createdEntities = new List<Entity>();
                 List<Point3d> PointsSet = new List<Point3d>();
 
                 foreach (var selObj in ObjIds)
@@ -134,7 +134,7 @@ namespace SioForgeCAD.Functions
 
                     foreach (Point3dCollection path in ChainSegments(kvp.Value))
                     {
-                        if (path.Count < 2) continue;
+                        if (path.Count <= 2) continue;
 
                         Poly3dType polyType = createSplines ? Poly3dType.QuadSplinePoly : Poly3dType.SimplePoly;
 
@@ -148,20 +148,20 @@ namespace SioForgeCAD.Functions
                         {
                             LineWeight = epaisseurTrait
                         };
-                        createdEntities.Add(poly.AddToDrawingCurrentTransaction());
+                        createdEntities.Add(poly);
                     }
                 }
 
                 if (createdEntities.Count > 0)
                 {
-                    var BlkDefId = BlockReferences.CreateFromExistingEnts(
+                    var BlkDefId = BlockReferences.Create(
                         typeof(CREATECONTOURSLINESFROMPOINTS).Name + "_" + DateTime.Now.Ticks, // Assurez-vous que c'est bien la classe voulue ici
                         $"Courbes généré à partir de {Generic.GetExtensionDLLName()}.",
-                        createdEntities.ToObjectIdCollection(),
+                        createdEntities.ToDBObjectCollection(),
                         Points.Empty,
                         true,
-                        BlockScaling.Uniform,
-                        true);
+                        BlockScaling.Uniform
+                        );
 
                     if (!BlkDefId.IsValid) { tr.Commit(); return; }
                     var BlkRef = new BlockReference(Points.Empty.SCG, BlkDefId);
@@ -183,43 +183,110 @@ namespace SioForgeCAD.Functions
         {
             List<Point3dCollection> polylines = new List<Point3dCollection>();
             const double tol = 1e-5;
-
             List<Tuple<Point3d, Point3d>> pool = new List<Tuple<Point3d, Point3d>>(segments);
+            Vector3d normalPlane = Vector3d.ZAxis;
 
             while (pool.Count > 0)
             {
-                var currentChain = new LinkedList<Point3d>();
+                var currentChain = new List<Point3d>();
                 var firstSeg = pool[0];
                 pool.RemoveAt(0);
 
-                currentChain.AddLast(firstSeg.Item1);
-                currentChain.AddLast(firstSeg.Item2);
+                currentChain.Add(firstSeg.Item1);
+                currentChain.Add(firstSeg.Item2);
 
-                bool added = true;
-                while (added)
-                {
-                    added = false;
-                    for (int i = 0; i < pool.Count; i++)
-                    {
-                        var seg = pool[i];
-                        Point3d head = currentChain.First.Value;
-                        Point3d tail = currentChain.Last.Value;
+                // --- 1ÈRE ÉTAPE : Extension vers l'avant (Tail) ---
+                ExtendChain(currentChain, pool, tol, normalPlane);
 
-                        if (seg.Item1.DistanceTo(tail) < tol) { currentChain.AddLast(seg.Item2); pool.RemoveAt(i); added = true; break; }
-                        else if (seg.Item2.DistanceTo(tail) < tol) { currentChain.AddLast(seg.Item1); pool.RemoveAt(i); added = true; break; }
-                        else if (seg.Item1.DistanceTo(head) < tol) { currentChain.AddFirst(seg.Item2); pool.RemoveAt(i); added = true; break; }
-                        else if (seg.Item2.DistanceTo(head) < tol) { currentChain.AddFirst(seg.Item1); pool.RemoveAt(i); added = true; break; }
-                    }
-                }
+                // --- 2ÈME ÉTAPE : Extension vers l'arrière (Head) ---
+                // On retourne la chaîne pour transformer la tête en queue, puis on relance l'extension
+                currentChain.Reverse();
+                ExtendChain(currentChain, pool, tol, normalPlane);
 
+                // Conversion finale
                 Point3dCollection pts = new Point3dCollection();
                 foreach (var p in currentChain) pts.Add(p);
-
                 polylines.Add(pts);
             }
 
             return polylines;
         }
+
+        /// <summary>
+        /// Étend la chaîne de points vers l'avant en cherchant le virage le plus à droite dans le pool de segments
+        /// </summary>
+        private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol, Vector3d normalPlane)
+        {
+            bool added = true;
+            while (added)
+            {
+                added = false;
+                int bestIdx = -1;
+                bool reverseSeg = false;
+                double maxAngle = double.MaxValue; // Recherche du virage le plus à droite (valeur la plus négative possible)
+
+                Point3d tail = chain[chain.Count - 1];
+                Point3d previousPoint = chain[chain.Count - 2];
+                Vector3d currentDir = previousPoint.GetVectorTo(tail).GetNormal();
+
+                for (int i = 0; i < pool.Count; i++)
+                {
+                    var seg = pool[i];
+                    Vector3d candidateDir = new Vector3d();
+                    bool isCandidate = false;
+                    bool tempReverse = false;
+
+                    if (seg.Item1.DistanceTo(tail) < tol)
+                    {
+                        candidateDir = seg.Item1.GetVectorTo(seg.Item2).GetNormal();
+                        isCandidate = true;
+                        tempReverse = false;
+                    }
+                    else if (seg.Item2.DistanceTo(tail) < tol)
+                    {
+                        candidateDir = seg.Item2.GetVectorTo(seg.Item1).GetNormal();
+                        isCandidate = true;
+                        tempReverse = true;
+                    }
+
+                    if (isCandidate)
+                    {
+                        if (candidateDir.DotProduct(currentDir) < -0.999)
+                            continue; // Sécurité anti-demi-tour
+
+                        double angle = GetSignedAngle(currentDir, candidateDir, normalPlane);
+
+                        if (angle < maxAngle)
+                        {
+                            maxAngle = angle;
+                            bestIdx = i;
+                            reverseSeg = tempReverse;
+                        }
+                    }
+                }
+
+                if (bestIdx != -1)
+                {
+                    var bestSeg = pool[bestIdx];
+                    pool.RemoveAt(bestIdx);
+                    chain.Add(reverseSeg ? bestSeg.Item1 : bestSeg.Item2);
+                    added = true;
+                }
+            }
+        }
+
+        private static double GetSignedAngle(Vector3d v1, Vector3d v2, Vector3d normal)
+        {
+            // Projection des vecteurs sur le plan perpendiculaire à 'normal' pour la robustesse
+            Vector3d v1Proj = v1 - (normal * v1.DotProduct(normal));
+            Vector3d v2Proj = v2 - (normal * v2.DotProduct(normal));
+
+            double dot = v1Proj.GetNormal().DotProduct(v2Proj.GetNormal());
+            Vector3d cross = v1Proj.CrossProduct(v2Proj);
+
+            return Math.Atan2(cross.DotProduct(normal), dot); // Entre -π et +π
+        }
+
 
         private static List<Point3d> GetTriangleContourIntersections(Point3d p1, Point3d p2, Point3d p3, double z)
         {

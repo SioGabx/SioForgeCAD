@@ -243,6 +243,10 @@ namespace SioForgeCAD.Commun.Extensions
                 {
                     case Polyline _:
                         return ((Polyline)ent).Area;
+                    case Polyline2d _:
+                        return ((Polyline2d)ent).Area;
+                    case Polyline3d _:
+                        return ((Polyline3d)ent).Area;
                     case Hatch _:
                         return ((Hatch)ent).Area;
                     case Circle _:

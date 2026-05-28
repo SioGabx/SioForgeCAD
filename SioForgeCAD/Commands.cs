@@ -546,7 +546,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]

@@ -130,9 +130,9 @@ namespace SioForgeCAD.Commun
             int stIdx2 = numberOfPoints + 1;
             int stIdx3 = numberOfPoints + 2;
 
-            xCoordinates[stIdx1] = xMid - 20 * dMax; yCoordinates[stIdx1] = yMid - dMax; zCoordinates[stIdx1] = 0;
-            xCoordinates[stIdx2] = xMid; yCoordinates[stIdx2] = yMid + 20 * dMax; zCoordinates[stIdx2] = 0;
-            xCoordinates[stIdx3] = xMid + 20 * dMax; yCoordinates[stIdx3] = yMid - dMax; zCoordinates[stIdx3] = 0;
+            xCoordinates[stIdx1] = xMid - (20 * dMax); yCoordinates[stIdx1] = yMid - dMax; zCoordinates[stIdx1] = 0;
+            xCoordinates[stIdx2] = xMid; yCoordinates[stIdx2] = yMid + (20 * dMax); zCoordinates[stIdx2] = 0;
+            xCoordinates[stIdx3] = xMid + (20 * dMax); yCoordinates[stIdx3] = yMid - dMax; zCoordinates[stIdx3] = 0;
 
             // Using a dynamic List of structs prevents IndexOutOfRange errors completely
             List<InternalTriangle> triangles = new List<InternalTriangle>();
@@ -164,7 +164,7 @@ namespace SioForgeCAD.Commun
 
                     double dx = t.CentroidX - px;
                     double dy = t.CentroidY - py;
-                    if ((dx * dx + dy * dy) < t.RadiusSq)
+                    if (((dx * dx) + (dy * dy)) < t.RadiusSq)
                     {
                         // Add edges to buffer
                         edgeBuffer.Add(new Edge(t.P1, t.P2));
