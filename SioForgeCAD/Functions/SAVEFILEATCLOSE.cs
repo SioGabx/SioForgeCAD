@@ -61,7 +61,6 @@ namespace SioForgeCAD.Functions
             string timeStamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string targetDirectory = Settings.SaveFileAtCloseDirectory;
             Directory.CreateDirectory(targetDirectory);
-            targetDirectory = Path.GetTempPath();
             string finalDwgName = $"{baseName}_AutoSave_at_{timeStamp}.dwg";
             string finalFilePath = Path.Combine(targetDirectory, finalDwgName);
 

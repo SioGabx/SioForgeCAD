@@ -88,9 +88,11 @@ namespace SioForgeCAD.Functions
                             }
                         }
                     }
+
+                    Polys3D.DeepDispose();
+                    PointsSet.DeepDispose();
                 }
 
-                PointsSet.DeepDispose();
 
 
                 // circle has 32 edges
