@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Control = System.Windows.Forms.Control;
@@ -96,6 +97,13 @@ namespace SioForgeCAD.Functions
                     var itemName = item?.GetType()?.GetProperty("Name")?.GetValue(item)?.ToString();
                     if (!(itemName is null)) Names.Add(itemName);
                 }
+
+
+                if (LayerName.IndexOfAny(new char[] { '|', ':' }) != -1)
+                {
+                    LayerName = LayerName.Split(new char[] { '|', ':' }, StringSplitOptions.RemoveEmptyEntries).Last();
+                }
+                
                 string NewLayerName = SymbolUtilityServices.RepairSymbolName(LayerName, false); //we need to repair if the layername come from a XREF (|)
 
                 for (int index = 0; Names.Contains(NewLayerName); index++)

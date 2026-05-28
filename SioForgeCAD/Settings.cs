@@ -83,7 +83,7 @@ namespace SioForgeCAD
 
         public static string PrefixCAD
         {
-            get => GetValue(nameof(PrefixCAD), "_APUd_");
+            get => GetValue(nameof(PrefixCAD), "_SIOFORGECAD_");
             set => SetValue(nameof(PrefixCAD), value);
         }
 

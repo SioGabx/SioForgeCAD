@@ -30,7 +30,6 @@ namespace SioForgeCAD.Functions
                         PromptEntOption.AddAllowedClass(typeof(MText), true);
                         PromptEntOption.AddAllowedClass(typeof(AttributeDefinition), true);
                         PromptEntOption.AddAllowedClass(typeof(ProxyEntity), false);
-
                         PromptEntOption.AddAllowedClass(typeof(BlockReference), true);
 
                         var promptStatus = ed.GetEntity(PromptEntOption);

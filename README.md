@@ -5,7 +5,7 @@
 ## 🛠️ Installation
 
 1. Build the project as a `.dll`.
-2. In add this to `"C:\Program Files\Autodesk\AutoCAD XXXX\acad.exe.config"`:   `<runtime><loadFromRemoteSources enabled="true"/></runtime>`
+2. If you load this DLL from a network drive, add this to `"C:\Program Files\Autodesk\AutoCAD XXXX\acad.exe.config"` : `<runtime><loadFromRemoteSources enabled="true"/></runtime>`
 3. Load the extension into AutoCAD using the `NETLOAD` command.
 4. Select the compiled `.dll` file.
 5. Once loaded, use the command prefix `SIOFORGECAD` followed by one of the available commands listed below.
