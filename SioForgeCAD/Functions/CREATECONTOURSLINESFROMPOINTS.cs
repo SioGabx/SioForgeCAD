@@ -22,10 +22,7 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
 
             var selRes = ed.GetBlocks(out var ObjIds, "Sélectionnez des côtes", false, true);
-            if (!selRes)
-            {
-                return;
-            }
+            if (!selRes) return;
 
             var selBuildings = ed.GetSelectionRedraw(
                 "\nSélectionnez les bâtiments : ",
@@ -33,10 +30,7 @@ namespace SioForgeCAD.Functions
                 false,
                 ed.GetCurvesFilter());
 
-            if (selBuildings.Status != PromptStatus.OK)
-            {
-                return;
-            }
+            if (selBuildings.Status != PromptStatus.OK) return;
 
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'intervalle des courbes de niveau : ")
             {
@@ -46,29 +40,20 @@ namespace SioForgeCAD.Functions
             };
 
             PromptDoubleResult pdr = ed.GetDouble(pdo);
-
-            if (pdr.Status != PromptStatus.OK)
-            {
-                return;
-            }
+            if (pdr.Status != PromptStatus.OK) return;
 
             double intervalle = pdr.Value;
-
             double intervallePrincipal = (intervalle < 1.0) ? 1.0 : 5.0;
 
-            PromptKeywordOptions pko =
-                new PromptKeywordOptions(
-                    "\nVoulez-vous lisser les courbes de niveau (Splines) ? [Oui/Non] : ",
-                    "Oui Non");
-
-            pko.Keywords.Default = "Non";
+            PromptKeywordOptions pko = new PromptKeywordOptions(
+                "\nVoulez-vous lisser les courbes de niveau (Splines) ? [Oui/Non] : ",
+                "Oui Non")
+            {
+                Keywords = { Default = "Non" }
+            };
 
             PromptResult pkr = ed.GetKeywords(pko);
-
-            if (pkr.Status != PromptStatus.OK)
-            {
-                return;
-            }
+            if (pkr.Status != PromptStatus.OK) return;
 
             bool createSplines = (pkr.StringResult == "Oui");
 
@@ -78,7 +63,6 @@ namespace SioForgeCAD.Functions
                 try
                 {
                     List<Entity> createdEntities = new List<Entity>();
-
                     List<Point3d> terrainPoints = ReadTopoPoints(tr, ObjIds);
 
                     if (terrainPoints.Count < 3)
@@ -89,60 +73,53 @@ namespace SioForgeCAD.Functions
                     }
 
                     List<Polyline> buildings = ReadBuildings(tr, selBuildings.Value);
-
-                    
-
                     var firstTriangles = DelaunayTriangulate.Triangulate(terrainPoints);
 
-                    List<Point3d> sampledPoints = GenerateBuildingSamplePoints(buildings, firstTriangles, 0.25, 0.50);
+                    List<Point3d> sampledPoints = new List<Point3d>();
+                    List<Point3d> roofPoints = new List<Point3d>();
 
-                    double maxTerrainZ = terrainPoints.Max(p => p.Z);
+                    // =====================================================
+                    // TRAITEMENT PAR BÂTIMENT (VOTRE MODIFICATION)
+                    // =====================================================
+                    foreach (Polyline building in buildings)
+                    {
+                        // 1. Génération des points de la base (échantillonnage au sol)
+                        List<Point3d> buildingBasePoints = GenerateSingleBuildingSamplePoints(building, firstTriangles, 0.25, 0.50);
+                        sampledPoints.AddRange(buildingBasePoints);
+
+                        // 2. Calcul du Z max LOCAL (sous le bâtiment actuel) pour une élévation intelligente
+                        double maxLocalZ = buildingBasePoints.Count > 0
+                            ? buildingBasePoints.Max(p => p.Z)
+                            : terrainPoints.Max(p => p.Z); // Repli au cas où
+
+                       double targetRoofZ = maxLocalZ + 1.0;
+                        List<Point3d> buildingRoofPoints = GenerateSingleBuildingPeakPoints(building, 1, 1.5, targetRoofZ);
+                        roofPoints.AddRange(buildingRoofPoints);
+                    }
+
                     sampledPoints.ForEach(t => t.AddToDrawing(5));
-                    List<Point3d> roofPoints = GenerateBuildingPeakPoints(buildings, 1, 1.5, maxTerrainZ - 1.0);
-
                     roofPoints.ForEach(t => t.AddToDrawing(6));
 
                     List<Point3d> finalPoints = new List<Point3d>();
-
                     finalPoints.AddRange(terrainPoints);
                     finalPoints.AddRange(sampledPoints);
                     finalPoints.AddRange(roofPoints);
 
-                    // =====================================================
-                    // SECOND DELAUNAY
-                    // =====================================================
-
                     var finalTriangles = DelaunayTriangulate.Triangulate(finalPoints);
-
-                    // =====================================================
-                    // GENERATION DES SEGMENTS DE COURBES
-                    // =====================================================
-
                     Dictionary<double, List<Tuple<Point3d, Point3d>>> segmentsByZ = GenerateContourSegments(finalTriangles, intervalle);
 
-                    // =====================================================
-                    // CHAINAGE
-                    // =====================================================
-
-                    foreach (var kvp in segmentsByZ)
+                     foreach (var kvp in segmentsByZ)
                     {
                         double reste = Math.Abs(kvp.Key % intervallePrincipal);
-
                         bool estCourbePrincipale = reste < 1e-4 || Math.Abs(reste - intervallePrincipal) < 1e-4;
-
                         LineWeight epaisseurTrait = estCourbePrincipale ? LineWeight.LineWeight050 : LineWeight.LineWeight000;
 
                         foreach (Point3dCollection path in ChainSegments(kvp.Value))
                         {
-                            if (path.Count <= 2)
-                            {
-                                continue;
-                            }
+                            if (path.Count <= 2) continue;
 
                             Poly3dType polyType = createSplines ? Poly3dType.QuadSplinePoly : Poly3dType.SimplePoly;
-
-                            bool isClosed =
-                                path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
+                            bool isClosed = path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
 
                             if (isClosed && path.Count > 2)
                             {
@@ -154,10 +131,6 @@ namespace SioForgeCAD.Functions
                                 LineWeight = epaisseurTrait
                             };
 
-                            // =====================================================
-                            // SUPPRESSION DES COURBES INTERNES AUX BATIMENTS
-                            // =====================================================
-
                             if (IsContourInsideBuildings(poly, buildings))
                             {
                                 poly.Dispose();
@@ -168,19 +141,15 @@ namespace SioForgeCAD.Functions
                         }
                     }
 
-                    // =====================================================
-                    // DESSIN
-                    // =====================================================
-
                     if (createdEntities.Count > 0)
                     {
-                        var blkDefId =
-                            BlockReferences.Create(typeof(CREATECONTOURSLINESFROMPOINTS).Name + "_" + DateTime.Now.Ticks,
-                                                            $"Courbes générées à partir de {Generic.GetExtensionDLLName()}.",
-                                createdEntities.ToDBObjectCollection(),
-                                Points.Empty,
-                                true,
-                                BlockScaling.Uniform);
+                        var blkDefId = BlockReferences.Create(
+                            typeof(CREATECONTOURSLINESFROMPOINTS).Name + "_" + DateTime.Now.Ticks,
+                            $"Courbes générées à partir de {Generic.GetExtensionDLLName()}.",
+                            createdEntities.ToDBObjectCollection(),
+                            Points.Empty,
+                            true,
+                            BlockScaling.Uniform);
 
                         if (!blkDefId.IsValid)
                         {
@@ -189,14 +158,11 @@ namespace SioForgeCAD.Functions
                         }
 
                         BlockReference blkRef = new BlockReference(Points.Empty.SCG, blkDefId);
-
                         blkRef.AddToDrawingCurrentTransaction();
-
                         ed.SetImpliedSelection(new ObjectId[1] { blkRef.ObjectId });
                     }
 
                     Generic.WriteMessage($"{createdEntities.Count} courbes générées.");
-
                     tr.Commit();
                 }
                 catch (Exception ex)
@@ -209,31 +175,21 @@ namespace SioForgeCAD.Functions
         }
 
         // =====================================================================
-        // TOPO POINTS
+        // METHODES MISES À JOUR POUR UN SEUL BÂTIMENT
         // =====================================================================
 
-        private static List<Point3d> ReadTopoPoints(
-            Transaction tr,
-            ObjectId[] ids)
+        private static List<Point3d> ReadTopoPoints(Transaction tr, ObjectId[] ids)
         {
             List<Point3d> pts = new List<Point3d>();
-
             foreach (ObjectId id in ids)
             {
-                if (!(tr.GetObject(id, OpenMode.ForRead) is BlockReference blockRef))
-                {
-                    continue;
-                }
+                if (!(tr.GetObject(id, OpenMode.ForRead) is BlockReference blockRef)) continue;
 
                 foreach (ObjectId attId in blockRef.AttributeCollection)
                 {
-                    if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef))
-                    {
-                        continue;
-                    }
+                    if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef)) continue;
 
                     string text = attRef.TextString;
-
                     if (Regex.IsMatch(text, @"^\d+\.\d{2,}$"))
                     {
                         double z = Convert.ToDouble(text);
@@ -242,43 +198,25 @@ namespace SioForgeCAD.Functions
                     }
                 }
             }
-
             return pts;
         }
-
-        // =====================================================================
-        // BATIMENTS
-        // =====================================================================
 
         private static List<Polyline> ReadBuildings(Transaction tr, object sel)
         {
             List<Polyline> result = new List<Polyline>();
+            if (!(sel is SelectionSet selectionSet)) return result;
 
-            if (!(sel is SelectionSet selectionSet))
-            {
-                return result;
-            }
             foreach (SelectedObject so in selectionSet)
             {
-                if (so == null)
-                {
-                    continue;
-                }
-
+                if (so == null) continue;
                 Polyline pl = tr.GetObject(so.ObjectId, OpenMode.ForRead) as Polyline;
-
                 if (pl?.Closed == true)
                 {
                     result.Add(pl);
                 }
             }
-
             return result;
         }
-
-        // =====================================================================
-        // ECHANTILLONNAGE
-        // =====================================================================
 
         private static Polyline CreateInnerOffsetPolyline(Polyline source, double offsetDist)
         {
@@ -289,19 +227,13 @@ namespace SioForgeCAD.Functions
 
             for (int i = 0; i < count; i++)
             {
-                if (source.GetSegmentType(i) != SegmentType.Line)
-                {
-                    continue;
-                }
+                if (source.GetSegmentType(i) != SegmentType.Line) continue;
 
                 Point2d p1 = source.GetPoint2dAt(i);
                 Point2d p2 = source.GetPoint2dAt((i + 1) % count);
                 Vector2d dir = p2 - p1;
                 double len = dir.Length;
-                if (len < EPS)
-                {
-                    continue;
-                }
+                if (len < EPS) continue;
 
                 dir = dir / len;
                 Vector2d normal = clockwise ? new Vector2d(dir.Y, -dir.X) : new Vector2d(-dir.Y, dir.X);
@@ -323,109 +255,75 @@ namespace SioForgeCAD.Functions
             return result;
         }
 
-
-        private static List<Point3d> GenerateBuildingSamplePoints(List<Polyline> buildings, dynamic triangles, double sampleDist, double offsetDist)
+        private static List<Point3d> GenerateSingleBuildingSamplePoints(Polyline building, dynamic triangles, double sampleDist, double offsetDist)
         {
             List<Point3d> result = new List<Point3d>();
+            Polyline offsetPoly = CreateInnerOffsetPolyline(building, offsetDist);
 
-            foreach (Polyline building in buildings)
+            for (int i = 0; i < offsetPoly.NumberOfVertices; i++)
             {
-                Polyline offsetPoly = CreateInnerOffsetPolyline(building, offsetDist);
+                Point2d p1 = offsetPoly.GetPoint2dAt(i);
+                Point2d p2 = offsetPoly.GetPoint2dAt((i + 1) % offsetPoly.NumberOfVertices);
+                Vector2d dir = p2 - p1;
+                double len = dir.Length;
 
-                for (int i = 0; i < offsetPoly.NumberOfVertices; i++)
+                if (len < EPS) continue;
+
+                dir = dir.GetNormal();
+
+                for (double d = 0; d <= len; d += sampleDist)
                 {
-                    Point2d p1 = offsetPoly.GetPoint2dAt(i);
+                    Point2d pt2d = p1 + (dir * d);
+                    Point3d pt = new Point3d(pt2d.X, pt2d.Y, 0);
 
-                    Point2d p2 = offsetPoly.GetPoint2dAt((i + 1) % offsetPoly.NumberOfVertices);
+                    if (!pt.IsInsidePolyline(building)) continue;
 
-                    Vector2d dir = p2 - p1;
-
-                    double len = dir.Length;
-
-                    if (len < EPS)
-                    {
-                        continue;
-                    }
-
-                    dir = dir.GetNormal();
-
-                    for (double d = 0; d <= len; d += sampleDist)
-                    {
-                        Point2d pt2d = p1 + (dir * d);
-
-                        Point3d pt = new Point3d(pt2d.X, pt2d.Y, 0);
-
-                        // sécurité
-                        if (!pt.IsInsidePolyline(building))
-                        {
-                            continue;
-                        }
-
-                        double z = InterpolateZFromTriangles(pt, triangles);
-
-                        result.Add(new Point3d(pt.X, pt.Y, z));
-                    }
+                    double z = InterpolateZFromTriangles(pt, triangles);
+                    result.Add(new Point3d(pt.X, pt.Y, z));
                 }
-
-                offsetPoly.Dispose();
             }
 
+            offsetPoly.Dispose();
             return result;
         }
 
-        private static List<Point3d> GenerateBuildingPeakPoints(List<Polyline> buildings, double sampleDist, double offsetDist, double z)
+        private static List<Point3d> GenerateSingleBuildingPeakPoints(Polyline building, double sampleDist, double offsetDist, double z)
         {
-            List<Point3d> result =
-                new List<Point3d>();
+            List<Point3d> result = new List<Point3d>();
+            Polyline offsetPoly = CreateInnerOffsetPolyline(building, offsetDist);
+            offsetPoly.AddToDrawing(3);
 
-            foreach (Polyline building in buildings)
+            for (int i = 0; i < offsetPoly.NumberOfVertices; i++)
             {
-                Polyline offsetPoly = CreateInnerOffsetPolyline(building, offsetDist);
-                offsetPoly.AddToDrawing(3);
-                for (int i = 0; i < offsetPoly.NumberOfVertices; i++)
+                Point2d p1 = offsetPoly.GetPoint2dAt(i);
+                Point2d p2 = offsetPoly.GetPoint2dAt((i + 1) % offsetPoly.NumberOfVertices);
+                Vector2d dir = p2 - p1;
+                double len = dir.Length;
+
+                if (len < EPS) continue;
+
+                dir = dir.GetNormal();
+
+                for (double d = 0; d <= len; d += sampleDist)
                 {
-                    Point2d p1 = offsetPoly.GetPoint2dAt(i);
+                    Point2d pt2d = p1 + (dir * d);
+                    Point3d pt = new Point3d(pt2d.X, pt2d.Y, z);
 
-                    Point2d p2 = offsetPoly.GetPoint2dAt((i + 1) % offsetPoly.NumberOfVertices);
+                    if (!pt.IsInsidePolyline(building)) continue;
 
-                    Vector2d dir = p2 - p1;
+                    if (building.GetClosestPointTo(pt, false).DistanceTo(pt) < offsetDist - .1) continue;
 
-                    double len = dir.Length;
-
-                    if (len < EPS)
-                    {
-                        continue;
-                    }
-
-                    dir = dir.GetNormal();
-
-                    for (double d = 0; d <= len; d += sampleDist)
-                    {
-                        Point2d pt2d = p1 + (dir * d);
-
-                        Point3d pt = new Point3d(pt2d.X, pt2d.Y, z);
-
-                        // sécurité anti points extérieurs
-                        if (!pt.IsInsidePolyline(building))
-                        {
-                            continue;
-                        }
-
-                        if (building.GetClosestPointTo(pt, false).DistanceTo(pt) < offsetDist - .1)
-                        {
-                            continue;
-                        }
-
-                        result.Add(pt);
-                    }
+                    result.Add(pt);
                 }
-
-                offsetPoly.Dispose();
             }
 
+            offsetPoly.Dispose();
             return result;
         }
 
+        // =====================================================================
+        // RESTE DES MÉTHODES PRIVÉES (Inchangées mais incluses pour compilation)
+        // =====================================================================
 
         private static double InterpolateZFromTriangles(Point3d pt, dynamic triangles)
         {
@@ -440,63 +338,30 @@ namespace SioForgeCAD.Functions
                     return InterpolateBarycentricZ(pt, a, b, c);
                 }
             }
-
             return 0;
         }
 
         private static bool PointInsideTriangleXY(Point3d p, Point3d a, Point3d b, Point3d c)
         {
-            double denominator =
-                ((b.Y - c.Y) * (a.X - c.X)) +
-                ((c.X - b.X) * (a.Y - c.Y));
-
-            double alpha =
-                (((b.Y - c.Y) * (p.X - c.X)) +
-                ((c.X - b.X) * (p.Y - c.Y)))
-                / denominator;
-
-            double beta =
-                (((c.Y - a.Y) * (p.X - c.X)) +
-                ((a.X - c.X) * (p.Y - c.Y)))
-                / denominator;
-
+            double denominator = ((b.Y - c.Y) * (a.X - c.X)) + ((c.X - b.X) * (a.Y - c.Y));
+            double alpha = (((b.Y - c.Y) * (p.X - c.X)) + ((c.X - b.X) * (p.Y - c.Y))) / denominator;
+            double beta = (((c.Y - a.Y) * (p.X - c.X)) + ((a.X - c.X) * (p.Y - c.Y))) / denominator;
             double gamma = 1.0 - alpha - beta;
 
-            return
-                alpha >= -EPS &&
-                beta >= -EPS &&
-                gamma >= -EPS;
+            return alpha >= -EPS && beta >= -EPS && gamma >= -EPS;
         }
 
         private static double InterpolateBarycentricZ(Point3d p, Point3d a, Point3d b, Point3d c)
         {
-            double denominator =
-                ((b.Y - c.Y) * (a.X - c.X)) +
-                ((c.X - b.X) * (a.Y - c.Y));
-
-            double alpha =
-                (((b.Y - c.Y) * (p.X - c.X)) +
-                ((c.X - b.X) * (p.Y - c.Y)))
-                / denominator;
-
-            double beta =
-                (((c.Y - a.Y) * (p.X - c.X)) +
-                ((a.X - c.X) * (p.Y - c.Y)))
-                / denominator;
-
+            double denominator = ((b.Y - c.Y) * (a.X - c.X)) + ((c.X - b.X) * (a.Y - c.Y));
+            double alpha = (((b.Y - c.Y) * (p.X - c.X)) + ((c.X - b.X) * (p.Y - c.Y))) / denominator;
+            double beta = (((c.Y - a.Y) * (p.X - c.X)) + ((a.X - c.X) * (p.Y - c.Y))) / denominator;
             double gamma = 1.0 - alpha - beta;
 
-            return
-                (alpha * a.Z) +
-                (beta * b.Z) +
-                (gamma * c.Z);
+            return (alpha * a.Z) + (beta * b.Z) + (gamma * c.Z);
         }
 
-
-        private static Dictionary<double, List<Tuple<Point3d, Point3d>>>
-            GenerateContourSegments(
-            dynamic triangles,
-            double intervalle)
+        private static Dictionary<double, List<Tuple<Point3d, Point3d>>> GenerateContourSegments(dynamic triangles, double intervalle)
         {
             Dictionary<double, List<Tuple<Point3d, Point3d>>> result = new Dictionary<double, List<Tuple<Point3d, Point3d>>>();
 
@@ -507,19 +372,13 @@ namespace SioForgeCAD.Functions
                 Point3d p3 = tri.Vertex3;
 
                 double minZ = Math.Min(p1.Z, Math.Min(p2.Z, p3.Z));
-
                 double maxZ = Math.Max(p1.Z, Math.Max(p2.Z, p3.Z));
-
                 double startZ = Math.Ceiling(minZ / intervalle) * intervalle;
-
                 double endZ = Math.Floor(maxZ / intervalle) * intervalle;
 
-                for (double z = startZ;
-                     z <= endZ + EPS;
-                     z += intervalle)
+                for (double z = startZ; z <= endZ + EPS; z += intervalle)
                 {
                     double zKey = Math.Round(z, 4);
-
                     List<Point3d> intersections = GetTriangleContourIntersections(p1, p2, p3, z);
 
                     if (intersections.Count == 2)
@@ -529,31 +388,24 @@ namespace SioForgeCAD.Functions
                             value = new List<Tuple<Point3d, Point3d>>();
                             result[zKey] = value;
                         }
-
                         value.Add(new Tuple<Point3d, Point3d>(intersections[0], intersections[1]));
                     }
                 }
             }
-
             return result;
         }
-
 
         private static bool IsContourInsideBuildings(Polyline3d poly, List<Polyline> buildings)
         {
             List<Point3d> pts = new List<Point3d>();
             foreach (PolylineVertex3d v in poly)
             {
-                if (v != null)
-                {
-                    pts.Add(v.Position);
-                }
+                if (v != null) pts.Add(v.Position);
             }
 
             foreach (Polyline building in buildings)
             {
                 bool allInside = true;
-
                 foreach (Point3d pt in pts)
                 {
                     if (!pt.IsInsidePolyline(building))
@@ -562,83 +414,63 @@ namespace SioForgeCAD.Functions
                         break;
                     }
                 }
-
-                if (allInside)
-                {
-                    return true;
-                }
+                if (allInside) return true;
             }
-
             return false;
         }
 
         private static bool IsClockwise(Polyline pl)
         {
             double area = 0;
-
             for (int i = 0; i < pl.NumberOfVertices; i++)
             {
                 Point2d p1 = pl.GetPoint2dAt(i);
                 Point2d p2 = pl.GetPoint2dAt((i + 1) % pl.NumberOfVertices);
-
                 area += (p2.X - p1.X) * (p2.Y + p1.Y);
             }
-
             return area > 0;
         }
 
         private static List<Point3dCollection> ChainSegments(List<Tuple<Point3d, Point3d>> segments)
         {
             List<Point3dCollection> polylines = new List<Point3dCollection>();
-
             const double tol = 1e-5;
-
             List<Tuple<Point3d, Point3d>> pool = new List<Tuple<Point3d, Point3d>>(segments);
 
             while (pool.Count > 0)
             {
                 List<Point3d> currentChain = new List<Point3d>();
-
                 var firstSeg = pool[0];
-
                 pool.RemoveAt(0);
 
                 currentChain.Add(firstSeg.Item1);
                 currentChain.Add(firstSeg.Item2);
 
                 ExtendChain(currentChain, pool, tol);
-
                 currentChain.Reverse();
-
                 ExtendChain(currentChain, pool, tol);
 
                 Point3dCollection pts = new Point3dCollection();
-
                 foreach (Point3d p in currentChain)
                 {
                     pts.Add(p);
                 }
-
                 polylines.Add(pts);
             }
-
             return polylines;
         }
 
         private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol)
         {
             bool added = true;
-
             while (added)
             {
                 added = false;
-
                 Point3d tail = chain[chain.Count - 1];
 
                 for (int i = 0; i < pool.Count; i++)
                 {
                     var seg = pool[i];
-
                     if (seg.Item1.DistanceTo(tail) < tol)
                     {
                         chain.Add(seg.Item2);
@@ -646,7 +478,6 @@ namespace SioForgeCAD.Functions
                         added = true;
                         break;
                     }
-
                     if (seg.Item2.DistanceTo(tail) < tol)
                     {
                         chain.Add(seg.Item1);
@@ -666,19 +497,14 @@ namespace SioForgeCAD.Functions
             {
                 foreach (Point3d p in pts)
                 {
-                    if (p.DistanceTo(pt) < EPS)
-                    {
-                        return;
-                    }
+                    if (p.DistanceTo(pt) < EPS) return;
                 }
-
                 pts.Add(pt);
             }
 
             void CheckEdge(Point3d a, Point3d b)
             {
                 bool aOn = Math.Abs(a.Z - z) < EPS;
-
                 bool bOn = Math.Abs(b.Z - z) < EPS;
 
                 if (aOn && bOn)
@@ -694,12 +520,9 @@ namespace SioForgeCAD.Functions
                 {
                     AddPt(new Point3d(b.X, b.Y, z));
                 }
-                else if (
-                    (a.Z < z && b.Z > z) ||
-                    (b.Z < z && a.Z > z))
+                else if ((a.Z < z && b.Z > z) || (b.Z < z && a.Z > z))
                 {
                     double t = (z - a.Z) / (b.Z - a.Z);
-
                     AddPt(new Point3d(a.X + (t * (b.X - a.X)), a.Y + (t * (b.Y - a.Y)), z));
                 }
             }
