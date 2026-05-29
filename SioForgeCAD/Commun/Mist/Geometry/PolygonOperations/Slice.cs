@@ -355,6 +355,12 @@ namespace SioForgeCAD.Commun
             return new DBObjectCollection();
         }
 
+        public static DBObjectCollection TryGetSplitCurves(this Polyline polyline, Point3dCollection poi)
+        {
+            var SplitDouble = polyline.GetSplitPoints(poi);
+            return polyline.TryGetSplitCurves(SplitDouble);
+        }
+
         public static DBObjectCollection CutCurveByCurve(this Polyline polyline, Polyline CutLine, Intersect intersect = Intersect.OnBothOperands)
         {
             polyline.IsSegmentIntersecting(CutLine, out Point3dCollection IntersectionPointsFounds, intersect);

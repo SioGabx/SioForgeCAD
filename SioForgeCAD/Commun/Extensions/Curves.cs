@@ -517,6 +517,11 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static Point3d GetMiddlePoint(this Curve curve)
+        {
+            double midParam = (curve.StartParam + curve.EndParam) / 2.0;
+            return curve.GetPointAtParameter(midParam);
+        }
 
         /// <summary>
         /// Coupe les Lignes et Polylignes en utilisant les intersections.

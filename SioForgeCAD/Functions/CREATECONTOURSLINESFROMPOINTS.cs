@@ -21,6 +21,10 @@ namespace SioForgeCAD.Functions
             var selRes = ed.GetBlocks(out var ObjIds, "Sélectionnez des côtes", false, true);
             if (!selRes) return;
 
+
+           // var selResContours = ed.GetSelectionRedraw("\nSélectionnez des batiments :", true, false, ed.GetCurvesFilter());
+           // if (selResContours.Status != PromptStatus.OK) return;
+
             // Demander l'intervalle des courbes
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'intervalle des courbes de niveau : ")
             {
@@ -143,6 +147,9 @@ namespace SioForgeCAD.Functions
                         {
                             path.RemoveAt(path.Count - 1); // Enlever le point en double pour la fermeture
                         }
+
+
+
 
                         Polyline3d poly = new Polyline3d(polyType, path, isClosed)
                         {

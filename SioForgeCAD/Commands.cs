@@ -546,6 +546,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            Functions.TEST.OffsetSegmentsCustom();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
@@ -618,8 +619,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.UsePickSet)]
         public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
 
-        [CommandMethod("DEBUG", "TRIANGLECC", CommandFlags.UsePickSet)]
-        public static void TRIANGLECC() => Functions.DEBUG.TRIANGLECC();
 
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS() => Functions.DEBUG.DEBUG_RANDOM_POINTS();

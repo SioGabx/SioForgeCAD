@@ -40,46 +40,6 @@ namespace SioForgeCAD.Commun
             public Edge(int p1, int p2) { P1 = p1; P2 = p2; }
         }
 
-        public static void TriangulateCommand()
-        {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Editor ed = doc.Editor;
-
-            TypedValue[] filterVal = { new TypedValue(0, "POINT") };
-            PromptSelectionResult selResult = ed.GetSelection(new PromptSelectionOptions { MessageForAdding = "Sélectionnez les points :" }, new SelectionFilter(filterVal));
-            if (selResult.Status != PromptStatus.OK) return;
-
-            List<Point3d> Nuage = new List<Point3d>();
-
-            using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId id in selResult.Value.GetObjectIds())
-                {
-                    if (tr.GetObject(id, OpenMode.ForRead) is DBPoint point)
-                    {
-                        Nuage.Add(point.Position);
-                    }
-                }
-
-                List<Triangle3d> trianglesCalcules = Triangulate(Nuage);
-
-                ed.WriteMessage($"\nCalcul terminé. Nombre de triangles générés en mémoire : {trianglesCalcules.Count}");
-
-                foreach (var triangle in trianglesCalcules)
-                {
-                    using (Polyline3d poly = new Polyline3d())
-                    {
-                        poly.AddToDrawingCurrentTransaction();
-                        poly.AddVertex(triangle.Vertex1);
-                        poly.AddVertex(triangle.Vertex2);
-                        poly.AddVertex(triangle.Vertex3);
-                        poly.Closed = true;
-                    }
-                }
-                tr.Commit();
-            }
-        }
-
         public static List<Triangle3d> Triangulate(List<Point3d> nuagePoints)
         {
             List<Triangle3d> Resultat = new List<Triangle3d>();

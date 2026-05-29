@@ -523,8 +523,7 @@ namespace SioForgeCAD.Commun
                         }
                     }
 
-                    var SplitDouble = PolyBase.GetSplitPoints(OnLineIntersectionPointsFounds);
-                    var Splitted = PolyBase.TryGetSplitCurves(SplitDouble).Cast<Polyline>().ToHashSet();
+                    var Splitted = PolyBase.TryGetSplitCurves(OnLineIntersectionPointsFounds).Cast<Polyline>().ToHashSet();
 
                     //Remove zero length line
                     foreach (var curv in Splitted.ToList())

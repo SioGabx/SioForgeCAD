@@ -47,10 +47,6 @@ namespace SioForgeCAD.Functions
                 Generic.WriteMessage($"Taille : {Files.FormatFileSizeFromByte(x.ObjectId.GetObjectByteSize())}");
             }
         }
-        public static void TRIANGLECC()
-        {
-            DelaunayTriangulate.TriangulateCommand();
-        }
 
         public static void DRAWRAINBOWLIGNES()
         {
