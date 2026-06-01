@@ -57,6 +57,14 @@ namespace SioForgeCAD.Commun
             Filter = new LongOperationMessageFilter();
             Application.AddMessageFilter(Filter);
         }
+        public void CheckCanceled()
+        {
+            if (IsCanceled)
+            {
+                throw new OperationCanceledException(
+                    "Opération annulée par l'utilisateur.");
+            }
+        }
 
         public class LongOperationMessageFilter : IMessageFilter
         {

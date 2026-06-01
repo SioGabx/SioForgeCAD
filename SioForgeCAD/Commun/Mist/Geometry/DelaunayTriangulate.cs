@@ -40,7 +40,9 @@ namespace SioForgeCAD.Commun
             public Edge(int p1, int p2) { P1 = p1; P2 = p2; }
         }
 
-        public static List<Triangle3d> Triangulate(List<Point3d> nuagePoints)
+        public static List<Triangle3d> Triangulate(
+            List<Point3d> nuagePoints,
+            LongOperationProcess op = null)
         {
             List<Triangle3d> Resultat = new List<Triangle3d>();
 
@@ -52,11 +54,8 @@ namespace SioForgeCAD.Commun
 
             int numberOfPoints = PtsFiltres.Count;
             if (numberOfPoints < 3)
-            {
                 return Resultat;
-            }
 
-            // Coordinate arrays containing input points + 3 points for the super-triangle
             double[] xCoordinates = new double[numberOfPoints + 3];
             double[] yCoordinates = new double[numberOfPoints + 3];
             double[] zCoordinates = new double[numberOfPoints + 3];
@@ -66,17 +65,28 @@ namespace SioForgeCAD.Commun
                 xCoordinates[i] = PtsFiltres[i].X;
                 yCoordinates[i] = PtsFiltres[i].Y;
                 zCoordinates[i] = PtsFiltres[i].Z;
+
+                if (op != null && (i & 31) == 0)
+                {
+                    op.CheckCanceled();
+                    op.UpdateProgress();
+                }
             }
 
-            // Calculate Super-Triangle bounds
             double xMin = xCoordinates[0], xMax = xMin;
             double yMin = yCoordinates[0], yMax = yMin;
+
             for (int i = 1; i < numberOfPoints; i++)
             {
                 if (xCoordinates[i] < xMin) xMin = xCoordinates[i];
                 if (xCoordinates[i] > xMax) xMax = xCoordinates[i];
                 if (yCoordinates[i] < yMin) yMin = yCoordinates[i];
                 if (yCoordinates[i] > yMax) yMax = yCoordinates[i];
+
+                if (op != null && (i & 63) == 0)
+                {
+                    op.CheckCanceled();
+                }
             }
 
             double deltaX = xMax - xMin;
@@ -85,38 +95,58 @@ namespace SioForgeCAD.Commun
             double yMid = (yMin + yMax) / 2;
             double dMax = Math.Max(deltaX, deltaY);
 
-            // Append Super-Triangle coordinates at the end of our coordinate arrays
             int stIdx1 = numberOfPoints;
             int stIdx2 = numberOfPoints + 1;
             int stIdx3 = numberOfPoints + 2;
 
-            xCoordinates[stIdx1] = xMid - (20 * dMax); yCoordinates[stIdx1] = yMid - dMax; zCoordinates[stIdx1] = 0;
-            xCoordinates[stIdx2] = xMid; yCoordinates[stIdx2] = yMid + (20 * dMax); zCoordinates[stIdx2] = 0;
-            xCoordinates[stIdx3] = xMid + (20 * dMax); yCoordinates[stIdx3] = yMid - dMax; zCoordinates[stIdx3] = 0;
+            xCoordinates[stIdx1] = xMid - (20 * dMax);
+            yCoordinates[stIdx1] = yMid - dMax;
+            zCoordinates[stIdx1] = 0;
 
-            // Using a dynamic List of structs prevents IndexOutOfRange errors completely
+            xCoordinates[stIdx2] = xMid;
+            yCoordinates[stIdx2] = yMid + (20 * dMax);
+            zCoordinates[stIdx2] = 0;
+
+            xCoordinates[stIdx3] = xMid + (20 * dMax);
+            yCoordinates[stIdx3] = yMid - dMax;
+            zCoordinates[stIdx3] = 0;
+
             List<InternalTriangle> triangles = new List<InternalTriangle>();
 
-            // Create initial super-triangle
-            InternalTriangle superTriangle = new InternalTriangle { P1 = stIdx1, P2 = stIdx2, P3 = stIdx3, IsValid = true };
+            InternalTriangle superTriangle = new InternalTriangle
+            {
+                P1 = stIdx1,
+                P2 = stIdx2,
+                P3 = stIdx3,
+                IsValid = true
+            };
+
             CalculateCircumscribedCircle(
                 xCoordinates[stIdx1], yCoordinates[stIdx1],
                 xCoordinates[stIdx2], yCoordinates[stIdx2],
                 xCoordinates[stIdx3], yCoordinates[stIdx3],
-                ref superTriangle.CentroidX, ref superTriangle.CentroidY, ref superTriangle.RadiusSq
+                ref superTriangle.CentroidX,
+                ref superTriangle.CentroidY,
+                ref superTriangle.RadiusSq
             );
+
             triangles.Add(superTriangle);
 
             List<Edge> edgeBuffer = new List<Edge>();
 
-            // Main loop: Incremental insertion
             for (int i = 0; i < numberOfPoints; i++)
             {
                 double px = xCoordinates[i];
                 double py = yCoordinates[i];
+
                 edgeBuffer.Clear();
 
-                // 1. Identify and invalidate triangles whose circumcircles contain the current point
+                if (op != null && (i & 7) == 0)
+                {
+                    op.CheckCanceled();
+                    op.UpdateProgress();
+                }
+
                 for (int j = 0; j < triangles.Count; j++)
                 {
                     InternalTriangle t = triangles[j];
@@ -124,67 +154,82 @@ namespace SioForgeCAD.Commun
 
                     double dx = t.CentroidX - px;
                     double dy = t.CentroidY - py;
-                    if (((dx * dx) + (dy * dy)) < t.RadiusSq)
+
+                    if ((dx * dx + dy * dy) < t.RadiusSq)
                     {
-                        // Add edges to buffer
                         edgeBuffer.Add(new Edge(t.P1, t.P2));
                         edgeBuffer.Add(new Edge(t.P2, t.P3));
                         edgeBuffer.Add(new Edge(t.P3, t.P1));
 
                         t.IsValid = false;
-                        triangles[j] = t; // Struct updating
+                        triangles[j] = t;
                     }
                 }
 
-                // 2. Remove duplicate edges (shared edges within the polygonal hole)
                 for (int j = 0; j < edgeBuffer.Count - 1; j++)
                 {
                     for (int k = j + 1; k < edgeBuffer.Count; k++)
                     {
                         Edge e1 = edgeBuffer[j];
                         Edge e2 = edgeBuffer[k];
-                        if ((e1.P1 == e2.P2 && e1.P2 == e2.P1) || (e1.P1 == e2.P1 && e1.P2 == e2.P2))
+
+                        if ((e1.P1 == e2.P2 && e1.P2 == e2.P1) ||
+                            (e1.P1 == e2.P1 && e1.P2 == e2.P2))
                         {
-                            e1.P1 = -1; e1.P2 = -1;
-                            e2.P1 = -1; e2.P2 = -1;
+                            e1.P1 = e1.P2 = -1;
+                            e2.P1 = e2.P2 = -1;
+
                             edgeBuffer[j] = e1;
                             edgeBuffer[k] = e2;
                         }
                     }
                 }
 
-                // 3. Form new triangles from unique boundary edges to the new point
                 for (int j = 0; j < edgeBuffer.Count; j++)
                 {
                     Edge e = edgeBuffer[j];
                     if (e.P1 < 0 || e.P2 < 0) continue;
 
-                    InternalTriangle newTri = new InternalTriangle { P1 = e.P1, P2 = e.P2, P3 = i, IsValid = true };
+                    InternalTriangle newTri = new InternalTriangle
+                    {
+                        P1 = e.P1,
+                        P2 = e.P2,
+                        P3 = i,
+                        IsValid = true
+                    };
+
                     CalculateCircumscribedCircle(
                         xCoordinates[e.P1], yCoordinates[e.P1],
                         xCoordinates[e.P2], yCoordinates[e.P2],
                         xCoordinates[i], yCoordinates[i],
-                        ref newTri.CentroidX, ref newTri.CentroidY, ref newTri.RadiusSq
+                        ref newTri.CentroidX,
+                        ref newTri.CentroidY,
+                        ref newTri.RadiusSq
                     );
+
                     triangles.Add(newTri);
                 }
 
-                // Clean up invalid items to keep memory footprint low
                 triangles.RemoveAll(t => !t.IsValid);
             }
 
-            // 4. Convert internal valid triangles back to AutoCAD Point3d elements, ignoring super-triangle vertices
             foreach (var t in triangles)
             {
-                if (t.IsValid && t.P1 < numberOfPoints && t.P2 < numberOfPoints && t.P3 < numberOfPoints)
+                if (!t.IsValid) continue;
+
+                if (t.P1 < numberOfPoints &&
+                    t.P2 < numberOfPoints &&
+                    t.P3 < numberOfPoints)
                 {
-                    Point3d v1 = new Point3d(xCoordinates[t.P1], yCoordinates[t.P1], zCoordinates[t.P1]);
-                    Point3d v2 = new Point3d(xCoordinates[t.P2], yCoordinates[t.P2], zCoordinates[t.P2]);
-                    Point3d v3 = new Point3d(xCoordinates[t.P3], yCoordinates[t.P3], zCoordinates[t.P3]);
-                    Resultat.Add(new Triangle3d(v1, v2, v3));
+                    Resultat.Add(new Triangle3d(
+                        new Point3d(xCoordinates[t.P1], yCoordinates[t.P1], zCoordinates[t.P1]),
+                        new Point3d(xCoordinates[t.P2], yCoordinates[t.P2], zCoordinates[t.P2]),
+                        new Point3d(xCoordinates[t.P3], yCoordinates[t.P3], zCoordinates[t.P3])
+                    ));
                 }
             }
 
+            op?.CheckCanceled();
             return Resultat;
         }
 

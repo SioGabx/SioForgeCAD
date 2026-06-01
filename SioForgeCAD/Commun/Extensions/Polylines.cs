@@ -290,7 +290,7 @@ namespace SioForgeCAD.Commun.Extensions
                     double bulgePrev = polyline.GetBulgeAt(prevIdx);
                     double bulgeCurr = polyline.GetBulgeAt(currIdx);
 
-                    bool isPrevLine = Math.Abs(bulgePrev) == 0.0; 
+                    bool isPrevLine = Math.Abs(bulgePrev) == 0.0;
                     bool isCurrLine = Math.Abs(bulgeCurr) == 0.0;
 
                     // --- CAS A : Deux LIGNES DROITES colinéaires ---
@@ -659,11 +659,21 @@ namespace SioForgeCAD.Commun.Extensions
             if (poly3d.PolyType == Poly3dType.SimplePoly)
             {
                 Polyline poly2d = new Polyline();
-                foreach (PolylineVertex3d vertex in poly3d)
+                foreach (var vertex in poly3d)
                 {
-                    if (vertex != null)
+                    PolylineVertex3d polyVertex3d = null;
+                    if (vertex is PolylineVertex3d)
                     {
-                        Point2d point = new Point2d(vertex.Position.X, vertex.Position.Y);
+                        polyVertex3d = (PolylineVertex3d)vertex;
+                    }
+                    else if (vertex is ObjectId)
+                    {
+                        polyVertex3d = ((ObjectId)vertex).GetDBObject(OpenMode.ForRead) as PolylineVertex3d;
+                    }
+
+                    if (polyVertex3d != null)
+                    {
+                        Point2d point = new Point2d(polyVertex3d.Position.X, polyVertex3d.Position.Y);
                         poly2d.AddVertexAt(poly2d.NumberOfVertices, point, 0, 0, 0);
                     }
                 }

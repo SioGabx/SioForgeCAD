@@ -59,6 +59,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return !(b.Left() > a.Right() || b.Right() < a.Left() || b.Top() < a.Bottom() || b.Bottom() > a.Top());
         }
+
         public static bool CollideWithOrConnected(this Extents3d a, Extents3d b)
         {
             return !(b.Left() >= a.Right() || b.Right() <= a.Left() || b.Top() <= a.Bottom() || b.Bottom() >= a.Top());
@@ -394,11 +395,23 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
-        public static bool IsPointIn(this Extents3d extents, Point3d point)
+        public static bool Contains(this Extents3d extents, Point3d point)
         {
             return point.X >= extents.MinPoint.X && point.X <= extents.MaxPoint.X
                 && point.Y >= extents.MinPoint.Y && point.Y <= extents.MaxPoint.Y
                 && point.Z >= extents.MinPoint.Z && point.Z <= extents.MaxPoint.Z;
+        }
+
+        public static bool ContainsIgnoreZ(this Extents3d extents, Point3d point)
+        {
+            return point.X >= extents.MinPoint.X && point.X <= extents.MaxPoint.X
+                && point.Y >= extents.MinPoint.Y && point.Y <= extents.MaxPoint.Y;
+        }
+
+        public static bool Contains(this Extents3d extents, Point2d point)
+        {
+            return point.X >= extents.MinPoint.X && point.X <= extents.MaxPoint.X
+                && point.Y >= extents.MinPoint.Y && point.Y <= extents.MaxPoint.Y;
         }
 
         public static bool IsInside(this Polyline LineB, Extents3d extents, bool CheckEach = true)
@@ -426,7 +439,7 @@ namespace SioForgeCAD.Commun.Extensions
 
                 if ((PolylineSegment.StartPoint.DistanceTo(PolylineSegment.EndPoint) / 2) > Generic.MediumTolerance.EqualPoint)
                 {
-                    if (!extents.IsPointIn(MiddlePoint))
+                    if (!extents.Contains(MiddlePoint))
                     {
                         return false;
                     }
