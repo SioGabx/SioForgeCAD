@@ -353,7 +353,7 @@ namespace SioForgeCAD.Commun.Extensions
         }
 
         /// <summary>
-        /// Convertit les facettes (suites de segments de lignes courtes) d'une polyligne en véritables arcs (Bulges) 
+        /// Convertit les facettes (suites de segments de lignes courtes) d'une polyligne en véritables arcs (Bulges)
         /// si les points suivent une trajectoire circulaire.
         /// </summary>
         /// <param name="polyline">La polyligne à optimiser.</param>
@@ -679,13 +679,13 @@ namespace SioForgeCAD.Commun.Extensions
                 foreach (var vertex in poly3d)
                 {
                     PolylineVertex3d polyVertex3d = null;
-                    if (vertex is PolylineVertex3d)
+                    if (vertex is PolylineVertex3d polylineVertex3d)
                     {
-                        polyVertex3d = (PolylineVertex3d)vertex;
+                        polyVertex3d = polylineVertex3d;
                     }
-                    else if (vertex is ObjectId)
+                    else if (vertex is ObjectId objectId)
                     {
-                        polyVertex3d = ((ObjectId)vertex).GetDBObject(OpenMode.ForRead) as PolylineVertex3d;
+                        polyVertex3d = ((ObjectId)objectId).GetDBObject(OpenMode.ForRead) as PolylineVertex3d;
                     }
 
                     if (polyVertex3d != null)

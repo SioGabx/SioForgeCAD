@@ -71,7 +71,7 @@ namespace SioForgeCAD.Functions
                     int totalOps =
                         terrainPoints.Count +
                         terrainPoints.Count + // triangulation approx
-                        buildings.Count * 200 +
+                        (buildings.Count * 200) +
                         5000;
 
                     op.SetTotalOperations(totalOps);
@@ -199,7 +199,7 @@ namespace SioForgeCAD.Functions
 
                 for (double d = 0; d <= len; d += sampleDist)
                 {
-                    Point2d pt2d = p1 + dir * d;
+                    Point2d pt2d = p1 + (dir * d);
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, 0);
 
                     if (!pt.IsInsidePolyline(building)) continue;
@@ -237,7 +237,7 @@ namespace SioForgeCAD.Functions
 
                 for (double d = 0; d <= len; d += sampleDist)
                 {
-                    Point2d pt2d = p1 + dir * d;
+                    Point2d pt2d = p1 + (dir * d);
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, z);
 
                     if (!pt.IsInsidePolyline(building)) continue;
@@ -279,7 +279,7 @@ namespace SioForgeCAD.Functions
             double beta = (((c.Y - a.Y) * (p.X - c.X)) + ((a.X - c.X) * (p.Y - c.Y))) / denom;
             double gamma = 1 - alpha - beta;
 
-            return alpha * a.Z + beta * b.Z + gamma * c.Z;
+            return (alpha * a.Z) + (beta * b.Z) + (gamma * c.Z);
         }
 
         private static List<Point3d> ReadTopoPoints(Transaction tr, ObjectId[] ids)
@@ -337,7 +337,7 @@ namespace SioForgeCAD.Functions
                 double len = dir.Length;
                 if (len < EPS) continue;
 
-                dir = dir / len;
+                dir /= len;
                 Vector2d normal = clockwise ? new Vector2d(dir.Y, -dir.X) : new Vector2d(-dir.Y, dir.X);
                 Vector2d offset = normal * offsetDist;
                 Point2d o1 = p1 + offset;

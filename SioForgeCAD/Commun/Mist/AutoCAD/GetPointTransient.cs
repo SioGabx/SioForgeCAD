@@ -140,7 +140,7 @@ namespace SioForgeCAD.Commun
             {
                 foreach (Drawable Entity in Drawable)
                 {
-                    Entity.Dispose();
+                    if (!Entity.IsDisposed) Entity.Dispose();
                 }
                 Drawable?.Clear();
             }
@@ -152,7 +152,7 @@ namespace SioForgeCAD.Commun
             {
                 foreach (Drawable Entity in StaticDrawable)
                 {
-                    Entity.Dispose();
+                    if (!Entity.IsDisposed) Entity.Dispose();
                 }
                 StaticDrawable?.Clear();
             }
@@ -160,7 +160,7 @@ namespace SioForgeCAD.Commun
 
         public void DisposeEntities()
         {
-            if (Entities != null)
+            if (Entities?.IsDisposed == false)
             {
                 foreach (DBObject item in Entities)
                 {
@@ -172,7 +172,7 @@ namespace SioForgeCAD.Commun
 
         public void DisposeStaticEntities()
         {
-            if (StaticEntities != null)
+            if (StaticEntities?.IsDisposed == false)
             {
                 foreach (DBObject item in StaticEntities)
                 {
