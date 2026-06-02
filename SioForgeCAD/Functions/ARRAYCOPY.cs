@@ -95,7 +95,7 @@ namespace SioForgeCAD.Functions
                     return false;
                 }
 
-                targetPt = targetRes.PromptPointResult.Value;
+                targetPt = Points.GetFromPromptPointResult(targetRes.PromptPointResult).SCG;
                 return true;
             }
         }
