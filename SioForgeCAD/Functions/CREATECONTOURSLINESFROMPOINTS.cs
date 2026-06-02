@@ -122,7 +122,6 @@ namespace SioForgeCAD.Functions
                         foreach (Point3dCollection path in ChainSegments(kvp.Value))
                         {
                             if (path.Count <= 2) continue;
-
                             bool closed = path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
 
                             if (closed)
@@ -203,7 +202,10 @@ namespace SioForgeCAD.Functions
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, 0);
 
                     if (!pt.IsInsidePolyline(building)) continue;
-                    if (building.GetClosestPointTo(pt, false).DistanceTo(pt) < offsetDist - 0.1) continue;
+
+                    var distanceFromBuilding = building.GetClosestPointTo(pt, false).ToPoint2d().GetDistanceTo(pt.ToPoint2d());
+                    if (distanceFromBuilding < offsetDist - 0.1) continue;
+                    if (distanceFromBuilding > offsetDist + 0.1) continue;
 
                     double z = InterpolateZFromTriangles(pt, triangles);
                     result.Add(new Point3d(pt.X, pt.Y, z));
@@ -241,7 +243,11 @@ namespace SioForgeCAD.Functions
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, z);
 
                     if (!pt.IsInsidePolyline(building)) continue;
-                    if (building.GetClosestPointTo(pt, false).DistanceTo(pt) < offsetDist - 0.1) continue;
+                    var distanceFromBuilding = building.GetClosestPointTo(pt, false).ToPoint2d().GetDistanceTo(pt.ToPoint2d());
+                    Debug.WriteLine($"distanceFromBuilding : {distanceFromBuilding}\noffsetDist : {offsetDist}\n\n");
+                    if (distanceFromBuilding < offsetDist - 0.1) continue;
+                    
+                    if (distanceFromBuilding > offsetDist + 1) continue;
 
                     result.Add(pt);
                     op.UpdateProgress();
@@ -468,7 +474,95 @@ namespace SioForgeCAD.Functions
             return polylines;
         }
 
-        private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol)
+public static Point3dCollection SimplifyCollinearPoints(Point3dCollection pts, double tolerance = 0.1)
+    {
+        if (pts == null || pts.Count <= 2) return pts;
+
+        // 1. Conversion en List pour faciliter l'accès par index
+        List<Point3d> pointList = new List<Point3d>();
+        foreach (Point3d pt in pts)
+        {
+            pointList.Add(pt);
+        }
+
+        // 2. Application de l'algorithme
+        List<Point3d> simplifiedList = DouglasPeucker(pointList, 0, pointList.Count - 1, tolerance);
+
+        // 3. (Optionnel) Nettoyage de la boucle fermée
+        // Si la forme est fermée et que le premier point est en plein milieu d'une ligne droite, on l'enlève.
+        if (simplifiedList.Count > 3 &&
+            simplifiedList[0].DistanceTo(simplifiedList[simplifiedList.Count - 1]) < tolerance)
+        {
+            Vector3d vStart = simplifiedList[1] - simplifiedList[0];
+            Vector3d vEnd = simplifiedList[0] - simplifiedList[simplifiedList.Count - 2];
+
+            // Si les vecteurs d'entrée et de sortie du point de départ sont alignés
+            if (vStart.IsParallelTo(vEnd, new Tolerance(0.01, 0.01)))
+            {
+                simplifiedList.RemoveAt(0);
+            }
+        }
+
+        // 4. Reconversion en Point3dCollection
+        Point3dCollection result = new Point3dCollection();
+        foreach (Point3d pt in simplifiedList)
+        {
+            result.Add(pt);
+        }
+
+        return result;
+    }
+
+    private static List<Point3d> DouglasPeucker(List<Point3d> points, int first, int last, double epsilon)
+    {
+        double maxDistance = 0;
+        int indexFarthest = first;
+
+        for (int i = first + 1; i < last; i++)
+        {
+            double distance = PerpendicularDistance(points[i], points[first], points[last]);
+            if (distance > maxDistance)
+            {
+                maxDistance = distance;
+                indexFarthest = i;
+            }
+        }
+
+        List<Point3d> result = new List<Point3d>();
+
+        if (maxDistance > epsilon)
+        {
+            // Si le point le plus éloigné est en dehors de la tolérance, on coupe le segment en deux
+            List<Point3d> rec1 = DouglasPeucker(points, first, indexFarthest, epsilon);
+            List<Point3d> rec2 = DouglasPeucker(points, indexFarthest, last, epsilon);
+
+            rec1.RemoveAt(rec1.Count - 1); // Éviter le doublon du point de jointure
+            rec1.AddRange(rec2);
+            return rec1;
+        }
+        else
+        {
+            // Sinon, tous les points intermédiaires sont inutiles
+            result.Add(points[first]);
+            result.Add(points[last]);
+            return result;
+        }
+    }
+
+    private static double PerpendicularDistance(Point3d pt, Point3d lineStart, Point3d lineEnd)
+    {
+        Vector3d lineVec = lineEnd - lineStart;
+
+        // Si le segment est en fait un point (début et fin identiques)
+        if (lineVec.Length == 0.0) return pt.DistanceTo(lineStart);
+
+        Vector3d ptVec = pt - lineStart;
+
+        // La distance perpendiculaire est la norme du produit vectoriel divisée par la longueur de la base
+        return lineVec.CrossProduct(ptVec).Length / lineVec.Length;
+    }
+
+    private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol)
         {
             bool added = true;
             while (added)
