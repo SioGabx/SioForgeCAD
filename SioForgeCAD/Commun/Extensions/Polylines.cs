@@ -399,29 +399,46 @@ namespace SioForgeCAD.Commun.Extensions
 
                     // --- CRITÈRE DE TOLÉRANCE GÉOMÉTRIQUE ---
                     bool allPointsFit = true;
-                    for (int k = i + 1; k < j; k++)
-                    {
-                        Point2d pk = polyline.GetPoint2dAt(k);
 
-                        // 1. Vérification de la distance au rayon
-                        double distToCenter = pk.GetDistanceTo(arc.Center);
-                        if (Math.Abs(distToCenter - arc.Radius) > tolerance)
+                    // On vérifie maintenant jusqu'à 'j' (inclusivement) pour traiter le tout dernier segment
+                    for (int k = i + 1; k <= j; k++)
+                    {
+                        Point2d pPrev = polyline.GetPoint2dAt(k - 1);
+                        Point2d pCurr = polyline.GetPoint2dAt(k);
+
+                        // Vérification du MILIEU du segment
+                        Point2d pMidSeg = new Point2d((pPrev.X + pCurr.X) / 2.0, (pPrev.Y + pCurr.Y) / 2.0);
+                        double midDistToCenter = pMidSeg.GetDistanceTo(arc.Center);
+
+                        if (Math.Abs(arc.Radius - midDistToCenter) > tolerance)
                         {
                             allPointsFit = false;
                             break;
                         }
 
-                        // 2. Vérification de la déviation angulaire (Évite de lisser des angles vifs)
-                        // On vérifie que le segment (k-1, k) ne fait pas un angle trop brusque
-                        Vector2d v1 = polyline.GetPoint2dAt(k) - polyline.GetPoint2dAt(k - 1);
-                        Vector2d v2 = polyline.GetPoint2dAt(k + 1) - polyline.GetPoint2dAt(k);
-                        double angle = v1.GetAngleTo(v2);
-
-                        // Si l'angle entre deux segments est > 45° (par ex), ce n'est probablement pas un arc
-                        if (Math.Abs(angle) > Math.PI / 4)
+                        // Pour les sommets intermédiaires uniquement
+                        if (k < j)
                         {
-                            allPointsFit = false;
-                            break;
+                            Point2d pk = polyline.GetPoint2dAt(k);
+
+                            // Vérification de la distance du sommet au rayon
+                            double distToCenter = pk.GetDistanceTo(arc.Center);
+                            if (Math.Abs(distToCenter - arc.Radius) > tolerance)
+                            {
+                                allPointsFit = false;
+                                break;
+                            }
+
+                            // Vérification de la déviation angulaire
+                            Vector2d v1 = pk - pPrev;
+                            Vector2d v2 = polyline.GetPoint2dAt(k + 1) - pk;
+                            double angle = v1.GetAngleTo(v2);
+
+                            if (Math.Abs(angle) > Math.PI / 4)
+                            {
+                                allPointsFit = false;
+                                break;
+                            }
                         }
                     }
 

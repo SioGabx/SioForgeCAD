@@ -568,25 +568,9 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
-            var db = Generic.GetDatabase();
-            var ed = Generic.GetEditor();
-            var Layouts = LayoutManager.Current.GetLayoutNames();
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                foreach (var item in Layouts)
-                {
-                    var id = LayoutManager.Current.GetLayoutId(item);
-                    var Lay = id.GetDBObject(OpenMode.ForWrite) as Layout;
-
-                    Debug.WriteLine($"{item} : TabSelected = {Lay.TabSelected}");
-                    Lay.TabSelected = true;
-                    ed.UpdateScreen();
-                }
-
-                tr.Commit();
-            }
 
 
+            DEBUG.EXPORTPOLYLINEDATA();
 
             //const string patha = "PATH.pc3";
             //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(patha);

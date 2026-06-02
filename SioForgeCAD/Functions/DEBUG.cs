@@ -8,11 +8,38 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
 
 namespace SioForgeCAD.Functions
 {
     internal static class DEBUG
     {
+        public static void EXPORTPOLYLINEDATA()
+        {
+            var ed = Generic.GetEditor();
+            var polyline = ed.GetPolyline("Select poly", false, false);
+            if (polyline == null) return;
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("--- Données de la Polyligne ---");
+
+            for (int i = 0; i < polyline.NumberOfVertices; i++)
+            {
+                var pt = polyline.GetPoint2dAt(i);
+                double bulge = polyline.GetBulgeAt(i);
+
+                // J'utilise InvariantCulture pour forcer l'écriture avec des points (.) 
+                // et éviter les soucis de parsing avec les virgules (,) françaises.
+                string line = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    "Index: {0:D3} | X: {1:F4}, Y: {2:F4} | Bulge: {3:F8}",
+                    i, pt.X, pt.Y, bulge);
+
+                sb.AppendLine(line);
+            }
+            Debug.WriteLine(sb.ToString());
+        }
+
         public static void DEBUG_RANDOM_POINTS()
         {
             Random _random = new Random();
@@ -32,7 +59,7 @@ namespace SioForgeCAD.Functions
                     double y = RandomNumber(-50, 50);
                     double alti = RandomNumber(100, 120) + (RandomNumber(0, 99) * 0.01);
                     Point3d point = new Point3d(x, y, alti);
-                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry,nameof(Settings.BlkAltimetry), new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
+                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), new Points(point), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", alti.ToString("#.00") } });
                 }
                 tr.Commit();
             }
