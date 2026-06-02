@@ -117,8 +117,8 @@ namespace SioForgeCAD.Functions
                 using (var getStringTrans = new GetStringTransientNoColorChange(null))
                 {
                     getStringTrans.SetStaticEntities = previewEntities;
-
-                    string msg = $"Tapez une distance, ou *5, /3, ou Entrée pour valider\u2028Copie {currentMode} x{currentCount} | Dist: {vec.Length:F2} : ";
+                    double interdistance = currentMode == MODE_MULTIPLY ? vec.Length : (vec.Length / currentCount);
+                    string msg = $"Tapez une distance, ou *5, /3, ou Entrée pour valider\u2028Copie {currentMode} x{currentCount} | Dist: {vec.Length:F2} | Interdistance: {interdistance:F2} : ";
 
                     var strRes = getStringTrans.GetString(msg);
 
