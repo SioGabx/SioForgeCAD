@@ -476,6 +476,7 @@ namespace SioForgeCAD.Functions
             List<Point3dCollection> polylines = new List<Point3dCollection>();
             const double tol = 1e-5;
             List<Tuple<Point3d, Point3d>> pool = new List<Tuple<Point3d, Point3d>>(segments);
+            Vector3d normalPlane = Vector3d.ZAxis;
 
             while (pool.Count > 0)
             {
@@ -486,9 +487,12 @@ namespace SioForgeCAD.Functions
                 currentChain.Add(firstSeg.Item1);
                 currentChain.Add(firstSeg.Item2);
 
-                ExtendChain(currentChain, pool, tol);
+                // --- 1ÈRE ÉTAPE : Extension vers l'avant (Tail) ---
+                ExtendChain(currentChain, pool, tol, normalPlane);
+
+                // --- 2ÈME ÉTAPE : Extension vers l'arrière (Head) ---
                 currentChain.Reverse();
-                ExtendChain(currentChain, pool, tol);
+                ExtendChain(currentChain, pool, tol, normalPlane);
 
                 Point3dCollection pts = new Point3dCollection();
                 foreach (Point3d p in currentChain)
@@ -500,34 +504,80 @@ namespace SioForgeCAD.Functions
             return polylines;
         }
 
-
-        private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol)
+        private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol, Vector3d normalPlane)
         {
             bool added = true;
             while (added)
             {
                 added = false;
+                int bestIdx = -1;
+                bool reverseSeg = false;
+                double maxAngle = double.MaxValue;
+
                 Point3d tail = chain[chain.Count - 1];
+
+                // Si la chaîne n'a qu'un point (ce qui ne devrait pas arriver ici, mais par sécurité)
+                if (chain.Count < 2) break;
+
+                Point3d previousPoint = chain[chain.Count - 2];
+                Vector3d currentDir = previousPoint.GetVectorTo(tail).GetNormal();
 
                 for (int i = 0; i < pool.Count; i++)
                 {
                     var seg = pool[i];
+                    Vector3d candidateDir = new Vector3d();
+                    bool isCandidate = false;
+                    bool tempReverse = false;
+
                     if (seg.Item1.DistanceTo(tail) < tol)
                     {
-                        chain.Add(seg.Item2);
-                        pool.RemoveAt(i);
-                        added = true;
-                        break;
+                        candidateDir = seg.Item1.GetVectorTo(seg.Item2).GetNormal();
+                        isCandidate = true;
+                        tempReverse = false;
                     }
-                    if (seg.Item2.DistanceTo(tail) < tol)
+                    else if (seg.Item2.DistanceTo(tail) < tol)
                     {
-                        chain.Add(seg.Item1);
-                        pool.RemoveAt(i);
-                        added = true;
-                        break;
+                        candidateDir = seg.Item2.GetVectorTo(seg.Item1).GetNormal();
+                        isCandidate = true;
+                        tempReverse = true;
+                    }
+
+                    if (isCandidate)
+                    {
+                        // Évite les demi-tours brutaux
+                        if (candidateDir.DotProduct(currentDir) < -0.999)
+                            continue;
+
+                        double angle = GetSignedAngle(currentDir, candidateDir, normalPlane);
+
+                        if (angle < maxAngle)
+                        {
+                            maxAngle = angle;
+                            bestIdx = i;
+                            reverseSeg = tempReverse;
+                        }
                     }
                 }
+
+                if (bestIdx != -1)
+                {
+                    var bestSeg = pool[bestIdx];
+                    pool.RemoveAt(bestIdx);
+                    chain.Add(reverseSeg ? bestSeg.Item1 : bestSeg.Item2);
+                    added = true;
+                }
             }
+        }
+
+        private static double GetSignedAngle(Vector3d v1, Vector3d v2, Vector3d normal)
+        {
+            Vector3d v1Proj = v1 - (normal * v1.DotProduct(normal));
+            Vector3d v2Proj = v2 - (normal * v2.DotProduct(normal));
+
+            double dot = v1Proj.GetNormal().DotProduct(v2Proj.GetNormal());
+            Vector3d cross = v1Proj.CrossProduct(v2Proj);
+
+            return Math.Atan2(cross.DotProduct(normal), dot);
         }
 
         private static List<Point3d> GetTriangleContourIntersections(Point3d p1, Point3d p2, Point3d p3, double z)
