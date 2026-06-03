@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -85,6 +86,16 @@ namespace SioForgeCAD.Commun.Extensions
                 }
             }
             return result.ToString();
+        }
+
+        public static string RemoveInvalidFileNameChars(this string str)
+        {
+            string finalString = str ?? string.Empty;
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                finalString = finalString.Replace(c.ToString(), "");
+            }
+            return finalString;
         }
 
         public static string[] SplitByListString(this string input, IEnumerable<string> delimiters)

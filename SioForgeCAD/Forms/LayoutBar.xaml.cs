@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -815,7 +816,10 @@ namespace SioForgeCAD.Forms
                     {
                         return transformed;
                     }
-                }))
+                })
+                {
+                    Text = $"Renommer les {typeNameStr.Split(' ').Last()}s",
+                })
                 {
                     renameForm.UpdateMessage($"Les noms peuvent contenir jusqu'à 255 caractères et inclure des lettres, des chiffres, des espaces et plusieurs caractères spéciaux.\nIls ne peuvent pas contenir les caractères suivants : {"< > / \\ “ : ; ? * | = ‘".Replace(' ', '\u00A0')}");
 
@@ -1681,9 +1685,37 @@ namespace SioForgeCAD.Forms
             // l'événement LayoutManager.Current.LayoutRenamed appel ReloadTabs().
         }
 
+        public static string GetPlotFileName(List<LayoutTab> targetTabs)
+        {
+            return FormatPlotFileName(string.Join("+", targetTabs.FirstOrDefault()?.Title));
+        }
 
+        public static string GetPlotFileName(List<LayoutGroup> targetGroups)
+        {
+            return FormatPlotFileName(string.Join("+", targetGroups.Select(g => g.Title)));
+        }
 
-        public void Plot(List<LayoutTab> targetTabs)
+        public static string FormatPlotFileName(string LayoutName)
+        {
+            const string fileNamePattern = "%DocName%_%LayoutName%_%Date.Format(yyMMdd)%";
+
+            Document doc = Generic.GetDocument();
+            string docName = Path.GetFileNameWithoutExtension(doc.Name);
+
+            string result = fileNamePattern
+                .Replace("%DocName%", docName)
+                .Replace("%LayoutName%", LayoutName);
+
+            result = Regex.Replace(result, @"%Date\.Format\(([^)]+)\)%", match =>
+            {
+                string dateFormat = match.Groups[1].Value; //contient la valeur à l'intérieur des parenthèses (ex: "yyMMdd")
+                return DateTime.Now.ToString(dateFormat);
+            });
+
+            return result.RemoveInvalidFileNameChars();
+        }
+
+        public void Plot(List<LayoutTab> targetTabs, string FileName)
         {
             var recoverCurrentTab = _currentItem;
             var recoverSelectedTab = GetSelectedTabs();
@@ -1725,7 +1757,7 @@ namespace SioForgeCAD.Forms
                             {
                                 Title = "Enregistrer la présentation",
                                 Filter = "Fichier PDF (*.pdf)|*.pdf",
-                                FileName = $"{docName}_{LayoutListToPlot.FirstOrDefault().LayoutName}.pdf",
+                                FileName = $"{FileName}",
                                 InitialDirectory = dwgDirectory,
                                 RestoreDirectory = false
                             };
@@ -1768,7 +1800,7 @@ namespace SioForgeCAD.Forms
             }
 
         }
-        public void Publish(List<LayoutTab> targetTabs)
+        public void Publish(List<LayoutTab> targetTabs, string FileName)
         {
             var recoverCurrentTab = _currentItem;
             var recoverSelectedTab = GetSelectedTabs();
@@ -1786,7 +1818,7 @@ namespace SioForgeCAD.Forms
                 {
                     Title = "Enregistrer la publication (Carnet)",
                     Filter = "Fichier PDF (*.pdf)|*.pdf",
-                    FileName = $"{docPath}_Carnet.pdf",
+                    FileName = $"{FileName}.pdf",
                     InitialDirectory = dwgDirectory,
                     RestoreDirectory = false,
                 };
@@ -1823,13 +1855,16 @@ namespace SioForgeCAD.Forms
 
         private void ContextMenu_Tracer_Click(object sender, RoutedEventArgs e)
         {
-            Plot(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+            var Layouts = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+            Plot(Layouts, GetPlotFileName(Layouts));
         }
 
         private void ContextMenu_Publier_Click(object sender, RoutedEventArgs e)
         {
-            Publish(GetTargetedTabsForContextMenu(sender, t => !t.IsModel));
+            var Layouts = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
+            Publish(Layouts, GetPlotFileName(Layouts));
         }
+
         private void ContextMenu_Supprimer_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = GetTargetedTabsForContextMenu(sender, t => !t.IsModel);
@@ -1919,17 +1954,18 @@ namespace SioForgeCAD.Forms
             {
                 targetTabs.AddRange(targetGroup.SubTabs);
             }
-            Plot(targetTabs);
+            Plot(targetTabs, GetPlotFileName(GetTargetedGroupsForContextMenu(sender)));
         }
 
         private void ContextMenu_PublierGroupe_Click(object sender, RoutedEventArgs e)
         {
             var targetTabs = new List<LayoutTab>();
-            foreach (var targetGroup in GetTargetedGroupsForContextMenu(sender))
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+            foreach (var targetGroup in targetGroups)
             {
                 targetTabs.AddRange(targetGroup.SubTabs);
             }
-            Publish(targetTabs);
+            Publish(targetTabs, GetPlotFileName(targetGroups));
         }
 
         private void ContextMenu_SupprimerGroupeSeul_Click(object sender, RoutedEventArgs e)
