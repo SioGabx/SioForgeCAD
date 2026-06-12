@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace SioForgeCAD.Functions
 {
@@ -21,8 +23,12 @@ namespace SioForgeCAD.Functions
                 CotePoints SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
 
+                HightLighter.UnhighlightAll();
                 var DifferenceAltitude = Math.Abs(FirstPointCote.Altitude - SecondPointCote.Altitude);
-                Generic.WriteMessage($"Différence d'altitude : {DifferenceAltitude}");
+                string Message = $"Différence d'altitude : {Generic.FormatNumberForPrint((DifferenceAltitude))}";
+                Generic.WriteMessage(Message);
+                Application.ShowAlertDialog(Message);
+                System.Windows.Clipboard.SetText(DifferenceAltitude.ToString());
             }
         }
     }
