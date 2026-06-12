@@ -166,6 +166,12 @@ namespace SioForgeCAD
             set => SetValue(nameof(EmptyLayoutGabaritPresentationName), value);
         }
 
+        public static string PlotFileNamePattern
+        {
+            get => GetValue(nameof(PlotFileNamePattern), "{%DocName%}_{%LayoutName%}_{%Date.Format(yyMMdd)%}");
+            set => SetValue(nameof(PlotFileNamePattern), value);
+        }
+
         public static string GabaritFile
         {
             get => GetValue(nameof(GabaritFile), @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt");

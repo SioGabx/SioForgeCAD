@@ -1697,16 +1697,22 @@ namespace SioForgeCAD.Forms
 
         public static string FormatPlotFileName(string LayoutName)
         {
-            const string fileNamePattern = "%DocName%_%LayoutName%_%Date.Format(yyMMdd)%";
+            string fileNamePattern = Settings.PlotFileNamePattern;
 
             Document doc = Generic.GetDocument();
+            Database db = Generic.GetDatabase();
             string docName = Path.GetFileNameWithoutExtension(doc.Name);
 
             string result = fileNamePattern
-                .Replace("%DocName%", docName)
-                .Replace("%LayoutName%", LayoutName);
+                .Replace("{%DocName%}", docName)
+                .Replace("{%LayoutName%}", LayoutName);
 
-            result = Regex.Replace(result, @"%Date\.Format\(([^)]+)\)%", match =>
+            foreach (var keyValuePair in db.GetCustomProperties())
+            {
+                result = result.Replace($"{{%{keyValuePair.Key}%}}", keyValuePair.Value);
+            }
+
+            result = Regex.Replace(result, @"{%Date\.Format\(([^)]+)\)%}", match =>
             {
                 string dateFormat = match.Groups[1].Value; //contient la valeur à l'intérieur des parenthèses (ex: "yyMMdd")
                 return DateTime.Now.ToString(dateFormat);

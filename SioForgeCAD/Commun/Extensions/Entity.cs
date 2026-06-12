@@ -78,16 +78,16 @@ namespace SioForgeCAD.Commun.Extensions
                 Target.LayerId = Origin.LayerId;
             }
 
-            if (Origin.Linetype != "")
+            if (Origin.LinetypeId != ObjectId.Null)
             {
-                Target.Linetype = Origin.Linetype;
+                Target.LinetypeId = Origin.LinetypeId;
             }
 
             Target.LinetypeScale = Origin.LinetypeScale;
             Target.LineWeight = Origin.LineWeight;
-            if (Origin.Material != "")
+            if (Origin.MaterialId != ObjectId.Null)
             {
-                Target.Material = Origin.Material;
+                Target.MaterialId = Origin.MaterialId;
             }
 
             if (Origin.OwnerId != ObjectId.Null)

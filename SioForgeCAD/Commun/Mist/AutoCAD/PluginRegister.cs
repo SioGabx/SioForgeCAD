@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Runtime;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
@@ -23,18 +24,38 @@ namespace SioForgeCAD.Commun
                 using (RegistryKey regAcadAppKey = GetAutoCADApplicationsRegistryKey(false))
                 {
                     string sAppName = Generic.GetExtensionDLLName();
-                    // Check to see if the "MyApp" key exists
-                    foreach (string subKey in regAcadAppKey.GetSubKeyNames())
+
+                    // On tente d'ouvrir directement la sous-clé de notre application
+                    using (RegistryKey appKey = regAcadAppKey.OpenSubKey(sAppName))
                     {
-                        // If the application is already registered, exit
-                        if (subKey.Equals(sAppName))
+                        // Si la clé n'existe pas, l'application n'est pas enregistrée
+                        if (appKey == null)
                         {
-                            return true;
+                            return false;
                         }
+
+                        // La clé existe, on vérifie maintenant la valeur de LOADCTRLS
+                        object loadCtrlsObj = appKey.GetValue("LOADCTRLS");
+
+                        // Si LOADCTRLS n'existe pas, on considère qu'il faut ré-enregistrer
+                        if (loadCtrlsObj == null)
+                        {
+                            return false;
+                        }
+
+                        // Si LOADCTRLS est défini sur LoadDisabled, on considère qu'il faut ré-enregistrer
+                        int loadCtrlsValue = (int)loadCtrlsObj;
+                        if (loadCtrlsValue == (int)ApplicationLoadReasons.LoadDisabled)
+                        {
+                            return false;
+                        }
+
+                        // Si la clé existe et que LOADCTRLS est présent et différent de LoadDisabled
+                        return true;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Debug.WriteLine($"Erreur lors de la verification de l'inscription de l'application : {ex.Message}");
             }
@@ -49,13 +70,16 @@ namespace SioForgeCAD.Commun
 
                 if (IsAlreadyRegister())
                 {
-                    Generic.WriteMessage($"{sAppName} est déja enregistrée");
+                    Generic.WriteMessage($"{sAppName} est déja enregistrée et active.");
                     return;
                 }
 
                 using (RegistryKey regAcadAppKey = GetAutoCADApplicationsRegistryKey())
                 {
                     string sAssemblyPath = Generic.GetExtensionDLLLocation();
+
+                    // CreateSubKey ouvrira la clé en écriture si elle existe déjà, 
+                    // ou la créera si elle n'existe pas. C'est parfait pour notre cas.
                     RegistryKey regAppAddInKey = regAcadAppKey.CreateSubKey(sAppName);
                     regAppAddInKey.SetValue("DESCRIPTION", sAppName, RegistryValueKind.String);
 
@@ -73,7 +97,7 @@ namespace SioForgeCAD.Commun
                     Generic.WriteMessage($"{sAppName} à été enregistrée avec succès");
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Debug.WriteLine($"Erreur lors de l'inscription de l'application : {ex.Message}");
             }
@@ -83,14 +107,23 @@ namespace SioForgeCAD.Commun
         {
             try
             {
-                using (RegistryKey regAcadAppKey = GetAutoCADApplicationsRegistryKey())
+                // On passe 'true' pour s'assurer d'avoir les droits d'écriture
+                using (RegistryKey regAcadAppKey = GetAutoCADApplicationsRegistryKey(true))
                 {
                     string sAppName = Generic.GetExtensionDLLName();
-                    regAcadAppKey.DeleteSubKeyTree(sAppName);
-                    Generic.WriteMessage($"{sAppName} ne se chargera désormais plus au démarage d'AutoCAD");
+
+                    // On ouvre la clé de l'application en écriture au lieu d'utiliser une variable non déclarée
+                    using (RegistryKey regAppAddInKey = regAcadAppKey.OpenSubKey(sAppName, true))
+                    {
+                        if (regAppAddInKey != null)
+                        {
+                            regAppAddInKey.SetValue("LOADCTRLS", ApplicationLoadReasons.LoadDisabled, RegistryValueKind.DWord);
+                            Generic.WriteMessage($"{sAppName} ne se chargera désormais plus au démarage d'AutoCAD");
+                        }
+                    }
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Debug.WriteLine($"Erreur lors de la désinscription de l'application : {ex.Message}");
             }
