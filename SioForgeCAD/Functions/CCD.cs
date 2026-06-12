@@ -7,11 +7,9 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
-    public class CCD
+    public static class CCD
     {
-        private CotePoints OriginCotePoint = CotePoints.Null;
-        private double SlopePourcentage = 0;
-        public void Compute()
+        public static void Compute()
         {
             while (true)
             {
@@ -20,26 +18,27 @@ namespace SioForgeCAD.Functions
                 {
                     return;
                 }
-                SlopePourcentage = (double)SlopeValueNullable;
-                OriginCotePoint = CotePoints.GetCotePoints("Selectionnez la cote de base", null);
+                double SlopePourcentage = (double)SlopeValueNullable;
+                CotePoints OriginCotePoint = CotePoints.GetCotePoints("Selectionnez la cote de base", null);
                 if (CotePoints.NullPointExit(OriginCotePoint)) { continue; }
-                PlacePoint(OriginCotePoint);
+                PlacePoint(OriginCotePoint, OriginCotePoint, SlopePourcentage);
             }
         }
 
-        public Dictionary<string, string> ComputeValue(Points NewPoint)
+
+        public static void PlacePoint(CotePoints PointCote, CotePoints OriginCotePoint, double SlopePourcentage)
         {
-            double OriginAltitude = OriginCotePoint.Altitude;
-            double DistanceFromOrigin = OriginCotePoint.Points.DistanceTo(NewPoint);
-            double NewAltitude = Arythmetique.ComputePointFromSlopePourcentage(OriginAltitude, DistanceFromOrigin, SlopePourcentage);
-            return new Dictionary<string, string>() {
+            Dictionary<string, string> ComputeValue(Points NewPoint)
+            {
+                double OriginAltitude = OriginCotePoint.Altitude;
+                double DistanceFromOrigin = OriginCotePoint.Points.DistanceTo(NewPoint);
+                double NewAltitude = Arythmetique.ComputePointFromSlopePourcentage(OriginAltitude, DistanceFromOrigin, SlopePourcentage);
+                return new Dictionary<string, string>() {
                 {"ALTIMETRIE", CotePoints.FormatAltitude(NewAltitude) },
                 {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(NewAltitude, 3) },
             };
-        }
+            }
 
-        public void PlacePoint(CotePoints PointCote)
-        {
             bool IsMultiplePlacement = false;
             do
             {

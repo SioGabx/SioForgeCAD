@@ -81,19 +81,22 @@ namespace SioForgeCAD
 
         //Compute an intermediate point between two elevation points.
         [CommandMethod("SIOFORGECAD", "CCI", CommandFlags.Modal)]
-        public static void CCI() => new Functions.CCI().Compute();
+        public static void CCI() => Functions.CCI.Compute();
 
         //Compute slope value between two elevation points.
         [CommandMethod("SIOFORGECAD", "CCP", CommandFlags.Modal)]
-        public static void CCP() => new Functions.CCP().Compute();
+        public static void CCP() => Functions.CCP.Compute();
 
         //Calculate a point from a known elevation point using a slope.
         [CommandMethod("SIOFORGECAD", "CCD", CommandFlags.Modal)]
-        public static void CCD() => new Functions.CCD().Compute();
+        public static void CCD() => Functions.CCD.Compute();
 
         //Add or subtract an elevation value to/from a point.
         [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
         public static void CCA() => Functions.CCA.Compute();
+
+        [CommandMethod("SIOFORGECAD", "CCDIF", CommandFlags.Modal)]
+        public static void CCDIF() => Functions.CCDIF.Compute();
 
         //Create a block from a text-based elevation value
         [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]

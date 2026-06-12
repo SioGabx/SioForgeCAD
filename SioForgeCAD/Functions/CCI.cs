@@ -12,19 +12,17 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
-    public class CCI
+    public static class CCI
     {
-        private CotePoints FirstPointCote;
-        private CotePoints SecondPointCote;
-        public void Compute()
+        public static void Compute()
         {
             while (true)
             {
                 Editor ed = Generic.GetEditor();
                 Database db = Generic.GetDatabase();
-                FirstPointCote = CotePoints.GetCotePoints("Selectionnez un premier point", null);
+                CotePoints FirstPointCote = CotePoints.GetCotePoints("Selectionnez un premier point", null);
                 if (CotePoints.NullPointExit(FirstPointCote)) { return; }
-                SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
+                CotePoints SecondPointCote = CotePoints.GetCotePoints("Selectionnez un deuxième point", FirstPointCote.Points);
                 if (CotePoints.NullPointExit(SecondPointCote)) { return; }
 
                 Line Line = new Line(FirstPointCote.Points.SCG, SecondPointCote.Points.SCG);
@@ -69,6 +67,29 @@ namespace SioForgeCAD.Functions
 
                             jig.StaticEntities.AddRange(Scale);
                             return true;
+                        }
+
+                        Dictionary<string, string> ComputeValue(Points Intermediaire)
+                        {
+                            var ComputeSlopeAndIntermediate = Arythmetique.ComputeSlopeAndIntermediate(FirstPointCote, SecondPointCote, Intermediaire);
+                            double Altitude = ComputeSlopeAndIntermediate.Altitude;
+                            double Slope = ComputeSlopeAndIntermediate.Slope;
+
+                            //Compute DISTANCEPERCM
+                            double DistancePerCm = 0;
+                            double AltitudeDifference = Math.Abs(FirstPointCote.Altitude - SecondPointCote.Altitude);
+                            double DistanceBetweenPoints = FirstPointCote.Points.SCG.DistanceTo(SecondPointCote.Points.SCG);
+                            if (AltitudeDifference > 0 && DistanceBetweenPoints > 0)
+                            {
+                                DistancePerCm = DistanceBetweenPoints / (AltitudeDifference / 0.01);
+                            }
+
+                            return new Dictionary<string, string>() {
+                                {"ALTIMETRIE", CotePoints.FormatAltitude(Altitude) },
+                                {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(Altitude, 3) },
+                                {"DISTANCEPERCM", DistancePerCm.ToString() },
+                                {"PENTE", $"{Slope}%" },
+                            };
                         }
 
 
@@ -189,27 +210,5 @@ namespace SioForgeCAD.Functions
             return closestPoint;
         }
 
-        public Dictionary<string, string> ComputeValue(Points Intermediaire)
-        {
-            var ComputeSlopeAndIntermediate = Arythmetique.ComputeSlopeAndIntermediate(FirstPointCote, SecondPointCote, Intermediaire);
-            double Altitude = ComputeSlopeAndIntermediate.Altitude;
-            double Slope = ComputeSlopeAndIntermediate.Slope;
-
-            //Compute DISTANCEPERCM
-            double DistancePerCm = 0;
-            double AltitudeDifference = Math.Abs(FirstPointCote.Altitude - SecondPointCote.Altitude);
-            double DistanceBetweenPoints = FirstPointCote.Points.SCG.DistanceTo(SecondPointCote.Points.SCG);
-            if (AltitudeDifference > 0 && DistanceBetweenPoints > 0)
-            {
-                DistancePerCm = DistanceBetweenPoints / (AltitudeDifference / 0.01);
-            }
-
-            return new Dictionary<string, string>() {
-                {"ALTIMETRIE", CotePoints.FormatAltitude(Altitude) },
-                {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(Altitude, 3) },
-                {"DISTANCEPERCM", DistancePerCm.ToString() },
-                {"PENTE", $"{Slope}%" },
-            };
-        }
     }
 }
