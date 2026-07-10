@@ -533,12 +533,6 @@ namespace SioForgeCAD
             Functions.TOGGLELAYERCOMPARE.Execute();
         }
 
-        [CommandMethod("SIOFORGECAD", "LAZPOINTSIMPORT", CommandFlags.Redraw)]
-        public static void LAZPOINTSIMPORT()
-        {
-            Functions.LAZPOINTSIMPORT.Import();
-        }
-
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
         public static void LASIMPORT()
         {

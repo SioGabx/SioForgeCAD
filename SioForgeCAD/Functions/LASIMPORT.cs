@@ -1,16 +1,16 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.Runtime;
-using System.Diagnostics;
-using System.Net;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
-
+using SioForgeCAD.Forms;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Windows.Forms;
 
 
@@ -213,39 +213,53 @@ namespace SioForgeCAD.Functions
 
         private static string ConvertLAZtoLAS(string lazFile)
         {
-            string lastoolsPath = Settings.LastoolsPath;
+            const string LastToolDownloadPage = "https://github.com/LAStools/LAStools/releases/latest";
 
 
-            if (string.IsNullOrWhiteSpace(lastoolsPath) || !Directory.Exists(lastoolsPath))
+            bool IsPathOk = false;
+            string laszip = string.Empty;
+            do
             {
-                FolderBrowserDialog dlg = new FolderBrowserDialog();
-
-                dlg.Description = "Sélectionnez le dossier LAStools";
-
-
-                if (dlg.ShowDialog() != DialogResult.OK)
+                string lastoolsPath = Settings.LastoolsPath;
+                if (string.IsNullOrWhiteSpace(lastoolsPath) || !Directory.Exists(lastoolsPath))
                 {
-                    return null;
+
+                    MessageBox.Show($"Le dossier LAStools\\bin n'est pas défini ou manquant. Veuillez télécharger LAStools et redéfinir le chemin\n\nTélécharger LAStools :\n\"{LastToolDownloadPage}\"", "LAStools");
+                    FolderBrowserDialog dlg = new FolderBrowserDialog
+                    {
+                        Description =
+                            "Sélectionnez le dossier \"LAStools\\bin\".\n\n" +
+                            "Téléchargement : https://github.com/LAStools/LAStools/releases/latest"
+                    };
+
+                    if (dlg.ShowDialog() != DialogResult.OK)
+                    {
+                        return null;
+                    }
+                    lastoolsPath = dlg.SelectedPath;
                 }
-                lastoolsPath = dlg.SelectedPath;
+
+                laszip = Path.Combine(lastoolsPath, "laszip.exe");
 
 
+                if (!File.Exists(laszip))
+                {
+                    MessageBox.Show($"laszip.exe introuvable.\n\nTélécharger LAStools :\n{LastToolDownloadPage}", "LAStools manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Settings.LastoolsPath = string.Empty;
+                    continue;
+                }
+
+                //All check OK
                 Settings.LastoolsPath = lastoolsPath;
-            }
+                IsPathOk = true;
 
-            string laszip = Path.Combine(lastoolsPath, "laszip.exe");
+            } while (!IsPathOk);
 
 
-            if (!File.Exists(laszip))
-            {
-                MessageBox.Show("laszip.exe introuvable.\n\nTélécharger LAStools :\nhttps://github.com/LAStools/LAStools/releases/latest", "LAStools manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                Settings.LastoolsPath = "";
-                return null;
-            }
 
             string output = Path.Combine(Path.GetDirectoryName(lazFile), Path.GetFileNameWithoutExtension(lazFile) + ".las");
 
-            Generic.WriteMessage("\nConversion LAZ -> LAS...");
+            Generic.WriteMessage("Conversion LAZ -> LAS...");
 
             ProcessStartInfo psi = new ProcessStartInfo();
 
@@ -256,20 +270,36 @@ namespace SioForgeCAD.Functions
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
 
-            using (Process p = Process.Start(psi))
+            using (ProgressDialog dlg = new ProgressDialog("Conversion LAZ → LAS en cours..."))
             {
-                while (!p.HasExited)
-                {
-                    System.Windows.Forms.Application.DoEvents();
-                }
+                dlg.Show();
+                System.Windows.Forms.Application.DoEvents();
 
-                if (p.ExitCode != 0)
+
+                using (Process p = Process.Start(psi))
                 {
-                    MessageBox.Show("Erreur pendant la conversion LAZ.");
-                    return null;
+                    while (!p.HasExited)
+                    {
+                        System.Windows.Forms.Application.DoEvents();
+                        System.Threading.Thread.Sleep(50);
+                    }
+
+                    dlg.Close();
+
+
+                    if (p.ExitCode != 0)
+                    {
+                        MessageBox.Show(
+                            "Erreur pendant la conversion LAZ.",
+                            "LAZ",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+
+                        return null;
+                    }
                 }
             }
-
+            Generic.WriteMessage("Conversion LAZ -> LAS terminée !");
             return output;
         }
 
@@ -483,3 +513,4 @@ namespace SioForgeCAD.Functions
             }
         }
     }
+}
