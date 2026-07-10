@@ -11,192 +11,132 @@ namespace SioForgeCAD.Functions
 {
     public static class CCFROMPOINT
     {
-        public static void CreateCotationBlocFromText()
+        public static void CreateCotationBlocFromDbPoint()
         {
-            while (true)
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                Database db = Generic.GetDatabase();
-                Editor ed = Generic.GetEditor();
-                using (Transaction tr = db.TransactionManager.StartTransaction())
+                try
                 {
-                    try
+                    const string SelectMessage = "\nVeuillez sélectionner un point";
+
+                    PromptEntityOptions promptEntityOptions = new PromptEntityOptions(SelectMessage)
                     {
-                        const string SelectMessage = "\nVeuillez selectionner une côte inscrite dans un texte";
-                        var PromptEntOption = new PromptEntityOptions(SelectMessage) { AllowNone = false, AllowObjectOnLockedLayer = true };
-                        PromptEntOption.Keywords.Add("Multiples");
-                        PromptEntOption.AppendKeywordsToMessage = true;
-                        PromptEntOption.SetRejectMessage(SelectMessage);
-                        PromptEntOption.AddAllowedClass(typeof(DBText), true);
-                        PromptEntOption.AddAllowedClass(typeof(MText), true);
-                        PromptEntOption.AddAllowedClass(typeof(AttributeDefinition), true);
-                        PromptEntOption.AddAllowedClass(typeof(ProxyEntity), false);
-                        PromptEntOption.AddAllowedClass(typeof(BlockReference), true);
+                        AllowNone = false,
+                        AllowObjectOnLockedLayer = true
+                    };
 
-                        var promptStatus = ed.GetEntity(PromptEntOption);
+                    promptEntityOptions.Keywords.Add("Multiples");
+                    promptEntityOptions.AppendKeywordsToMessage = true;
+                    promptEntityOptions.SetRejectMessage("\nSélectionnez uniquement des points.");
+                    promptEntityOptions.AddAllowedClass(typeof(DBPoint), true);
+                    promptEntityOptions.AddAllowedClass(typeof(BlockReference), true);
 
-                        if (promptStatus.Status == PromptStatus.Keyword)
-                        {
-                            //MULTIPLES
-                            SelectionFilter filterList = new SelectionFilter(new TypedValue[] {
-                                new TypedValue((int)DxfCode.Operator, "<or"),
-                                new TypedValue((int)DxfCode.Start, "TEXT"),//DBTEXT
-                                new TypedValue((int)DxfCode.Start, "MTEXT"),
-                                new TypedValue((int)DxfCode.Start, "ATTDEF"),
-                                new TypedValue((int)DxfCode.Operator, "or>"),
+                    PromptEntityResult result = ed.GetEntity(promptEntityOptions);
+
+
+                    // Sélection multiple
+                    if (result.Status == PromptStatus.Keyword)
+                    {
+                        SelectionFilter filter = new SelectionFilter(
+                            new TypedValue[]
+                            {
+                                new TypedValue((int)DxfCode.Start, "POINT")
                             });
-                            var promptSelectionOptions = new PromptSelectionOptions
-                            {
-                                MessageForAdding = "\nVeuillez selectionner des côtes inscrite dans des textes"
-                            };
-                            var sel = ed.GetSelection(promptSelectionOptions, filterList);
-                            if (sel.Status != PromptStatus.OK) { return; }
 
-                            foreach (var item in sel.Value.GetObjectIds())
-                            {
-                                Entity Ent = item.GetEntity();
-                                if (Ent is DBText || Ent is AttributeDefinition || Ent is MText || Ent is ProxyEntity)
-                                {
-                                    var Values = GetAltitudeInObject(Ent);
-                                    string Text = Values.Text;
-                                    Point3d Location = Values.Location;
-
-                                    double Altimetrie = GetDoubleInString(Text);
-
-                                    if (Altimetrie == 0)
-                                    {
-                                        continue;
-                                    }
-                                    string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
-                                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), Location.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } });
-                                }
-                            }
-                            return;
-                        }
-                        else if (promptStatus.Status != PromptStatus.OK) { return; }
-                        else
+                        PromptSelectionOptions selectionOptions = new PromptSelectionOptions
                         {
-                            //SINGLE TEXT
-                            if (promptStatus.ObjectId == ObjectId.Null)
-                            {
-                                continue;
-                            }
-                            Entity Ent = promptStatus.ObjectId.GetEntity();
+                            MessageForAdding = "\nSélectionnez les points"
+                        };
 
-                            string Text = "";
-                            Point3d Location = Point3d.Origin;
-                            if (Ent is DBText || Ent is AttributeDefinition || Ent is MText || Ent is ProxyEntity)
+                        PromptSelectionResult selection = ed.GetSelection(selectionOptions, filter);
+
+                        if (selection.Status != PromptStatus.OK)
+                            return;
+
+
+                        foreach (ObjectId id in selection.Value.GetObjectIds())
+                        {
+                            DBPoint point = id.GetEntity() as DBPoint;
+
+                            if (point == null)
+                                continue;
+
+                            InsertAltitudeBlock(point.Position, ed);
+                        }
+
+                        return;
+                    }
+
+
+                    // Sélection simple
+                    if (result.Status != PromptStatus.OK)
+                    {
+                        return;
+                    }
+
+                    Entity Ent = result.ObjectId.GetEntity();
+                    Point3d Location = Point3d.Origin;
+                    if (Ent is DBPoint dbPoint)
+                    {
+                        InsertAltitudeBlock(dbPoint.Position, ed);
+                    }
+                    else if (Ent is BlockReference blockReference)
+                    {
+                        if (blockReference.IsXref())
+                        {
+                            List<ObjectId> XrefObjectId;
+                            (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = SelectInXref.Select(SelectMessage, result.PickedPoint);
+                            XrefObjectId = XrefSelection.XrefObjectId.ToList();
+                            if (XrefSelection.PromptStatus == PromptStatus.OK && XrefSelection.SelectedObjectId != ObjectId.Null)
                             {
-                                var Values = GetAltitudeInObject(Ent);
-                                Text = Values.Text;
-                                Location = Values.Location;
-                            }
-                            else if (Ent is BlockReference blockReference)
-                            {
-                                if (blockReference.IsXref())
+                                DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
+                                if (XrefObject is DBPoint dbPointInXref)
                                 {
-                                    List<ObjectId> XrefObjectId;
-                                    (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = SelectInXref.Select(SelectMessage, promptStatus.PickedPoint);
-                                    XrefObjectId = XrefSelection.XrefObjectId.ToList();
-                                    if (XrefSelection.PromptStatus == PromptStatus.OK && XrefSelection.SelectedObjectId != ObjectId.Null)
-                                    {
-                                        DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
-                                        var Values = GetAltitudeInObject(XrefObject);
-                                        Text = Values.Text;
-                                        Location = Points.ToSCGFromCurentSCU(promptStatus.PickedPoint);
-                                    }
+                                    InsertAltitudeBlock(dbPointInXref.Position.ProjectXrefPointToCurrentSpace(blockReference.ObjectId), ed);
                                 }
                             }
-                            double Altimetrie = GetDoubleInString(Text);
-
-                            if (Altimetrie == 0)
-                            {
-                                continue;
-                            }
-
-                            string AltimetrieStr = CotePoints.FormatAltitude(Altimetrie);
-
-                            Dictionary<string, string> ComputeValue(Points _) => new Dictionary<string, string>() { { "ALTIMETRIE", AltimetrieStr } };
-
-                            DBObjectCollection ents = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(null));
-                            GetPointTransient insertionTransientPoints = new GetPointTransient(ents, ComputeValue);
-                            var InsertionTransientPointsValues = insertionTransientPoints.GetPoint("\nIndiquez l'emplacements du point", Location.ToPoints(), false);
-                            Points NewPointLocation = InsertionTransientPointsValues.Point;
-                            PromptPointResult NewPointPromptPointResult = InsertionTransientPointsValues.PromptPointResult;
-
-                            if (NewPointLocation == null || NewPointPromptPointResult.Status != PromptStatus.OK)
-                            {
-                                return;
-                            }
-                            BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), NewPointLocation, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(NewPointLocation));
-                            return;
                         }
                     }
-                    finally
-                    {
-                        tr.Commit();
-                    }
+
+
+
+                    
+                }
+                finally
+                {
+                    tr.Commit();
                 }
             }
         }
 
 
-        public static (string Text, Point3d Location) GetAltitudeInObject(DBObject Object)
+        private static void InsertAltitudeBlock(Point3d position, Editor ed)
         {
-            if (Object is DBText DBTextEnt)
-            {
-                return (DBTextEnt.TextString, DBTextEnt.Position);
-            }
-            else if (Object is AttributeDefinition AttributeDefinitionEnt)
-            {
-                return (AttributeDefinitionEnt.TextString, AttributeDefinitionEnt.Position);
-            }
-            else if (Object is MText MTextEnt)
-            {
-                return (MTextEnt.Text, MTextEnt.Location);
-            }
-            else if (Object is ProxyEntity ProxyEnt)
-            {
-                var ProxyInnerEnts = new DBObjectCollection();
-                ProxyEnt.Explode(ProxyInnerEnts);
+            double altitude = position.Z;
 
-                var PossiblesValues = new List<(string Text, Point3d Location)>();
-                foreach (DBObject ProxyInnerEnt in ProxyInnerEnts)
+            string altitudeString = CotePoints.FormatAltitude(altitude);
+
+
+            Dictionary<string, string> values =
+                new Dictionary<string, string>()
                 {
-                    var Values = GetAltitudeInObject(ProxyInnerEnt);
-                    if (!string.IsNullOrEmpty(Values.Text))
                     {
-                        PossiblesValues.Add(Values);
+                        "ALTIMETRIE",
+                        altitudeString
                     }
-                    ProxyInnerEnt.Dispose();
-                }
+                };
 
-                if (PossiblesValues.Count == 1)
-                {
-                    return PossiblesValues.First();
-                }
-                else if (PossiblesValues.Count > 1)
-                {
-                    var Possible = Generic.GetEditor().GetKeywords("Plusieurs valeurs possible trouvées :", PossiblesValues.Select(p => p.Text).Distinct().ToArray());
-                    if (Possible.Status == PromptStatus.OK)
-                    {
-                        return PossiblesValues.FirstOrDefault(p => p.Text == Possible.StringResult);
-                    }
-                }
-            }
-            return (string.Empty, Point3d.Origin);
-        }
 
-        private static double GetDoubleInString(string Text)
-        {
-            if (double.TryParse(Text.Trim(), out double Altimetrie))
-            {
-                return Altimetrie;
-            }
-            else
-            {
-                double? ExtractedAltitude = CotePoints.ExtractDoubleInStringFromPoint(Text.Trim());
-                return ExtractedAltitude ?? 0;
-            }
+            BlockReferences.InsertFromNameImportIfNotExist(
+                Settings.BlkAltimetry,
+                nameof(Settings.BlkAltimetry),
+                position.ToPoints(),
+                ed.GetUSCRotation(AngleUnit.Radians),
+                values
+            );
         }
     }
 }

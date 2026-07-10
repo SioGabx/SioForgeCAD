@@ -102,6 +102,10 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "CCFROMTEXT", CommandFlags.Modal)]
         public static void CCFROMTEXT() => Functions.CCFROMTEXT.CreateCotationBlocFromText();
 
+        //Create a block from a point-based elevation value
+        [CommandMethod("SIOFORGECAD", "CCFROMPOINT", CommandFlags.Redraw)]
+        public static void CCFROMPOINT() => Functions.CCFROMPOINT.CreateCotationBlocFromDbPoint();
+
         //Move a XREF elevation point into the drawing.
         [CommandMethod("SIOFORGECAD", "CCXREF", CommandFlags.Redraw)]
         public static void CCXREF() => Functions.CCXREF.MoveCotationFromXrefToCurrentDrawing();
