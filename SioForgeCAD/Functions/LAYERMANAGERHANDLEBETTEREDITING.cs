@@ -42,10 +42,14 @@ namespace SioForgeCAD.Functions
                     int end = start;
 
                     while (end < tb.Text.Length && Array.Exists(separators, s => s == tb.Text[end]))
+                    {
                         end++;
+                    }
 
                     while (end < tb.Text.Length && !Array.Exists(separators, s => s == tb.Text[end]))
+                    {
                         end++;
+                    }
 
                     if (end > start)
                     {
@@ -58,15 +62,22 @@ namespace SioForgeCAD.Functions
                 else if (e.KeyCode == Keys.Back)
                 {
                     int start = tb.SelectionStart;
-                    if (start == 0) return;
+                    if (start == 0)
+                    {
+                        return;
+                    }
 
                     int end = start - 1;
 
                     while (end >= 0 && Array.Exists(separators, s => s == tb.Text[end]))
+                    {
                         end--;
+                    }
 
                     while (end >= 0 && !Array.Exists(separators, s => s == tb.Text[end]))
+                    {
                         end--;
+                    }
 
                     int removeStart = end + 1;
                     int length = start - removeStart;

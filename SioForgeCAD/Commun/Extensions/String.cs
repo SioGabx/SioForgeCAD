@@ -117,16 +117,23 @@ namespace SioForgeCAD.Commun.Extensions
         }
         public static string SanitizeToAlphanumericHyphens(this string input)
         {
-            if (string.IsNullOrEmpty(input)) return string.Empty;
+            if (string.IsNullOrEmpty(input))
+            {
+                return string.Empty;
+            }
 
             var sb = new StringBuilder();
 
             foreach (char c in input)
             {
                 if (char.IsLetterOrDigit(c))
+                {
                     sb.Append(c);
+                }
                 else
+                {
                     sb.Append('-');
+                }
             }
 
             return sb.ToString();

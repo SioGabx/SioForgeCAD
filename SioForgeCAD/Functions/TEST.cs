@@ -24,7 +24,10 @@ namespace SioForgeCAD.Functions
 
             PromptEntityResult per = ed.GetEntity(peo);
 
-            if (per.Status != PromptStatus.OK) return;
+            if (per.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             double offsetDist = .5; // Distance de décalage
 

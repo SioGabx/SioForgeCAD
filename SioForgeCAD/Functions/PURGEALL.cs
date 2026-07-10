@@ -40,9 +40,13 @@ namespace SioForgeCAD.Functions
                 void AddToReport(string key, int count)
                 {
                     if (purgeReport.ContainsKey(key))
+                    {
                         purgeReport[key] += count;
+                    }
                     else
+                    {
                         purgeReport[key] = count;
+                    }
 
                     TotalDeletedCount += count;
                 }

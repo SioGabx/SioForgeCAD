@@ -39,7 +39,9 @@ namespace SioForgeCAD.Commun.Mist.UI
             {
                 float factor = 0.2f;
                 if (parameter != null)
+                {
                     float.TryParse(parameter.ToString().Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out factor);
+                }
 
                 return Color.FromRgb(
                     CalculateChannel(baseColor.R, factor),

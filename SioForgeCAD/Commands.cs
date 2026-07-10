@@ -527,6 +527,25 @@ namespace SioForgeCAD
             Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
         }
 
+        [CommandMethod("SIOFORGECAD", "TOGGLELAYERCOMPARE", CommandFlags.Redraw)]
+        public static void TOGGLELAYERCOMPARE()
+        {
+            Functions.TOGGLELAYERCOMPARE.Execute();
+        }
+
+        [CommandMethod("SIOFORGECAD", "LAZPOINTSIMPORT", CommandFlags.Redraw)]
+        public static void LAZPOINTSIMPORT()
+        {
+            Functions.LAZPOINTSIMPORT.Import();
+        }
+
+        [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
+        public static void LASIMPORT()
+        {
+            Functions.LASIMPORT.ImportLAS();
+        }
+
+
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html
@@ -549,7 +568,8 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.TEST.OffsetSegmentsCustom();
+            //Functions.LAZPOINTSIMPORT.Import();
+            //Functions.TEST.OffsetSegmentsCustom();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]

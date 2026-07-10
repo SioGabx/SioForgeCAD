@@ -19,7 +19,10 @@ namespace SioForgeCAD.Functions
         {
             var ed = Generic.GetEditor();
             var polyline = ed.GetPolyline("Select poly", false, false);
-            if (polyline == null) return;
+            if (polyline == null)
+            {
+                return;
+            }
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("--- Données de la Polyligne ---");

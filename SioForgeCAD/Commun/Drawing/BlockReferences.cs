@@ -66,15 +66,27 @@ namespace SioForgeCAD.Commun.Drawing
                     {
                         bool IsEntOnLockedLayer = ent.IsEntityOnLockedLayer();
                         Dictionary<string, string> propertiesToCopy = PreserveProperties ? GetPropertiesFromBlock(tr, br) : null;
-                        if (IsEntOnLockedLayer) Layers.SetLock(ent.Layer, false);
+                        if (IsEntOnLockedLayer)
+                        {
+                            Layers.SetLock(ent.Layer, false);
+                        }
+
                         ent.UpgradeOpen();
                         BlockTableRecord ownerBtr = tr.GetObject(br.OwnerId, OpenMode.ForWrite) as BlockTableRecord;
 
                         var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), propertiesToCopy, NewBlockName, ownerBtr);
                         var newBr = tr.GetObject(newBrObjId, OpenMode.ForWrite) as BlockReference;
 
-                        if (KeepScale) newBr.ScaleFactors = br.ScaleFactors;
-                        if (KeepRotation) newBr.Rotation = br.Rotation;
+                        if (KeepScale)
+                        {
+                            newBr.ScaleFactors = br.ScaleFactors;
+                        }
+
+                        if (KeepRotation)
+                        {
+                            newBr.Rotation = br.Rotation;
+                        }
+
                         newBr.Color = br.Color;
                         newBr.Layer = br.Layer;
 
@@ -82,7 +94,10 @@ namespace SioForgeCAD.Commun.Drawing
                         {
                             br.Erase(true);
                         }
-                        if (IsEntOnLockedLayer) Layers.SetLock(ent.Layer, true);
+                        if (IsEntOnLockedLayer)
+                        {
+                            Layers.SetLock(ent.Layer, true);
+                        }
                     }
                 }
                 tr.Commit();
@@ -416,7 +431,10 @@ namespace SioForgeCAD.Commun.Drawing
 
         private static void ApplyPropertiesToBlock(Transaction tr, BlockTableRecord btr, BlockReference blockRef, Dictionary<string, string> attributesValues)
         {
-            if (attributesValues == null || attributesValues.Count == 0) return;
+            if (attributesValues == null || attributesValues.Count == 0)
+            {
+                return;
+            }
 
             //Settings legacy block attributes
             foreach (ObjectId id in btr)

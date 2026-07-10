@@ -26,7 +26,9 @@ namespace SioForgeCAD.Functions
                         (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
 
                     if (!btr.IsFromExternalReference || string.IsNullOrEmpty(btr.PathName))
+                    {
                         continue;
+                    }
 
                     // Résolution du chemin réel
                     string resolvedPath = ResolveXrefPath(db, btr.PathName);
@@ -42,7 +44,9 @@ namespace SioForgeCAD.Functions
 
                     Match match = Regex.Match(fileName, @"^(.*_)(\d+)$");
                     if (!match.Success)
+                    {
                         continue;
+                    }
 
                     string baseName = match.Groups[1].Value;
                     int currentVersion = int.Parse(match.Groups[2].Value);
@@ -65,7 +69,9 @@ namespace SioForgeCAD.Functions
                         .FirstOrDefault();
 
                     if (newer == null)
+                    {
                         continue;
+                    }
 
                     // Recalcul du chemin relatif (si la Xref était relative)
                     string newPath = btr.PathName.StartsWith("..")
@@ -85,7 +91,9 @@ namespace SioForgeCAD.Functions
         private static string ResolveXrefPath(Database db, string xrefPath)
         {
             if (Path.IsPathRooted(xrefPath))
+            {
                 return xrefPath;
+            }
 
             string hostDir = Path.GetDirectoryName(db.Filename);
             return Path.GetFullPath(Path.Combine(hostDir, xrefPath));

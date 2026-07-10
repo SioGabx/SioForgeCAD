@@ -22,7 +22,10 @@ namespace SioForgeCAD.Functions
             Editor ed = Generic.GetEditor();
 
             var selRes = ed.GetBlocks(out var ObjIds, "Sélectionnez des côtes", false, true);
-            if (!selRes) return;
+            if (!selRes)
+            {
+                return;
+            }
 
             var selBuildings = ed.GetSelectionRedraw(
                 "\nSélectionnez les bâtiments : ",
@@ -30,7 +33,10 @@ namespace SioForgeCAD.Functions
                 false,
                 ed.GetCurvesFilter());
 
-            if (selBuildings.Status != PromptStatus.OK) return;
+            if (selBuildings.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez l'intervalle des courbes de niveau : ")
             {
@@ -40,13 +46,19 @@ namespace SioForgeCAD.Functions
             };
 
             PromptDoubleResult pdr = ed.GetDouble(pdo);
-            if (pdr.Status != PromptStatus.OK) return;
+            if (pdr.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             double intervalle = pdr.Value;
             double intervallePrincipal = (intervalle < 1.0) ? 1.0 : 5.0;
 
             var pkr = ed.GetOptions("Voulez-vous lisser les courbes de niveau (Splines) ? ", false, "Oui", "Non");
-            if (pkr.Status != PromptStatus.OK) return;
+            if (pkr.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             bool createSplines = (pkr.StringResult == "Oui");
 
@@ -121,11 +133,17 @@ namespace SioForgeCAD.Functions
 
                         foreach (Point3dCollection path in ChainSegments(kvp.Value))
                         {
-                            if (path.Count <= 2) continue;
+                            if (path.Count <= 2)
+                            {
+                                continue;
+                            }
+
                             bool closed = path[0].DistanceTo(path[path.Count - 1]) < 1e-5;
 
                             if (closed)
+                            {
                                 path.RemoveAt(path.Count - 1);
+                            }
 
                             Polyline3d poly = new Polyline3d(
                                 createSplines ? Poly3dType.QuadSplinePoly : Poly3dType.SimplePoly,
@@ -195,7 +213,10 @@ namespace SioForgeCAD.Functions
 
                 Vector2d dir = (p2 - p1);
                 double len = dir.Length;
-                if (len < EPS) continue;
+                if (len < EPS)
+                {
+                    continue;
+                }
 
                 dir = dir.GetNormal();
 
@@ -204,12 +225,26 @@ namespace SioForgeCAD.Functions
                     Point2d pt2d = p1 + (dir * d);
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, 0);
 
-                    if (!buildingExtends.ContainsIgnoreZ(pt)) continue;
-                    if (!pt.IsInsidePolyline(building)) continue;
+                    if (!buildingExtends.ContainsIgnoreZ(pt))
+                    {
+                        continue;
+                    }
+
+                    if (!pt.IsInsidePolyline(building))
+                    {
+                        continue;
+                    }
 
                     var distanceFromBuilding = building.GetClosestPointTo(pt, false).ToPoint2d().GetDistanceTo(pt.ToPoint2d());
-                    if (distanceFromBuilding < offsetDist - 0.1) continue;
-                    if (distanceFromBuilding > offsetDist + 0.1) continue;
+                    if (distanceFromBuilding < offsetDist - 0.1)
+                    {
+                        continue;
+                    }
+
+                    if (distanceFromBuilding > offsetDist + 0.1)
+                    {
+                        continue;
+                    }
 
                     double z = InterpolateZFromTriangles(pt, triangles);
                     result.Add(new Point3d(pt.X, pt.Y, z));
@@ -237,7 +272,10 @@ namespace SioForgeCAD.Functions
 
                 Vector2d dir = (p2 - p1);
                 double len = dir.Length;
-                if (len < EPS) continue;
+                if (len < EPS)
+                {
+                    continue;
+                }
 
                 dir = dir.GetNormal();
 
@@ -246,12 +284,27 @@ namespace SioForgeCAD.Functions
                     Point2d pt2d = p1 + (dir * d);
                     Point3d pt = new Point3d(pt2d.X, pt2d.Y, z);
 
-                    if (!buildingExtends.ContainsIgnoreZ(pt)) continue;
-                    if (!pt.IsInsidePolyline(building)) continue;
+                    if (!buildingExtends.ContainsIgnoreZ(pt))
+                    {
+                        continue;
+                    }
+
+                    if (!pt.IsInsidePolyline(building))
+                    {
+                        continue;
+                    }
+
                     var distanceFromBuilding = building.GetClosestPointTo(pt, false).ToPoint2d().GetDistanceTo(pt.ToPoint2d());
                     Debug.WriteLine($"distanceFromBuilding : {distanceFromBuilding}\noffsetDist : {offsetDist}\n\n");
-                    if (distanceFromBuilding < offsetDist - 0.1) continue;
-                    if (distanceFromBuilding > offsetDist + 1) continue;
+                    if (distanceFromBuilding < offsetDist - 0.1)
+                    {
+                        continue;
+                    }
+
+                    if (distanceFromBuilding > offsetDist + 1)
+                    {
+                        continue;
+                    }
 
                     result.Add(pt);
                     op.UpdateProgress();
@@ -267,7 +320,9 @@ namespace SioForgeCAD.Functions
             foreach (var tri in triangles)
             {
                 if (PointInsideTriangleXY(pt, tri.Vertex1, tri.Vertex2, tri.Vertex3))
+                {
                     return InterpolateBarycentricZ(pt, tri.Vertex1, tri.Vertex2, tri.Vertex3);
+                }
             }
             return 0;
         }
@@ -297,11 +352,17 @@ namespace SioForgeCAD.Functions
             List<Point3d> pts = new List<Point3d>();
             foreach (ObjectId id in ids)
             {
-                if (!(tr.GetObject(id, OpenMode.ForRead) is BlockReference br)) continue;
+                if (!(tr.GetObject(id, OpenMode.ForRead) is BlockReference br))
+                {
+                    continue;
+                }
 
                 foreach (ObjectId attId in br.AttributeCollection)
                 {
-                    if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference att)) continue;
+                    if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference att))
+                    {
+                        continue;
+                    }
 
                     if (Regex.IsMatch(att.TextString, @"^\d+\.\d{2,}$"))
                     {
@@ -317,7 +378,11 @@ namespace SioForgeCAD.Functions
                 foreach (var pt in pts.ToArray())
                 {
 
-                    if (!buildingExtends.ContainsIgnoreZ(pt)) continue;
+                    if (!buildingExtends.ContainsIgnoreZ(pt))
+                    {
+                        continue;
+                    }
+
                     if (pt.IsInsidePolyline(building))
                     {
                         var distanceFromBuilding = building.GetClosestPointTo(pt, false).ToPoint2d().GetDistanceTo(pt.ToPoint2d());
@@ -337,13 +402,22 @@ namespace SioForgeCAD.Functions
         {
             List<Polyline> result = new List<Polyline>();
 
-            if (!(sel is SelectionSet set)) return result;
+            if (!(sel is SelectionSet set))
+            {
+                return result;
+            }
 
             foreach (SelectedObject so in set)
             {
-                if (so == null) continue;
+                if (so == null)
+                {
+                    continue;
+                }
+
                 if (tr.GetObject(so.ObjectId, OpenMode.ForRead) is Polyline pl && pl.Closed)
+                {
                     result.Add(pl);
+                }
             }
 
             return result;
@@ -358,13 +432,19 @@ namespace SioForgeCAD.Functions
 
             for (int i = 0; i < count; i++)
             {
-                if (source.GetSegmentType(i) != SegmentType.Line) continue;
+                if (source.GetSegmentType(i) != SegmentType.Line)
+                {
+                    continue;
+                }
 
                 Point2d p1 = source.GetPoint2dAt(i);
                 Point2d p2 = source.GetPoint2dAt((i + 1) % count);
                 Vector2d dir = p2 - p1;
                 double len = dir.Length;
-                if (len < EPS) continue;
+                if (len < EPS)
+                {
+                    continue;
+                }
 
                 dir /= len;
                 Vector2d normal = clockwise ? new Vector2d(dir.Y, -dir.X) : new Vector2d(-dir.Y, dir.X);
@@ -428,7 +508,10 @@ namespace SioForgeCAD.Functions
             List<Point3d> pts = new List<Point3d>();
             foreach (PolylineVertex3d v in poly)
             {
-                if (v != null) pts.Add(v.Position);
+                if (v != null)
+                {
+                    pts.Add(v.Position);
+                }
             }
 
             foreach (Polyline building in buildings)
@@ -454,7 +537,10 @@ namespace SioForgeCAD.Functions
                         break;
                     }
                 }
-                if (allInside) return true;
+                if (allInside)
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -517,7 +603,10 @@ namespace SioForgeCAD.Functions
                 Point3d tail = chain[chain.Count - 1];
 
                 // Si la chaîne n'a qu'un point (ce qui ne devrait pas arriver ici, mais par sécurité)
-                if (chain.Count < 2) break;
+                if (chain.Count < 2)
+                {
+                    break;
+                }
 
                 Point3d previousPoint = chain[chain.Count - 2];
                 Vector3d currentDir = previousPoint.GetVectorTo(tail).GetNormal();
@@ -546,7 +635,9 @@ namespace SioForgeCAD.Functions
                     {
                         // Évite les demi-tours brutaux
                         if (candidateDir.DotProduct(currentDir) < -0.999)
+                        {
                             continue;
+                        }
 
                         double angle = GetSignedAngle(currentDir, candidateDir, normalPlane);
 
@@ -588,7 +679,10 @@ namespace SioForgeCAD.Functions
             {
                 foreach (Point3d p in pts)
                 {
-                    if (p.DistanceTo(pt) < EPS) return;
+                    if (p.DistanceTo(pt) < EPS)
+                    {
+                        return;
+                    }
                 }
                 pts.Add(pt);
             }

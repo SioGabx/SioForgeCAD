@@ -95,7 +95,10 @@ namespace SioForgeCAD.Functions
                 foreach (var item in LayerGrid.DataSource as IEnumerable)
                 {
                     var itemName = item?.GetType()?.GetProperty("Name")?.GetValue(item)?.ToString();
-                    if (!(itemName is null)) Names.Add(itemName);
+                    if (!(itemName is null))
+                    {
+                        Names.Add(itemName);
+                    }
                 }
 
 

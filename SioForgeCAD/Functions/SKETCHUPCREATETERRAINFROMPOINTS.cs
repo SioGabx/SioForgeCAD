@@ -22,7 +22,10 @@ namespace SioForgeCAD.Functions
 
             var selRes = ed.GetBlocks(out var ObjIds, "Selectionnez des côtes", false, true);
 
-            if (!selRes) return;
+            if (!selRes)
+            {
+                return;
+            }
 
             using (Generic.GetLock())
             using (Transaction tr = db.TransactionManager.StartTransaction())
@@ -34,11 +37,17 @@ namespace SioForgeCAD.Functions
                 List<Point3d> PointsSet = new List<Point3d>();
                 foreach (var selObj in ObjIds)
                 {
-                    if (!(tr.GetObject(selObj, OpenMode.ForRead) is BlockReference blockRef)) continue;
+                    if (!(tr.GetObject(selObj, OpenMode.ForRead) is BlockReference blockRef))
+                    {
+                        continue;
+                    }
 
                     foreach (ObjectId attId in blockRef.AttributeCollection)
                     {
-                        if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef)) continue;
+                        if (!(tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef))
+                        {
+                            continue;
+                        }
 
                         string text = attRef.TextString;
 

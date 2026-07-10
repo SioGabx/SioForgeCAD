@@ -26,7 +26,10 @@ namespace SioForgeCAD.Commun.Extensions
         /// </summary>
         public static List<T> ToList<T>(this IEnumerable source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             // Cast<T> transforme l'IEnumerable (objet) en IEnumerable<T> (typé)
             // ce qui rend ensuite ToList() disponible.

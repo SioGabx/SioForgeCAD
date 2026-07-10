@@ -317,7 +317,10 @@ namespace SioForgeCAD.Functions
 
                 if (!IsApplicable(entity)) { base.GetGripPoints(entity, grips, viewUnit, gripSize, viewDir, flags); return; }
 
-                if (!(entity is BlockReference blk)) return;
+                if (!(entity is BlockReference blk))
+                {
+                    return;
+                }
 
 
                 //using (var tr = blk.Database.TransactionManager.StartOpenCloseTransaction())

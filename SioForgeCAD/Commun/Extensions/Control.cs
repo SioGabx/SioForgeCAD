@@ -13,7 +13,10 @@ namespace SioForgeCAD.Commun.Extensions
         /// </summary>
         public static T FindControlByType<T>(this Control parent) where T : Control
         {
-            if (parent == null) return null;
+            if (parent == null)
+            {
+                return null;
+            }
 
             foreach (Control child in parent.Controls)
             {
@@ -40,7 +43,10 @@ namespace SioForgeCAD.Commun.Extensions
         /// </summary>
         public static Control FindControlByTypeName(this Control parent, string typeName)
         {
-            if (parent == null) return null;
+            if (parent == null)
+            {
+                return null;
+            }
 
             foreach (Control child in parent.Controls)
             {
@@ -62,7 +68,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static IEnumerable<T> TrouverEnfantsVisuels<T>(this DependencyObject depObj) where T : DependencyObject
         {
-            if (depObj == null) yield break;
+            if (depObj == null)
+            {
+                yield break;
+            }
 
             // Parcourt les enfants directs de l'objet courant
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)

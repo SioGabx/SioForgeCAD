@@ -14,7 +14,10 @@ namespace SioForgeCAD.Commun.Extensions
     {
         public static string GetPath(this Document doc)
         {
-            if (doc == null) return string.Empty;
+            if (doc == null)
+            {
+                return string.Empty;
+            }
 
             if (doc.IsNamedDrawing)
             {

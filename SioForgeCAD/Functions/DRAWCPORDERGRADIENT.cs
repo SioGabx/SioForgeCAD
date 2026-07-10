@@ -19,7 +19,10 @@ namespace SioForgeCAD.Functions
 
             // 0. Sélection des entités
             var selRes = ed.GetSelectionRedraw();
-            if (selRes.Status != PromptStatus.OK) return;
+            if (selRes.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             var selSet = selRes.Value.GetSelectionSet();
 
@@ -34,7 +37,10 @@ namespace SioForgeCAD.Functions
 
             // 1. Vecteur de référence
             PromptPointResult ppr1 = ed.GetPoint("\nPoint de départ du vecteur : ");
-            if (ppr1.Status != PromptStatus.OK) return;
+            if (ppr1.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             PromptPointOptions ppo = new PromptPointOptions("\nPoint d'arrivée du vecteur : ")
             {
@@ -42,7 +48,10 @@ namespace SioForgeCAD.Functions
                 UseBasePoint = true
             };
             PromptPointResult ppr2 = ed.GetPoint(ppo);
-            if (ppr2.Status != PromptStatus.OK) return;
+            if (ppr2.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             Vector3d vecteur = (ppr2.Value - ppr1.Value).GetNormal();
             if (vecteur.Length < Tolerance.Global.EqualPoint)
@@ -60,7 +69,10 @@ namespace SioForgeCAD.Functions
 
                 foreach (var selObj in selSet)
                 {
-                    if (selObj.IsNull) continue;
+                    if (selObj.IsNull)
+                    {
+                        continue;
+                    }
 
                     if (!(selObj.GetDBObject() is Entity ent) || ent.IsErased)
                     {

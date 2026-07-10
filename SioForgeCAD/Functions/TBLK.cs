@@ -45,7 +45,10 @@ namespace SioForgeCAD.Functions
         {
             var ed = Generic.GetEditor();
             var blkList = AcquireSelectedBlocks(out var selectionSet);
-            if (blkList == null) return;
+            if (blkList == null)
+            {
+                return;
+            }
 
             StringBuilder ClipBoardValue = new StringBuilder();
             StringBuilder ConsoleValue = new StringBuilder();
@@ -69,7 +72,10 @@ namespace SioForgeCAD.Functions
         {
             var ed = Generic.GetEditor();
             var blkList = AcquireSelectedBlocks(out var selectionSet);
-            if (blkList == null) return;
+            if (blkList == null)
+            {
+                return;
+            }
 
             StringBuilder sb = new StringBuilder();
 
@@ -98,7 +104,10 @@ namespace SioForgeCAD.Functions
         {
             var ed = Generic.GetEditor();
             var blkList = AcquireSelectedBlocks(out var selectionSet);
-            if (blkList == null) return;
+            if (blkList == null)
+            {
+                return;
+            }
 
             StringBuilder sb = new StringBuilder();
 
@@ -136,7 +145,10 @@ namespace SioForgeCAD.Functions
 
             SelectionFilter blkFilter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "INSERT") });
             var selRes = ed.GetSelectionRedraw(null, false, false, blkFilter);
-            if (selRes.Status != PromptStatus.OK) return null;
+            if (selRes.Status != PromptStatus.OK)
+            {
+                return null;
+            }
 
             selectionSet = selRes.Value.GetSelectionSet();
             List<BlkInstance> blkList = new List<BlkInstance>();
@@ -145,10 +157,16 @@ namespace SioForgeCAD.Functions
             {
                 foreach (var objId in selRes.Value.GetObjectIds())
                 {
-                    if (!objId.IsDerivedFrom(typeof(BlockReference))) continue;
+                    if (!objId.IsDerivedFrom(typeof(BlockReference)))
+                    {
+                        continue;
+                    }
 
                     var blkRef = (BlockReference)tr.GetObject(objId, OpenMode.ForRead);
-                    if (blkRef?.IsXref() == true) continue;
+                    if (blkRef?.IsXref() == true)
+                    {
+                        continue;
+                    }
 
                     var blk = blkList.FirstOrDefault(b => b.BlockName == blkRef.GetBlockReferenceName());
                     if (blk == null)
@@ -162,7 +180,11 @@ namespace SioForgeCAD.Functions
                     // --- Propriétés dynamiques ---
                     foreach (DynamicBlockReferenceProperty dynProp in blkRef.DynamicBlockReferencePropertyCollection)
                     {
-                        if (dynProp.ReadOnly || !dynProp.VisibleInCurrentVisibilityState) continue;
+                        if (dynProp.ReadOnly || !dynProp.VisibleInCurrentVisibilityState)
+                        {
+                            continue;
+                        }
+
                         AddPropertyValue(blk, dynProp.PropertyName, dynProp.Value, dynProp.UnitsType);
                     }
 
@@ -170,7 +192,11 @@ namespace SioForgeCAD.Functions
                     foreach (ObjectId attId in blkRef.AttributeCollection)
                     {
                         var attRef = attId.GetDBObject() as AttributeReference;
-                        if (attRef == null || string.IsNullOrWhiteSpace(attRef.TextString)) continue;
+                        if (attRef == null || string.IsNullOrWhiteSpace(attRef.TextString))
+                        {
+                            continue;
+                        }
+
                         AddPropertyValue(blk, attRef.Tag, attRef.TextString, DynamicBlockReferencePropertyUnitsType.NoUnits);
                     }
                 }

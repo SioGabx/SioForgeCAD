@@ -52,10 +52,16 @@ namespace SioForgeCAD.Commun.Mist
             {
                 DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
                 string myDictName = Generic.GetExtensionDLLName();
-                if (!nod.Contains(myDictName)) return null;
+                if (!nod.Contains(myDictName))
+                {
+                    return null;
+                }
 
                 DBDictionary myDict = (DBDictionary)tr.GetObject(nod.GetAt(myDictName), OpenMode.ForRead);
-                if (!myDict.Contains(key)) return null;
+                if (!myDict.Contains(key))
+                {
+                    return null;
+                }
 
                 Xrecord record = (Xrecord)tr.GetObject(myDict.GetAt(key), OpenMode.ForRead);
                 TypedValue[] values = record.Data.AsArray();
@@ -69,10 +75,16 @@ namespace SioForgeCAD.Commun.Mist
             {
                 DBDictionary nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
                 string myDictName = Generic.GetExtensionDLLName();
-                if (!nod.Contains(myDictName)) return;
+                if (!nod.Contains(myDictName))
+                {
+                    return;
+                }
 
                 DBDictionary myDict = (DBDictionary)tr.GetObject(nod.GetAt(myDictName), OpenMode.ForWrite);
-                if (myDict.Contains(key)) myDict.Remove(key);
+                if (myDict.Contains(key))
+                {
+                    myDict.Remove(key);
+                }
 
                 tr.Commit();
             }

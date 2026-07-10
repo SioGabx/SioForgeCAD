@@ -52,7 +52,10 @@ namespace SioForgeCAD.Functions
 
                 using (RegistryKey profilesKey = Registry.CurrentUser.OpenSubKey(profilesPath, true))
                 {
-                    if (profilesKey == null) return;
+                    if (profilesKey == null)
+                    {
+                        return;
+                    }
 
                     foreach (string profileName in profilesKey.GetSubKeyNames())
                     {
@@ -82,7 +85,11 @@ namespace SioForgeCAD.Functions
                 string ETransmitSetupsPath = $@"{sProdKey}\ETransmit\setups";
                 using (RegistryKey ETransmitSetups = Registry.CurrentUser.OpenSubKey(ETransmitSetupsPath, true))
                 {
-                    if (ETransmitSetups == null) return;
+                    if (ETransmitSetups == null)
+                    {
+                        return;
+                    }
+
                     foreach (string setup in ETransmitSetups.GetSubKeyNames())
                     {
                         using (RegistryKey AcPublishDlgKey = ETransmitSetups.OpenSubKey(setup, true))

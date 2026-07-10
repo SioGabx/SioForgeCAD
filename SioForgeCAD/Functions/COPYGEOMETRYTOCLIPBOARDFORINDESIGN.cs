@@ -31,7 +31,11 @@ namespace SioForgeCAD.Functions
                 List<Entity> EntsClones = new List<Entity>();
                 foreach (ObjectId id in SelectedEnts.Value.GetObjectIds())
                 {
-                    if (!(tr.GetObject(id, OpenMode.ForRead) is Entity ent)) continue;
+                    if (!(tr.GetObject(id, OpenMode.ForRead) is Entity ent))
+                    {
+                        continue;
+                    }
+
                     var entClone = ent.Clone() as Entity;
                     EntsClones.Add(entClone);
                 }

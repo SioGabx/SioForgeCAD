@@ -108,7 +108,11 @@ namespace SioForgeCAD.Functions
                                 Generic.WriteMessage($"Erreur détéctée sur le calque du bloc {blockName}, veuillez corriger le calque manuellement");
                                 ObjectIdCollection objectIdCollection = BlockReferences.GetAllBlockReferenceInstances(blockName, tr, db);
                                 var MostUsedLayer = Layers.GetLayerCountsFromCollection(objectIdCollection).FirstOrDefault();
-                                if (string.IsNullOrEmpty(MostUsedLayer.Key)) continue;//should never happen
+                                if (string.IsNullOrEmpty(MostUsedLayer.Key))
+                                {
+                                    continue;//should never happen
+                                }
+
                                 Layer = MostUsedLayer.Key;
                             }
 

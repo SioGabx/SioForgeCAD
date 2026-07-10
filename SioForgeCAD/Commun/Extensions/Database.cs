@@ -225,18 +225,24 @@ namespace SioForgeCAD.Commun.Extensions
             var nod = (DBDictionary)tr.GetObject(db.NamedObjectsDictionaryId, OpenMode.ForRead);
 
             if (!nod.Contains(appDictName))
+            {
                 return ObjectId.Null;
+            }
 
             var appDict = (DBDictionary)tr.GetObject(nod.GetAt(appDictName), OpenMode.ForRead);
 
             if (!appDict.Contains(keyName))
+            {
                 return ObjectId.Null;
+            }
 
             var xrec = (Xrecord)tr.GetObject(appDict.GetAt(keyName), OpenMode.ForRead);
             var data = xrec.Data.AsArray();
 
             if (data.Length == 0 || !(data[0].Value is ObjectId))
+            {
                 return ObjectId.Null;
+            }
 
             return (ObjectId)data[0].Value;
         }
@@ -259,7 +265,10 @@ namespace SioForgeCAD.Commun.Extensions
                 appDict = (DBDictionary)tr.GetObject(nod.GetAt(appDictName), OpenMode.ForRead);
             }
 
-            if (appDict.Contains(keyName)) return;
+            if (appDict.Contains(keyName))
+            {
+                return;
+            }
 
             appDict.UpgradeOpen();
             var xrec = new Xrecord

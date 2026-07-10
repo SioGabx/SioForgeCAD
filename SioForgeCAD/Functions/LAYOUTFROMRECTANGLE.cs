@@ -24,7 +24,10 @@ namespace SioForgeCAD.Functions
             peo.AddAllowedClass(typeof(Polyline), true);
 
             PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
+            if (per.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             // 2. Demander l'échelle
             PromptDoubleOptions pdo = new PromptDoubleOptions("\nEntrez le dénominateur de l'échelle (ex: 500 pour 1/500e) : ")
@@ -35,7 +38,10 @@ namespace SioForgeCAD.Functions
             };
 
             PromptDoubleResult pdr = ed.GetDouble(pdo);
-            if (pdr.Status != PromptStatus.OK) return;
+            if (pdr.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             double echelleDenominateur = pdr.Value;
 

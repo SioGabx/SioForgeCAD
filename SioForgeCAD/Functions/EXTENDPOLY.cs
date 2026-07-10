@@ -157,7 +157,10 @@ namespace SioForgeCAD.Functions
             Point2d? newEnd = null;
 
             // On n'étend pas une polyligne fermée ou qui a moins de 2 sommets
-            if (poly.Closed || poly.NumberOfVertices < 2) return (newStart, newEnd);
+            if (poly.Closed || poly.NumberOfVertices < 2)
+            {
+                return (newStart, newEnd);
+            }
 
             if (mode == ExtendMode.START || mode == ExtendMode.BOTH)
             {

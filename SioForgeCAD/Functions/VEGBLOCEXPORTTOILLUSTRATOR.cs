@@ -34,7 +34,9 @@ namespace SioForgeCAD.Functions
             var db = doc.Database;
 
             if (!GetUserInput(ed, out PromptSelectionResult selResult, out ObjectId perimeterId, out double scaleFactor))
+            {
                 return;
+            }
 
             // Facteur de conversion (72 DPI)
             double multiplier = 1000.0 / scaleFactor * (72.0 / 25.4);
@@ -47,7 +49,10 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                if (!(tr.GetObject(perimeterId, OpenMode.ForRead) is Polyline perimeter)) return;
+                if (!(tr.GetObject(perimeterId, OpenMode.ForRead) is Polyline perimeter))
+                {
+                    return;
+                }
 
                 // Calcul de l'emprise (Bounding Box)
                 Extents3d ucsExtents = GetUcsExtents(perimeter, wcsToUcs);
@@ -62,7 +67,11 @@ namespace SioForgeCAD.Functions
                 // 2. Traitement des blocs
                 foreach (SelectedObject selObj in selResult.Value)
                 {
-                    if (selObj?.ObjectId.IsDerivedFrom(typeof(BlockReference)) != true) continue;
+                    if (selObj?.ObjectId.IsDerivedFrom(typeof(BlockReference)) != true)
+                    {
+                        continue;
+                    }
+
                     BlockReference blkRef = tr.GetObject(selObj.ObjectId, OpenMode.ForRead) as BlockReference;
 
                     ObjectId btrId = blkRef.DynamicBlockTableRecord;
@@ -116,7 +125,11 @@ namespace SioForgeCAD.Functions
             {
                 int GetPriority(ObjectId EntId)
                 {
-                    if (EntId.IsDerivedFrom(typeof(Hatch))) return 1;
+                    if (EntId.IsDerivedFrom(typeof(Hatch)))
+                    {
+                        return 1;
+                    }
+
                     return int.MaxValue;
                 }
                 return GetPriority(a).CompareTo(GetPriority(b));
@@ -127,7 +140,11 @@ namespace SioForgeCAD.Functions
 
             foreach (ObjectId entId in entIds)
             {
-                if (processedEnts.Contains(entId)) continue; // Skip already processed entities (in case of duplicates)
+                if (processedEnts.Contains(entId))
+                {
+                    continue; // Skip already processed entities (in case of duplicates)
+                }
+
                 processedEnts.Add(entId);
                 Entity ent = tr.GetObject(entId, OpenMode.ForRead) as Entity;
 
@@ -303,7 +320,11 @@ namespace SioForgeCAD.Functions
         private static Extents3d GetUcsExtents(Polyline p, Matrix3d wcsToUcs)
         {
             Extents3d ex = new Extents3d();
-            for (int i = 0; i < p.NumberOfVertices; i++) ex.AddPoint(p.GetPoint3dAt(i).TransformBy(wcsToUcs));
+            for (int i = 0; i < p.NumberOfVertices; i++)
+            {
+                ex.AddPoint(p.GetPoint3dAt(i).TransformBy(wcsToUcs));
+            }
+
             return ex;
         }
 
@@ -312,12 +333,24 @@ namespace SioForgeCAD.Functions
         {
             id = ObjectId.Null; s = 200;
             sel = ed.GetSelection(new PromptSelectionOptions { MessageForAdding = "\nSélectionnez les blocs : " });
-            if (sel.Status != PromptStatus.OK) return false;
+            if (sel.Status != PromptStatus.OK)
+            {
+                return false;
+            }
+
             var per = ed.GetEntity("\nPérimètre : ");
-            if (per.Status != PromptStatus.OK) return false;
+            if (per.Status != PromptStatus.OK)
+            {
+                return false;
+            }
+
             id = per.ObjectId;
             var sc = ed.GetDouble("\nÉchelle (ex: 200) : ");
-            if (sc.Status == PromptStatus.OK) s = sc.Value;
+            if (sc.Status == PromptStatus.OK)
+            {
+                s = sc.Value;
+            }
+
             return true;
         }
     }

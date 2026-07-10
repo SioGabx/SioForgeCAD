@@ -15,7 +15,10 @@ namespace SioForgeCAD.Functions
 
             var psr = ed.GetBlocks(out ObjectId[] ObjIds, "Selectionnez un bloc", false, true);
 
-            if (!psr) return;
+            if (!psr)
+            {
+                return;
+            }
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {

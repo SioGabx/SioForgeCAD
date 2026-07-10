@@ -140,7 +140,10 @@ namespace SioForgeCAD.Commun
             {
                 foreach (Drawable Entity in Drawable)
                 {
-                    if (!Entity.IsDisposed) Entity.Dispose();
+                    if (!Entity.IsDisposed)
+                    {
+                        Entity.Dispose();
+                    }
                 }
                 Drawable?.Clear();
             }
@@ -152,7 +155,10 @@ namespace SioForgeCAD.Commun
             {
                 foreach (Drawable Entity in StaticDrawable)
                 {
-                    if (!Entity.IsDisposed) Entity.Dispose();
+                    if (!Entity.IsDisposed)
+                    {
+                        Entity.Dispose();
+                    }
                 }
                 StaticDrawable?.Clear();
             }
@@ -286,7 +292,11 @@ namespace SioForgeCAD.Commun
                 pointOptions.UseBasePoint = true;
                 pointOptions.BasePoint = OriginPoint.SCU;
             }
-            if (AllowNone) pointOptions.AllowNone = true;
+            if (AllowNone)
+            {
+                pointOptions.AllowNone = true;
+            }
+
             bool IsNotValid = true;
             PromptPointResult InsertionPromptPointResult = null;
             while (IsNotValid)

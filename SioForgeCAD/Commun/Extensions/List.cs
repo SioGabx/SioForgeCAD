@@ -52,8 +52,16 @@ namespace SioForgeCAD.Commun.Extensions
         {
             var doubles = values.ConvertAll(v =>
             {
-                if (v is double d) return d;
-                if (double.TryParse(v.ToString(), out double res)) return res;
+                if (v is double d)
+                {
+                    return d;
+                }
+
+                if (double.TryParse(v.ToString(), out double res))
+                {
+                    return res;
+                }
+
                 return 0.0;
             });
 

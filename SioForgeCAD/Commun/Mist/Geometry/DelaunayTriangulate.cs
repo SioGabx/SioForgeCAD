@@ -54,7 +54,9 @@ namespace SioForgeCAD.Commun
 
             int numberOfPoints = PtsFiltres.Count;
             if (numberOfPoints < 3)
+            {
                 return Resultat;
+            }
 
             double[] xCoordinates = new double[numberOfPoints + 3];
             double[] yCoordinates = new double[numberOfPoints + 3];
@@ -78,10 +80,25 @@ namespace SioForgeCAD.Commun
 
             for (int i = 1; i < numberOfPoints; i++)
             {
-                if (xCoordinates[i] < xMin) xMin = xCoordinates[i];
-                if (xCoordinates[i] > xMax) xMax = xCoordinates[i];
-                if (yCoordinates[i] < yMin) yMin = yCoordinates[i];
-                if (yCoordinates[i] > yMax) yMax = yCoordinates[i];
+                if (xCoordinates[i] < xMin)
+                {
+                    xMin = xCoordinates[i];
+                }
+
+                if (xCoordinates[i] > xMax)
+                {
+                    xMax = xCoordinates[i];
+                }
+
+                if (yCoordinates[i] < yMin)
+                {
+                    yMin = yCoordinates[i];
+                }
+
+                if (yCoordinates[i] > yMax)
+                {
+                    yMax = yCoordinates[i];
+                }
 
                 if (op != null && (i & 63) == 0)
                 {
@@ -150,7 +167,10 @@ namespace SioForgeCAD.Commun
                 for (int j = 0; j < triangles.Count; j++)
                 {
                     InternalTriangle t = triangles[j];
-                    if (!t.IsValid) continue;
+                    if (!t.IsValid)
+                    {
+                        continue;
+                    }
 
                     double dx = t.CentroidX - px;
                     double dy = t.CentroidY - py;
@@ -188,7 +208,10 @@ namespace SioForgeCAD.Commun
                 for (int j = 0; j < edgeBuffer.Count; j++)
                 {
                     Edge e = edgeBuffer[j];
-                    if (e.P1 < 0 || e.P2 < 0) continue;
+                    if (e.P1 < 0 || e.P2 < 0)
+                    {
+                        continue;
+                    }
 
                     InternalTriangle newTri = new InternalTriangle
                     {
@@ -215,7 +238,10 @@ namespace SioForgeCAD.Commun
 
             foreach (var t in triangles)
             {
-                if (!t.IsValid) continue;
+                if (!t.IsValid)
+                {
+                    continue;
+                }
 
                 if (t.P1 < numberOfPoints &&
                     t.P2 < numberOfPoints &&

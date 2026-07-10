@@ -157,11 +157,17 @@ namespace SioForgeCAD.Commun.Extensions
         {
             try
             {
-                if (ent is null) return false;
+                if (ent is null)
+                {
+                    return false;
+                }
 
                 Extents3d vpExtents = vp.GetExtents();
                 Extents3d extents = ent.GetExtents();
-                if (ent?.Bounds.HasValue == false) return true;
+                if (ent?.Bounds.HasValue == false)
+                {
+                    return true;
+                }
 
                 Point3d min = extents.MinPoint;
                 Point3d max = extents.MaxPoint;
@@ -185,10 +191,25 @@ namespace SioForgeCAD.Commun.Extensions
                 foreach (Point3d corner in corners)
                 {
                     Point3d pt = corner.TransformBy(modelToPaper);
-                    if (pt.X < eMinX) eMinX = pt.X;
-                    if (pt.Y < eMinY) eMinY = pt.Y;
-                    if (pt.X > eMaxX) eMaxX = pt.X;
-                    if (pt.Y > eMaxY) eMaxY = pt.Y;
+                    if (pt.X < eMinX)
+                    {
+                        eMinX = pt.X;
+                    }
+
+                    if (pt.Y < eMinY)
+                    {
+                        eMinY = pt.Y;
+                    }
+
+                    if (pt.X > eMaxX)
+                    {
+                        eMaxX = pt.X;
+                    }
+
+                    if (pt.Y > eMaxY)
+                    {
+                        eMaxY = pt.Y;
+                    }
                 }
 
                 return eMaxX >= vpExtents.MinPoint.X && eMinX <= vpExtents.MaxPoint.X &&

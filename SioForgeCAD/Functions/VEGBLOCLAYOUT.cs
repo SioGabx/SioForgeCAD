@@ -21,11 +21,18 @@ namespace SioForgeCAD.Functions
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 string layoutName = PromptForLayoutName();
-                if (string.IsNullOrEmpty(layoutName)) return;
+                if (string.IsNullOrEmpty(layoutName))
+                {
+                    return;
+                }
+
                 Generic.WriteMessage($"Selected \"{layoutName}\"");
 
                 var layout = ed.GetLayoutFromName(layoutName);
-                if (layout == null) return;
+                if (layout == null)
+                {
+                    return;
+                }
 
                 var viewport = GetViewport(layout);
                 var boundary = viewport?.GetBoundary();

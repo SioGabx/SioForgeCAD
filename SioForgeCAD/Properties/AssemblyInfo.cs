@@ -25,6 +25,6 @@ using System.Runtime.InteropServices;
 //Hot Reload and Edit & Continue are not compatible with using * in AssemblyVersionAttribute value.
 //Presence of * in the version means that the compiler generates a new version every build based on the current time.
 //The build then produces non-reproducible, non-deterministic outputs
-[assembly: AssemblyVersion("2026.6.12.16")]
-[assembly: AssemblyFileVersion("2026.6.12.16")]
+[assembly: AssemblyVersion("2026.7.10.7")]
+[assembly: AssemblyFileVersion("2026.7.10.7")]
 [assembly: NeutralResourcesLanguage("")]

@@ -27,7 +27,10 @@ namespace SioForgeCAD.Commun.Mist
 
         public static string ColorToHex(this Color acadColor)
         {
-            if (acadColor == null) return "#000000"; // Or string.Empty
+            if (acadColor == null)
+            {
+                return "#000000"; // Or string.Empty
+            }
 
             var rgb = acadColor.ColorValue;
             return $"#{rgb.R:X2}{rgb.G:X2}{rgb.B:X2}";

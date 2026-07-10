@@ -142,7 +142,10 @@ namespace SioForgeCAD.Functions
                     DefaultValue = blk.Position.X
                 };
                 PromptDoubleResult pdrX = ed.GetDouble(pdoX);
-                if (pdrX.Status != PromptStatus.OK) return;
+                if (pdrX.Status != PromptStatus.OK)
+                {
+                    return;
+                }
 
                 // Modification de Y
                 PromptDoubleOptions pdoY = new PromptDoubleOptions($"\nNouvelle position Y <{blk.Position.Y:F4}>: ")
@@ -151,7 +154,10 @@ namespace SioForgeCAD.Functions
                     DefaultValue = blk.Position.Y
                 };
                 PromptDoubleResult pdrY = ed.GetDouble(pdoY);
-                if (pdrY.Status != PromptStatus.OK) return;
+                if (pdrY.Status != PromptStatus.OK)
+                {
+                    return;
+                }
 
                 // Modification de Z
                 PromptDoubleOptions pdoZ = new PromptDoubleOptions($"\nNouvelle position Z <{blk.Position.Z:F4}>: ")
@@ -160,7 +166,10 @@ namespace SioForgeCAD.Functions
                     DefaultValue = blk.Position.Z
                 };
                 PromptDoubleResult pdrZ = ed.GetDouble(pdoZ);
-                if (pdrZ.Status != PromptStatus.OK) return;
+                if (pdrZ.Status != PromptStatus.OK)
+                {
+                    return;
+                }
 
                 // Modification de la Rotation (conversion radians -> degrés pour la saisie utilisateur)
                 double currentRotDeg = blk.Rotation * 180.0 / Math.PI;
@@ -170,7 +179,10 @@ namespace SioForgeCAD.Functions
                     DefaultValue = currentRotDeg
                 };
                 PromptDoubleResult pdrRot = ed.GetDouble(pdoRot);
-                if (pdrRot.Status != PromptStatus.OK) return;
+                if (pdrRot.Status != PromptStatus.OK)
+                {
+                    return;
+                }
 
                 // Application des modifications (conversion degrés -> radians pour la base de données)
                 blk.Position = new Point3d(pdrX.Value, pdrY.Value, pdrZ.Value);

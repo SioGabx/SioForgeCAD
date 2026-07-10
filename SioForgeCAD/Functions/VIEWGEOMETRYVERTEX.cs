@@ -59,7 +59,10 @@ namespace SioForgeCAD.Functions
                 double blockScale = Vector3d.XAxis.TransformBy(mcsToWcs).Length;
 
                 // Sécurité pour éviter les divisions par zéro
-                if (blockScale <= 0) return;
+                if (blockScale <= 0)
+                {
+                    return;
+                }
 
                 // 3. Trouver le centre du cercle dans l'espace Monde (WCS) absolu
                 Point3d centerWcs = centerPt.TransformBy(mcsToWcs);
@@ -67,7 +70,10 @@ namespace SioForgeCAD.Functions
                 // 4. Obtenir les pixels par unité Monde (WCS) à cette position absolue
                 Point2d pixelsPerUnitWcs = vd.Viewport.GetNumPixelsInUnitSquare(centerWcs);
 
-                if (pixelsPerUnitWcs.X <= 0) return;
+                if (pixelsPerUnitWcs.X <= 0)
+                {
+                    return;
+                }
 
                 // 5. Calculer le rayon absolu en unités Monde (WCS)
                 double radiusWcs = _radiusInPixels;// / pixelsPerUnitWcs.X; //pixelsPerUnitWcs = ajustement par rapport à la vue

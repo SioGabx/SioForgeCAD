@@ -66,7 +66,10 @@ namespace SioForgeCAD.Functions
 
             try
             {
-                if (doc?.IsDisposed != false) return;
+                if (doc?.IsDisposed != false)
+                {
+                    return;
+                }
 
                 using (var dlock = doc.LockDocument())
                 {

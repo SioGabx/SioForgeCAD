@@ -25,7 +25,9 @@ namespace SioForgeCAD.Functions
                 {
                     // On ignore l'onglet "Model"
                     if (entry.Key.Equals("Model", StringComparison.OrdinalIgnoreCase))
+                    {
                         continue;
+                    }
 
                     layoutNames.Add(entry.Key);
                 }
@@ -64,7 +66,9 @@ namespace SioForgeCAD.Functions
                         foreach (var item in resultats)
                         {
                             if (string.Equals(item.Original, item.Renamed, StringComparison.Ordinal))
+                            {
                                 continue;
+                            }
 
                             try
                             {

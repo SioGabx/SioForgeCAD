@@ -17,7 +17,10 @@ namespace SioForgeCAD.Functions
 
             var selRes = ed.GetSelectionRedraw("\nSélectionnez des courbes :", true, false, ed.GetCurvesFilter());
 
-            if (selRes.Status != PromptStatus.OK) return;
+            if (selRes.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -28,7 +31,10 @@ namespace SioForgeCAD.Functions
                     foreach (ObjectId id in selRes.Value.GetObjectIds())
                     {
                         // Cast to the base Curve class
-                        if (!(tr.GetObject(id, OpenMode.ForRead) is Curve ent)) continue;
+                        if (!(tr.GetObject(id, OpenMode.ForRead) is Curve ent))
+                        {
+                            continue;
+                        }
 
                         List<Point3d> pointsToCreate = new List<Point3d>();
 
@@ -36,7 +42,9 @@ namespace SioForgeCAD.Functions
                         if (ent is Polyline pline)
                         {
                             for (int i = 0; i < pline.NumberOfVertices; i++)
+                            {
                                 pointsToCreate.Add(pline.GetPoint3dAt(i));
+                            }
                         }
                         else if (ent is Polyline3d pline3d)
                         {
@@ -51,7 +59,9 @@ namespace SioForgeCAD.Functions
                         {
                             // For Splines, we usually want Control Points
                             for (int i = 0; i < spline.NumControlPoints; i++)
+                            {
                                 pointsToCreate.Add(spline.GetControlPointAt(i));
+                            }
                         }
                         else
                         {

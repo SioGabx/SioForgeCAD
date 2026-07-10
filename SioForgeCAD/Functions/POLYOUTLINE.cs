@@ -25,7 +25,10 @@ namespace SioForgeCAD.Functions
             peo.AddAllowedClass(typeof(Polyline), true);
 
             PromptEntityResult per = ed.GetEntity(peo);
-            if (per.Status != PromptStatus.OK) return;
+            if (per.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
@@ -105,7 +108,10 @@ namespace SioForgeCAD.Functions
             List<(Curve2d Original, Curve2d Ajusted)> TrimAndExtendCurves = new List<(Curve2d, Curve2d)>();
             curves.ForEach(t => TrimAndExtendCurves.Add((t, t.Clone() as Curve2d)));
 
-            if (curves == null || curves.Length < 2) return TrimAndExtendCurves.ConvertAll(t => t.Ajusted);
+            if (curves == null || curves.Length < 2)
+            {
+                return TrimAndExtendCurves.ConvertAll(t => t.Ajusted);
+            }
 
             int StartIndex = sourcePoly.Closed ? -1 : 0;
             int EndIndex = sourcePoly.Closed ? -1 : curves.Length - 1;

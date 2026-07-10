@@ -77,21 +77,33 @@ namespace SioForgeCAD.Forms
             headerCheckBox.Checked = CheckAllByDefault;
             headerCheckBox.CheckedChanged += (s, e) =>
             {
-                foreach (var item in _items) item.Include = headerCheckBox.Checked;
+                foreach (var item in _items)
+                {
+                    item.Include = headerCheckBox.Checked;
+                }
+
                 dataGridView1.Refresh();
             };
             dataGridView1.Controls.Add(headerCheckBox);
 
             dataGridView1.CurrentCellDirtyStateChanged += (s, e) =>
             {
-                if (dataGridView1.IsCurrentCellDirty) dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                if (dataGridView1.IsCurrentCellDirty)
+                {
+                    dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
             };
+            dummy.Focus(); // Pour éviter que la première ligne soit sélectionnée par défaut
         }
 
         // Récupérer les éléments cochés
         public List<string> GetSelectedItems()
         {
             return _items.Where(x => x.Include).Select(x => x.Name).ToList();
+        }
+        public void SetSelectedItems(List<string> Items)
+        {
+            _items.Where(x => Items.Contains(x.Name)).ToList().ForEach(x => x.Include = true);
         }
 
         private void ValidateButton_Click(object sender, EventArgs e)

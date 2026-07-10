@@ -52,7 +52,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static IEnumerable<T> GetVisualChildren<T>(this DependencyObject parent) where T : DependencyObject
         {
-            if (parent == null) yield break;
+            if (parent == null)
+            {
+                yield break;
+            }
 
             int childCount = VisualTreeHelper.GetChildrenCount(parent);
             for (int i = 0; i < childCount; i++)
@@ -74,7 +77,10 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static T GetVisualChild<T>(this DependencyObject parent) where T : DependencyObject
         {
-            if (parent == null) return null;
+            if (parent == null)
+            {
+                return null;
+            }
 
             int childCount = VisualTreeHelper.GetChildrenCount(parent);
             for (int i = 0; i < childCount; i++)
@@ -88,7 +94,10 @@ namespace SioForgeCAD.Commun.Extensions
 
                 // Recursive call to search deeper
                 T result = GetVisualChild<T>(child);
-                if (result != null) return result;
+                if (result != null)
+                {
+                    return result;
+                }
             }
 
             return null;

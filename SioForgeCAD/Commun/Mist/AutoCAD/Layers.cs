@@ -46,7 +46,7 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        public static List<ObjectId> GetAllLayersInDrawing()
+        public static List<ObjectId> GetAllLayersObjIdInDrawing()
         {
             var db = Generic.GetDatabase();
 
@@ -63,6 +63,26 @@ namespace SioForgeCAD.Commun
                 tr.Commit();
             }
             return layerIds;
+        }
+
+        public static List<string> GetAllLayersInDrawings()
+        {
+            var db = Generic.GetDatabase();
+
+            List<string> layers = new List<string>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                LayerTable lt = (LayerTable)tr.GetObject(db.LayerTableId, OpenMode.ForRead);
+                foreach (ObjectId id in lt)
+                {
+                    LayerTableRecord ltr = tr.GetObject(id, OpenMode.ForRead) as LayerTableRecord;
+                    layers.Add(ltr.Name);
+                }
+
+                tr.Commit();
+            }
+            return layers;
         }
 
         public class LayerStatus
@@ -89,7 +109,11 @@ namespace SioForgeCAD.Commun
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 LayerTable lt = tr.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable;
-                if (lt?.Has(layerName) != true) return null;
+                if (lt?.Has(layerName) != true)
+                {
+                    return null;
+                }
+
                 ObjectId layerId = lt[layerName];
                 LayerTableRecord ltr = tr.GetObject(layerId, OpenMode.ForRead) as LayerTableRecord;
                 ObjectIdCollection frozenInVpIds = GetFrozenLayerIdsInViewport(tr, viewportId);
@@ -104,7 +128,7 @@ namespace SioForgeCAD.Commun
             var db = Generic.GetDatabase();
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                IEnumerable<ObjectId> allLayersInDrawing = Layers.GetAllLayersInDrawing();
+                IEnumerable<ObjectId> allLayersInDrawing = Layers.GetAllLayersObjIdInDrawing();
                 ObjectIdCollection frozenInVpIds = GetFrozenLayerIdsInViewport(tr, viewportId);
                 Dictionary<string, LayerStatus> layerData = new Dictionary<string, LayerStatus>();
 

@@ -168,7 +168,11 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static bool CreateLayoutFromTemplate(this LayoutManager lm, string filePath, string layoutName, string targetName, int TabOrder = int.MaxValue)
         {
-            if (string.IsNullOrEmpty(targetName)) targetName = layoutName;
+            if (string.IsNullOrEmpty(targetName))
+            {
+                targetName = layoutName;
+            }
+
             Database destDb = Generic.GetDatabase();
 
             using (Generic.GetLock())

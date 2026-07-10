@@ -47,7 +47,10 @@ namespace SioForgeCAD.Functions
             {
                 foreach (ObjectId objId in psr.Value.GetObjectIds())
                 {
-                    if (!(tr.GetObject(objId, OpenMode.ForRead) is Entity proxyEnt)) continue;
+                    if (!(tr.GetObject(objId, OpenMode.ForRead) is Entity proxyEnt))
+                    {
+                        continue;
+                    }
 
                     // 1. Extraction brute des composants du proxy
                     ProxyData data = ExtractDataFromProxy(proxyEnt);
@@ -120,7 +123,10 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            if (string.IsNullOrEmpty(data.TextValue)) return data;
+            if (string.IsNullOrEmpty(data.TextValue))
+            {
+                return data;
+            }
 
             // --- PASSE 2 : Transformation et Debug ---
             Matrix3d invRot = Matrix3d.Rotation(-data.TextRotation, Vector3d.ZAxis, data.TextCenter);
@@ -186,7 +192,10 @@ namespace SioForgeCAD.Functions
 
         private static void ProcessSlopeBlock(ProxyData data, Editor ed)
         {
-            if (!data.TextValue.Contains("%")) return;
+            if (!data.TextValue.Contains("%"))
+            {
+                return;
+            }
 
             var rotation = data.TextRotation;
 

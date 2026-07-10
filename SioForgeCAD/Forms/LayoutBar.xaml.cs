@@ -199,7 +199,10 @@ namespace SioForgeCAD.Forms
         private void LayoutTab_SelectionChanged()
         {
             // Évite la boucle infinie si AutoCAD est déjà en train de mettre à jour le WPF
-            if (IsSyncingFromAutoCAD || _isSyncSelectionScheduled) return;
+            if (IsSyncingFromAutoCAD || _isSyncSelectionScheduled)
+            {
+                return;
+            }
 
             _isSyncSelectionScheduled = true;
 
@@ -214,10 +217,16 @@ namespace SioForgeCAD.Forms
 
         private void SyncSelectionToAutoCAD()
         {
-            if (IsSyncingFromAutoCAD) return;
+            if (IsSyncingFromAutoCAD)
+            {
+                return;
+            }
 
             var doc = Generic.GetDocument();
-            if (doc?.IsDisposed != false) return;
+            if (doc?.IsDisposed != false)
+            {
+                return;
+            }
 
             IsSyncingFromWPF = true;
             try
@@ -1367,13 +1376,21 @@ namespace SioForgeCAD.Forms
 
         private void ExecuteLayoutCreation(string sourceFile, string templateName, string PreferedName, bool isFallbackEnabled)
         {
-            if (IsSyncingFromAutoCAD) return;
+            if (IsSyncingFromAutoCAD)
+            {
+                return;
+            }
+
             string targetName = GenerateUniqueLayoutName(PreferedName ?? "Présentation");
 
             // Tentative de création via gabarit
             if (!string.IsNullOrEmpty(sourceFile) && LayoutManager.Current.CreateLayoutFromTemplate(sourceFile, templateName, targetName))
             {
-                if (!LayoutManager.Current.LayoutExists(targetName)) return;
+                if (!LayoutManager.Current.LayoutExists(targetName))
+                {
+                    return;
+                }
+
                 using (Generic.GetLock())
                 {
                     try
@@ -1425,7 +1442,11 @@ namespace SioForgeCAD.Forms
 
         private void AddBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (!(sender is Button btn)) return;
+            if (!(sender is Button btn))
+            {
+                return;
+            }
+
             ContextMenu cm = new ContextMenu();
 
             // --- 1. Menu : Créer nouveau (vierge) ---
@@ -1449,7 +1470,11 @@ namespace SioForgeCAD.Forms
 
         private void AddBtn_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (!(sender is Button btn)) return;
+            if (!(sender is Button btn))
+            {
+                return;
+            }
+
             ContextMenu cm = new ContextMenu();
 
             string PromptGabaritInitialDir = Registries.GetValue<string>($@"{HostApplicationServices.Current.UserRegistryProductRootKey}\Profiles\{Application.GetSystemVariable("CPROFILE")}\General\", "TemplatePath")?.ToString();
@@ -1486,7 +1511,10 @@ namespace SioForgeCAD.Forms
             redefineItem.Click += (s, args) =>
             {
                 string path = PromptFileSelection(PromptGabaritInitialDir);
-                if (path != null) Settings.GabaritFile = path;
+                if (path != null)
+                {
+                    Settings.GabaritFile = path;
+                }
             };
             cm.Items.Add(redefineItem);
             cm.PlacementTarget = btn;
@@ -1727,7 +1755,10 @@ namespace SioForgeCAD.Forms
             var recoverSelectedTab = GetSelectedTabs();
             try
             {
-                if (targetTabs.Count == 0) return;
+                if (targetTabs.Count == 0)
+                {
+                    return;
+                }
 
                 Document doc = Generic.GetDocument();
                 string docName = Path.GetFileNameWithoutExtension(doc.Name);
@@ -1768,7 +1799,10 @@ namespace SioForgeCAD.Forms
                                 RestoreDirectory = false
                             };
 
-                            if (saveFileDialog.ShowDialog() != true) return; // Annulation utilisateur
+                            if (saveFileDialog.ShowDialog() != true)
+                            {
+                                return; // Annulation utilisateur
+                            }
 
                             LayoutListToPlot.PublishLayouts(saveFileDialog.FileName);
                         }
@@ -1777,7 +1811,10 @@ namespace SioForgeCAD.Forms
                         {
                             var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog("Sélectionnez le dossier d'enregistrement", "", "", "jj", Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
                             {
-                                if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return; // Annulation
+                                if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                                {
+                                    return; // Annulation
+                                }
 
                                 string selectedFolder = folderDialog.FileOrFoldername;
 
@@ -1813,7 +1850,10 @@ namespace SioForgeCAD.Forms
             targetTabs.ForEach(t => Debug.WriteLine(t.Title));
             try
             {
-                if (targetTabs.Count == 0) return;
+                if (targetTabs.Count == 0)
+                {
+                    return;
+                }
 
                 Document doc = Generic.GetDocument();
                 string docPath = Path.GetFileNameWithoutExtension(doc.Name);
@@ -1829,7 +1869,10 @@ namespace SioForgeCAD.Forms
                     RestoreDirectory = false,
                 };
 
-                if (saveFileDialog.ShowDialog() != true) return; // Si l'utilisateur annule, on arrête là.
+                if (saveFileDialog.ShowDialog() != true)
+                {
+                    return; // Si l'utilisateur annule, on arrête là.
+                }
 
                 string outputPath = saveFileDialog.FileName;
 

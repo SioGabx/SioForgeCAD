@@ -19,20 +19,33 @@ namespace SioForgeCAD.Functions
 
             // 1. Sélection et Point de base
             var selRes = ed.GetSelectionRedraw("Sélectionnez les objets à copier :", true, false, null);
-            if (selRes.Status != PromptStatus.OK) return;
+            if (selRes.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             var ptRes = ed.GetPoint("\nPoint de base : ");
-            if (ptRes.Status != PromptStatus.OK) return;
+            if (ptRes.Status != PromptStatus.OK)
+            {
+                return;
+            }
+
             Point3d basePt = Points.ToSCGFromCurentSCU(ptRes.Value);
 
             ObjectId[] sourceIds = selRes.Value.GetObjectIds();
-            if (sourceIds.Length == 0) return;
+            if (sourceIds.Length == 0)
+            {
+                return;
+            }
 
             DBObjectCollection previewSources = GetTransientPreviewEntities(db, sourceIds);
 
             try
             {
-                if (!TryGetTargetPoint(basePt, previewSources, out Point3d targetPt)) return;
+                if (!TryGetTargetPoint(basePt, previewSources, out Point3d targetPt))
+                {
+                    return;
+                }
 
                 Vector3d vec = basePt.GetVectorTo(targetPt);
                 if (vec.IsZeroLength())

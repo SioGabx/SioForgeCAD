@@ -38,11 +38,19 @@ namespace SioForgeCAD.Functions
 
                 foreach (var selObj in psr.Value.GetSelectionSet())
                 {
-                    if (!(selObj.GetObject(OpenMode.ForRead) is Entity ent)) continue;
+                    if (!(selObj.GetObject(OpenMode.ForRead) is Entity ent))
+                    {
+                        continue;
+                    }
+
                     if (ent is Curve)
                     {
                         // Clone l'entité sélectionnée pour ne pas modifier l'original
-                        if (!(ent.Clone() is Entity tempEnt)) continue;
+                        if (!(ent.Clone() is Entity tempEnt))
+                        {
+                            continue;
+                        }
+
                         tempEnt.Flatten();
                         DBObjectCollection curves = new DBObjectCollection { tempEnt };
                         DBObjectCollection regions = null;
@@ -63,7 +71,10 @@ namespace SioForgeCAD.Functions
 
                         foreach (Region region in regions)
                         {
-                            if (region == null) continue;
+                            if (region == null)
+                            {
+                                continue;
+                            }
 
                             string layer = ent.Layer;
                             ObjectId layerId = Layers.GetLayerIdByName(layer);
@@ -123,7 +134,9 @@ namespace SioForgeCAD.Functions
                                 ObjectId newId = mapping[id].Value;
                                 Entity e = newTr.GetObject(newId, OpenMode.ForWrite, true, true) as Entity;
                                 if (e != null)
+                                {
                                     clonedRegions.Add(e);
+                                }
                             }
                         }
 

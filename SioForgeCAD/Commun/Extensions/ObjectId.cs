@@ -206,7 +206,10 @@ namespace SioForgeCAD.Commun
         public static long GetObjectByteSize(this ObjectId objId)
         {
             Database currentDb = objId.Database;
-            if (currentDb == null || objId == ObjectId.Null) return 0;
+            if (currentDb == null || objId == ObjectId.Null)
+            {
+                return 0;
+            }
 
             using (Database emptyDb = new Database(true, true))
             {

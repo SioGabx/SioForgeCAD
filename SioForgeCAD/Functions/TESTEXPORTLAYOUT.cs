@@ -15,7 +15,10 @@ namespace SioForgeCAD.Functions
         public static void ExportLayoutComplet()
         {
             Document doc = Generic.GetDocument();
-            if (doc == null) return;
+            if (doc == null)
+            {
+                return;
+            }
 
             if (LayoutManager.Current.CurrentLayoutIsModel())
             {
@@ -114,13 +117,23 @@ namespace SioForgeCAD.Functions
                 {
                     Entity cachedEnt = (Entity)newTr.GetObject(cachedId, OpenMode.ForRead);
 
-                    if (!LayersProps[cachedEnt.Layer].IsPlottable) continue;
-                    if (!vp.IsEntityVisibleInViewport(cachedEnt)) continue;
+                    if (!LayersProps[cachedEnt.Layer].IsPlottable)
+                    {
+                        continue;
+                    }
+
+                    if (!vp.IsEntityVisibleInViewport(cachedEnt))
+                    {
+                        continue;
+                    }
 
                     vpIdsToClone.Add(cachedId);
                 }
 
-                if (vpIdsToClone.Count == 0) continue;
+                if (vpIdsToClone.Count == 0)
+                {
+                    continue;
+                }
 
                 IdMapping vpMapping = new IdMapping();
                 newDb.DeepCloneObjects(vpIdsToClone, newModelSpaceId, vpMapping, false);
@@ -164,7 +177,10 @@ namespace SioForgeCAD.Functions
         /// </summary>
         private static void ClipEntityToBoundary(Transaction tr, BlockTableRecord btr, Entity ent, Curve boundary)
         {
-            if (boundary == null) return;
+            if (boundary == null)
+            {
+                return;
+            }
 
             if (ent is Line || ent is Polyline || ent is Arc)
             {

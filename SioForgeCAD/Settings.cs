@@ -183,5 +183,11 @@ namespace SioForgeCAD
             get => GetValue(nameof(SaveFileAtCloseDirectory), Path.GetTempPath());
             set => SetValue(nameof(SaveFileAtCloseDirectory), value);
         }
+
+        public static string LastoolsPath
+        {
+            get => GetValue(nameof(LastoolsPath), @"");
+            set => SetValue(nameof(LastoolsPath), value);
+        }
     }
 }

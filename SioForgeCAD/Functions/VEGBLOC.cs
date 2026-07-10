@@ -601,7 +601,9 @@ namespace SioForgeCAD.Functions
                 foreach (var color in existingColors)
                 {
                     if (color.ColorMethod != ColorMethod.ByColor)
+                    {
                         continue;
+                    }
 
                     int dr = color.Red - candidate.Red;
                     int dg = color.Green - candidate.Green;

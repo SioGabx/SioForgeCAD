@@ -72,7 +72,10 @@ namespace SioForgeCAD.Functions
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
 
-                if (askContinue != DialogResult.Yes) return;
+                if (askContinue != DialogResult.Yes)
+                {
+                    return;
+                }
             }
 
             foreach (string oldName in uniqueBlockNames)
