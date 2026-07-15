@@ -6,6 +6,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Mist.Helpers.Projections;
 using SioForgeCAD.Forms;
 using System;
 using System.Diagnostics;
@@ -45,6 +46,16 @@ namespace SioForgeCAD.Functions
                 }
             }
 
+            const int drawingEPSG = 2154;
+            int lasEPSG = GetProjectionOption(ed, drawingEPSG);
+
+            if (lasEPSG == 0)
+            {
+                return;
+            }
+
+            CoordinateTransform transform = new CoordinateTransform(drawingEPSG, lasEPSG);
+
             PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
             if (p1.Status != PromptStatus.OK)
             {
@@ -64,6 +75,18 @@ namespace SioForgeCAD.Functions
             double ymin = Math.Min(p1.Value.Y, p2.Value.Y);
             double ymax = Math.Max(p1.Value.Y, p2.Value.Y);
 
+            Point2d lasP1 = transform.Inverse(xmin, ymin);
+            Point2d lasP2 = transform.Inverse(xmax, ymax);
+
+
+            double lasXmin = Math.Min(lasP1.X, lasP2.X);
+            double lasXmax = Math.Max(lasP1.X, lasP2.X);
+
+            double lasYmin = Math.Min(lasP1.Y, lasP2.Y);
+            double lasYmax = Math.Max(lasP1.Y, lasP2.Y);
+
+            Debug.WriteLine(lasXmin + " , " + lasYmin);
+
             int count = 0;
 
             using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
@@ -82,12 +105,14 @@ namespace SioForgeCAD.Functions
                                 return;
                             }
 
-                            if (pt.X < xmin || pt.X > xmax || pt.Y < ymin || pt.Y > ymax)
+                            if (pt.X < lasXmin || pt.X > lasXmax || pt.Y < lasYmin || pt.Y > lasYmax)
                             {
                                 continue;
                             }
 
-                            DBPoint acPoint = new DBPoint(new Point3d(pt.X, pt.Y, pt.Z));
+                            Point2d converted = transform.Transform(pt.X, pt.Y);
+
+                            DBPoint acPoint = new DBPoint(new Point3d(converted.X, converted.Y, pt.Z));
 
                             if (pt.HasRGB)
                             {
@@ -121,6 +146,102 @@ namespace SioForgeCAD.Functions
 
 
             Generic.WriteMessage($"\nImport terminé : {count} points");
+        }
+
+        public class CoordinateTransform
+        {
+            private Lambert93 source;
+            private Lambert93 target;
+
+
+            public CoordinateTransform(
+                int sourceEPSG,
+                int targetEPSG)
+            {
+                source = Lambert93.Get(sourceEPSG);
+                target = Lambert93.Get(targetEPSG);
+            }
+
+
+            public Point2d Transform(double x, double y)
+            {
+                var geo = source.Inverse(x, y);
+
+                var result =
+                    target.Forward(
+                        geo.Lon,
+                        geo.Lat);
+
+                return new Point2d(
+                    result.X,
+                    result.Y);
+            }
+
+
+            public Point2d Inverse(double x, double y)
+            {
+                var geo = target.Inverse(x, y);
+
+                var result =
+                    source.Forward(
+                        geo.Lon,
+                        geo.Lat);
+
+                return new Point2d(
+                    result.X,
+                    result.Y);
+            }
+        }
+
+        private static int GetProjectionOption(Editor ed, int drawingEPSG)
+        {
+            PromptKeywordOptions opts = new PromptKeywordOptions("\nLes fichiers LAS Lidar en FRANCE sont en Lambert93. Selectionnez la projection du dessin courrant");
+            opts.Keywords.Add("Aucune");
+            opts.Keywords.Add("Lambert93");
+            opts.Keywords.Add("CC42");
+            opts.Keywords.Add("CC43");
+            opts.Keywords.Add("CC44");
+            opts.Keywords.Add("CC45");
+            opts.Keywords.Add("CC46");
+            opts.Keywords.Add("CC47");
+            opts.Keywords.Add("CC48");
+            opts.Keywords.Add("CC49");
+            opts.Keywords.Add("CC50");
+
+            opts.AllowNone = false;
+
+            PromptResult res = ed.GetKeywords(opts);
+
+            if (res.Status != PromptStatus.OK)
+                return 0;
+
+
+            switch (res.StringResult)
+            {
+                case "Aucune":
+                    return drawingEPSG;
+                case "Lambert93":
+                    return 2154;
+                case "CC42":
+                    return 3942;
+                case "CC43":
+                    return 3943;
+                case "CC44":
+                    return 3944;
+                case "CC45":
+                    return 3945;
+                case "CC46":
+                    return 3946;
+                case "CC47":
+                    return 3947;
+                case "CC48":
+                    return 3948;
+                case "CC49":
+                    return 3949;
+                case "CC50":
+                    return 3950;
+            }
+            return 0;
         }
 
         private static Color GetClassificationColor(byte classification)
@@ -187,10 +308,7 @@ namespace SioForgeCAD.Functions
 
                 default:
                     // Classes utilisateur 19-255
-                    return Color.FromRgb(
-                        100,
-                        100,
-                        255);
+                    return Color.FromRgb(100, 100, 255);
             }
         }
 
@@ -261,14 +379,13 @@ namespace SioForgeCAD.Functions
 
             Generic.WriteMessage("Conversion LAZ -> LAS...");
 
-            ProcessStartInfo psi = new ProcessStartInfo();
-
-            psi.FileName = laszip;
-            psi.Arguments = "-i \"" + lazFile + "\" -o \"" + output + "\"";
-
-
-            psi.CreateNoWindow = true;
-            psi.UseShellExecute = false;
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = laszip,
+                Arguments = "-i \"" + lazFile + "\" -o \"" + output + "\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
 
             using (ProgressDialog dlg = new ProgressDialog("Conversion LAZ → LAS en cours..."))
             {
@@ -289,12 +406,7 @@ namespace SioForgeCAD.Functions
 
                     if (p.ExitCode != 0)
                     {
-                        MessageBox.Show(
-                            "Erreur pendant la conversion LAZ.",
-                            "LAZ",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
-
+                        MessageBox.Show("Erreur pendant la conversion LAZ.", "LAZ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
                     }
                 }
@@ -373,8 +485,6 @@ namespace SioForgeCAD.Functions
                 br.BaseStream.Seek(96, SeekOrigin.Begin);
                 pointOffset = br.ReadUInt32();
 
-
-
                 // Nombre de VLR
                 br.BaseStream.Seek(100, SeekOrigin.Begin);
 
@@ -436,13 +546,9 @@ namespace SioForgeCAD.Functions
                     $"\nNombre points : {pointCount}");
             }
 
-
-
-
             public bool ReadPoint(out LasPoint point)
             {
                 point = null;
-
 
                 if (pointCount == 0)
                 {
@@ -451,15 +557,14 @@ namespace SioForgeCAD.Functions
 
                 long start = br.BaseStream.Position;
 
-
                 LasPoint p = new LasPoint();
                 int rawX = br.ReadInt32();
                 int rawY = br.ReadInt32();
                 int rawZ = br.ReadInt32();
 
-                p.X = rawX * scaleX + offsetX;
-                p.Y = rawY * scaleY + offsetY;
-                p.Z = rawZ * scaleZ + offsetZ;
+                p.X = (rawX * scaleX) + offsetX;
+                p.Y = (rawY * scaleY) + offsetY;
+                p.Z = (rawZ * scaleZ) + offsetZ;
 
                 br.ReadUInt16(); // Intensité
                 br.ReadByte();   // Return Number / Flags
@@ -505,7 +610,6 @@ namespace SioForgeCAD.Functions
                 point = p;
                 return true;
             }
-
 
             public void Dispose()
             {

@@ -5,6 +5,7 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.Helpers;
+using SioForgeCAD.Commun.Mist.Helpers.Projections;
 using SioForgeCAD.Functions;
 using System;
 using System.Diagnostics;
@@ -537,6 +538,7 @@ namespace SioForgeCAD
             Functions.TOGGLELAYERCOMPARE.Execute();
         }
 
+        [CommandMethod("SIOFORGECAD", "LAZIMPORT", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
         public static void LASIMPORT()
         {
@@ -589,9 +591,9 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
+            LambertProjectionTest.Run();
 
-
-            DEBUG.EXPORTPOLYLINEDATA();
+            //DEBUG.EXPORTPOLYLINEDATA();
 
             //const string patha = "PATH.pc3";
             //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(patha);

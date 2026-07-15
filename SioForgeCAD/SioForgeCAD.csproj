@@ -175,6 +175,7 @@
     <Compile Include="Commun\Mist\Helpers\Clipboard.cs" />
     <Compile Include="Commun\Mist\Helpers\Colors.cs" />
     <Compile Include="Commun\Mist\Helpers\Plotting.cs" />
+    <Compile Include="Commun\Mist\Helpers\Projections\Lambert93.cs" />
     <Compile Include="Commun\Mist\Helpers\Registry.cs" />
     <Compile Include="Commun\Mist\Helpers\TextParsers\PC3\Files.cs" />
     <Compile Include="Commun\Mist\UI\CUI.cs" />
