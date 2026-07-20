@@ -37,6 +37,12 @@ namespace SioForgeCAD.Forms
             After
         }
 
+        public enum DuplicateOperation
+        {
+            Move,
+            Duplicate
+        }
+
         #region Propriétés et Variables
 
         public ObservableCollection<LayoutItem> PinnedItems { get; } = new ObservableCollection<LayoutItem>();
@@ -1605,11 +1611,11 @@ namespace SioForgeCAD.Forms
                             menuItem.IsEnabled = !tab.IsModel && ct <= 0;
                             break;
                         case "TabMenuItem_Duplicate":
-                            PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click, tab);
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click, tab, DuplicateOperation.Duplicate);
                             menuItem.IsEnabled = !tab.IsModel;
                             break;
                         case "TabMenuItem_Move":
-                            PopulatePositionSubMenu(menuItem, ContextMenu_Move_Click, tab);
+                            PopulatePositionSubMenu(menuItem, ContextMenu_Move_Click, tab, DuplicateOperation.Move);
                             menuItem.IsEnabled = !tab.IsModel;
                             break;
                     }
@@ -2298,15 +2304,34 @@ namespace SioForgeCAD.Forms
             SyncTabOrderToAutoCAD();
         }
 
-        private void PopulatePositionSubMenu(MenuItem parentMenu, RoutedEventHandler clickHandler, LayoutTab sourceTab)
+        private void PopulatePositionSubMenu(MenuItem parentMenu, RoutedEventHandler clickHandler, LayoutTab sourceTab, DuplicateOperation duplicateOperation)
         {
             parentMenu.Items.Clear();
-
-
 
             if (((sourceTab?.IsInGroup == true) ? sourceTab.ParentGroup : null) is LayoutGroup defaultTarget)
             {
                 // --- Boutons de base contextuels ---
+                if (duplicateOperation == DuplicateOperation.Duplicate)
+                {
+                    var btnBefore = new MenuItem
+                    {
+                        Header = "Juste avant",
+                        Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Before, sourceTab)
+                    };
+                    btnBefore.Click += clickHandler;
+                    parentMenu.Items.Add(btnBefore);
+
+                    var btnAfter = new MenuItem
+                    {
+                        Header = "Juste après",
+                        Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.After, sourceTab)
+                    };
+                    btnAfter.Click += clickHandler;
+                    parentMenu.Items.Add(btnAfter);
+
+                    parentMenu.Items.Add(new Separator());
+                }
+
                 var btnBeginning = new MenuItem
                 {
                     Header = "Au début du groupe",
@@ -2336,6 +2361,28 @@ namespace SioForgeCAD.Forms
             else
             {
                 // --- Boutons de base ---
+
+                if (duplicateOperation == DuplicateOperation.Duplicate && sourceTab != null)
+                {
+                    var btnBefore = new MenuItem
+                    {
+                        Header = "Juste avant",
+                        Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Before, sourceTab)
+                    };
+                    btnBefore.Click += clickHandler;
+                    parentMenu.Items.Add(btnBefore);
+
+                    var btnAfter = new MenuItem
+                    {
+                        Header = "Juste après",
+                        Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.After, sourceTab)
+                    };
+                    btnAfter.Click += clickHandler;
+                    parentMenu.Items.Add(btnAfter);
+
+                    parentMenu.Items.Add(new Separator());
+                }
+
                 var btnBeginning = new MenuItem { Header = "Au début", Tag = new Tuple<DuplicatePosition, LayoutItem>(DuplicatePosition.Beginning, null) };
                 btnBeginning.Click += clickHandler;
                 parentMenu.Items.Add(btnBeginning);

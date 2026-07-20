@@ -8,6 +8,7 @@ using SioForgeCAD.Commun.Mist;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -28,7 +29,7 @@ namespace SioForgeCAD.Functions
                         return;
                     }
 
-                    var selResult = ed.GetSelectionRedraw("Selectionnez des entités à inclure au bloc", true, false);
+                    var selResult = ed.GetSelectionRedraw("Selectionnez des entités à inclure au bloc", false, false);
 
                     if (selResult.Status != PromptStatus.OK)
                     {
@@ -63,13 +64,26 @@ namespace SioForgeCAD.Functions
                 blockRefId = ObjectId.Null;
                 blockRef = null;
 
-                if (!ed.GetBlocks(out ObjectId[] ids, "Selectionnez un bloc", true, true) || ids.Length == 0)
+                if (!ed.GetBlocks(out ObjectId[] ids, "Selectionnez un bloc", true, false) || ids.Length == 0)
                 {
                     return false;
                 }
 
                 blockRefId = ids.First();
-                blockRef = tr.GetObject(blockRefId, OpenMode.ForWrite) as BlockReference;
+                blockRef = tr.GetObject(blockRefId, OpenMode.ForWrite, false, true) as BlockReference;
+
+                if (blockRef.IsEntityOnLockedLayer())
+                {
+                    var WarningDialogResult = MessageBox.Show("Le bloc sélectionné est sur un calque verrouillé. Voullez-vous continuer ?", nameof(BLKADDENTITIES), MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (WarningDialogResult.HasFlag(DialogResult.Yes))
+                    {
+                        Generic.WriteMessage("AVERTISSEMENT : Le bloc sélectionné est sur un calque verrouillé. ");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
 
                 if (blockRef == null)
                 {
