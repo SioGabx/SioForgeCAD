@@ -33,7 +33,7 @@ namespace SioForgeCAD.Functions
                 //BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
                 //BlockTableRecord btr = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
 
-                List<ObjectId> createdEntities = new List<ObjectId>();
+                List<Entity> createdEntities = new List<Entity>();
                 List<Point3d> PointsSet = new List<Point3d>();
                 foreach (var selObj in ObjIds)
                 {
@@ -77,6 +77,8 @@ namespace SioForgeCAD.Functions
 
 
                 var DelaunayTriangles = DelaunayTriangulate.Triangulate(PointsSet);
+
+
                 foreach (var Triangle in DelaunayTriangles)
                 {
                     Point3dCollection pts = new Point3dCollection(new[] { Triangle.Vertex1, Triangle.Vertex2, Triangle.Vertex3 });
@@ -89,7 +91,7 @@ namespace SioForgeCAD.Functions
                             {
                                 foreach (Region reg in Poly3DRegions)
                                 {
-                                    createdEntities.Add(reg.AddToDrawingCurrentTransaction());
+                                    createdEntities.Add(reg);
                                 }
                             }
                         }
@@ -104,12 +106,11 @@ namespace SioForgeCAD.Functions
                 // circle has 32 edges
                 if (createdEntities.Count > 0)
                 {
-                    var BlkDefId = BlockReferences.CreateFromExistingEnts(typeof(SKETCHUPCREATETERRAINFROMPOINTS).Name + "_" + DateTime.Now.Ticks, $"Terrain généré à partir de {Generic.GetExtensionDLLName()} pour SketchUp.", createdEntities.ToObjectIdCollection(), Points.Empty, true, BlockScaling.Uniform, true);
+                    var BlkDefId = BlockReferences.Create(typeof(SKETCHUPCREATETERRAINFROMPOINTS).Name + "_" + DateTime.Now.Ticks, $"Terrain généré à partir de {Generic.GetExtensionDLLName()} pour SketchUp.", createdEntities.ToDBObjectCollection(), Points.Empty, true, BlockScaling.Uniform);
 
                     if (!BlkDefId.IsValid) { tr.Commit(); return; }
                     var BlkRef = new BlockReference(Points.Empty.SCG, BlkDefId);
                     BlkRef.AddToDrawingCurrentTransaction();
-
                     ed.SetImpliedSelection(new ObjectId[1] { BlkRef.ObjectId });
                 }
 

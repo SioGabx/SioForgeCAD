@@ -115,7 +115,7 @@ namespace SioForgeCAD.Functions
                     finalPoints.AddRange(sampledPoints);
                     finalPoints.AddRange(roofPoints);
 
-                    finalPoints.ForEach(pt => pt.AddToDrawing(5));
+                    //finalPoints.ForEach(pt => pt.AddToDrawing(5));
                     var finalTriangles = DelaunayTriangulate.Triangulate(finalPoints, op);
 
                     var segmentsByZ = GenerateContourSegments(finalTriangles, intervalle);

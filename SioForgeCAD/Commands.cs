@@ -538,6 +538,12 @@ namespace SioForgeCAD
             Functions.TOGGLELAYERCOMPARE.Execute();
         }
 
+        [CommandMethod("SIOFORGECAD", "SELECTSPREADPOINTS", CommandFlags.Redraw)]
+        public static void SELECTSPREADPOINTS()
+        {
+            Functions.SELECTSPREADPOINTS.Select();
+        }
+
         [CommandMethod("SIOFORGECAD", "LAZIMPORT", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
         public static void LASIMPORT()
