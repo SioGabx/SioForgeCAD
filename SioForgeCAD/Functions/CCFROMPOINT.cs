@@ -26,28 +26,59 @@ namespace SioForgeCAD.Functions
             {
                 try
                 {
-                    Dictionary<string, string> GetAttributes(double Altitude)
+                    var HeightHintText = new DBText()
                     {
-                        return new Dictionary<string, string>() {
-                        { "ALTIMETRIE", CotePoints.FormatAltitude(Altitude) }
+                        TextString = CotePoints.FormatAltitude(0),
+                        Height = 0.05,
+                        ColorIndex = 8, // gris AutoCAD
+                        Position = Point3d.Origin,
+                        HorizontalMode = TextHorizontalMode.TextCenter,
+                        VerticalMode = TextVerticalMode.TextVerticalMid,
+                        AlignmentPoint = Point3d.Origin
                     };
-                    }
+
+                    //const double MaxDistance = .1;
+                    //const double MaxDistanceSquared = MaxDistance * MaxDistance;
 
                     bool UpdateFunction(Point3d currentPoint, InputPointContext context, GetEntityJig jig)
                     {
+                        double maxDistance;
+
+                        double pdSize = db.Pdsize;
+
+                        if (pdSize > 0)
+                        {
+                            maxDistance = pdSize;
+                        }
+                        else
+                        {
+                            Extents3d extents = ed.GetDisplayAreaExtents();
+                            double viewSize = Math.Max(
+                                extents.MaxPoint.X - extents.MinPoint.X,
+                                extents.MaxPoint.Y - extents.MinPoint.Y);
+
+                            // PDSIZE = 0 -> 5 % de la taille de la vue
+                            // PDSIZE < 0 -> |PDSIZE| %
+                            double percent = pdSize == 0 ? 5.0 : -pdSize;
+
+                            maxDistance = viewSize * percent / 100.0;
+                        }
+
+                        double maxDistanceSquared = maxDistance * maxDistance;
+
                         Point3d nearest = Point3d.Origin;
-                        double best = 1.0 * 1.0;
+                        double best = maxDistanceSquared;
 
                         foreach (var p in Points)
                         {
                             double dx = p.X - currentPoint.X;
-                            if (Math.Abs(dx) > 1.0)
+                            if (Math.Abs(dx) > maxDistance)
                             {
                                 continue;
                             }
 
                             double dy = p.Y - currentPoint.Y;
-                            if (Math.Abs(dy) > 1.0)
+                            if (Math.Abs(dy) > maxDistance)
                             {
                                 continue;
                             }
@@ -61,33 +92,26 @@ namespace SioForgeCAD.Functions
                             }
                         }
 
-
-                        //Debug.WriteLine("Update");
                         if (nearest == Point3d.Origin)
                         {
-                            // Debug.WriteLine("Update null");
-                            return true;
+                            HeightHintText.TextString = "";
                         }
-                        Debug.WriteLine(nearest.Z);
-                        var values = GetAttributes(nearest.Z);
-                        foreach (Entity entity in jig.StaticEntities)
+                        else
                         {
-                            if (entity is BlockReference blkRef)
-                            {
-                                // Position du bloc
-                                blkRef.TransformBy(Matrix3d.Displacement(blkRef.Position.GetVectorTo(nearest)));
-
-                                // Mise à jour des attributs
-                                blkRef.SetAttributeValues(values);
-                            }
+                            HeightHintText.Position = nearest;
+                            HeightHintText.AlignmentPoint = nearest;
+                            HeightHintText.TextString = CotePoints.FormatAltitude(nearest.Z);
                         }
+
                         jig.RegenTransients();
                         return true;
                     }
 
+
+
                     using (var GetEntJig = new GetEntityJig()
                     {
-                        StaticEntities = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), GetAttributes(0)),
+                        StaticEntities = new DBObjectCollection() { HeightHintText },
                         UpdateFunction = UpdateFunction
                     })
                     {
