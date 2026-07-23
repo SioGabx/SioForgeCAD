@@ -9,9 +9,8 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
 {
     public class GetPointJig : DrawJig, IDisposable
     {
+        private bool _disposedValue;
         private Point3d _currentPoint = Point3d.Origin;
-
-
         private string[] _keywords;
         private string _message;
 
@@ -22,7 +21,6 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
         public Func<Points, GetPointJig, bool> UpdateFunction;
 
         public Points BasePoint = Points.Null;
-        private bool disposedValue;
 
         public (Points Point, PromptResult PromptPointResult) GetPoint(string message, params string[] keywords)
         {
@@ -121,14 +119,14 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
                     Entities.DeepDispose();
                     StaticEntities.DeepDispose();
                 }
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

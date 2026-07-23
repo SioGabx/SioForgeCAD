@@ -218,6 +218,7 @@
     <Compile Include="Commun\Mist\AutoCAD\HightLighter.cs" />
     <Compile Include="Commun\Mist\Generic.cs" />
     <Compile Include="Commun\Mist\AutoCAD\Layers.cs" />
+    <Compile Include="Commun\Mist\AutoCAD\DrawJigs\GetEntityJig.cs" />
     <Compile Include="Commun\Mist\Helpers\TextParsers\Json\Parser.cs" />
     <Compile Include="Commun\Mist\Helpers\TextParsers\Json\Writer.cs" />
     <Compile Include="Commun\Mist\Helpers\LongOperationProcess.cs" />

@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using System;
@@ -48,10 +49,56 @@ namespace SioForgeCAD.Commun.Extensions
             //need to be transformed back to World CS
             Point3d cent = ((Point3d)Autodesk.AutoCAD.ApplicationServices.Core.Application.GetSystemVariable("VIEWCTR")).TransformBy(ed.CurrentUserCoordinateSystem);
 
-            Point3d minPoint = new Point3d(cent.X - (w / 2.0), cent.Y - (h / 2.0), 0);
-            Point3d maxPoint = new Point3d(cent.X + (w / 2.0), cent.Y + (h / 2.0), 0);
+            double halfW = w / 2.0;
+            double halfH = h / 2.0;
 
-            return new Extents3d(minPoint, maxPoint);
+            Point3d bottomLeft = new Point3d(cent.X - halfW, cent.Y - halfH, 0);
+            Point3d bottomRight = new Point3d(cent.X + halfW, cent.Y - halfH, 0);
+            Point3d topRight = new Point3d(cent.X + halfW, cent.Y + halfH, 0);
+            Point3d topLeft = new Point3d(cent.X - halfW, cent.Y + halfH, 0);
+
+            var Extend = new Extents3d();
+            Extend.AddPoint(bottomLeft);
+            Extend.AddPoint(bottomRight);
+            Extend.AddPoint(topRight);
+            Extend.AddPoint(topLeft);
+            return Extend;
+        }
+
+        public static Extents3d GetDisplayAreaExtents(this Editor ed)
+        {
+            Document doc = Generic.GetDocument();
+
+            // Taille de la fenêtre AutoCAD en pixels
+            System.Drawing.Rectangle rect =
+                System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+
+            // Coins écran (pixels)
+            Point topLeftScreen = new Point(0, 0);
+            Point bottomRightScreen = new Point(
+                rect.Width,
+                rect.Height
+            );
+
+            // Conversion pixels -> coordonnées dessin
+            Point3d topLeftWorld = ed.PointToWorld(topLeftScreen, 1);
+            Point3d bottomRightWorld = ed.PointToWorld(bottomRightScreen);
+
+            // Création de l'extension
+            Extents3d ext = new Extents3d(
+                new Point3d(
+                    Math.Min(topLeftWorld.X, bottomRightWorld.X),
+                    Math.Min(topLeftWorld.Y, bottomRightWorld.Y),
+                    0
+                ),
+                new Point3d(
+                    Math.Max(topLeftWorld.X, bottomRightWorld.X),
+                    Math.Max(topLeftWorld.Y, bottomRightWorld.Y),
+                    0
+                )
+            );
+
+            return ext;
         }
 
         public static List<Layout> GetAllLayout(this Editor _)

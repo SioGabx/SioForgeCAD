@@ -60,27 +60,29 @@ namespace SioForgeCAD.Functions
                     HightLighter.UnhighlightAll();
 
 
-                    var GetPointJig = new GetPointJig()
+                    using (var GetPointJig = new GetPointJig()
                     {
                         Entities = BlockReferences.InitForTransient(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), ComputeValue(PointCote.Points)),
                         StaticEntities = new DBObjectCollection(),
                         UpdateFunction = UpdateFunction
-                    };
-
-                    string Signe = string.Empty;
-                    if (StepValue > 0)
+                    })
                     {
-                        Signe = "+";
-                    }
-                    var GetPointTransientResult = GetPointJig.GetPoint("Indiquez les emplacements des points cote", $"{Altitude - StepValue}{Signe}{StepValue}");
 
-                    if (GetPointTransientResult.Point == null || GetPointTransientResult.PromptPointResult.Status != PromptStatus.OK)
-                    {
+                        string Signe = string.Empty;
+                        if (StepValue > 0)
+                        {
+                            Signe = "+";
+                        }
+                        var GetPointTransientResult = GetPointJig.GetPoint("Indiquez les emplacements des points cote", $"{Altitude - StepValue}{Signe}{StepValue}");
+
+                        if (GetPointTransientResult.Point == null || GetPointTransientResult.PromptPointResult.Status != PromptStatus.OK)
+                        {
+                            tr.Commit();
+                            return;
+                        }
+                        BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(GetPointTransientResult.Point));
                         tr.Commit();
-                        return;
                     }
-                    BlockReferences.InsertFromNameImportIfNotExist(Settings.BlkAltimetry, nameof(Settings.BlkAltimetry), GetPointTransientResult.Point, ed.GetUSCRotation(AngleUnit.Radians), ComputeValue(GetPointTransientResult.Point));
-                    tr.Commit();
                 }
             }
         }
