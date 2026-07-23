@@ -175,7 +175,7 @@ namespace SioForgeCAD.Commun
                     double dx = t.CentroidX - px;
                     double dy = t.CentroidY - py;
 
-                    if ((dx * dx + dy * dy) < t.RadiusSq)
+                    if (((dx * dx) + (dy * dy)) < t.RadiusSq)
                     {
                         edgeBuffer.Add(new Edge(t.P1, t.P2));
                         edgeBuffer.Add(new Edge(t.P2, t.P3));

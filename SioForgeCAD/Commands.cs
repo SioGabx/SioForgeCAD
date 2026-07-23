@@ -586,7 +586,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-          
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]

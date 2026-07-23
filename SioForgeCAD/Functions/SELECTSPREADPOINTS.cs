@@ -23,7 +23,6 @@ namespace SioForgeCAD.Functions
             public double MaxX;
             public double MinY;
             public double MaxY;
-
             public List<Candidate> Points = new List<Candidate>();
         }
 
@@ -34,8 +33,9 @@ namespace SioForgeCAD.Functions
             var sel = ed.GetSelectionRedraw();
 
             if (sel.Status != PromptStatus.OK)
+            {
                 return;
-
+            }
 
             List<Candidate> pts = new List<Candidate>();
 
@@ -73,37 +73,29 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-
-            PromptIntegerOptions opt =
-                new PromptIntegerOptions("\nNombre d'objets désirés :")
-                {
-                    LowerLimit = 1,
-                    UpperLimit = pts.Count,
-                    DefaultValue = pts.Count / 10
-                };
-
+            PromptIntegerOptions opt = new PromptIntegerOptions("\nNombre d'objets désirés :")
+            {
+                LowerLimit = 1,
+                UpperLimit = pts.Count,
+                DefaultValue = pts.Count
+            };
 
             var number = ed.GetInteger(opt);
-
             if (number.Status != PromptStatus.OK)
+            {
                 return;
-
+            }
 
             int wanted = number.Value;
-
-
             ObjectId[] result = SelectUniformGrid(pts, wanted);
-
-
             ed.SetImpliedSelection(result);
         }
-        private static ObjectId[] SelectUniformGrid(
-    List<Candidate> pts,
-    int wanted)
+        private static ObjectId[] SelectUniformGrid(List<Candidate> pts, int wanted)
         {
             if (wanted >= pts.Count)
+            {
                 return pts.Select(p => p.Id).ToArray();
-
+            }
 
             double minX = pts.Min(p => p.Position.X);
             double maxX = pts.Max(p => p.Position.X);
@@ -120,81 +112,37 @@ namespace SioForgeCAD.Functions
                 Points = pts
             };
 
-
-            List<Cell> cells = new List<Cell>
-    {
-        root
-    };
+            List<Cell> cells = new List<Cell> { root };
 
 
             // Nombre de divisions adaptatives
             while (cells.Count < wanted)
             {
                 // cellule avec le plus de points
-                Cell biggest = cells
-                    .Where(c => c.Points.Count > 1)
-                    .OrderByDescending(c => c.Points.Count)
-                    .FirstOrDefault();
-
+                Cell biggest = cells.Where(c => c.Points.Count > 1).OrderByDescending(c => c.Points.Count).FirstOrDefault();
 
                 if (biggest == null)
+                {
                     break;
-
+                }
 
                 cells.Remove(biggest);
 
+                double midX = (biggest.MinX + biggest.MaxX) / 2.0;
+                double midY = (biggest.MinY + biggest.MaxY) / 2.0;
 
-                double midX =
-                    (biggest.MinX + biggest.MaxX) / 2.0;
-
-                double midY =
-                    (biggest.MinY + biggest.MaxY) / 2.0;
-
-
-                Cell[] children =
-                {
-            new Cell
-            {
-                MinX = biggest.MinX,
-                MaxX = midX,
-                MinY = biggest.MinY,
-                MaxY = midY
-            },
-
-            new Cell
-            {
-                MinX = midX,
-                MaxX = biggest.MaxX,
-                MinY = biggest.MinY,
-                MaxY = midY
-            },
-
-            new Cell
-            {
-                MinX = biggest.MinX,
-                MaxX = midX,
-                MinY = midY,
-                MaxY = biggest.MaxY
-            },
-
-            new Cell
-            {
-                MinX = midX,
-                MaxX = biggest.MaxX,
-                MinY = midY,
-                MaxY = biggest.MaxY
-            }
-        };
-
+                Cell[] children = {
+                    new Cell { MinX = biggest.MinX, MaxX = midX, MinY = biggest.MinY, MaxY = midY },
+                    new Cell { MinX = midX, MaxX = biggest.MaxX, MinY = biggest.MinY, MaxY = midY },
+                    new Cell { MinX = biggest.MinX, MaxX = midX, MinY = midY, MaxY = biggest.MaxY },
+                    new Cell { MinX = midX, MaxX = biggest.MaxX, MinY = midY, MaxY = biggest.MaxY }
+                };
 
                 foreach (Candidate p in biggest.Points)
                 {
                     foreach (Cell child in children)
                     {
-                        if (p.Position.X >= child.MinX &&
-                            p.Position.X <= child.MaxX &&
-                            p.Position.Y >= child.MinY &&
-                            p.Position.Y <= child.MaxY)
+                        if (p.Position.X >= child.MinX && p.Position.X <= child.MaxX && p.Position.Y >= child.MinY && p.Position.Y <= child.MaxY)
                         {
                             child.Points.Add(p);
                             break;
@@ -202,58 +150,44 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-
                 foreach (Cell child in children)
                 {
                     if (child.Points.Count > 0)
+                    {
                         cells.Add(child);
+                    }
                 }
             }
 
-
-
             List<Candidate> result = new List<Candidate>();
-
 
             // Choisir le point le plus central de chaque cellule
             foreach (Cell cell in cells)
             {
-                double cx =
-                    (cell.MinX + cell.MaxX) / 2;
+                double cx = (cell.MinX + cell.MaxX) / 2;
+                double cy = (cell.MinY + cell.MaxY) / 2;
 
-                double cy =
-                    (cell.MinY + cell.MaxY) / 2;
-
-
-                Candidate best =
-                    cell.Points
-                    .OrderBy(p =>
-                    {
-                        double dx = p.Position.X - cx;
-                        double dy = p.Position.Y - cy;
-                        return dx * dx + dy * dy;
-                    })
-                    .First();
-
+                Candidate best = cell.Points.OrderBy(p =>
+                {
+                    double dx = p.Position.X - cx;
+                    double dy = p.Position.Y - cy;
+                    return (dx * dx) + (dy * dy);
+                }).First();
 
                 result.Add(best);
             }
 
-
-
-            // Si on a encore trop peu de cellules
-            // compléter avec des points restants
+            // Si on a encore trop peu de cellules compléter avec des points restants
             if (result.Count < wanted)
             {
-                HashSet<ObjectId> used =
-                    new HashSet<ObjectId>(
-                        result.Select(r => r.Id));
-
+                HashSet<ObjectId> used = new HashSet<ObjectId>(result.Select(r => r.Id));
 
                 foreach (Candidate p in pts)
                 {
                     if (result.Count >= wanted)
+                    {
                         break;
+                    }
 
                     if (!used.Contains(p.Id))
                     {
@@ -263,11 +197,7 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-
-            return result
-                .Take(wanted)
-                .Select(p => p.Id)
-                .ToArray();
+            return result.Take(wanted).Select(p => p.Id).ToArray();
         }
 
     }

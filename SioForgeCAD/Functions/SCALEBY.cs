@@ -24,6 +24,7 @@ namespace SioForgeCAD.Functions
                     AllowZero = false,
                     DefaultValue = LastScaleByRatio,
                 };
+
                 var AskRatioResult = ed.GetDouble(promptDoubleOptions);
                 if (AskRatioResult.Status == PromptStatus.OK)
                 {

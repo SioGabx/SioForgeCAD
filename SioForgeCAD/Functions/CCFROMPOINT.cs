@@ -37,31 +37,13 @@ namespace SioForgeCAD.Functions
                         AlignmentPoint = Point3d.Origin
                     };
 
-                    //const double MaxDistance = .1;
-                    //const double MaxDistanceSquared = MaxDistance * MaxDistance;
 
-                    bool UpdateFunction(Point3d currentPoint, InputPointContext context, GetEntityJig jig)
+                    bool UpdateFunction(Point3d currentPoint, InputPointContext _, GetEntityJig jig)
                     {
-                        double maxDistance;
-
-                        double pdSize = db.Pdsize;
-
-                        if (pdSize > 0)
+                        double maxDistance = .1;//10 cm
+                        if (db.Pdsize > 0)
                         {
-                            maxDistance = pdSize;
-                        }
-                        else
-                        {
-                            Extents3d extents = ed.GetDisplayAreaExtents();
-                            double viewSize = Math.Max(
-                                extents.MaxPoint.X - extents.MinPoint.X,
-                                extents.MaxPoint.Y - extents.MinPoint.Y);
-
-                            // PDSIZE = 0 -> 5 % de la taille de la vue
-                            // PDSIZE < 0 -> |PDSIZE| %
-                            double percent = pdSize == 0 ? 5.0 : -pdSize;
-
-                            maxDistance = viewSize * percent / 100.0;
+                            maxDistance = db.Pdsize;
                         }
 
                         double maxDistanceSquared = maxDistance * maxDistance;
@@ -83,7 +65,7 @@ namespace SioForgeCAD.Functions
                                 continue;
                             }
 
-                            double d2 = dx * dx + dy * dy;
+                            double d2 = (dx * dx) + (dy * dy);
 
                             if (d2 < best)
                             {
@@ -137,9 +119,7 @@ namespace SioForgeCAD.Functions
 
                             foreach (ObjectId id in selection.Value.GetObjectIds())
                             {
-                                DBPoint point = id.GetEntity() as DBPoint;
-
-                                if (point == null)
+                                if (!(id.GetEntity() is DBPoint point))
                                 {
                                     continue;
                                 }
@@ -193,16 +173,12 @@ namespace SioForgeCAD.Functions
         {
             List<Point3d> points = new List<Point3d>();
 
-            Database db = Generic.GetDatabase(); ;
+            Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            using (Transaction tr = db.TransactionManager.StartOpenCloseTransaction())
+            using (OpenCloseTransaction tr = db.TransactionManager.StartOpenCloseTransaction())
             {
-                BlockTableRecord ms =
-                    (BlockTableRecord)tr.GetObject(
-                        SymbolUtilityServices.GetBlockModelSpaceId(db),
-                        OpenMode.ForRead);
-
+                BlockTableRecord ms = (BlockTableRecord)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForRead);
                 Extents3d viewExtents = ed.GetDisplayAreaExtents();
                 viewExtents.Expand(1.2);
                 SelectionFilter filter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "POINT") });
@@ -216,13 +192,14 @@ namespace SioForgeCAD.Functions
 
 
                 PromptSelectionResult res = ed.SelectWindowPolygon(polygonUcs, filter);
-                //viewExtents.GetGeometry().AddToDrawing();
                 if (res.Status == PromptStatus.OK)
                 {
                     foreach (SelectedObject so in res.Value)
                     {
                         if (so == null)
+                        {
                             continue;
+                        }
 
                         DBPoint pt = tr.GetObject(so.ObjectId, OpenMode.ForRead) as DBPoint;
                         points.Add(pt.Position);
@@ -234,20 +211,7 @@ namespace SioForgeCAD.Functions
 
         private static void InsertAltitudeBlock(Point3d position, Editor ed)
         {
-            double altitude = position.Z;
-
-            string altitudeString = CotePoints.FormatAltitude(altitude);
-
-
-            Dictionary<string, string> values =
-                new Dictionary<string, string>()
-                {
-                    {
-                        "ALTIMETRIE",
-                        altitudeString
-                    }
-                };
-
+            Dictionary<string, string> values = new Dictionary<string, string>() { { "ALTIMETRIE", CotePoints.FormatAltitude(position.Z) } };
 
             BlockReferences.InsertFromNameImportIfNotExist(
                 Settings.BlkAltimetry,

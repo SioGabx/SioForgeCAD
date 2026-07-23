@@ -76,10 +76,7 @@ namespace SioForgeCAD.Functions
                 }
 
 
-                var DelaunayTriangles = DelaunayTriangulate.Triangulate(PointsSet);
-
-
-                foreach (var Triangle in DelaunayTriangles)
+                foreach (var Triangle in DelaunayTriangulate.Triangulate(PointsSet))
                 {
                     Point3dCollection pts = new Point3dCollection(new[] { Triangle.Vertex1, Triangle.Vertex2, Triangle.Vertex3 });
                     using (var tempPoly = new Polyline3d(Poly3dType.SimplePoly, pts, true))

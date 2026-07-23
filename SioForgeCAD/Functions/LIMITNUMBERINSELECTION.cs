@@ -21,9 +21,10 @@ namespace SioForgeCAD.Functions
                 {
                     LowerLimit = 1,
                     UpperLimit = SelectedObjIds.Length,
-                    DefaultValue = Convert.ToInt32(Math.Round((double)SelectedObjIds.Length, 0)),
+                    DefaultValue = SelectedObjIds.Length,
                     AllowNone = false
                 };
+
                 PromptIntegerResult PromptNumberToSelect = ed.GetInteger(PromptNumberToSelectOptions);
                 if (PromptNumberToSelect.Status != PromptStatus.OK) { return; }
                 int NumberToSelect = PromptNumberToSelect.Value;

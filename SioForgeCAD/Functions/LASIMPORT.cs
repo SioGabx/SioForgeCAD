@@ -213,8 +213,9 @@ namespace SioForgeCAD.Functions
             PromptResult res = ed.GetKeywords(opts);
 
             if (res.Status != PromptStatus.OK)
+            {
                 return 0;
-
+            }
 
             switch (res.StringResult)
             {
