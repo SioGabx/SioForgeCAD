@@ -81,7 +81,10 @@ namespace SioForgeCAD.Functions
             Legend.Columns[1].Width = 5;
             Legend.Rows[0].Height = 1;
             Legend.Rows[1].Height = 1;
-            Legend.Position = new Point3d(0, 0, 0);
+
+            Legend.Columns[1].Alignment = CellAlignment.MiddleLeft;
+           Legend.Position = new Point3d(0, 0, 0);
+
             Legend.GenerateLayout();
             Legend.RecomputeTableBlock(true);
             Legend.AddToDrawing();

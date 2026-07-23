@@ -1,7 +1,9 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.Helpers;
@@ -574,33 +576,32 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            //Functions.LAZPOINTSIMPORT.Import();
-            //Functions.TEST.OffsetSegmentsCustom();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
         public static void TEST1()
         {
-            Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
         }
 
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
-            var Paths = Directory.GetFiles(@"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters");
-            foreach (var item in Paths)
-            {
-                SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(item);
-            }
+          
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
-            LambertProjectionTest.Run();
+            //LambertProjectionTest.Run();
 
+            //Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
             //DEBUG.EXPORTPOLYLINEDATA();
 
+            //var Paths = Directory.GetFiles(@"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters");
+            //foreach (var item in Paths)
+            //{
+            //    SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(item);
+            //}
             //const string patha = "PATH.pc3";
             //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(patha);
             //const string pathb = "PATH.txt";

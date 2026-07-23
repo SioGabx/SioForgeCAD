@@ -9,41 +9,63 @@ namespace SioForgeCAD.Commun.Extensions
 {
     public static class Extends3dExtensions
     {
-        public static double Left(this Extents3d extends)
+        public static double Left(this Extents3d extents)
         {
-            return extends.MinPoint.X;
+            return Math.Min(extents.MinPoint.X, extents.MaxPoint.X);
         }
-        public static double Right(this Extents3d extends)
+
+        public static double Right(this Extents3d extents)
         {
-            return extends.MaxPoint.X;
+            return Math.Max(extents.MinPoint.X, extents.MaxPoint.X);
         }
-        public static double Top(this Extents3d extends)
+
+        public static double Top(this Extents3d extents)
         {
-            return extends.MaxPoint.Y;
+            return Math.Max(extents.MinPoint.Y, extents.MaxPoint.Y);
         }
-        public static double Bottom(this Extents3d extends)
+
+        public static double Bottom(this Extents3d extents)
         {
-            return extends.MinPoint.Y;
+            return Math.Min(extents.MinPoint.Y, extents.MaxPoint.Y);
         }
-        public static Point3d Middle(this Extents3d extends)
+
+        public static Point3dCollection GetPointsCollection(this Extents3d extents)
         {
-            return new Point3d((extends.Left() + extends.Right()) / 2, (extends.Top() + extends.Bottom()) / 2, 0);
+            return new Point3dCollection()
+    {
+      extents.BottomLeft(),
+    extents.BottomRight(),
+    extents.TopRight(),
+    extents.TopLeft()
+    };
         }
-        public static Point3d TopLeft(this Extents3d extends)
+
+        public static Point3d Middle(this Extents3d extents)
         {
-            return new Point3d(extends.Left(), extends.Top(), 0);
+            return new Point3d(
+                (extents.Left() + extents.Right()) / 2,
+                (extents.Bottom() + extents.Top()) / 2,
+                0);
         }
-        public static Point3d TopRight(this Extents3d extends)
+
+        public static Point3d TopLeft(this Extents3d extents)
         {
-            return new Point3d(extends.MaxPoint.X, extends.Top(), 0);
+            return new Point3d(extents.Left(), extents.Top(), 0);
         }
-        public static Point3d BottomLeft(this Extents3d extends)
+
+        public static Point3d TopRight(this Extents3d extents)
         {
-            return new Point3d(extends.Left(), extends.Bottom(), 0);
+            return new Point3d(extents.Right(), extents.Top(), 0);
         }
-        public static Point3d BottomRight(this Extents3d extends)
+
+        public static Point3d BottomLeft(this Extents3d extents)
         {
-            return new Point3d(extends.Right(), extends.Bottom(), 0);
+            return new Point3d(extents.Left(), extents.Bottom(), 0);
+        }
+
+        public static Point3d BottomRight(this Extents3d extents)
+        {
+            return new Point3d(extents.Right(), extents.Bottom(), 0);
         }
 
         public static Size Size(this Extents3d extends)

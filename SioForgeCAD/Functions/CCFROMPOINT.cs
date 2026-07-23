@@ -179,10 +179,20 @@ namespace SioForgeCAD.Functions
                         SymbolUtilityServices.GetBlockModelSpaceId(db),
                         OpenMode.ForRead);
 
-                Extents3d viewExtents = ed.GetCurrentViewBound(2);
+                Extents3d viewExtents = ed.GetDisplayAreaExtents();
+                viewExtents.Expand(1.2);
                 SelectionFilter filter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.Start, "POINT") });
-                PromptSelectionResult res = ed.SelectCrossingWindow(viewExtents.MinPoint, viewExtents.MaxPoint, filter);
-                viewExtents.GetGeometry().AddToDrawing();
+                var polygonWcs = viewExtents.GetPointsCollection();
+                Matrix3d wcsToUcs = ed.CurrentUserCoordinateSystem.Inverse();
+                Point3dCollection polygonUcs = new Point3dCollection();
+                foreach (Point3d p in polygonWcs)
+                {
+                    polygonUcs.Add(p.TransformBy(wcsToUcs));
+                }
+
+
+                PromptSelectionResult res = ed.SelectWindowPolygon(polygonUcs, filter);
+                //viewExtents.GetGeometry().AddToDrawing();
                 if (res.Status == PromptStatus.OK)
                 {
                     foreach (SelectedObject so in res.Value)

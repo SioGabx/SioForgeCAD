@@ -8,6 +8,11 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return Math.Floor(value / multiple) * multiple;
         }
+        
+        public static int ToInt(this double value)
+        {
+            return (int)Math.Round(value);
+        }
 
         public static bool IsBetween(this double value, double min, double max)
         {

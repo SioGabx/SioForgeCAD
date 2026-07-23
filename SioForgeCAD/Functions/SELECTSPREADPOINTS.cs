@@ -25,8 +25,6 @@ namespace SioForgeCAD.Functions
             public double MaxY;
 
             public List<Candidate> Points = new List<Candidate>();
-
-            public bool IsLeaf;
         }
 
         public static void Select()
