@@ -73,21 +73,12 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            PromptIntegerOptions opt = new PromptIntegerOptions("\nNombre d'objets désirés :")
-            {
-                LowerLimit = 1,
-                UpperLimit = pts.Count,
-                DefaultValue = pts.Count
-            };
-
-            var number = ed.GetInteger(opt);
-            if (number.Status != PromptStatus.OK)
+            int? PromptNumberToSelectResult = ed.GetIntegerInRange("\nNombre d'objets désirés", 0, pts.Count, pts.Count);
+            if (!(PromptNumberToSelectResult is int NumberToSelect))
             {
                 return;
             }
-
-            int wanted = number.Value;
-            ObjectId[] result = SelectUniformGrid(pts, wanted);
+            ObjectId[] result = SelectUniformGrid(pts, NumberToSelect);
             ed.SetImpliedSelection(result);
         }
         private static ObjectId[] SelectUniformGrid(List<Candidate> pts, int wanted)

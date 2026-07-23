@@ -308,6 +308,46 @@ namespace SioForgeCAD.Commun.Extensions
 
         }
 
+        public static int? GetIntegerInRange(this Editor ed, string message, int min, int max, int defaultValue)
+        {
+            while (true)
+            {
+                PromptStringOptions promptStringOptions = new PromptStringOptions(message)
+                {
+                    DefaultValue = defaultValue.ToString(),
+                    UseDefaultValue = true
+                };
+                //We cannot use GetInteger because it is limited to a short between -32768 et 32767.
+                var pr = ed.GetString(promptStringOptions);
+
+                if (pr.Status != PromptStatus.OK)
+                {
+                    return null;
+                }
+
+                string txt = pr.StringResult.Trim();
+
+                if (string.IsNullOrEmpty(txt))
+                {
+                    return defaultValue;
+                }
+
+                if (!int.TryParse(txt, out int value))
+                {
+                    ed.WriteMessage("\nVeuillez saisir un entier.");
+                    continue;
+                }
+
+                if (value < min || value > max)
+                {
+                    ed.WriteMessage($"\nLa valeur doit être comprise entre {min} et {max}.");
+                    continue;
+                }
+
+                return value;
+            }
+        }
+
 
         public static PromptSelectionResult GetCurves(this Editor ed, string Message, bool SingleOnly = true, bool RejectObjectsOnLockedLayers = true)
         {

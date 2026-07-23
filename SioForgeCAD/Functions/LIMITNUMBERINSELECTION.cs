@@ -17,18 +17,14 @@ namespace SioForgeCAD.Functions
             {
                 var SelectedObjIds = Select.Value.GetObjectIds();
 
-                PromptIntegerOptions PromptNumberToSelectOptions = new PromptIntegerOptions("\nCombien d'entités voulez-vous selectionner ?")
-                {
-                    LowerLimit = 1,
-                    UpperLimit = SelectedObjIds.Length,
-                    DefaultValue = SelectedObjIds.Length,
-                    AllowNone = false
-                };
 
-                PromptIntegerResult PromptNumberToSelect = ed.GetInteger(PromptNumberToSelectOptions);
-                if (PromptNumberToSelect.Status != PromptStatus.OK) { return; }
-                int NumberToSelect = PromptNumberToSelect.Value;
+               
+                int? PromptNumberToSelectResult = ed.GetIntegerInRange("\nCombien d'entités voulez-vous selectionner ?", 0, SelectedObjIds.Length, SelectedObjIds.Length);
 
+                if (!(PromptNumberToSelectResult is int NumberToSelect)) {
+                    return;
+                }
+                
                 Random Rand = new Random();
                 ObjectId[] ImpliedSelection = SelectedObjIds.OrderBy(_ => Rand.Next()).Take(NumberToSelect).ToArray();
 
