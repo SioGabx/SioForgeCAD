@@ -9,6 +9,7 @@ using SioForgeCAD.Commun.Drawing;
 using SioForgeCAD.Commun.Mist.Helpers.Projections;
 using SioForgeCAD.Forms;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -26,14 +27,12 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-
             string file = GetFile();
 
             if (string.IsNullOrEmpty(file))
             {
                 return;
             }
-
 
             // Conversion LAZ automatique
             if (Path.GetExtension(file).Equals(".laz", StringComparison.OrdinalIgnoreCase))
@@ -56,36 +55,62 @@ namespace SioForgeCAD.Functions
 
             CoordinateTransform transform = new CoordinateTransform(drawingEPSG, lasEPSG);
 
-            PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
-            if (p1.Status != PromptStatus.OK)
+            // Demande si on veut importer tout le fichier
+            PromptKeywordOptions keywordOpts = new PromptKeywordOptions(
+                "\nImporter toute la LAS ? [Oui/Non] <Non> : ",
+                "Oui Non");
+
+            keywordOpts.AllowNone = true;
+
+            PromptResult keywordResult = ed.GetKeywords(keywordOpts);
+
+            if (keywordResult.Status != PromptStatus.OK &&
+                keywordResult.Status != PromptStatus.None)
             {
                 return;
             }
-            PromptCornerOptions opts = new PromptCornerOptions("\nDeuxième coin : ", p1.Value);
-            PromptPointResult p2 = ed.GetCorner(opts);
 
-            if (p2.Status != PromptStatus.OK)
+            bool importAll = keywordResult.StringResult == "Oui";
+
+            // Limites de sélection
+            double lasXmin = double.MinValue;
+            double lasXmax = double.MaxValue;
+            double lasYmin = double.MinValue;
+            double lasYmax = double.MaxValue;
+
+            // Si on n'importe pas tout, demander la zone
+            if (!importAll)
             {
-                return;
+                PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
+                if (p1.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+                PromptCornerOptions opts = new PromptCornerOptions("\nDeuxième coin : ", p1.Value);
+                PromptPointResult p2 = ed.GetCorner(opts);
+
+                if (p2.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+
+                double xmin = Math.Min(p1.Value.X, p2.Value.X);
+                double xmax = Math.Max(p1.Value.X, p2.Value.X);
+
+                double ymin = Math.Min(p1.Value.Y, p2.Value.Y);
+                double ymax = Math.Max(p1.Value.Y, p2.Value.Y);
+
+                Point2d lasP1 = transform.Inverse(xmin, ymin);
+                Point2d lasP2 = transform.Inverse(xmax, ymax);
+
+                lasXmin = Math.Min(lasP1.X, lasP2.X);
+                lasXmax = Math.Max(lasP1.X, lasP2.X);
+
+                lasYmin = Math.Min(lasP1.Y, lasP2.Y);
+                lasYmax = Math.Max(lasP1.Y, lasP2.Y);
+
+                Debug.WriteLine(lasXmin + " , " + lasYmin);
             }
-
-            double xmin = Math.Min(p1.Value.X, p2.Value.X);
-            double xmax = Math.Max(p1.Value.X, p2.Value.X);
-
-            double ymin = Math.Min(p1.Value.Y, p2.Value.Y);
-            double ymax = Math.Max(p1.Value.Y, p2.Value.Y);
-
-            Point2d lasP1 = transform.Inverse(xmin, ymin);
-            Point2d lasP2 = transform.Inverse(xmax, ymax);
-
-
-            double lasXmin = Math.Min(lasP1.X, lasP2.X);
-            double lasXmax = Math.Max(lasP1.X, lasP2.X);
-
-            double lasYmin = Math.Min(lasP1.Y, lasP2.Y);
-            double lasYmax = Math.Max(lasP1.Y, lasP2.Y);
-
-            Debug.WriteLine(lasXmin + " , " + lasYmin);
 
             int count = 0;
 
@@ -105,9 +130,14 @@ namespace SioForgeCAD.Functions
                                 return;
                             }
 
-                            if (pt.X < lasXmin || pt.X > lasXmax || pt.Y < lasYmin || pt.Y > lasYmax)
+                            // Filtrage uniquement si on n'importe pas tout
+                            if (!importAll)
                             {
-                                continue;
+                                if (pt.X < lasXmin || pt.X > lasXmax ||
+                                    pt.Y < lasYmin || pt.Y > lasYmax)
+                                {
+                                    continue;
+                                }
                             }
 
                             Point2d converted = transform.Transform(pt.X, pt.Y);
@@ -123,15 +153,13 @@ namespace SioForgeCAD.Functions
                                 acPoint.Color = GetClassificationColor(pt.Classification);
                             }
 
-
                             ms.AppendEntity(acPoint);
 
                             tr.AddNewlyCreatedDBObject(acPoint, true);
 
                             count++;
 
-
-                            if (count % 5000 == 0)
+                            if (count % 10000 == 0)
                             {
                                 Generic.WriteMessage($"\n{count} points");
                                 System.Windows.Forms.Application.DoEvents();
@@ -139,11 +167,9 @@ namespace SioForgeCAD.Functions
                         }
                     }
 
-
                     tr.Commit();
                 }
             }
-
 
             Generic.WriteMessage($"\nImport terminé : {count} points");
         }
@@ -312,6 +338,88 @@ namespace SioForgeCAD.Functions
                     return Color.FromRgb(100, 100, 255);
             }
         }
+
+        private static HashSet<byte> GetClassificationFilter()
+        {
+            var classifications = new List<string>
+    {
+        "0 - Jamais classifié",
+        "1 - Non assigné",
+        "2 - Sol",
+        "3 - Végétation basse",
+        "4 - Végétation moyenne",
+        "5 - Végétation haute",
+        "6 - Bâtiment",
+        "7 - Point bas / bruit",
+        "8 - Réservé",
+        "9 - Eau",
+        "10 - Rail",
+        "11 - Route",
+        "12 - Réservé",
+        "13 - Fil / câble de protection",
+        "14 - Conducteur",
+        "15 - Pylône électrique",
+        "16 - Connecteur",
+        "17 - Pont",
+        "18 - Bruit élevé",
+        "19-255 - Classes utilisateur"
+    };
+
+            var dialog = new ComboboxDialog(
+                classifications,
+                "Sélection des types de points",
+                false)
+            {
+                Text = "Sélectionnez les types de points à importer"
+            };
+
+            if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(dialog)
+                != System.Windows.Forms.DialogResult.OK)
+            {
+                return null;
+            }
+
+            List<string> selectedItems = dialog.GetSelectedItems();
+
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                return new HashSet<byte>();
+            }
+
+            var selectedClassifications = new HashSet<byte>();
+
+            foreach (string item in selectedItems)
+            {
+                if (string.IsNullOrEmpty(item))
+                {
+                    continue;
+                }
+
+                // Classes utilisateur 19-255
+                if (item.StartsWith("19-255"))
+                {
+                    // 255 valeurs possibles : on les ajoute toutes
+                    for (int i = 19; i <= 255; i++)
+                    {
+                        selectedClassifications.Add((byte)i);
+                    }
+
+                    continue;
+                }
+
+                // Récupération du numéro de classe
+                int separator = item.IndexOf(' ');
+
+                if (separator > 0 &&
+                    byte.TryParse(item.Substring(0, separator), out byte classification))
+                {
+                    selectedClassifications.Add(classification);
+                }
+            }
+
+            return selectedClassifications;
+        }
+
 
         private static string GetFile()
         {
