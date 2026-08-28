@@ -12,6 +12,7 @@ namespace SioForgeCAD.Functions
 {
     public static class OFFSETMULTIPLE
     {
+        static string LastEntry = null;
         public static void Execute()
         {
             Document doc = Generic.GetDocument();
@@ -26,7 +27,12 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            double[] offsets = GetOffsetsInteractively(ed, Generic.GetSystemVariable("OFFSETDIST").ToString());
+            if (LastEntry is null)
+            {
+                LastEntry = Generic.GetSystemVariable("OFFSETDIST").ToString();
+            }
+
+            double[] offsets = GetOffsetsInteractively(ed, LastEntry);
             if (offsets == null)
             {
                 return;
@@ -105,6 +111,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
+
         private static double[] GetOffsetsInteractively(Editor ed, string OldValue)
         {
             PromptStringOptions strOpts = new PromptStringOptions("\nEntrez les distances d'offset séparées par ';' : ")
@@ -124,11 +131,13 @@ namespace SioForgeCAD.Functions
 
             try
             {
-
-                return strRes.StringResult
+                var value = strRes.StringResult
                     .SplitUserInputByDelimiters(";", ",")
                     .Select(s => Convert.ToDouble(s.Trim()))
                     .ToArray();
+
+                LastEntry = strRes.StringResult;
+                return value;
             }
             catch
             {

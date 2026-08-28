@@ -15,7 +15,7 @@ using System.IO;
 using System.Net;
 using System.Windows.Forms;
 
-
+//
 namespace SioForgeCAD.Functions
 {
     public static class LASIMPORT
@@ -176,8 +176,8 @@ namespace SioForgeCAD.Functions
 
         public class CoordinateTransform
         {
-            private Lambert93 source;
-            private Lambert93 target;
+            private readonly Lambert93 source;
+            private readonly Lambert93 target;
 
 
             public CoordinateTransform(
@@ -339,88 +339,7 @@ namespace SioForgeCAD.Functions
             }
         }
 
-        private static HashSet<byte> GetClassificationFilter()
-        {
-            var classifications = new List<string>
-    {
-        "0 - Jamais classifié",
-        "1 - Non assigné",
-        "2 - Sol",
-        "3 - Végétation basse",
-        "4 - Végétation moyenne",
-        "5 - Végétation haute",
-        "6 - Bâtiment",
-        "7 - Point bas / bruit",
-        "8 - Réservé",
-        "9 - Eau",
-        "10 - Rail",
-        "11 - Route",
-        "12 - Réservé",
-        "13 - Fil / câble de protection",
-        "14 - Conducteur",
-        "15 - Pylône électrique",
-        "16 - Connecteur",
-        "17 - Pont",
-        "18 - Bruit élevé",
-        "19-255 - Classes utilisateur"
-    };
-
-            var dialog = new ComboboxDialog(
-                classifications,
-                "Sélection des types de points",
-                false)
-            {
-                Text = "Sélectionnez les types de points à importer"
-            };
-
-            if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(dialog)
-                != System.Windows.Forms.DialogResult.OK)
-            {
-                return null;
-            }
-
-            List<string> selectedItems = dialog.GetSelectedItems();
-
-            if (selectedItems == null || selectedItems.Count == 0)
-            {
-                return new HashSet<byte>();
-            }
-
-            var selectedClassifications = new HashSet<byte>();
-
-            foreach (string item in selectedItems)
-            {
-                if (string.IsNullOrEmpty(item))
-                {
-                    continue;
-                }
-
-                // Classes utilisateur 19-255
-                if (item.StartsWith("19-255"))
-                {
-                    // 255 valeurs possibles : on les ajoute toutes
-                    for (int i = 19; i <= 255; i++)
-                    {
-                        selectedClassifications.Add((byte)i);
-                    }
-
-                    continue;
-                }
-
-                // Récupération du numéro de classe
-                int separator = item.IndexOf(' ');
-
-                if (separator > 0 &&
-                    byte.TryParse(item.Substring(0, separator), out byte classification))
-                {
-                    selectedClassifications.Add(classification);
-                }
-            }
-
-            return selectedClassifications;
-        }
-
-
+      
         private static string GetFile()
         {
             OpenFileDialog dlg = new OpenFileDialog
@@ -557,17 +476,17 @@ namespace SioForgeCAD.Functions
         */
         public class LasReader : IDisposable
         {
-            private BinaryReader br;
-            private long pointOffset;
-            private ushort pointSize;
-            private byte pointFormat;
+            private readonly BinaryReader br;
+            private readonly long pointOffset;
+            private readonly ushort pointSize;
+            private readonly byte pointFormat;
             private uint pointCount;
-            private double scaleX;
-            private double scaleY;
-            private double scaleZ;
-            private double offsetX;
-            private double offsetY;
-            private double offsetZ;
+            private readonly double scaleX;
+            private readonly double scaleY;
+            private readonly double scaleZ;
+            private readonly double offsetX;
+            private readonly double offsetY;
+            private readonly double offsetZ;
 
 
 
