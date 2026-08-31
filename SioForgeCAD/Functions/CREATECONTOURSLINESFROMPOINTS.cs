@@ -31,9 +31,9 @@ namespace SioForgeCAD.Functions
                 "\nSélectionnez les bâtiments : ",
                 true,
                 false,
-                ed.GetCurvesFilter());
+                ed.GetCurvesFilter(), new string[] { "Ignorer" });
 
-            if (selBuildings.Status != PromptStatus.OK)
+            if (selBuildings.Status != PromptStatus.OK && selBuildings.Status != PromptStatus.Keyword)
             {
                 return;
             }
@@ -88,9 +88,11 @@ namespace SioForgeCAD.Functions
 
                     op.SetTotalOperations(totalOps);
 
-                    var baseTriangles = DelaunayTriangulate.Triangulate(terrainPoints, op);
-
-                    List<Point3d> sampledPoints = new List<Point3d>();
+                    List<DelaunayTriangulate.Triangle3d> baseTriangles = DelaunayTriangulate.Triangulate(terrainPoints, op);
+                    List<DelaunayTriangulate.Triangle3d> finalTriangles;
+                    
+                    if (buildings.Any()) {
+                    List <Point3d> sampledPoints = new List<Point3d>();
                     List<Point3d> roofPoints = new List<Point3d>();
 
                     foreach (Polyline building in buildings)
@@ -116,8 +118,12 @@ namespace SioForgeCAD.Functions
                     finalPoints.AddRange(roofPoints);
 
                     //finalPoints.ForEach(pt => pt.AddToDrawing(5));
-                    var finalTriangles = DelaunayTriangulate.Triangulate(finalPoints, op);
-
+                    finalTriangles = DelaunayTriangulate.Triangulate(finalPoints, op);
+                    }
+                    else
+                    {
+                        finalTriangles = baseTriangles;
+                    }
                     var segmentsByZ = GenerateContourSegments(finalTriangles, intervalle);
 
                     List<Entity> resultEntities = new List<Entity>();

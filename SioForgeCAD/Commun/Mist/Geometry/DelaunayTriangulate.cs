@@ -1,9 +1,5 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
+﻿using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,81 +22,148 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        // Internal helper structure to keep the algorithm fast and clean
-        private struct InternalTriangle
+        /*
+         * Triangle interne.
+         *
+         * N_A = triangle voisin de l'arête BC
+         * N_B = triangle voisin de l'arête CA
+         * N_C = triangle voisin de l'arête AB
+         *
+         * Les triangles supprimés restent dans la liste pour éviter
+         * les RemoveAll() coûteux. Ils sont simplement marqués Removed.
+         */
+        private sealed class InternalTriangle
         {
-            public int P1, P2, P3;
-            public double CentroidX, CentroidY, RadiusSq;
-            public bool IsValid;
+            public int A;
+            public int B;
+            public int C;
+
+            public int N_A = -1;
+            public int N_B = -1;
+            public int N_C = -1;
+
+            public bool Removed;
         }
 
-        private struct Edge
+        /*
+         * Une arête est toujours stockée dans l'ordre min/max.
+         * Cela permet d'utiliser directement Dictionary<Edge, int>.
+         */
+        private struct Edge : IEquatable<Edge>
         {
-            public int P1, P2;
-            public Edge(int p1, int p2) { P1 = p1; P2 = p2; }
+            public readonly int A;
+            public readonly int B;
+
+            public Edge(int a, int b)
+            {
+                if (a < b)
+                {
+                    A = a;
+                    B = b;
+                }
+                else
+                {
+                    A = b;
+                    B = a;
+                }
+            }
+
+            public bool Equals(Edge other)
+            {
+                return A == other.A && B == other.B;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Edge && Equals((Edge)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (A * 397) ^ B;
+                }
+            }
         }
 
+        /// <summary>
+        /// Triangulation de Delaunay 2D.
+        ///
+        /// X/Y servent à la triangulation.
+        /// Z est conservé et restitué dans les Triangle3d.
+        ///
+        /// Version optimisée :
+        /// - suppression des doublons
+        /// - ordre spatial Morton/Z-order
+        /// - triangles adjacents
+        /// - localisation par marche topologique
+        /// - cavity local
+        /// - dictionnaire d'arêtes
+        /// - aucune double boucle sur les arêtes
+        /// - aucun RemoveAll() pendant la triangulation
+        /// </summary>
         public static List<Triangle3d> Triangulate(
             List<Point3d> nuagePoints,
             LongOperationProcess op = null)
         {
-            List<Triangle3d> Resultat = new List<Triangle3d>();
+            List<Triangle3d> resultat = new List<Triangle3d>();
 
-            // Clean up duplicates
-            List<Point3d> PtsFiltres = nuagePoints
-                .GroupBy(p => new { p.X, p.Y })
+            if (nuagePoints == null || nuagePoints.Count < 3)
+            {
+                return resultat;
+            }
+
+            // ------------------------------------------------------------
+            // 1. Suppression des doublons XY
+            // ------------------------------------------------------------
+
+            List<Point3d> ptsFiltres = nuagePoints
+                .GroupBy(p => new PointKey(p.X, p.Y))
                 .Select(g => g.First())
                 .ToList();
 
-            int numberOfPoints = PtsFiltres.Count;
-            if (numberOfPoints < 3)
+            int n = ptsFiltres.Count;
+
+            if (n < 3)
             {
-                return Resultat;
+                return resultat;
             }
 
-            double[] xCoordinates = new double[numberOfPoints + 3];
-            double[] yCoordinates = new double[numberOfPoints + 3];
-            double[] zCoordinates = new double[numberOfPoints + 3];
+            // ------------------------------------------------------------
+            // 2. Stockage compact des coordonnées
+            // ------------------------------------------------------------
 
-            for (int i = 0; i < numberOfPoints; i++)
+            double[] xs = new double[n + 3];
+            double[] ys = new double[n + 3];
+            double[] zs = new double[n + 3];
+
+            double xMin = ptsFiltres[0].X;
+            double xMax = xMin;
+            double yMin = ptsFiltres[0].Y;
+            double yMax = yMin;
+
+            for (int i = 0; i < n; i++)
             {
-                xCoordinates[i] = PtsFiltres[i].X;
-                yCoordinates[i] = PtsFiltres[i].Y;
-                zCoordinates[i] = PtsFiltres[i].Z;
+                Point3d p = ptsFiltres[i];
 
-                if (op != null && (i & 31) == 0)
-                {
-                    op.CheckCanceled();
-                    op.UpdateProgress();
-                }
-            }
+                xs[i] = p.X;
+                ys[i] = p.Y;
+                zs[i] = p.Z;
 
-            double xMin = xCoordinates[0], xMax = xMin;
-            double yMin = yCoordinates[0], yMax = yMin;
+                if (p.X < xMin)
+                    xMin = p.X;
 
-            for (int i = 1; i < numberOfPoints; i++)
-            {
-                if (xCoordinates[i] < xMin)
-                {
-                    xMin = xCoordinates[i];
-                }
+                if (p.X > xMax)
+                    xMax = p.X;
 
-                if (xCoordinates[i] > xMax)
-                {
-                    xMax = xCoordinates[i];
-                }
+                if (p.Y < yMin)
+                    yMin = p.Y;
 
-                if (yCoordinates[i] < yMin)
-                {
-                    yMin = yCoordinates[i];
-                }
+                if (p.Y > yMax)
+                    yMax = p.Y;
 
-                if (yCoordinates[i] > yMax)
-                {
-                    yMax = yCoordinates[i];
-                }
-
-                if (op != null && (i & 63) == 0)
+                if (op != null && (i & 1023) == 0)
                 {
                     op.CheckCanceled();
                 }
@@ -108,186 +171,1118 @@ namespace SioForgeCAD.Commun
 
             double deltaX = xMax - xMin;
             double deltaY = yMax - yMin;
-            double xMid = (xMin + xMax) / 2;
-            double yMid = (yMin + yMax) / 2;
+
             double dMax = Math.Max(deltaX, deltaY);
 
-            int stIdx1 = numberOfPoints;
-            int stIdx2 = numberOfPoints + 1;
-            int stIdx3 = numberOfPoints + 2;
-
-            xCoordinates[stIdx1] = xMid - (20 * dMax);
-            yCoordinates[stIdx1] = yMid - dMax;
-            zCoordinates[stIdx1] = 0;
-
-            xCoordinates[stIdx2] = xMid;
-            yCoordinates[stIdx2] = yMid + (20 * dMax);
-            zCoordinates[stIdx2] = 0;
-
-            xCoordinates[stIdx3] = xMid + (20 * dMax);
-            yCoordinates[stIdx3] = yMid - dMax;
-            zCoordinates[stIdx3] = 0;
-
-            List<InternalTriangle> triangles = new List<InternalTriangle>();
-
-            InternalTriangle superTriangle = new InternalTriangle
+            /*
+             * Tous les points ont le même XY.
+             * Normalement impossible ici puisque les doublons sont filtrés,
+             * mais on protège tout de même le calcul du super triangle.
+             */
+            if (dMax <= 0.0)
             {
-                P1 = stIdx1,
-                P2 = stIdx2,
-                P3 = stIdx3,
-                IsValid = true
-            };
+                return resultat;
+            }
 
-            CalculateCircumscribedCircle(
-                xCoordinates[stIdx1], yCoordinates[stIdx1],
-                xCoordinates[stIdx2], yCoordinates[stIdx2],
-                xCoordinates[stIdx3], yCoordinates[stIdx3],
-                ref superTriangle.CentroidX,
-                ref superTriangle.CentroidY,
-                ref superTriangle.RadiusSq
-            );
+            double xMid = (xMin + xMax) * 0.5;
+            double yMid = (yMin + yMax) * 0.5;
 
-            triangles.Add(superTriangle);
+            // ------------------------------------------------------------
+            // 3. Super triangle
+            //
+            // CCW :
+            //
+            //        ST3
+            //       /  \
+            //      /    \
+            //    ST1----ST2
+            // ------------------------------------------------------------
 
-            List<Edge> edgeBuffer = new List<Edge>();
+            int st1 = n;
+            int st2 = n + 1;
+            int st3 = n + 2;
 
-            for (int i = 0; i < numberOfPoints; i++)
+            xs[st1] = xMid - (20.0 * dMax);
+            ys[st1] = yMid - dMax;
+            zs[st1] = 0.0;
+
+            xs[st2] = xMid + (20.0 * dMax);
+            ys[st2] = yMid - dMax;
+            zs[st2] = 0.0;
+
+            xs[st3] = xMid;
+            ys[st3] = yMid + (20.0 * dMax);
+            zs[st3] = 0.0;
+
+            // ------------------------------------------------------------
+            // 4. Ordre spatial Morton / Z-order
+            //
+            // L'idée est de traiter les points proches géographiquement
+            // les uns après les autres.
+            //
+            // Cela rend la marche dans les triangles beaucoup plus courte
+            // qu'un ordre arbitraire.
+            // ------------------------------------------------------------
+
+            int[] ordre = Enumerable.Range(0, n).ToArray();
+
+            Array.Sort(
+                ordre,
+                delegate (int a, int b)
+                {
+                    ulong ma = MortonCode(
+                        xs[a], ys[a],
+                        xMin, xMax,
+                        yMin, yMax);
+
+                    ulong mb = MortonCode(
+                        xs[b], ys[b],
+                        xMin, xMax,
+                        yMin, yMax);
+
+                    int c = ma.CompareTo(mb);
+
+                    if (c != 0)
+                        return c;
+
+                    return a.CompareTo(b);
+                });
+
+            // ------------------------------------------------------------
+            // 5. Structure de triangulation
+            // ------------------------------------------------------------
+
+            List<InternalTriangle> triangles =
+                new List<InternalTriangle>(Math.Max(16, n * 2));
+
+            /*
+             * edgeMap contient uniquement les arêtes de la triangulation
+             * COURANTE.
+             *
+             * Pour une arête donnée, une seule référence de triangle est
+             * conservée. Le voisin est accessible dans le triangle.
+             */
+            Dictionary<Edge, int> edgeMap =
+                new Dictionary<Edge, int>(Math.Max(16, n * 3));
+
+            int superTriangleId = AddTriangle(
+                st1,
+                st2,
+                st3,
+                triangles,
+                edgeMap,
+                xs,
+                ys);
+
+            if (superTriangleId < 0)
             {
-                double px = xCoordinates[i];
-                double py = yCoordinates[i];
+                return resultat;
+            }
 
-                edgeBuffer.Clear();
+            int lastTriangle = superTriangleId;
 
-                if (op != null && (i & 7) == 0)
+            // ------------------------------------------------------------
+            // 6. Insertion incrémentale
+            // ------------------------------------------------------------
+
+            for (int orderIndex = 0; orderIndex < n; orderIndex++)
+            {
+                int pointIndex = ordre[orderIndex];
+
+                double px = xs[pointIndex];
+                double py = ys[pointIndex];
+
+                if (op != null && (orderIndex & 63) == 0)
                 {
                     op.CheckCanceled();
                     op.UpdateProgress();
                 }
 
-                for (int j = 0; j < triangles.Count; j++)
+                // --------------------------------------------------------
+                // 6.1 Localiser le triangle contenant le point
+                // --------------------------------------------------------
+
+                int containingTriangle = LocateTriangle(
+                    px,
+                    py,
+                    lastTriangle,
+                    triangles,
+                    xs,
+                    ys);
+
+                /*
+                 * Cette situation ne devrait normalement arriver que
+                 * pour des cas dégénérés / problèmes numériques.
+                 *
+                 * On garde un fallback pour privilégier la robustesse.
+                 */
+                if (containingTriangle < 0)
                 {
-                    InternalTriangle t = triangles[j];
-                    if (!t.IsValid)
-                    {
-                        continue;
-                    }
-
-                    double dx = t.CentroidX - px;
-                    double dy = t.CentroidY - py;
-
-                    if (((dx * dx) + (dy * dy)) < t.RadiusSq)
-                    {
-                        edgeBuffer.Add(new Edge(t.P1, t.P2));
-                        edgeBuffer.Add(new Edge(t.P2, t.P3));
-                        edgeBuffer.Add(new Edge(t.P3, t.P1));
-
-                        t.IsValid = false;
-                        triangles[j] = t;
-                    }
+                    containingTriangle = FindAnyContainingTriangle(
+                        px,
+                        py,
+                        triangles,
+                        xs,
+                        ys);
                 }
 
-                for (int j = 0; j < edgeBuffer.Count - 1; j++)
-                {
-                    for (int k = j + 1; k < edgeBuffer.Count; k++)
-                    {
-                        Edge e1 = edgeBuffer[j];
-                        Edge e2 = edgeBuffer[k];
-
-                        if ((e1.P1 == e2.P2 && e1.P2 == e2.P1) ||
-                            (e1.P1 == e2.P1 && e1.P2 == e2.P2))
-                        {
-                            e1.P1 = e1.P2 = -1;
-                            e2.P1 = e2.P2 = -1;
-
-                            edgeBuffer[j] = e1;
-                            edgeBuffer[k] = e2;
-                        }
-                    }
-                }
-
-                for (int j = 0; j < edgeBuffer.Count; j++)
-                {
-                    Edge e = edgeBuffer[j];
-                    if (e.P1 < 0 || e.P2 < 0)
-                    {
-                        continue;
-                    }
-
-                    InternalTriangle newTri = new InternalTriangle
-                    {
-                        P1 = e.P1,
-                        P2 = e.P2,
-                        P3 = i,
-                        IsValid = true
-                    };
-
-                    CalculateCircumscribedCircle(
-                        xCoordinates[e.P1], yCoordinates[e.P1],
-                        xCoordinates[e.P2], yCoordinates[e.P2],
-                        xCoordinates[i], yCoordinates[i],
-                        ref newTri.CentroidX,
-                        ref newTri.CentroidY,
-                        ref newTri.RadiusSq
-                    );
-
-                    triangles.Add(newTri);
-                }
-
-                triangles.RemoveAll(t => !t.IsValid);
-            }
-
-            foreach (var t in triangles)
-            {
-                if (!t.IsValid)
+                if (containingTriangle < 0)
                 {
                     continue;
                 }
 
-                if (t.P1 < numberOfPoints &&
-                    t.P2 < numberOfPoints &&
-                    t.P3 < numberOfPoints)
+                // --------------------------------------------------------
+                // 6.2 Recherche du cavity
+                // --------------------------------------------------------
+
+                List<int> cavity = FindCavity(
+                    containingTriangle,
+                    px,
+                    py,
+                    triangles,
+                    xs,
+                    ys,
+                    op);
+
+                if (cavity.Count == 0)
                 {
-                    Resultat.Add(new Triangle3d(
-                        new Point3d(xCoordinates[t.P1], yCoordinates[t.P1], zCoordinates[t.P1]),
-                        new Point3d(xCoordinates[t.P2], yCoordinates[t.P2], zCoordinates[t.P2]),
-                        new Point3d(xCoordinates[t.P3], yCoordinates[t.P3], zCoordinates[t.P3])
-                    ));
+                    continue;
+                }
+
+                HashSet<int> cavitySet = new HashSet<int>(cavity);
+
+                // --------------------------------------------------------
+                // 6.3 Extraction de la frontière du cavity
+                //
+                // Grâce aux voisins, on n'a plus besoin de comparer
+                // toutes les arêtes entre elles.
+                // --------------------------------------------------------
+
+                List<Edge> boundary =
+                    new List<Edge>(cavity.Count + 2);
+
+                for (int i = 0; i < cavity.Count; i++)
+                {
+                    int triangleId = cavity[i];
+                    InternalTriangle t = triangles[triangleId];
+
+                    // Arête BC, voisin N_A
+                    AddBoundaryIfNeeded(
+                        new Edge(t.B, t.C),
+                        t.N_A,
+                        cavitySet,
+                        boundary);
+
+                    // Arête CA, voisin N_B
+                    AddBoundaryIfNeeded(
+                        new Edge(t.C, t.A),
+                        t.N_B,
+                        cavitySet,
+                        boundary);
+
+                    // Arête AB, voisin N_C
+                    AddBoundaryIfNeeded(
+                        new Edge(t.A, t.B),
+                        t.N_C,
+                        cavitySet,
+                        boundary);
+                }
+
+                // --------------------------------------------------------
+                // 6.4 Retrait logique des triangles du cavity
+                //
+                // On ne fait PAS de RemoveAll().
+                // --------------------------------------------------------
+
+                for (int i = 0; i < cavity.Count; i++)
+                {
+                    int triangleId = cavity[i];
+
+                    InternalTriangle t = triangles[triangleId];
+
+                    t.Removed = true;
+
+                    RemoveCurrentEdge(
+                        new Edge(t.B, t.C),
+                        triangleId,
+                        t.N_A,
+                        cavitySet,
+                        edgeMap);
+
+                    RemoveCurrentEdge(
+                        new Edge(t.C, t.A),
+                        triangleId,
+                        t.N_B,
+                        cavitySet,
+                        edgeMap);
+
+                    RemoveCurrentEdge(
+                        new Edge(t.A, t.B),
+                        triangleId,
+                        t.N_C,
+                        cavitySet,
+                        edgeMap);
+                }
+
+                // --------------------------------------------------------
+                // 6.5 Création des nouveaux triangles
+                // --------------------------------------------------------
+
+                int newLastTriangle = -1;
+
+                for (int i = 0; i < boundary.Count; i++)
+                {
+                    Edge e = boundary[i];
+
+                    int newTriangleId = AddTriangle(
+                        e.A,
+                        e.B,
+                        pointIndex,
+                        triangles,
+                        edgeMap,
+                        xs,
+                        ys);
+
+                    if (newTriangleId >= 0)
+                    {
+                        newLastTriangle = newTriangleId;
+                    }
+                }
+
+                /*
+                 * Pour la prochaine recherche, on démarre depuis un
+                 * triangle créé récemment, donc généralement très proche
+                 * du prochain point dans l'ordre Morton.
+                 */
+                if (newLastTriangle >= 0)
+                {
+                    lastTriangle = newLastTriangle;
                 }
             }
 
+            // ------------------------------------------------------------
+            // 7. Construction du résultat final
+            // ------------------------------------------------------------
+
+            resultat = new List<Triangle3d>();
+
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                InternalTriangle t = triangles[i];
+
+                if (t.Removed)
+                {
+                    continue;
+                }
+
+                /*
+                 * Les triangles contenant un sommet du super triangle
+                 * sont supprimés du résultat final.
+                 */
+                if (t.A >= n ||
+                    t.B >= n ||
+                    t.C >= n)
+                {
+                    continue;
+                }
+
+                /*
+                 * Dernière sécurité contre les triangles dégénérés.
+                 */
+                double area2 = Orientation(
+                    xs[t.A], ys[t.A],
+                    xs[t.B], ys[t.B],
+                    xs[t.C], ys[t.C]);
+
+                if (Math.Abs(area2) <= GeometricEpsilon(
+                    xs[t.A], ys[t.A],
+                    xs[t.B], ys[t.B],
+                    xs[t.C], ys[t.C]))
+                {
+                    continue;
+                }
+
+                resultat.Add(
+                    new Triangle3d(
+                        new Point3d(
+                            xs[t.A],
+                            ys[t.A],
+                            zs[t.A]),
+
+                        new Point3d(
+                            xs[t.B],
+                            ys[t.B],
+                            zs[t.B]),
+
+                        new Point3d(
+                            xs[t.C],
+                            ys[t.C],
+                            zs[t.C])));
+            }
+
             op?.CheckCanceled();
-            return Resultat;
+
+            return resultat;
         }
 
-        private static bool CalculateCircumscribedCircle(double x1, double y1, double x2, double y2, double x3, double y3, ref double xc, ref double yc, ref double r)
-        {
-            const double eps = 1e-6;
-            double m1, m2, mx1, mx2, my1, my2;
+        // ================================================================
+        // TRIANGLE MANAGEMENT
+        // ================================================================
 
-            if (Math.Abs(y2 - y1) < eps)
+        private static int AddTriangle(
+            int a,
+            int b,
+            int c,
+            List<InternalTriangle> triangles,
+            Dictionary<Edge, int> edgeMap,
+            double[] xs,
+            double[] ys)
+        {
+            double orientation = Orientation(
+                xs[a], ys[a],
+                xs[b], ys[b],
+                xs[c], ys[c]);
+
+            /*
+             * Triangle dégénéré.
+             */
+            if (Math.Abs(orientation) <=
+                GeometricEpsilon(
+                    xs[a], ys[a],
+                    xs[b], ys[b],
+                    xs[c], ys[c]))
             {
-                m2 = -(x3 - x2) / (y3 - y2);
-                mx2 = (x2 + x3) / 2; my2 = (y2 + y3) / 2;
-                xc = (x2 + x1) / 2; yc = (m2 * (xc - mx2)) + my2;
+                return -1;
             }
-            else if (Math.Abs(y3 - y2) < eps)
+
+            /*
+             * Tous les triangles sont stockés CCW.
+             */
+            if (orientation < 0.0)
             {
-                m1 = -(x2 - x1) / (y2 - y1);
-                mx1 = (x1 + x2) / 2; my1 = (y1 + y2) / 2;
-                xc = (x3 + x2) / 2; yc = (m1 * (xc - mx1)) + my1;
+                int temp = b;
+                b = c;
+                c = temp;
+            }
+
+            InternalTriangle t = new InternalTriangle
+            {
+                A = a,
+                B = b,
+                C = c,
+                Removed = false
+            };
+
+            int id = triangles.Count;
+
+            triangles.Add(t);
+
+            /*
+             * BC -> N_A
+             * CA -> N_B
+             * AB -> N_C
+             */
+            ConnectEdge(
+                id,
+                new Edge(b, c),
+                NeighborSlot.A,
+                triangles,
+                edgeMap);
+
+            ConnectEdge(
+                id,
+                new Edge(c, a),
+                NeighborSlot.B,
+                triangles,
+                edgeMap);
+
+            ConnectEdge(
+                id,
+                new Edge(a, b),
+                NeighborSlot.C,
+                triangles,
+                edgeMap);
+
+            return id;
+        }
+
+        private enum NeighborSlot
+        {
+            A,
+            B,
+            C
+        }
+
+        private static void ConnectEdge(
+            int triangleId,
+            Edge edge,
+            NeighborSlot slot,
+            List<InternalTriangle> triangles,
+            Dictionary<Edge, int> edgeMap)
+        {
+            int existingTriangle;
+
+            if (edgeMap.TryGetValue(edge, out existingTriangle))
+            {
+                if (existingTriangle >= 0 &&
+                    existingTriangle < triangles.Count &&
+                    existingTriangle != triangleId)
+                {
+                    SetNeighbour(
+                        triangles[triangleId],
+                        slot,
+                        existingTriangle);
+
+                    SetNeighbourForEdge(
+                        triangles[existingTriangle],
+                        edge,
+                        triangleId);
+                }
             }
             else
             {
-                m1 = -(x2 - x1) / (y2 - y1);
-                m2 = -(x3 - x2) / (y3 - y2);
-                if (Math.Abs(m1 - m2) < eps) { xc = x1; yc = y1; return false; }
-                mx1 = (x1 + x2) / 2; mx2 = (x2 + x3) / 2;
-                my1 = (y1 + y2) / 2; my2 = (y2 + y3) / 2;
-                xc = ((m1 * mx1) - (m2 * mx2) + my2 - my1) / (m1 - m2);
-                yc = (m1 * (xc - mx1)) + my1;
+                edgeMap.Add(edge, triangleId);
             }
-            r = ((x2 - xc) * (x2 - xc)) + ((y2 - yc) * (y2 - yc));
-            return true;
+        }
+
+        private static void SetNeighbour(
+            InternalTriangle t,
+            NeighborSlot slot,
+            int neighbour)
+        {
+            switch (slot)
+            {
+                case NeighborSlot.A:
+                    t.N_A = neighbour;
+                    break;
+
+                case NeighborSlot.B:
+                    t.N_B = neighbour;
+                    break;
+
+                case NeighborSlot.C:
+                    t.N_C = neighbour;
+                    break;
+            }
+        }
+
+        private static void SetNeighbourForEdge(
+            InternalTriangle t,
+            Edge edge,
+            int neighbour)
+        {
+            Edge edgeA = new Edge(t.B, t.C);
+
+            if (edge.Equals(edgeA))
+            {
+                t.N_A = neighbour;
+                return;
+            }
+
+            Edge edgeB = new Edge(t.C, t.A);
+
+            if (edge.Equals(edgeB))
+            {
+                t.N_B = neighbour;
+                return;
+            }
+
+            Edge edgeC = new Edge(t.A, t.B);
+
+            if (edge.Equals(edgeC))
+            {
+                t.N_C = neighbour;
+            }
+        }
+
+        private static int GetNeighbour(
+            InternalTriangle t,
+            Edge edge)
+        {
+            if (edge.Equals(new Edge(t.B, t.C)))
+                return t.N_A;
+
+            if (edge.Equals(new Edge(t.C, t.A)))
+                return t.N_B;
+
+            if (edge.Equals(new Edge(t.A, t.B)))
+                return t.N_C;
+
+            return -1;
+        }
+
+        // ================================================================
+        // TRIANGLE LOCATION
+        // ================================================================
+
+        private static int LocateTriangle(
+            double px,
+            double py,
+            int startTriangle,
+            List<InternalTriangle> triangles,
+            double[] xs,
+            double[] ys)
+        {
+            if (startTriangle < 0 ||
+                startTriangle >= triangles.Count)
+            {
+                return -1;
+            }
+
+            int current = startTriangle;
+
+            /*
+             * Sécurité contre une éventuelle boucle topologique.
+             */
+            int maxSteps = Math.Max(32, triangles.Count * 2);
+
+            for (int step = 0; step < maxSteps; step++)
+            {
+                InternalTriangle t = triangles[current];
+
+                if (t.Removed)
+                {
+                    return -1;
+                }
+
+                double cAB = Orientation(
+                    xs[t.A], ys[t.A],
+                    xs[t.B], ys[t.B],
+                    px, py);
+
+                double cBC = Orientation(
+                    xs[t.B], ys[t.B],
+                    xs[t.C], ys[t.C],
+                    px, py);
+
+                double cCA = Orientation(
+                    xs[t.C], ys[t.C],
+                    xs[t.A], ys[t.A],
+                    px, py);
+
+                double eps = PointInsideEpsilon(
+                    xs[t.A], ys[t.A],
+                    xs[t.B], ys[t.B],
+                    xs[t.C], ys[t.C],
+                    px, py);
+
+                /*
+                 * Tous les triangles sont CCW.
+                 * Donc un point intérieur a les trois cross >= 0.
+                 */
+                if (cAB >= -eps &&
+                    cBC >= -eps &&
+                    cCA >= -eps)
+                {
+                    return current;
+                }
+
+                /*
+                 * On traverse l'arête par laquelle le point est sorti.
+                 *
+                 * On choisit le cross le plus négatif.
+                 */
+                double min = cAB;
+                NeighborSlot slot = NeighborSlot.C;
+
+                if (cBC < min)
+                {
+                    min = cBC;
+                    slot = NeighborSlot.A;
+                }
+
+                if (cCA < min)
+                {
+                    min = cCA;
+                    slot = NeighborSlot.B;
+                }
+
+                int next;
+
+                switch (slot)
+                {
+                    case NeighborSlot.A:
+                        next = t.N_A;
+                        break;
+
+                    case NeighborSlot.B:
+                        next = t.N_B;
+                        break;
+
+                    default:
+                        next = t.N_C;
+                        break;
+                }
+
+                if (next < 0 ||
+                    next >= triangles.Count ||
+                    triangles[next].Removed)
+                {
+                    return -1;
+                }
+
+                current = next;
+            }
+
+            return -1;
+        }
+
+        private static int FindAnyContainingTriangle(
+            double px,
+            double py,
+            List<InternalTriangle> triangles,
+            double[] xs,
+            double[] ys)
+        {
+            /*
+             * Fallback uniquement.
+             *
+             * Cette boucle n'est normalement jamais utilisée sur un jeu
+             * de données propre.
+             */
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                InternalTriangle t = triangles[i];
+
+                if (t.Removed)
+                    continue;
+
+                if (PointInsideTriangle(
+                    px,
+                    py,
+                    t,
+                    xs,
+                    ys))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        // ================================================================
+        // CAVITY
+        // ================================================================
+
+        private static List<int> FindCavity(
+            int startTriangle,
+            double px,
+            double py,
+            List<InternalTriangle> triangles,
+            double[] xs,
+            double[] ys,
+            LongOperationProcess op)
+        {
+            List<int> cavity = new List<int>();
+
+            Stack<int> stack = new Stack<int>();
+            HashSet<int> visited = new HashSet<int>();
+
+            stack.Push(startTriangle);
+
+            int iterations = 0;
+
+            while (stack.Count > 0)
+            {
+                int id = stack.Pop();
+
+                if (id < 0 ||
+                    id >= triangles.Count)
+                {
+                    continue;
+                }
+
+                if (!visited.Add(id))
+                {
+                    continue;
+                }
+
+                InternalTriangle t = triangles[id];
+
+                if (t.Removed)
+                {
+                    continue;
+                }
+
+                /*
+                 * Test inCircle.
+                 *
+                 * Tous les triangles sont CCW.
+                 */
+                if (!PointInCircumcircle(
+                    px,
+                    py,
+                    t,
+                    xs,
+                    ys))
+                {
+                    continue;
+                }
+
+                cavity.Add(id);
+
+                if (t.N_A >= 0)
+                    stack.Push(t.N_A);
+
+                if (t.N_B >= 0)
+                    stack.Push(t.N_B);
+
+                if (t.N_C >= 0)
+                    stack.Push(t.N_C);
+
+                iterations++;
+
+                if (op != null &&
+                    (iterations & 255) == 0)
+                {
+                    op.CheckCanceled();
+                }
+            }
+
+            return cavity;
+        }
+
+        // ================================================================
+        // BOUNDARY
+        // ================================================================
+
+        private static void AddBoundaryIfNeeded(
+            Edge edge,
+            int neighbour,
+            HashSet<int> cavity,
+            List<Edge> boundary)
+        {
+            /*
+             * Si le voisin n'est pas dans le cavity,
+             * l'arête est une arête frontière.
+             */
+            if (neighbour < 0 ||
+                !cavity.Contains(neighbour))
+            {
+                boundary.Add(edge);
+            }
+        }
+
+        /*
+         * Met à jour edgeMap lors de la suppression d'un triangle.
+         *
+         * Cas 1 :
+         *
+         *       T supprimé | T extérieur
+         *       ------------|------------
+         *             edge
+         *
+         * L'arête reste dans la triangulation et doit pointer vers
+         * T extérieur.
+         *
+         * Cas 2 :
+         *
+         *       T supprimé | T supprimé
+         *
+         * L'arête disparaît complètement.
+         */
+        private static void RemoveCurrentEdge(
+            Edge edge,
+            int triangleId,
+            int neighbour,
+            HashSet<int> cavity,
+            Dictionary<Edge, int> edgeMap)
+        {
+            int current;
+
+            if (!edgeMap.TryGetValue(edge, out current))
+            {
+                return;
+            }
+
+            if (current != triangleId)
+            {
+                return;
+            }
+
+            if (neighbour >= 0 &&
+                !cavity.Contains(neighbour))
+            {
+                edgeMap[edge] = neighbour;
+            }
+            else
+            {
+                edgeMap.Remove(edge);
+            }
+        }
+
+        // ================================================================
+        // GEOMETRY
+        // ================================================================
+
+        private static bool PointInsideTriangle(
+            double px,
+            double py,
+            InternalTriangle t,
+            double[] xs,
+            double[] ys)
+        {
+            double c1 = Orientation(
+                xs[t.A], ys[t.A],
+                xs[t.B], ys[t.B],
+                px, py);
+
+            double c2 = Orientation(
+                xs[t.B], ys[t.B],
+                xs[t.C], ys[t.C],
+                px, py);
+
+            double c3 = Orientation(
+                xs[t.C], ys[t.C],
+                xs[t.A], ys[t.A],
+                px, py);
+
+            double eps = PointInsideEpsilon(
+                xs[t.A], ys[t.A],
+                xs[t.B], ys[t.B],
+                xs[t.C], ys[t.C],
+                px, py);
+
+            return
+                c1 >= -eps &&
+                c2 >= -eps &&
+                c3 >= -eps;
+        }
+
+        private static double Orientation(
+            double ax,
+            double ay,
+            double bx,
+            double by,
+            double cx,
+            double cy)
+        {
+            return
+                (bx - ax) * (cy - ay) -
+                (by - ay) * (cx - ax);
+        }
+
+        /*
+         * Test du cercle circonscrit.
+         *
+         * Le triangle est CCW.
+         *
+         * Pour un triangle CCW :
+         *
+         * determinant > 0
+         *
+         * signifie que P est à l'intérieur du cercle.
+         */
+        private static bool PointInCircumcircle(
+            double px,
+            double py,
+            InternalTriangle t,
+            double[] xs,
+            double[] ys)
+        {
+            double ax = xs[t.A] - px;
+            double ay = ys[t.A] - py;
+
+            double bx = xs[t.B] - px;
+            double by = ys[t.B] - py;
+
+            double cx = xs[t.C] - px;
+            double cy = ys[t.C] - py;
+
+            double a2 = ax * ax + ay * ay;
+            double b2 = bx * bx + by * by;
+            double c2 = cx * cx + cy * cy;
+
+            double determinant =
+                a2 * (bx * cy - by * cx)
+                - b2 * (ax * cy - ay * cx)
+                + c2 * (ax * by - ay * bx);
+
+            /*
+             * Tolérance relative.
+             *
+             * On veut éviter qu'une très petite erreur numérique fasse
+             * entrer/sortir un point d'un cercle presque tangent.
+             */
+            double scale =
+                a2 + b2 + c2;
+
+            double epsilon =
+                1e-14 * Math.Max(1.0, scale * scale);
+
+            return determinant > epsilon;
+        }
+
+        private static double GeometricEpsilon(
+            double ax,
+            double ay,
+            double bx,
+            double by,
+            double cx,
+            double cy)
+        {
+            double dx1 = bx - ax;
+            double dy1 = by - ay;
+
+            double dx2 = cx - ax;
+            double dy2 = cy - ay;
+
+            double dx3 = cx - bx;
+            double dy3 = cy - by;
+
+            double scale =
+                Math.Max(
+                    dx1 * dx1 + dy1 * dy1,
+                    Math.Max(
+                        dx2 * dx2 + dy2 * dy2,
+                        dx3 * dx3 + dy3 * dy3));
+
+            return 1e-14 * Math.Max(1.0, scale);
+        }
+
+        private static double PointInsideEpsilon(
+            double ax,
+            double ay,
+            double bx,
+            double by,
+            double cx,
+            double cy,
+            double px,
+            double py)
+        {
+            double scale =
+                Math.Max(
+                    Math.Abs(bx - ax) + Math.Abs(by - ay),
+                    Math.Max(
+                        Math.Abs(cx - ax) + Math.Abs(cy - ay),
+                        Math.Abs(px - ax) + Math.Abs(py - ay)));
+
+            return 1e-12 * Math.Max(1.0, scale * scale);
+        }
+
+        // ================================================================
+        // MORTON / Z-ORDER
+        // ================================================================
+
+        /*
+         * Transforme les coordonnées XY en code spatial.
+         *
+         * On utilise 20 bits par dimension :
+         *
+         * XXXXXXXXX...
+         * YYYYYYYYY...
+         *
+         * entrelacés :
+         *
+         * XYXYXYXY...
+         *
+         * Ce n'est pas utilisé pour la géométrie, uniquement pour
+         * améliorer la localité des insertions.
+         */
+        private static ulong MortonCode(
+            double x,
+            double y,
+            double xMin,
+            double xMax,
+            double yMin,
+            double yMax)
+        {
+            const uint maxValue = (1u << 20) - 1u;
+
+            double nx;
+
+            if (xMax > xMin)
+                nx = (x - xMin) / (xMax - xMin);
+            else
+                nx = 0.0;
+
+            double ny;
+
+            if (yMax > yMin)
+                ny = (y - yMin) / (yMax - yMin);
+            else
+                ny = 0.0;
+
+            nx = Clamp01(nx);
+            ny = Clamp01(ny);
+
+            uint ix = (uint)(nx * maxValue);
+            uint iy = (uint)(ny * maxValue);
+
+            return InterleaveBits(ix, iy);
+        }
+
+        private static double Clamp01(double value)
+        {
+            if (value < 0.0)
+                return 0.0;
+
+            if (value > 1.0)
+                return 1.0;
+
+            return value;
+        }
+
+        private static ulong InterleaveBits(
+            uint x,
+            uint y)
+        {
+            ulong result = 0;
+
+            for (int i = 0; i < 20; i++)
+            {
+                result |=
+                    ((ulong)((x >> i) & 1u))
+                    << (2 * i);
+
+                result |=
+                    ((ulong)((y >> i) & 1u))
+                    << (2 * i + 1);
+            }
+
+            return result;
+        }
+
+        // ================================================================
+        // DUPLICATE KEY
+        // ================================================================
+
+        private struct PointKey : IEquatable<PointKey>
+        {
+            private readonly double X;
+            private readonly double Y;
+
+            public PointKey(double x, double y)
+            {
+                X = x;
+                Y = y;
+            }
+
+            public bool Equals(PointKey other)
+            {
+                return X.Equals(other.X) &&
+                       Y.Equals(other.Y);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PointKey &&
+                       Equals((PointKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = 17;
+
+                    hash = hash * 31 + X.GetHashCode();
+                    hash = hash * 31 + Y.GetHashCode();
+
+                    return hash;
+                }
+            }
         }
     }
 }
