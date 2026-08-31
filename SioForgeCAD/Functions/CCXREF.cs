@@ -25,7 +25,7 @@ namespace SioForgeCAD.Functions
                         {
                             continue;
                         }
-                        Points BlockPosition = GetBlockInXref.Points;
+                        Points BlockPosition = new Points(GetBlockInXref.Points.SCG.Flatten());
                         double Altimetrie = GetBlockInXref.Altitude;
                         if (Altimetrie == 0)
                         {

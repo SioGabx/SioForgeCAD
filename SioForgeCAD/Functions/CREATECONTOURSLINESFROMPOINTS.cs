@@ -7,8 +7,10 @@ using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SioForgeCAD.Functions
 {
@@ -352,6 +354,22 @@ namespace SioForgeCAD.Functions
 
             return (alpha * a.Z) + (beta * b.Z) + (gamma * c.Z);
         }
+        private static bool
+        TryParseElevation(
+            string text,
+            out double value)
+        {
+            value = 0.0;
+
+            string normalized =
+                text.Replace(',', '.');
+
+            return double.TryParse(
+                normalized,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out value);
+        }
 
         private static List<Point3d> ReadTopoPoints(Transaction tr, ObjectId[] ids, List<Polyline> buildings)
         {
@@ -372,7 +390,12 @@ namespace SioForgeCAD.Functions
 
                     if (Regex.IsMatch(att.TextString, @"^\d+\.\d{2,}$"))
                     {
-                        double z = Convert.ToDouble(att.TextString);
+                        if (!TryParseElevation(
+                           att.TextString,
+                           out double z))
+                        {
+                            continue;
+                        }
                         pts.Add(new Point3d(br.Position.X, br.Position.Y, z));
                         break;
                     }
@@ -475,9 +498,25 @@ namespace SioForgeCAD.Functions
             return result;
         }
 
-        private static Dictionary<double, List<Tuple<Point3d, Point3d>>> GenerateContourSegments(dynamic triangles, double intervalle)
+        private static Dictionary<
+           double,
+           List<Tuple<Point3d, Point3d>>>
+           GenerateContourSegments(
+               IEnumerable<DelaunayTriangulate.Triangle3d> triangles,
+               double intervalle)
         {
-            Dictionary<double, List<Tuple<Point3d, Point3d>>> result = new Dictionary<double, List<Tuple<Point3d, Point3d>>>();
+            Dictionary<
+                double,
+                List<Tuple<Point3d, Point3d>>> result =
+                new Dictionary<
+                    double,
+                    List<Tuple<Point3d, Point3d>>>();
+
+            if (triangles == null ||
+                intervalle <= EPS)
+            {
+                return result;
+            }
 
             foreach (var tri in triangles)
             {
@@ -485,28 +524,74 @@ namespace SioForgeCAD.Functions
                 Point3d p2 = tri.Vertex2;
                 Point3d p3 = tri.Vertex3;
 
-                double minZ = Math.Min(p1.Z, Math.Min(p2.Z, p3.Z));
-                double maxZ = Math.Max(p1.Z, Math.Max(p2.Z, p3.Z));
-                double startZ = Math.Ceiling(minZ / intervalle) * intervalle;
-                double endZ = Math.Floor(maxZ / intervalle) * intervalle;
+                double minZ =
+                    Math.Min(
+                        p1.Z,
+                        Math.Min(p2.Z, p3.Z));
 
-                for (double z = startZ; z <= endZ + EPS; z += intervalle)
+                double maxZ =
+                    Math.Max(
+                        p1.Z,
+                        Math.Max(p2.Z, p3.Z));
+
+                double startZ =
+                    Math.Ceiling(
+                        (minZ - EPS) /
+                        intervalle) *
+                    intervalle;
+
+                double endZ =
+                    Math.Floor(
+                        (maxZ + EPS) /
+                        intervalle) *
+                    intervalle;
+
+                for (double z = startZ;
+                     z <= endZ + EPS;
+                     z += intervalle)
                 {
-                    double zKey = Math.Round(z, 4);
-                    List<Point3d> intersections = GetTriangleContourIntersections(p1, p2, p3, z);
+                    double zKey =
+                        NormalizeContourZ(z);
 
-                    if (intersections.Count == 2)
+                    List<Point3d> intersections =
+                        GetTriangleContourIntersections(
+                            p1,
+                            p2,
+                            p3,
+                            z);
+
+                    if (intersections.Count != 2)
+                        continue;
+
+                    if (!result.TryGetValue(
+                            zKey,
+                            out List<Tuple<Point3d, Point3d>> segments))
                     {
-                        if (!result.TryGetValue(zKey, out List<Tuple<Point3d, Point3d>> value))
-                        {
-                            value = new List<Tuple<Point3d, Point3d>>();
-                            result[zKey] = value;
-                        }
-                        value.Add(new Tuple<Point3d, Point3d>(intersections[0], intersections[1]));
+                        segments =
+                            new List<
+                                Tuple<Point3d, Point3d>>();
+
+                        result.Add(
+                            zKey,
+                            segments);
                     }
+
+                    segments.Add(
+                        Tuple.Create(
+                            intersections[0],
+                            intersections[1]));
                 }
             }
+
             return result;
+        }
+
+        private static double
+            NormalizeContourZ(double z)
+        {
+            // Évite 4.99999999997 / 5.00000000001
+            // dans les clés du dictionnaire.
+            return Math.Round(z, 6);
         }
 
         private static bool IsContourInsideBuildings(Polyline3d poly, List<Polyline> buildings)
@@ -524,7 +609,7 @@ namespace SioForgeCAD.Functions
             {
                 bool allInside = true;
                 var buildingExtend = building.GetExtents();
-                if (poly.GetExtents().IsFullyInside(buildingExtend))
+                if (!poly.GetExtents().IsFullyInside(buildingExtend))
                 {
                     continue;
                 }
@@ -596,86 +681,119 @@ namespace SioForgeCAD.Functions
             return polylines;
         }
 
-        private static void ExtendChain(List<Point3d> chain, List<Tuple<Point3d, Point3d>> pool, double tol, Vector3d normalPlane)
+        private static void
+             ExtendChain(
+                 List<Point3d> chain,
+                 List<Tuple<Point3d, Point3d>> pool,
+                 double tol,
+                 Vector3d normalPlane)
         {
-            bool added = true;
-            while (added)
+            while (chain.Count >= 2)
             {
-                added = false;
                 int bestIdx = -1;
-                bool reverseSeg = false;
-                double maxAngle = double.MaxValue;
+                bool reverseSegment = false;
 
-                Point3d tail = chain[chain.Count - 1];
+                double bestScore =
+                    double.MaxValue;
 
-                // Si la chaîne n'a qu'un point (ce qui ne devrait pas arriver ici, mais par sécurité)
-                if (chain.Count < 2)
-                {
+                Point3d tail =
+                    chain[chain.Count - 1];
+
+                Point3d previous =
+                    chain[chain.Count - 2];
+
+                Vector3d currentDir =
+                    previous
+                        .GetVectorTo(tail);
+
+                if (currentDir.Length < EPS)
                     break;
-                }
 
-                Point3d previousPoint = chain[chain.Count - 2];
-                Vector3d currentDir = previousPoint.GetVectorTo(tail).GetNormal();
+                currentDir =
+                    currentDir.GetNormal();
 
-                for (int i = 0; i < pool.Count; i++)
+                for (int i = 0;
+                     i < pool.Count;
+                     i++)
                 {
-                    var seg = pool[i];
-                    Vector3d candidateDir = new Vector3d();
-                    bool isCandidate = false;
-                    bool tempReverse = false;
+                    Tuple<Point3d, Point3d> seg =
+                        pool[i];
+
+                    Vector3d candidateDir;
+
+                    bool candidate = false;
+                    bool reverse = false;
 
                     if (seg.Item1.DistanceTo(tail) < tol)
                     {
-                        candidateDir = seg.Item1.GetVectorTo(seg.Item2).GetNormal();
-                        isCandidate = true;
-                        tempReverse = false;
+                        candidateDir =
+                            seg.Item1
+                                .GetVectorTo(seg.Item2)
+                                .GetNormal();
+
+                        candidate = true;
                     }
                     else if (seg.Item2.DistanceTo(tail) < tol)
                     {
-                        candidateDir = seg.Item2.GetVectorTo(seg.Item1).GetNormal();
-                        isCandidate = true;
-                        tempReverse = true;
-                    }
+                        candidateDir =
+                            seg.Item2
+                                .GetVectorTo(seg.Item1)
+                                .GetNormal();
 
-                    if (isCandidate)
+                        candidate = true;
+                        reverse = true;
+                    }
+                    else
                     {
-                        // Évite les demi-tours brutaux
-                        if (candidateDir.DotProduct(currentDir) < -0.999)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        double angle = GetSignedAngle(currentDir, candidateDir, normalPlane);
+                    if (!candidate)
+                        continue;
 
-                        if (angle < maxAngle)
-                        {
-                            maxAngle = angle;
-                            bestIdx = i;
-                            reverseSeg = tempReverse;
-                        }
+                    double dot =
+                        Math.Max(
+                            -1.0,
+                            Math.Min(
+                                1.0,
+                                currentDir.DotProduct(
+                                    candidateDir)));
+
+                    // Évite un demi-tour.
+                    if (dot < -0.999)
+                        continue;
+
+                    // On cherche la plus petite
+                    // déviation géométrique, pas le plus
+                    // petit angle signé.
+                    double angle =
+                        Math.Acos(dot);
+
+                    if (angle < bestScore)
+                    {
+                        bestScore = angle;
+                        bestIdx = i;
+                        reverseSegment = reverse;
                     }
                 }
 
-                if (bestIdx != -1)
-                {
-                    var bestSeg = pool[bestIdx];
-                    pool.RemoveAt(bestIdx);
-                    chain.Add(reverseSeg ? bestSeg.Item1 : bestSeg.Item2);
-                    added = true;
-                }
+                if (bestIdx < 0)
+                    break;
+
+                Tuple<Point3d, Point3d> bestSeg =
+                    pool[bestIdx];
+
+                pool.RemoveAt(bestIdx);
+
+                Point3d nextPoint =
+                    reverseSegment
+                        ? bestSeg.Item1
+                        : bestSeg.Item2;
+
+                chain.Add(nextPoint);
             }
         }
 
-        private static double GetSignedAngle(Vector3d v1, Vector3d v2, Vector3d normal)
-        {
-            Vector3d v1Proj = v1 - (normal * v1.DotProduct(normal));
-            Vector3d v2Proj = v2 - (normal * v2.DotProduct(normal));
-
-            double dot = v1Proj.GetNormal().DotProduct(v2Proj.GetNormal());
-            Vector3d cross = v1Proj.CrossProduct(v2Proj);
-
-            return Math.Atan2(cross.DotProduct(normal), dot);
-        }
 
         private static List<Point3d> GetTriangleContourIntersections(Point3d p1, Point3d p2, Point3d p3, double z)
         {
@@ -724,5 +842,9 @@ namespace SioForgeCAD.Functions
 
             return pts;
         }
+
+
+
+
     }
 }

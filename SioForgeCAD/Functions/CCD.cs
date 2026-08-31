@@ -31,7 +31,7 @@ namespace SioForgeCAD.Functions
             Dictionary<string, string> ComputeValue(Points NewPoint)
             {
                 double OriginAltitude = OriginCotePoint.Altitude;
-                double DistanceFromOrigin = OriginCotePoint.Points.DistanceTo(NewPoint);
+                double DistanceFromOrigin = OriginCotePoint.Points.Flatten().DistanceTo(NewPoint.Flatten());
                 double NewAltitude = Arythmetique.ComputePointFromSlopePourcentage(OriginAltitude, DistanceFromOrigin, SlopePourcentage);
                 return new Dictionary<string, string>() {
                 {"ALTIMETRIE", CotePoints.FormatAltitude(NewAltitude) },
