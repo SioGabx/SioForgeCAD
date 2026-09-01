@@ -8,7 +8,7 @@ namespace SioForgeCAD.Commun
 {
     public static class DelaunayTriangulate
     {
-        public struct Triangle3d
+        public readonly struct Triangle3d
         {
             public Point3d Vertex1 { get; }
             public Point3d Vertex2 { get; }
@@ -49,7 +49,7 @@ namespace SioForgeCAD.Commun
          * Une arête est toujours stockée dans l'ordre min/max.
          * Cela permet d'utiliser directement Dictionary<Edge, int>.
          */
-        private struct Edge : IEquatable<Edge>
+        private readonly struct Edge : IEquatable<Edge>
         {
             public readonly int A;
             public readonly int B;
@@ -75,7 +75,7 @@ namespace SioForgeCAD.Commun
 
             public override bool Equals(object obj)
             {
-                return obj is Edge && Equals((Edge)obj);
+                return obj is Edge edge && Equals(edge);
             }
 
             public override int GetHashCode()
@@ -118,10 +118,7 @@ namespace SioForgeCAD.Commun
             // 1. Suppression des doublons XY
             // ------------------------------------------------------------
 
-            List<Point3d> ptsFiltres = nuagePoints
-                .GroupBy(p => new PointKey(p.X, p.Y))
-                .Select(g => g.First())
-                .ToList();
+            List<Point3d> ptsFiltres = nuagePoints.GroupBy(p => new PointKey(p.X, p.Y)).Select(g => g.First()).ToList();
 
             int n = ptsFiltres.Count;
 
@@ -152,16 +149,24 @@ namespace SioForgeCAD.Commun
                 zs[i] = p.Z;
 
                 if (p.X < xMin)
+                {
                     xMin = p.X;
+                }
 
                 if (p.X > xMax)
+                {
                     xMax = p.X;
+                }
 
                 if (p.Y < yMin)
+                {
                     yMin = p.Y;
+                }
 
                 if (p.Y > yMax)
+                {
                     yMax = p.Y;
+                }
 
                 if (op != null && (i & 1023) == 0)
                 {
@@ -226,34 +231,19 @@ namespace SioForgeCAD.Commun
 
             int[] ordre = Enumerable.Range(0, n).ToArray();
 
-            Array.Sort(
-                ordre,
-                delegate (int a, int b)
+            Array.Sort(ordre, (a, b) =>
                 {
-                    ulong ma = MortonCode(
-                        xs[a], ys[a],
-                        xMin, xMax,
-                        yMin, yMax);
-
-                    ulong mb = MortonCode(
-                        xs[b], ys[b],
-                        xMin, xMax,
-                        yMin, yMax);
-
+                    ulong ma = MortonCode(xs[a], ys[a], xMin, xMax, yMin, yMax);
+                    ulong mb = MortonCode(xs[b], ys[b], xMin, xMax, yMin, yMax);
                     int c = ma.CompareTo(mb);
-
-                    if (c != 0)
-                        return c;
-
-                    return a.CompareTo(b);
+                    return c != 0 ? c : a.CompareTo(b);
                 });
 
             // ------------------------------------------------------------
             // 5. Structure de triangulation
             // ------------------------------------------------------------
 
-            List<InternalTriangle> triangles =
-                new List<InternalTriangle>(Math.Max(16, n * 2));
+            List<InternalTriangle> triangles = new List<InternalTriangle>(Math.Max(16, n * 2));
 
             /*
              * edgeMap contient uniquement les arêtes de la triangulation
@@ -262,17 +252,8 @@ namespace SioForgeCAD.Commun
              * Pour une arête donnée, une seule référence de triangle est
              * conservée. Le voisin est accessible dans le triangle.
              */
-            Dictionary<Edge, int> edgeMap =
-                new Dictionary<Edge, int>(Math.Max(16, n * 3));
-
-            int superTriangleId = AddTriangle(
-                st1,
-                st2,
-                st3,
-                triangles,
-                edgeMap,
-                xs,
-                ys);
+            Dictionary<Edge, int> edgeMap = new Dictionary<Edge, int>(Math.Max(16, n * 3));
+            int superTriangleId = AddTriangle(st1, st2, st3, triangles, edgeMap, xs, ys);
 
             if (superTriangleId < 0)
             {
@@ -301,14 +282,7 @@ namespace SioForgeCAD.Commun
                 // --------------------------------------------------------
                 // 6.1 Localiser le triangle contenant le point
                 // --------------------------------------------------------
-
-                int containingTriangle = LocateTriangle(
-                    px,
-                    py,
-                    lastTriangle,
-                    triangles,
-                    xs,
-                    ys);
+                int containingTriangle = LocateTriangle(px, py, lastTriangle, triangles, xs, ys);
 
                 /*
                  * Cette situation ne devrait normalement arriver que
@@ -318,12 +292,7 @@ namespace SioForgeCAD.Commun
                  */
                 if (containingTriangle < 0)
                 {
-                    containingTriangle = FindAnyContainingTriangle(
-                        px,
-                        py,
-                        triangles,
-                        xs,
-                        ys);
+                    containingTriangle = FindAnyContainingTriangle(px, py, triangles, xs, ys);
                 }
 
                 if (containingTriangle < 0)
@@ -335,14 +304,7 @@ namespace SioForgeCAD.Commun
                 // 6.2 Recherche du cavity
                 // --------------------------------------------------------
 
-                List<int> cavity = FindCavity(
-                    containingTriangle,
-                    px,
-                    py,
-                    triangles,
-                    xs,
-                    ys,
-                    op);
+                List<int> cavity = FindCavity(containingTriangle, px, py, triangles, xs, ys, op);
 
                 if (cavity.Count == 0)
                 {
@@ -367,25 +329,13 @@ namespace SioForgeCAD.Commun
                     InternalTriangle t = triangles[triangleId];
 
                     // Arête BC, voisin N_A
-                    AddBoundaryIfNeeded(
-                        new Edge(t.B, t.C),
-                        t.N_A,
-                        cavitySet,
-                        boundary);
+                    AddBoundaryIfNeeded(new Edge(t.B, t.C), t.N_A, cavitySet, boundary);
 
                     // Arête CA, voisin N_B
-                    AddBoundaryIfNeeded(
-                        new Edge(t.C, t.A),
-                        t.N_B,
-                        cavitySet,
-                        boundary);
+                    AddBoundaryIfNeeded(new Edge(t.C, t.A), t.N_B, cavitySet, boundary);
 
                     // Arête AB, voisin N_C
-                    AddBoundaryIfNeeded(
-                        new Edge(t.A, t.B),
-                        t.N_C,
-                        cavitySet,
-                        boundary);
+                    AddBoundaryIfNeeded(new Edge(t.A, t.B), t.N_C, cavitySet, boundary);
                 }
 
                 // --------------------------------------------------------
@@ -402,26 +352,11 @@ namespace SioForgeCAD.Commun
 
                     t.Removed = true;
 
-                    RemoveCurrentEdge(
-                        new Edge(t.B, t.C),
-                        triangleId,
-                        t.N_A,
-                        cavitySet,
-                        edgeMap);
+                    RemoveCurrentEdge(new Edge(t.B, t.C), triangleId, t.N_A, cavitySet, edgeMap);
 
-                    RemoveCurrentEdge(
-                        new Edge(t.C, t.A),
-                        triangleId,
-                        t.N_B,
-                        cavitySet,
-                        edgeMap);
+                    RemoveCurrentEdge(new Edge(t.C, t.A), triangleId, t.N_B, cavitySet, edgeMap);
 
-                    RemoveCurrentEdge(
-                        new Edge(t.A, t.B),
-                        triangleId,
-                        t.N_C,
-                        cavitySet,
-                        edgeMap);
+                    RemoveCurrentEdge(new Edge(t.A, t.B), triangleId, t.N_C, cavitySet, edgeMap);
                 }
 
                 // --------------------------------------------------------
@@ -434,14 +369,7 @@ namespace SioForgeCAD.Commun
                 {
                     Edge e = boundary[i];
 
-                    int newTriangleId = AddTriangle(
-                        e.A,
-                        e.B,
-                        pointIndex,
-                        triangles,
-                        edgeMap,
-                        xs,
-                        ys);
+                    int newTriangleId = AddTriangle(e.A, e.B, pointIndex, triangles, edgeMap, xs, ys);
 
                     if (newTriangleId >= 0)
                     {
@@ -479,9 +407,7 @@ namespace SioForgeCAD.Commun
                  * Les triangles contenant un sommet du super triangle
                  * sont supprimés du résultat final.
                  */
-                if (t.A >= n ||
-                    t.B >= n ||
-                    t.C >= n)
+                if (t.A >= n || t.B >= n || t.C >= n)
                 {
                     continue;
                 }
@@ -489,35 +415,14 @@ namespace SioForgeCAD.Commun
                 /*
                  * Dernière sécurité contre les triangles dégénérés.
                  */
-                double area2 = Orientation(
-                    xs[t.A], ys[t.A],
-                    xs[t.B], ys[t.B],
-                    xs[t.C], ys[t.C]);
+                double area2 = Orientation(xs[t.A], ys[t.A], xs[t.B], ys[t.B], xs[t.C], ys[t.C]);
 
-                if (Math.Abs(area2) <= GeometricEpsilon(
-                    xs[t.A], ys[t.A],
-                    xs[t.B], ys[t.B],
-                    xs[t.C], ys[t.C]))
+                if (Math.Abs(area2) <= GeometricEpsilon(xs[t.A], ys[t.A], xs[t.B], ys[t.B], xs[t.C], ys[t.C]))
                 {
                     continue;
                 }
 
-                resultat.Add(
-                    new Triangle3d(
-                        new Point3d(
-                            xs[t.A],
-                            ys[t.A],
-                            zs[t.A]),
-
-                        new Point3d(
-                            xs[t.B],
-                            ys[t.B],
-                            zs[t.B]),
-
-                        new Point3d(
-                            xs[t.C],
-                            ys[t.C],
-                            zs[t.C])));
+                resultat.Add(new Triangle3d(new Point3d(xs[t.A], ys[t.A], zs[t.A]), new Point3d(xs[t.B], ys[t.B], zs[t.B]), new Point3d(xs[t.C], ys[t.C], zs[t.C])));
             }
 
             op?.CheckCanceled();
@@ -529,28 +434,14 @@ namespace SioForgeCAD.Commun
         // TRIANGLE MANAGEMENT
         // ================================================================
 
-        private static int AddTriangle(
-            int a,
-            int b,
-            int c,
-            List<InternalTriangle> triangles,
-            Dictionary<Edge, int> edgeMap,
-            double[] xs,
-            double[] ys)
+        private static int AddTriangle(int a, int b, int c, List<InternalTriangle> triangles, Dictionary<Edge, int> edgeMap, double[] xs, double[] ys)
         {
-            double orientation = Orientation(
-                xs[a], ys[a],
-                xs[b], ys[b],
-                xs[c], ys[c]);
+            double orientation = Orientation(xs[a], ys[a], xs[b], ys[b], xs[c], ys[c]);
 
             /*
              * Triangle dégénéré.
              */
-            if (Math.Abs(orientation) <=
-                GeometricEpsilon(
-                    xs[a], ys[a],
-                    xs[b], ys[b],
-                    xs[c], ys[c]))
+            if (Math.Abs(orientation) <= GeometricEpsilon(xs[a], ys[a], xs[b], ys[b], xs[c], ys[c]))
             {
                 return -1;
             }
@@ -582,26 +473,9 @@ namespace SioForgeCAD.Commun
              * CA -> N_B
              * AB -> N_C
              */
-            ConnectEdge(
-                id,
-                new Edge(b, c),
-                NeighborSlot.A,
-                triangles,
-                edgeMap);
-
-            ConnectEdge(
-                id,
-                new Edge(c, a),
-                NeighborSlot.B,
-                triangles,
-                edgeMap);
-
-            ConnectEdge(
-                id,
-                new Edge(a, b),
-                NeighborSlot.C,
-                triangles,
-                edgeMap);
+            ConnectEdge(id, new Edge(b, c), NeighborSlot.A, triangles, edgeMap);
+            ConnectEdge(id, new Edge(c, a), NeighborSlot.B, triangles, edgeMap);
+            ConnectEdge(id, new Edge(a, b), NeighborSlot.C, triangles, edgeMap);
 
             return id;
         }
@@ -613,30 +487,16 @@ namespace SioForgeCAD.Commun
             C
         }
 
-        private static void ConnectEdge(
-            int triangleId,
-            Edge edge,
-            NeighborSlot slot,
-            List<InternalTriangle> triangles,
-            Dictionary<Edge, int> edgeMap)
+        private static void ConnectEdge(int triangleId, Edge edge, NeighborSlot slot, List<InternalTriangle> triangles, Dictionary<Edge, int> edgeMap)
         {
-            int existingTriangle;
 
-            if (edgeMap.TryGetValue(edge, out existingTriangle))
+            if (edgeMap.TryGetValue(edge, out int existingTriangle))
             {
-                if (existingTriangle >= 0 &&
-                    existingTriangle < triangles.Count &&
-                    existingTriangle != triangleId)
+                if (existingTriangle >= 0 && existingTriangle < triangles.Count && existingTriangle != triangleId)
                 {
-                    SetNeighbour(
-                        triangles[triangleId],
-                        slot,
-                        existingTriangle);
+                    SetNeighbour(triangles[triangleId], slot, existingTriangle);
 
-                    SetNeighbourForEdge(
-                        triangles[existingTriangle],
-                        edge,
-                        triangleId);
+                    SetNeighbourForEdge(triangles[existingTriangle], edge, triangleId);
                 }
             }
             else
@@ -695,21 +555,6 @@ namespace SioForgeCAD.Commun
             }
         }
 
-        private static int GetNeighbour(
-            InternalTriangle t,
-            Edge edge)
-        {
-            if (edge.Equals(new Edge(t.B, t.C)))
-                return t.N_A;
-
-            if (edge.Equals(new Edge(t.C, t.A)))
-                return t.N_B;
-
-            if (edge.Equals(new Edge(t.A, t.B)))
-                return t.N_C;
-
-            return -1;
-        }
 
         // ================================================================
         // TRIANGLE LOCATION
@@ -845,7 +690,9 @@ namespace SioForgeCAD.Commun
                 InternalTriangle t = triangles[i];
 
                 if (t.Removed)
+                {
                     continue;
+                }
 
                 if (PointInsideTriangle(
                     px,
@@ -923,13 +770,19 @@ namespace SioForgeCAD.Commun
                 cavity.Add(id);
 
                 if (t.N_A >= 0)
+                {
                     stack.Push(t.N_A);
+                }
 
                 if (t.N_B >= 0)
+                {
                     stack.Push(t.N_B);
+                }
 
                 if (t.N_C >= 0)
+                {
                     stack.Push(t.N_C);
+                }
 
                 iterations++;
 
@@ -982,16 +835,10 @@ namespace SioForgeCAD.Commun
          *
          * L'arête disparaît complètement.
          */
-        private static void RemoveCurrentEdge(
-            Edge edge,
-            int triangleId,
-            int neighbour,
-            HashSet<int> cavity,
-            Dictionary<Edge, int> edgeMap)
+        private static void RemoveCurrentEdge( Edge edge, int triangleId, int neighbour, HashSet<int> cavity, Dictionary<Edge, int> edgeMap)
         {
-            int current;
 
-            if (!edgeMap.TryGetValue(edge, out current))
+            if (!edgeMap.TryGetValue(edge, out int current))
             {
                 return;
             }
@@ -1059,8 +906,8 @@ namespace SioForgeCAD.Commun
             double cy)
         {
             return
-                (bx - ax) * (cy - ay) -
-                (by - ay) * (cx - ax);
+                ((bx - ax) * (cy - ay)) -
+                ((by - ay) * (cx - ax));
         }
 
         /*
@@ -1090,14 +937,14 @@ namespace SioForgeCAD.Commun
             double cx = xs[t.C] - px;
             double cy = ys[t.C] - py;
 
-            double a2 = ax * ax + ay * ay;
-            double b2 = bx * bx + by * by;
-            double c2 = cx * cx + cy * cy;
+            double a2 = (ax * ax) + (ay * ay);
+            double b2 = (bx * bx) + (by * by);
+            double c2 = (cx * cx) + (cy * cy);
 
             double determinant =
-                a2 * (bx * cy - by * cx)
-                - b2 * (ax * cy - ay * cx)
-                + c2 * (ax * by - ay * bx);
+                (a2 * ((bx * cy) - (by * cx)))
+                - (b2 * ((ax * cy) - (ay * cx)))
+                + (c2 * ((ax * by) - (ay * bx)));
 
             /*
              * Tolérance relative.
@@ -1133,10 +980,10 @@ namespace SioForgeCAD.Commun
 
             double scale =
                 Math.Max(
-                    dx1 * dx1 + dy1 * dy1,
+                    (dx1 * dx1) + (dy1 * dy1),
                     Math.Max(
-                        dx2 * dx2 + dy2 * dy2,
-                        dx3 * dx3 + dy3 * dy3));
+                        (dx2 * dx2) + (dy2 * dy2),
+                        (dx3 * dx3) + (dy3 * dy3)));
 
             return 1e-14 * Math.Max(1.0, scale);
         }
@@ -1193,16 +1040,24 @@ namespace SioForgeCAD.Commun
             double nx;
 
             if (xMax > xMin)
+            {
                 nx = (x - xMin) / (xMax - xMin);
+            }
             else
+            {
                 nx = 0.0;
+            }
 
             double ny;
 
             if (yMax > yMin)
+            {
                 ny = (y - yMin) / (yMax - yMin);
+            }
             else
+            {
                 ny = 0.0;
+            }
 
             nx = Clamp01(nx);
             ny = Clamp01(ny);
@@ -1216,10 +1071,14 @@ namespace SioForgeCAD.Commun
         private static double Clamp01(double value)
         {
             if (value < 0.0)
+            {
                 return 0.0;
+            }
 
             if (value > 1.0)
+            {
                 return 1.0;
+            }
 
             return value;
         }
@@ -1238,7 +1097,7 @@ namespace SioForgeCAD.Commun
 
                 result |=
                     ((ulong)((y >> i) & 1u))
-                    << (2 * i + 1);
+                    << ((2 * i) + 1);
             }
 
             return result;
@@ -1248,7 +1107,7 @@ namespace SioForgeCAD.Commun
         // DUPLICATE KEY
         // ================================================================
 
-        private struct PointKey : IEquatable<PointKey>
+        private readonly struct PointKey : IEquatable<PointKey>
         {
             private readonly double X;
             private readonly double Y;
@@ -1261,14 +1120,12 @@ namespace SioForgeCAD.Commun
 
             public bool Equals(PointKey other)
             {
-                return X.Equals(other.X) &&
-                       Y.Equals(other.Y);
+                return X.Equals(other.X) && Y.Equals(other.Y);
             }
 
             public override bool Equals(object obj)
             {
-                return obj is PointKey &&
-                       Equals((PointKey)obj);
+                return obj is PointKey pointKey && Equals(pointKey);
             }
 
             public override int GetHashCode()
@@ -1277,8 +1134,8 @@ namespace SioForgeCAD.Commun
                 {
                     int hash = 17;
 
-                    hash = hash * 31 + X.GetHashCode();
-                    hash = hash * 31 + Y.GetHashCode();
+                    hash = (hash * 31) + X.GetHashCode();
+                    hash = (hash * 31) + Y.GetHashCode();
 
                     return hash;
                 }

@@ -586,6 +586,7 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
+            Functions.TEST2.P3D2DTrim();
         }
 
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
