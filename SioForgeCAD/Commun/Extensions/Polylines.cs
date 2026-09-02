@@ -671,6 +671,34 @@ namespace SioForgeCAD.Commun.Extensions
             }
         }
 
+        public static double GetElevation(this Polyline3d poly3d)
+        {
+            List<Point3d> pts3d = new List<Point3d>();
+
+            foreach (ObjectId vertexId in poly3d)
+            {
+                PolylineVertex3d vertex = vertexId.GetDBObject(OpenMode.ForRead) as PolylineVertex3d;
+
+                if (vertex != null)
+                {
+                    pts3d.Add(vertex.Position);
+                }
+
+            }
+            if (pts3d.Count > 0)
+            {
+                return (double)pts3d.First().Z;
+            }
+            return 0;
+        }
+
+        public static double GetElevation(this Polyline2d poly2d)
+        {
+            return poly2d.Elevation;
+        }
+
+
+
         public static Polyline ToPolyline(this Polyline3d poly3d)
         {
             if (poly3d.PolyType == Poly3dType.SimplePoly)

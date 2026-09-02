@@ -482,6 +482,72 @@ namespace SioForgeCAD.Commun.Extensions
             return true;
         }
 
+        public static double? GetElevation(this Entity entity)
+        {
+            switch (entity)
+            {
+                case Polyline pline:
+                    return pline.Elevation;
+                case Polyline2d pline2d:
+                    return pline2d.Elevation;
+                case Polyline3d pline3d:
+                    return pline3d.GetElevation();
+                case Line line:
+                    if (Math.Abs(line.StartPoint.Z - line.EndPoint.Z) < 0.001)
+                    {
+                        return line.StartPoint.Z;
+                    }
+                    return null;
+                case Arc arc:
+                    return arc.Center.Z;
+                case Circle circle:
+                    return circle.Center.Z;
+                case DBText dbText:
+                    return dbText.Position.Z;
+                case MText mText:
+                    return mText.Location.Z;
+                case Ellipse ellipse:
+                    return ellipse.Center.Z;
+                case Table table:
+                    return table.Position.Z;
+                case BlockReference blockRef:
+                    return blockRef.Position.Z;
+                case Hatch hatch:
+                    return hatch.Elevation;
+                case DBPoint dbPoint:
+                    return dbPoint.Position.Z;
+                case Ray ray:
+                    return ray.BasePoint.Z;
+                case Xline xline:
+                    return xline.BasePoint.Z;
+                case Helix helix:
+                    return helix.StartPoint.Z;
+                case Spline spline:
+                    return spline.StartPoint.Z;
+                case Wipeout wipeout:
+                    return wipeout.Position.Z;
+                case RasterImage rasterImage:
+                    return rasterImage.Position.Z;
+                case RotatedDimension rotatedDimension:
+                    return rotatedDimension.TextPosition.Z;
+                case AlignedDimension alignedDimension:
+                    return alignedDimension.TextPosition.Z;
+                case Point3AngularDimension point3AngularDimension:
+                    return point3AngularDimension.TextPosition.Z;
+                case LineAngularDimension2 lineAngularDimension2:
+                    return lineAngularDimension2.TextPosition.Z;
+                case DiametricDimension diametricDimension:
+                    return diametricDimension.TextPosition.Z;
+                case ArcDimension arcDimension:
+                    return arcDimension.TextPosition.Z;
+                case RadialDimension radialDimension:
+                    return radialDimension.TextPosition.Z;
+                case MLeader mLeader:
+                    return mLeader.BlockPosition.Z;
+                default:
+                    return null;
+            }
+        }
 
         public static void AddXData(this Entity ent, string value)
         {

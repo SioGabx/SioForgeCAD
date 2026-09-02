@@ -256,6 +256,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "SSALLSTRICTLYINSIDE", CommandFlags.Redraw)]
         public static void SSALLSTRICTLYINSIDE() => Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
 
+        [CommandMethod("SIOFORGECAD", "SSELEV", CommandFlags.Redraw)]
+        public static void SSELEV() => Functions.SSELEV.SelectByElevation();
+
         [CommandMethod("SIOFORGECAD", "RRR", CommandFlags.UsePickSet)]
         public static void RRR() => Functions.RRR.Rotate();
 
@@ -532,6 +535,12 @@ namespace SioForgeCAD
         public static void CREATECONTOURSLINESFROMPOINTS()
         {
             Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
+        }
+
+        [CommandMethod("SIOFORGECAD", "CREATELABELSONCONTOURELEVATIONS", CommandFlags.Redraw)]
+        public static void CREATELABELSONCONTOURELEVATIONS()
+        {
+            Functions.CREATELABELSONCONTOURELEVATIONS.Create();
         }
 
         [CommandMethod("SIOFORGECAD", "TOGGLELAYERCOMPARE", CommandFlags.Redraw)]
