@@ -141,20 +141,20 @@ namespace SioForgeCAD.Commun.Mist.DrawJigs
 
             Point3d basePt = BasePoint?.SCU ?? Point3d.Origin;
 
-            Matrix3d newTransform =                Matrix3d.Displacement(basePt.GetVectorTo(_currentPoint));
+            Matrix3d newTransform = Matrix3d.Displacement(basePt.GetVectorTo(_currentPoint));
 
             // Delta entre ancienne position et nouvelle
-            Matrix3d delta =_lastTransform.Inverse() * newTransform;
+            Matrix3d delta = _lastTransform.Inverse() * newTransform;
 
             foreach (Entity ent in _dynamicTransients)
             {
                 ent.TransformBy(delta);
-                TransientManager.CurrentTransientManager.UpdateTransient(ent,TransientManager.CurrentTransientManager.GetViewPortsNumbers());
+                TransientManager.CurrentTransientManager.UpdateTransient(ent, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
             }
 
             foreach (Entity ent2 in _staticTransients)
             {
-                TransientManager.CurrentTransientManager.UpdateTransient(ent2,TransientManager.CurrentTransientManager.GetViewPortsNumbers());
+                TransientManager.CurrentTransientManager.UpdateTransient(ent2, TransientManager.CurrentTransientManager.GetViewPortsNumbers());
             }
 
             _lastTransform = newTransform;

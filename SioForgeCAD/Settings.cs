@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using SioForgeCAD.Commun;
+﻿using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist.Helpers;
 using System;
 using System.Collections.Concurrent;

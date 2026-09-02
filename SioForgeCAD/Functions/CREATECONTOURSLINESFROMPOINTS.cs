@@ -170,13 +170,7 @@ namespace SioForgeCAD.Functions
 
                     if (resultEntities.Count > 0)
                     {
-                        var blkDefId = BlockReferences.Create(
-                            nameof(CREATECONTOURSLINESFROMPOINTS) + "_" + DateTime.Now.Ticks,
-                            "Contours générés",
-                            resultEntities.ToDBObjectCollection(),
-                            Points.Empty,
-                            true,
-                            BlockScaling.Uniform);
+                        var blkDefId = BlockReferences.Create(nameof(CREATECONTOURSLINESFROMPOINTS) + "_" + DateTime.Now.Ticks, "Contours générés", resultEntities.ToDBObjectCollection(), Points.Empty, true, BlockScaling.Uniform);
 
                         if (blkDefId.IsValid)
                         {

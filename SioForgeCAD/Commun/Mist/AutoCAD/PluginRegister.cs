@@ -1,7 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Runtime;
 using Microsoft.Win32;
-using System;
 using System.Diagnostics;
 using RegistryKey = Autodesk.AutoCAD.Runtime.RegistryKey;
 

@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 
 namespace SioForgeCAD.Commun.Mist.Helpers
 {
@@ -10,7 +9,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
     {
         public static void OpenRegEditAtKey(string keyPath)
         {
-            SetValue(@"Software\Microsoft\Windows\CurrentVersion\Applets\Regedit", "LastKey",Path.Combine(@"Computer\HKEY_CURRENT_USER", keyPath));
+            SetValue(@"Software\Microsoft\Windows\CurrentVersion\Applets\Regedit", "LastKey", Path.Combine(@"Computer\HKEY_CURRENT_USER", keyPath));
             try
             {
                 Process.Start(new ProcessStartInfo

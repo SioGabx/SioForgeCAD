@@ -1,5 +1,4 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
-using System;
 
 namespace SioForgeCAD.Functions
 {
@@ -7,7 +6,7 @@ namespace SioForgeCAD.Functions
     {
         public static void ShowPublishDialog()
         {
-           Application.Publisher.PublishSelectedLayouts(false);
+            Application.Publisher.PublishSelectedLayouts(false);
         }
     }
 }

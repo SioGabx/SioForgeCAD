@@ -17,15 +17,6 @@ namespace SioForgeCAD.Functions
             public Point3d Position;
         }
 
-        private class Cell
-        {
-            public double MinX;
-            public double MaxX;
-            public double MinY;
-            public double MaxY;
-            public List<Candidate> Points = new List<Candidate>();
-        }
-
         public static void Select()
         {
             Editor ed = Generic.GetEditor();
@@ -87,11 +78,9 @@ namespace SioForgeCAD.Functions
             int count = pts.Count;
 
             if (wanted >= count)
+            {
                 return pts.Select(p => p.Id).ToArray();
-
-            // ---------------------------------------------------------
-            // 1. Calcul de l'emprise en un seul parcours
-            // ---------------------------------------------------------
+            }
 
             double minX = double.MaxValue;
             double maxX = double.MinValue;
@@ -103,10 +92,25 @@ namespace SioForgeCAD.Functions
                 double x = p.Position.X;
                 double y = p.Position.Y;
 
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
+                if (x < minX)
+                {
+                    minX = x;
+                }
+
+                if (x > maxX)
+                {
+                    maxX = x;
+                }
+
+                if (y < minY)
+                {
+                    minY = y;
+                }
+
+                if (y > maxY)
+                {
+                    maxY = y;
+                }
             }
 
             double width = maxX - minX;
@@ -114,14 +118,12 @@ namespace SioForgeCAD.Functions
 
             // Cas dégénéré : tous les points sont identiques
             if (width == 0 && height == 0)
+            {
                 return pts.Take(wanted).Select(p => p.Id).ToArray();
+            }
 
-            // ---------------------------------------------------------
-            // 2. Déterminer une grille adaptée au ratio de l'emprise
-            // ---------------------------------------------------------
-
+            // Déterminer une grille adaptée au ratio de l'emprise
             double aspect = width / Math.Max(height, double.Epsilon);
-
             int columns = Math.Max(1, (int)Math.Round(Math.Sqrt(wanted * aspect)));
             int rows = Math.Max(1, (int)Math.Ceiling((double)wanted / columns));
 
@@ -135,57 +137,70 @@ namespace SioForgeCAD.Functions
             double cellWidth = width / columns;
             double cellHeight = height / rows;
 
-            // ---------------------------------------------------------
-            // 3. Un point par cellule
-            // ---------------------------------------------------------
-
+            // Un point par cellule
             Candidate[] selected = new Candidate[columns * rows];
             double[] bestDistance = new double[selected.Length];
 
             for (int i = 0; i < bestDistance.Length; i++)
+            {
                 bestDistance[i] = double.MaxValue;
+            }
 
             for (int i = 0; i < pts.Count; i++)
             {
                 Candidate p = pts[i];
-
                 int col;
                 int row;
 
                 if (cellWidth == 0)
+                {
                     col = 0;
+                }
                 else
+                {
                     col = (int)((p.Position.X - minX) / cellWidth);
+                }
 
                 if (cellHeight == 0)
+                {
                     row = 0;
+                }
                 else
+                {
                     row = (int)((p.Position.Y - minY) / cellHeight);
+                }
 
-                // Le point situé exactement sur maxX/maxY
-                // pourrait tomber juste après la dernière cellule.
+                // Le point situé exactement sur maxX/maxY pourrait tomber juste après la dernière cellule.
                 if (col >= columns)
+                {
                     col = columns - 1;
+                }
 
                 if (row >= rows)
+                {
                     row = rows - 1;
+                }
 
                 if (col < 0)
+                {
                     col = 0;
+                }
 
                 if (row < 0)
+                {
                     row = 0;
+                }
 
-                int index = row * columns + col;
+                int index = (row * columns) + col;
 
                 // Centre de la cellule
-                double cx = minX + (col + 0.5) * cellWidth;
-                double cy = minY + (row + 0.5) * cellHeight;
+                double cx = minX + ((col + 0.5) * cellWidth);
+                double cy = minY + ((row + 0.5) * cellHeight);
 
                 double dx = p.Position.X - cx;
                 double dy = p.Position.Y - cy;
 
-                double distance = dx * dx + dy * dy;
+                double distance = (dx * dx) + (dy * dy);
 
                 // On garde le point le plus proche du centre
                 if (distance < bestDistance[index])
@@ -195,12 +210,8 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            // ---------------------------------------------------------
-            // 4. Récupérer les points sélectionnés
-            // ---------------------------------------------------------
-
+            // Récupérer les points sélectionnés
             List<Candidate> result = new List<Candidate>(wanted);
-
             HashSet<ObjectId> used = new HashSet<ObjectId>();
 
             for (int i = 0; i < selected.Length; i++)
@@ -212,141 +223,30 @@ namespace SioForgeCAD.Functions
                     result.Add(p);
 
                     if (result.Count >= wanted)
+                    {
                         break;
+                    }
                 }
             }
 
-            // ---------------------------------------------------------
-            // 5. Compléter si certaines cellules étaient vides
-            // ---------------------------------------------------------
-
+            // Compléter si certaines cellules étaient vides
             if (result.Count < wanted)
             {
                 foreach (Candidate p in pts)
                 {
                     if (result.Count >= wanted)
+                    {
                         break;
+                    }
 
                     if (used.Add(p.Id))
-                        result.Add(p);
-                }
-            }
-
-            return result
-                .Take(wanted)
-                .Select(p => p.Id)
-                .ToArray();
-        }
-
-        private static ObjectId[] SelectUniformGridOld(List<Candidate> pts, int wanted)
-        {
-            if (wanted >= pts.Count)
-            {
-                return pts.Select(p => p.Id).ToArray();
-            }
-
-            double minX = pts.Min(p => p.Position.X);
-            double maxX = pts.Max(p => p.Position.X);
-            double minY = pts.Min(p => p.Position.Y);
-            double maxY = pts.Max(p => p.Position.Y);
-
-
-            Cell root = new Cell
-            {
-                MinX = minX,
-                MaxX = maxX,
-                MinY = minY,
-                MaxY = maxY,
-                Points = pts
-            };
-
-            List<Cell> cells = new List<Cell> { root };
-
-
-            // Nombre de divisions adaptatives
-            while (cells.Count < wanted)
-            {
-                // cellule avec le plus de points
-                Cell biggest = cells.Where(c => c.Points.Count > 1).OrderByDescending(c => c.Points.Count).FirstOrDefault();
-
-                if (biggest == null)
-                {
-                    break;
-                }
-
-                cells.Remove(biggest);
-
-                double midX = (biggest.MinX + biggest.MaxX) / 2.0;
-                double midY = (biggest.MinY + biggest.MaxY) / 2.0;
-
-                Cell[] children = {
-                    new Cell { MinX = biggest.MinX, MaxX = midX, MinY = biggest.MinY, MaxY = midY },
-                    new Cell { MinX = midX, MaxX = biggest.MaxX, MinY = biggest.MinY, MaxY = midY },
-                    new Cell { MinX = biggest.MinX, MaxX = midX, MinY = midY, MaxY = biggest.MaxY },
-                    new Cell { MinX = midX, MaxX = biggest.MaxX, MinY = midY, MaxY = biggest.MaxY }
-                };
-
-                foreach (Candidate p in biggest.Points)
-                {
-                    foreach (Cell child in children)
-                    {
-                        if (p.Position.X >= child.MinX && p.Position.X <= child.MaxX && p.Position.Y >= child.MinY && p.Position.Y <= child.MaxY)
-                        {
-                            child.Points.Add(p);
-                            break;
-                        }
-                    }
-                }
-
-                foreach (Cell child in children)
-                {
-                    if (child.Points.Count > 0)
-                    {
-                        cells.Add(child);
-                    }
-                }
-            }
-
-            List<Candidate> result = new List<Candidate>();
-
-            // Choisir le point le plus central de chaque cellule
-            foreach (Cell cell in cells)
-            {
-                double cx = (cell.MinX + cell.MaxX) / 2;
-                double cy = (cell.MinY + cell.MaxY) / 2;
-
-                Candidate best = cell.Points.OrderBy(p =>
-                {
-                    double dx = p.Position.X - cx;
-                    double dy = p.Position.Y - cy;
-                    return (dx * dx) + (dy * dy);
-                }).First();
-
-                result.Add(best);
-            }
-
-            // Si on a encore trop peu de cellules compléter avec des points restants
-            if (result.Count < wanted)
-            {
-                HashSet<ObjectId> used = new HashSet<ObjectId>(result.Select(r => r.Id));
-
-                foreach (Candidate p in pts)
-                {
-                    if (result.Count >= wanted)
-                    {
-                        break;
-                    }
-
-                    if (!used.Contains(p.Id))
                     {
                         result.Add(p);
-                        used.Add(p.Id);
                     }
                 }
             }
 
             return result.Take(wanted).Select(p => p.Id).ToArray();
         }
-
     }
 }

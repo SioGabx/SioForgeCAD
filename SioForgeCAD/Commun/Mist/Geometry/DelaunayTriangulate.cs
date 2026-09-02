@@ -1,5 +1,4 @@
 ﻿using Autodesk.AutoCAD.Geometry;
-using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -835,7 +834,7 @@ namespace SioForgeCAD.Commun
          *
          * L'arête disparaît complètement.
          */
-        private static void RemoveCurrentEdge( Edge edge, int triangleId, int neighbour, HashSet<int> cavity, Dictionary<Edge, int> edgeMap)
+        private static void RemoveCurrentEdge(Edge edge, int triangleId, int neighbour, HashSet<int> cavity, Dictionary<Edge, int> edgeMap)
         {
 
             if (!edgeMap.TryGetValue(edge, out int current))

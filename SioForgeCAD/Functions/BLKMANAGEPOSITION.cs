@@ -5,10 +5,6 @@ using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.JSONParser;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace SioForgeCAD.Functions

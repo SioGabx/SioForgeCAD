@@ -28,12 +28,10 @@ namespace SioForgeCAD.Functions
             {
                 var BlockReferencesCollection = new DBObjectCollection();
 
-                var modelSpace = SymbolUtilityServices.GetBlockModelSpaceId(db).GetObject(OpenMode.ForRead) as BlockTableRecord;
-                var drawOrderTable = modelSpace.DrawOrderTableId.GetObject(OpenMode.ForRead) as DrawOrderTable;
+                var currentSpace = Generic.GetCurrentSpaceBlockTableRecord(tr, OpenMode.ForRead);
+                var drawOrderTable = currentSpace.DrawOrderTableId.GetObject(OpenMode.ForRead) as DrawOrderTable;
                 var selectedIds = new HashSet<ObjectId>(selResult.Value.GetObjectIds());
-                var orderedIds = drawOrderTable.GetFullDrawOrder(0)
-                    .Cast<ObjectId>()
-                    .Where(id => selectedIds.Contains(id)).ToObjectIdCollection();
+                var orderedIds = drawOrderTable.GetFullDrawOrder(0).Cast<ObjectId>().Where(id => selectedIds.Contains(id)).ToObjectIdCollection();
 
                 var InsPoint = Points.GetFromPromptPointResult(ptResult);
                 var BlkDefId = BlockReferences.CreateFromExistingEnts("*U", "", orderedIds, InsPoint, true, BlockScaling.Any, true);

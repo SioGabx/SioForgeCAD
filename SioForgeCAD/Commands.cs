@@ -1,17 +1,9 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
+﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
-using SioForgeCAD.Commun.Drawing;
-using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.Helpers;
-using SioForgeCAD.Commun.Mist.Helpers.Projections;
-using SioForgeCAD.Functions;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
@@ -119,7 +111,7 @@ namespace SioForgeCAD
 
         //Makes the block instance unique. If several of the selected blocks have the same name, they will then share a new common instance
         [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUE", CommandFlags.Redraw)]
-       public static void BLKMAKEUNIQUE() => new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
+        public static void BLKMAKEUNIQUE() => new Functions.BLKMAKEUNIQUE(true).MakeUniqueBlockReferences();
 
         //Makes the block instance unique. If several of the selected blocks have the same name, they will NOT share a new common instance
         [CommandMethod("SIOFORGECAD", "BLKMAKEUNIQUEEACH", CommandFlags.Redraw)]
@@ -127,7 +119,7 @@ namespace SioForgeCAD
 
         //Convert all entity values in the block to BYBLOCK
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCK", CommandFlags.Redraw)]
-      public static void BLKSETTOBYBBLOCK() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Include);
+        public static void BLKSETTOBYBBLOCK() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.Include);
 
         //Convert all entity values in the block to BYBLOCK, ignoring HATCH
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKIGNOREHATCH", CommandFlags.Redraw)]
@@ -135,7 +127,7 @@ namespace SioForgeCAD
 
         //Convert all entity values in the block to BYBLOCK, HATCH to white (rgb 255,255,255)
         [CommandMethod("SIOFORGECAD", "BLKSETTOBYBBLOCKHATCHSETTOWHITE", CommandFlags.Redraw)]
-       public static void BLKSETTOBYBBLOCKHATCHSETTOWHITE() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.SetToWhite);
+        public static void BLKSETTOBYBBLOCKHATCHSETTOWHITE() => Functions.BLKSETTOBYBBLOCK.ByBlock(Functions.BLKSETTOBYBBLOCK.HatchSupport.SetToWhite);
 
         //Allow user to redefine the basepoint of a block instance without moving it
         [CommandMethod("SIOFORGECAD", "BLKINSEDIT", CommandFlags.UsePickSet)]

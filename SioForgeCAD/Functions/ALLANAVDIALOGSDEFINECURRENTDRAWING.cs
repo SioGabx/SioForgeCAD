@@ -1,13 +1,9 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Microsoft.Win32;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using SioForgeCAD.Commun.Mist.Helpers;
 using System;
 using System.Diagnostics;
-using System.IO;
-using Application = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace SioForgeCAD.Functions
 {

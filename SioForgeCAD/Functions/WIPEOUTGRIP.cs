@@ -162,14 +162,14 @@ namespace SioForgeCAD.Functions
                             pts.Add(NextPoint.TransformBy(TransformMatrix).ToPoint2d());
                         }
                         else
-                        if (Check(PreviousPoint))
-                        {
-                            pts.Add(PreviousPoint.TransformBy(TransformMatrix).ToPoint2d());
-                        }
-                        else
-                        {
-                            pts.Add(ActualWipeoutEntVertices.ToPoint2d());
-                        }
+                            if (Check(PreviousPoint))
+                            {
+                                pts.Add(PreviousPoint.TransformBy(TransformMatrix).ToPoint2d());
+                            }
+                            else
+                            {
+                                pts.Add(ActualWipeoutEntVertices.ToPoint2d());
+                            }
                     }
 
                     return pts;

@@ -1,9 +1,8 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
-using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Commun;
+using System;
 
 namespace SioForgeCAD.Functions
 {
@@ -11,275 +10,177 @@ namespace SioForgeCAD.Functions
     {
         public static void Create()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
 
-            // ---------------------------------------------------------
-            // Demande de l'intervalle
-            // ---------------------------------------------------------
-            PromptDistanceOptions distOpts =
-                new PromptDistanceOptions("\nIntervalle entre les textes (m) : ");
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
 
-            distOpts.AllowZero = false;
-            distOpts.AllowNegative = false;
-
-            PromptDoubleResult distRes = ed.GetDistance(distOpts);
-
-            if (distRes.Status != PromptStatus.OK)
+            PromptDistanceOptions intervalOptions = new PromptDistanceOptions("Intervalle entre les textes : ")
+            {
+                AllowZero = false,
+                AllowNegative = false,
+                DefaultValue = 10.0,
+                UseDefaultValue = true
+            };
+            PromptDoubleResult intervalResult = ed.GetDistance(intervalOptions);
+            if (intervalResult.Status != PromptStatus.OK)
+            {
                 return;
+            }
+            double interval = intervalResult.Value;
 
-            double interval = distRes.Value;
-
-            // ---------------------------------------------------------
-            // Sélection des polylignes
-            // ---------------------------------------------------------
-            PromptSelectionOptions selOpts =
-                new PromptSelectionOptions();
-
-            selOpts.MessageForAdding =
-                "\nSélectionnez les polylignes ayant une élévation : ";
-
-            // Filtre : LWPOLYLINE et POLYLINE 2D
-            SelectionFilter filter = new SelectionFilter(
-                new TypedValue[]
-                {
-                new TypedValue(
-                    (int)DxfCode.Operator,
-                    "<OR"
-                ),
-
-                new TypedValue(
-                    (int)DxfCode.Start,
-                    "LWPOLYLINE"
-                ),
-
-                new TypedValue(
-                    (int)DxfCode.Start,
-                    "POLYLINE"
-                ),
-
-                new TypedValue(
-                    (int)DxfCode.Operator,
-                    "OR>"
-                )
-                });
-
-            PromptSelectionResult selRes =
-                ed.GetSelection(selOpts, filter);
-
-            if (selRes.Status != PromptStatus.OK)
+            PromptDistanceOptions heightOptions = new PromptDistanceOptions("Hauteur du texte : ")
+            {
+                AllowZero = false,
+                AllowNegative = false,
+                DefaultValue = 0.20,
+                UseDefaultValue = true
+            };
+            PromptDoubleResult heightResult = ed.GetDistance(heightOptions);
+            if (heightResult.Status != PromptStatus.OK)
+            {
                 return;
+            }
+            double textHeight = heightResult.Value;
 
-            // ---------------------------------------------------------
-            // Transaction
-            // ---------------------------------------------------------
+
+            PromptIntegerOptions decimalOptions = new PromptIntegerOptions("Nombre de décimales : ")
+            {
+                AllowNegative = false,
+                AllowZero = true,
+                DefaultValue = 2,
+                UseDefaultValue = true
+            };
+            PromptIntegerResult decimalResult = ed.GetInteger(decimalOptions);
+            if (decimalResult.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            int decimals = decimalResult.Value;
+
+
+            PromptDistanceOptions offsetOptions = new PromptDistanceOptions("\nDécalage du texte par rapport à la courbe : ")
+            {
+                AllowNegative = true,
+                DefaultValue = 0.0,
+                UseDefaultValue = true
+            };
+            PromptDoubleResult offsetResult = ed.GetDistance(offsetOptions);
+            if (offsetResult.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            double offset = offsetResult.Value;
+
+            PromptSelectionOptions selectionOptions = new PromptSelectionOptions
+            {
+                MessageForAdding = "\nSélectionnez les courbes de niveau : "
+            };
+
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Operator, "<OR"), new TypedValue((int)DxfCode.Start, "LWPOLYLINE"), new TypedValue((int)DxfCode.Start, "POLYLINE"), new TypedValue((int)DxfCode.Operator, "OR>") });
+
+            PromptSelectionResult selectionResult = ed.GetSelection(selectionOptions, filter);
+
+            if (selectionResult.Status != PromptStatus.OK)
+            {
+                return;
+            }
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable bt =
-                    (BlockTable)tr.GetObject(
-                        db.BlockTableId,
-                        OpenMode.ForRead);
+                BlockTableRecord modelSpace = Generic.GetCurrentSpaceBlockTableRecord(tr, OpenMode.ForWrite);
 
-                BlockTableRecord modelSpace =
-                    (BlockTableRecord)tr.GetObject(
-                        bt[BlockTableRecord.ModelSpace],
-                        OpenMode.ForWrite);
-
-                foreach (SelectedObject selected in selRes.Value)
+                foreach (SelectedObject selectedObject in selectionResult.Value)
                 {
-                    if (selected == null)
-                        continue;
-
-                    Entity entity =
-                        tr.GetObject(
-                            selected.ObjectId,
-                            OpenMode.ForRead) as Entity;
-
-                    if (entity == null)
-                        continue;
-
-                    // -------------------------------------------------
-                    // POLYLIGNE 2D (LWPOLYLINE)
-                    // -------------------------------------------------
-                    if (entity is Polyline pline)
+                    if (selectedObject == null)
                     {
-                        double elevation = pline.Elevation;
-
-                        PlaceTextsOnPolyline(
-                            pline,
-                            elevation,
-                            interval,
-                            modelSpace,
-                            tr);
+                        continue;
                     }
 
-                    // -------------------------------------------------
-                    // Ancienne POLYLINE 2D
-                    // -------------------------------------------------
-                    else if (entity is Polyline2d pline2d)
+                    if (!(selectedObject.ObjectId.GetDBObject(OpenMode.ForRead) is Entity entity))
                     {
-                        // La Polyline2d ne possède pas directement
-                        // la propriété Elevation comme la LWPOLYLINE.
-                        // On récupère l'altitude du premier sommet.
+                        continue;
+                    }
 
-                        double elevation = pline2d.GetElevation();
-
-                        PlaceTextsOnPolyline2d(
-                            pline2d,
-                            elevation,
-                            interval,
-                            modelSpace,
-                            tr);
+                    if (entity is Polyline polyline)
+                    {
+                        double elevation = polyline.Elevation;
+                        CreateTextsOnPolyline(polyline, elevation, interval, textHeight, decimals, offset, modelSpace, tr);
                     }
                 }
 
                 tr.Commit();
             }
 
-            ed.WriteMessage(      "Les textes d'élévation ont été placés.");
+            Generic.WriteMessage("LABELCONTOURELEVATIONS terminé.");
         }
 
-        // =============================================================
-        // LWPOLYLINE
-        // =============================================================
-        private static void PlaceTextsOnPolyline(
-            Polyline pline,
-            double elevation,
-            double interval,
-            BlockTableRecord modelSpace,
-            Transaction tr)
-        {
-            double length = pline.Length;
 
-            // Distance du premier texte.
-            // Ici : X mètres depuis le début.
-            for (double distance = 0.0;
-                 distance <= length;
-                 distance += interval)
+        private static void CreateTextsOnPolyline(Polyline polyline, double elevation, double interval, double textHeight, int decimals, double offset, BlockTableRecord modelSpace, Transaction tr)
+        {
+            double length = polyline.Length;
+            double startDistance = interval;
+
+            for (double distance = startDistance; distance <= length + 1e-8; distance += interval)
             {
+                Point3d point;
+
                 try
                 {
-                    Point3d point =
-                        pline.GetPointAtDist(distance);
-
-                    // Tangente de la courbe
-                    Vector3d tangent =
-                        pline.GetFirstDerivative(point);
-
-                    if (tangent.Length < 1e-9)
-                        continue;
-
-                    tangent = tangent.GetNormal();
-
-                    // Angle de la tangente dans le plan XY
-                    double angle =
-                        System.Math.Atan2(
-                            tangent.Y,
-                            tangent.X);
-
-                    // Évite les textes complètement à l'envers.
-                    if (angle > System.Math.PI / 2.0 &&
-                        angle < 3.0 * System.Math.PI / 2.0)
-                    {
-                        angle += System.Math.PI;
-                    }
-
-                    // Position avec Z = élévation
-                    Point3d textPosition =
-                        new Point3d(
-                            point.X,
-                            point.Y,
-                            elevation);
-
-                    DBText text = new DBText();
-
-                    text.Position = textPosition;
-
-                    // Affichage de l'élévation
-                    text.TextString =
-                        elevation.ToString("0.00");
-
-                    // Hauteur du texte
-                    text.Height = 0.20;
-
-                    // Rotation suivant la courbe
-                    text.Rotation = angle;
-
-                    // Alignement centré
-                    text.HorizontalMode =
-                        TextHorizontalMode.TextCenter;
-
-                    text.VerticalMode =
-                        TextVerticalMode.TextVerticalMid;
-
-                    text.AlignmentPoint =
-                        textPosition;
-
-                    // Le texte est dans le même plan XY
-                    // avec son élévation réelle.
-                    text.Normal = Vector3d.ZAxis;
-
-                    modelSpace.AppendEntity(text);
-                    tr.AddNewlyCreatedDBObject(text, true);
+                    point = polyline.GetPointAtDist(distance);
                 }
                 catch
                 {
-                    // On ignore un point impossible à calculer
-                }
-            }
-        }
-
-        // =============================================================
-        // POLYLINE2D
-        // =============================================================
-        private static void PlaceTextsOnPolyline2d(
-            Polyline2d pline,
-            double elevation,
-            double interval,
-            BlockTableRecord modelSpace,
-            Transaction tr)
-        {
-            // Conversion temporaire en Polyline moderne
-            // pour faciliter le calcul des distances et tangentes.
-
-            Polyline converted =
-                new Polyline();
-
-            int index = 0;
-
-            foreach (ObjectId vertexId in pline)
-            {
-                Vertex2d vertex =
-                    tr.GetObject(
-                        vertexId,
-                        OpenMode.ForRead)
-                    as Vertex2d;
-
-                if (vertex == null)
                     continue;
+                }
+                Vector3d tangent;
 
-                Point3d p = vertex.Position;
+                try
+                {
+                    tangent = polyline.GetFirstDerivative(point);
+                }
+                catch
+                {
+                    continue;
+                }
 
-                converted.AddVertexAt(
-                    index++,
-                    new Point2d(p.X, p.Y),
-                    0.0,
-                    0.0,
-                    0.0);
+                if (tangent.Length < 1e-9)
+                {
+                    continue;
+                }
+
+                tangent = tangent.GetNormal();
+                double angle = Math.Atan2(tangent.Y, tangent.X);
+                if (angle > Math.PI / 2.0 && angle < 3.0 * Math.PI / 2.0)
+                {
+                    angle += Math.PI;
+                }
+
+                // Décalage du texte
+                Vector3d normal = new Vector3d(-tangent.Y, tangent.X, 0.0);
+                Point3d textPoint = point;
+
+                if (Math.Abs(offset) > 1e-9)
+                {
+                    textPoint = point + (normal * offset);
+                }
+
+                textPoint = new Point3d(textPoint.X, textPoint.Y, elevation);
+                DBText text = new DBText
+                {
+                    TextString = elevation.ToString("F" + decimals),
+                    Height = textHeight,
+                    Position = textPoint,
+                    HorizontalMode = TextHorizontalMode.TextCenter,
+                    VerticalMode = TextVerticalMode.TextVerticalMid,
+                    Rotation = angle,
+                    Normal = Vector3d.ZAxis
+                };
+
+                modelSpace.AppendEntity(text);
+                tr.AddNewlyCreatedDBObject(text, true);
+                text.AlignmentPoint = textPoint;
+                text.AdjustAlignment(Generic.GetDatabase());
             }
-
-            converted.Elevation = elevation;
-
-            PlaceTextsOnPolyline(
-                converted,
-                elevation,
-                interval,
-                modelSpace,
-                tr);
-
-            converted.Dispose();
         }
     }
-
 }

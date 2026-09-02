@@ -106,7 +106,7 @@ namespace SioForgeCAD.Functions
                 {
                     LayerName = LayerName.Split(new char[] { '|', ':' }, StringSplitOptions.RemoveEmptyEntries).Last();
                 }
-                
+
                 string NewLayerName = SymbolUtilityServices.RepairSymbolName(LayerName, false); //we need to repair if the layername come from a XREF (|)
 
                 for (int index = 0; Names.Contains(NewLayerName); index++)

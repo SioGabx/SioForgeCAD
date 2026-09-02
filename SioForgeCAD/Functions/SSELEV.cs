@@ -1,13 +1,9 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
+using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -15,19 +11,16 @@ namespace SioForgeCAD.Functions
     {
         public static void SelectByElevation()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
 
-            // Demande de l'altitude
-            PromptDoubleOptions elevOpts =
-                new PromptDoubleOptions("\nAltitude à sélectionner : ");
+            PromptDoubleOptions elevOpts = new PromptDoubleOptions("\nAltitude à sélectionner : ")
+            {
+                AllowNegative = true,
+                AllowZero = true
+            };
 
-            elevOpts.AllowNegative = true;
-            elevOpts.AllowZero = true;
-
-            PromptDoubleResult elevRes =
-                ed.GetDouble(elevOpts);
+            PromptDoubleResult elevRes = ed.GetDouble(elevOpts);
 
             if (elevRes.Status != PromptStatus.OK)
             {
@@ -36,20 +29,17 @@ namespace SioForgeCAD.Functions
 
             double elevation = elevRes.Value;
 
-            // Tolérance pour les erreurs d'arrondi
-            double tolerance = 0.001;
+            const double tolerance = 0.001;
 
-            PromptSelectionResult selRes =
-                ed.SelectAll();
+            PromptSelectionResult selRes = ed.SelectAll();
 
             if (selRes.Status != PromptStatus.OK)
             {
-                ed.WriteMessage("\nAucun objet trouvé.");
+                Generic.WriteMessage("Aucun objet trouvé.");
                 return;
             }
 
-            using (Transaction tr =
-                db.TransactionManager.StartTransaction())
+            using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 ObjectId[] selectedIds = selRes.Value.GetObjectIds();
 
@@ -57,23 +47,18 @@ namespace SioForgeCAD.Functions
 
                 foreach (ObjectId id in selectedIds)
                 {
-                    Entity entity =
-                        tr.GetObject(id, OpenMode.ForRead) as Entity;
-
-                    if (entity == null)
+                    if (!(tr.GetObject(id, OpenMode.ForRead) is Entity entity))
                     {
                         continue;
                     }
-
-                    double? entityElevation =                        entity.GetElevation();
+                    double? entityElevation = entity.GetElevation();
 
                     if (!entityElevation.HasValue)
                     {
                         continue;
                     }
 
-                    if (Math.Abs(
-                        entityElevation.Value - elevation) <= tolerance)
+                    if (Math.Abs(entityElevation.Value - elevation) <= tolerance)
                     {
                         ids.Add(id);
                     }
@@ -82,11 +67,9 @@ namespace SioForgeCAD.Functions
                 tr.Commit();
                 ed.SetImpliedSelection(ids.ToArray());
 
-                ed.WriteMessage(                    $"\n{ids.Count} objet(s) trouvé(s) à l'altitude {elevation:0.###}.");
+                Generic.WriteMessage($"{ids.Count} objet(s) trouvé(s) à l'altitude {elevation:0.###}.");
             }
         }
-
-        
     }
 
 }

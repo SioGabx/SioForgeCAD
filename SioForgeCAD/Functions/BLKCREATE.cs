@@ -35,7 +35,7 @@ namespace SioForgeCAD.Functions
                 {
                     Forms.InputDialogBox dialogBox = new Forms.InputDialogBox();
                     dialogBox.SetUserInputPlaceholder(BlkName);
-                    dialogBox.SetPrompt($"Indiquez un nom pour le bloc");
+                    dialogBox.SetPrompt("Indiquez un nom pour le bloc");
                     dialogBox.SetCursorAtEnd();
                     DialogResult dialogResult = dialogBox.ShowDialog();
                     if (dialogResult != DialogResult.OK)
@@ -54,9 +54,8 @@ namespace SioForgeCAD.Functions
                 while (BlockReferences.IsBlockExist(BlkName));
 
                 var BlockReferencesCollection = new DBObjectCollection();
-
-                var modelSpace = SymbolUtilityServices.GetBlockModelSpaceId(db).GetObject(OpenMode.ForRead) as BlockTableRecord;
-                var drawOrderTable = modelSpace.DrawOrderTableId.GetObject(OpenMode.ForRead) as DrawOrderTable;
+                var currentSpace = Generic.GetCurrentSpaceBlockTableRecord(tr, OpenMode.ForRead);
+                var drawOrderTable = currentSpace.DrawOrderTableId.GetObject(OpenMode.ForRead) as DrawOrderTable;
                 var selectedIds = new HashSet<ObjectId>(selResult.Value.GetObjectIds());
                 var orderedIds = drawOrderTable.GetFullDrawOrder(0)
                     .Cast<ObjectId>()
