@@ -10,7 +10,6 @@ namespace SioForgeCAD.Functions
     {
         public static void Create()
         {
-
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
@@ -42,7 +41,6 @@ namespace SioForgeCAD.Functions
             }
             double textHeight = heightResult.Value;
 
-
             PromptIntegerOptions decimalOptions = new PromptIntegerOptions("Nombre de décimales : ")
             {
                 AllowNegative = false,
@@ -57,7 +55,6 @@ namespace SioForgeCAD.Functions
             }
             int decimals = decimalResult.Value;
 
-
             PromptDistanceOptions offsetOptions = new PromptDistanceOptions("\nDécalage du texte par rapport à la courbe : ")
             {
                 AllowNegative = true,
@@ -71,12 +68,33 @@ namespace SioForgeCAD.Functions
             }
             double offset = offsetResult.Value;
 
+            // Option pour le masque d'arrière-plan
+            PromptKeywordOptions maskOptions = new PromptKeywordOptions("\nAjouter un masque d'arrière-plan ? ")
+            {
+                AllowNone = false
+            };
+            maskOptions.Keywords.Add("Oui");
+            maskOptions.Keywords.Add("Non");
+            maskOptions.Keywords.Default = "Non";
+
+            PromptResult maskResult = ed.GetKeywords(maskOptions);
+            if (maskResult.Status != PromptStatus.OK)
+            {
+                return;
+            }
+            bool useBackgroundMask = (maskResult.StringResult == "Oui");
+
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
             {
                 MessageForAdding = "\nSélectionnez les courbes de niveau : "
             };
 
-            SelectionFilter filter = new SelectionFilter(new TypedValue[] { new TypedValue((int)DxfCode.Operator, "<OR"), new TypedValue((int)DxfCode.Start, "LWPOLYLINE"), new TypedValue((int)DxfCode.Start, "POLYLINE"), new TypedValue((int)DxfCode.Operator, "OR>") });
+            SelectionFilter filter = new SelectionFilter(new TypedValue[] {
+                new TypedValue((int)DxfCode.Operator, "<OR"),
+                new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+                new TypedValue((int)DxfCode.Start, "POLYLINE"),
+                new TypedValue((int)DxfCode.Operator, "OR>")
+            });
 
             PromptSelectionResult selectionResult = ed.GetSelection(selectionOptions, filter);
 
@@ -104,7 +122,7 @@ namespace SioForgeCAD.Functions
                     if (entity is Polyline polyline)
                     {
                         double elevation = polyline.Elevation;
-                        CreateTextsOnPolyline(polyline, elevation, interval, textHeight, decimals, offset, modelSpace, tr);
+                        CreateTextsOnPolyline(polyline, elevation, interval, textHeight, decimals, offset, useBackgroundMask, modelSpace, tr);
                     }
                 }
 
@@ -114,8 +132,7 @@ namespace SioForgeCAD.Functions
             Generic.WriteMessage("LABELCONTOURELEVATIONS terminé.");
         }
 
-
-        private static void CreateTextsOnPolyline(Polyline polyline, double elevation, double interval, double textHeight, int decimals, double offset, BlockTableRecord modelSpace, Transaction tr)
+        private static void CreateTextsOnPolyline(Polyline polyline, double elevation, double interval, double textHeight, int decimals, double offset, bool useBackgroundMask, BlockTableRecord modelSpace, Transaction tr)
         {
             double length = polyline.Length;
             double startDistance = interval;
@@ -132,6 +149,7 @@ namespace SioForgeCAD.Functions
                 {
                     continue;
                 }
+
                 Vector3d tangent;
 
                 try
@@ -149,9 +167,12 @@ namespace SioForgeCAD.Functions
                 }
 
                 tangent = tangent.GetNormal();
+
+                // Orientation du texte pour la lisibilité de gauche à droite
                 double angle = Math.Atan2(tangent.Y, tangent.X);
                 if (angle > Math.PI / 2.0 && angle < 3.0 * Math.PI / 2.0)
                 {
+                    tangent = tangent.Negate();
                     angle += Math.PI;
                 }
 
@@ -165,21 +186,52 @@ namespace SioForgeCAD.Functions
                 }
 
                 textPoint = new Point3d(textPoint.X, textPoint.Y, elevation);
-                DBText text = new DBText
-                {
-                    TextString = elevation.ToString("F" + decimals),
-                    Height = textHeight,
-                    Position = textPoint,
-                    HorizontalMode = TextHorizontalMode.TextCenter,
-                    VerticalMode = TextVerticalMode.TextVerticalMid,
-                    Rotation = angle,
-                    Normal = Vector3d.ZAxis
-                };
+                string textValue = elevation.ToString("F" + decimals);
 
-                modelSpace.AppendEntity(text);
-                tr.AddNewlyCreatedDBObject(text, true);
-                text.AlignmentPoint = textPoint;
-                text.AdjustAlignment(Generic.GetDatabase());
+                Entity textEntity;
+
+                if (useBackgroundMask)
+                {
+                    MText mText = new MText
+                    {
+                        Contents = textValue,
+                        TextHeight = textHeight,
+                        Attachment = AttachmentPoint.MiddleCenter,
+                        Location = textPoint,
+                        Direction = tangent, // Définit la direction X du texte (alignement exact avec la tangente)
+                        BackgroundFill = true,
+                        UseBackgroundColor = true,
+                        BackgroundScaleFactor = 1.2
+                    };
+                    textEntity = mText;
+                }
+                else
+                {
+                    DBText text = new DBText
+                    {
+                        TextString = textValue,
+                        Height = textHeight,
+                        Position = textPoint,
+                        HorizontalMode = TextHorizontalMode.TextCenter,
+                        VerticalMode = TextVerticalMode.TextVerticalMid,
+                        Rotation = angle,
+                        Normal = Vector3d.ZAxis
+                    };
+
+                    modelSpace.AppendEntity(text);
+                    tr.AddNewlyCreatedDBObject(text, true);
+
+                    text.AlignmentPoint = textPoint;
+                    text.AdjustAlignment(Generic.GetDatabase());
+
+                    textEntity = text;
+                }
+
+                if (useBackgroundMask)
+                {
+                    modelSpace.AppendEntity(textEntity);
+                    tr.AddNewlyCreatedDBObject(textEntity, true);
+                }
             }
         }
     }
