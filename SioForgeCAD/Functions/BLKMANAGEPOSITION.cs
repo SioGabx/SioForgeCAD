@@ -18,6 +18,9 @@ namespace SioForgeCAD.Functions
             public double Y { get; set; }
             public double Z { get; set; }
             public double Rotation { get; set; } // En radians pour coller à l'API interne
+            public double ScaleX { get; set; }
+            public double ScaleY { get; set; }
+            public double ScaleZ { get; set; }
         }
 
         public static void Menu()
@@ -68,7 +71,10 @@ namespace SioForgeCAD.Functions
                     X = blk.Position.X,
                     Y = blk.Position.Y,
                     Z = blk.Position.Z,
-                    Rotation = blk.Rotation
+                    Rotation = blk.Rotation,
+                    ScaleX = blk.ScaleFactors.X,
+                    ScaleY = blk.ScaleFactors.Y,
+                    ScaleZ = blk.ScaleFactors.Z,
                 };
 
                 string json = data.ToJson();
@@ -116,6 +122,7 @@ namespace SioForgeCAD.Functions
                 // Application de la position et de la rotation
                 blk.Position = new Point3d(data.X, data.Y, data.Z);
                 blk.Rotation = data.Rotation;
+                blk.ScaleFactors = new Scale3d(data.ScaleX,data.ScaleY,data.ScaleZ);
 
                 Generic.WriteMessage("Placement collé avec succès.");
                 tr.Commit();

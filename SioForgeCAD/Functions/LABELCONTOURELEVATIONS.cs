@@ -137,6 +137,10 @@ namespace SioForgeCAD.Functions
             double length = polyline.Length;
             double startDistance = interval;
 
+            // Plage d'échantillonnage de 10% de l'intervalle (±5% autour du point)
+            //double deltaDist = (interval * 0.10) / 2.0;
+            double deltaDist = Math.Max(1.00, interval * 0.5) / 2.0;
+
             for (double distance = startDistance; distance <= length + 1e-8; distance += interval)
             {
                 Point3d point;
@@ -154,7 +158,20 @@ namespace SioForgeCAD.Functions
 
                 try
                 {
-                    tangent = polyline.GetFirstDerivative(point);
+                    // Échantillonnage autour du point pour lisser l'orientation
+                    double distBefore = Math.Max(0.0, distance - deltaDist);
+                    double distAfter = Math.Min(length, distance + deltaDist);
+
+                    Point3d ptBefore = polyline.GetPointAtDist(distBefore);
+                    Point3d ptAfter = polyline.GetPointAtDist(distAfter);
+
+                    tangent = ptAfter - ptBefore;
+
+                    // Sécurité : si la polyline est très courte ou fermée localement sur elle-même
+                    if (tangent.Length < 1e-9)
+                    {
+                        tangent = polyline.GetFirstDerivative(point);
+                    }
                 }
                 catch
                 {
@@ -168,7 +185,7 @@ namespace SioForgeCAD.Functions
 
                 tangent = tangent.GetNormal();
 
-                // Orientation du texte pour la lisibilité de gauche à droite
+                // Orientation du texte pour conserver la lisibilité (de gauche à droite)
                 double angle = Math.Atan2(tangent.Y, tangent.X);
                 if (angle > Math.PI / 2.0 && angle < 3.0 * Math.PI / 2.0)
                 {
@@ -176,7 +193,7 @@ namespace SioForgeCAD.Functions
                     angle += Math.PI;
                 }
 
-                // Décalage du texte
+                // Calcul du décalage perpendiculaire à la tangente lissée
                 Vector3d normal = new Vector3d(-tangent.Y, tangent.X, 0.0);
                 Point3d textPoint = point;
 
@@ -198,7 +215,7 @@ namespace SioForgeCAD.Functions
                         TextHeight = textHeight,
                         Attachment = AttachmentPoint.MiddleCenter,
                         Location = textPoint,
-                        Direction = tangent, // Définit la direction X du texte (alignement exact avec la tangente)
+                        Direction = tangent,
                         BackgroundFill = true,
                         UseBackgroundColor = true,
                         BackgroundScaleFactor = 1.2

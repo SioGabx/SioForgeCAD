@@ -289,6 +289,7 @@
     <Compile Include="Functions\BLKCREATEANONYMOUS.cs" />
     <Compile Include="Functions\BLKINSEDIT.cs" />
     <Compile Include="Functions\BLKMANAGEPOSITION.cs" />
+    <Compile Include="Functions\BLKRECORDMODIFIEDGRAPHICS.cs" />
     <Compile Include="Functions\BLKREPLACE.cs" />
     <Compile Include="Functions\BLKSETDEFINITIONTOEXPLODABLE.cs" />
     <Compile Include="Functions\BLKSETDEFINITIONTOSCALEUNIFORM.cs" />
