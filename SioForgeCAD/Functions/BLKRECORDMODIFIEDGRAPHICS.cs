@@ -1,13 +1,8 @@
-﻿using Autodesk.AutoCAD.Colors;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -34,7 +29,7 @@ namespace SioForgeCAD.Functions
                         if (!AlreadyProcessedBlkNames.Contains(BlkName))
                         {
                             AlreadyProcessedBlkNames.Add(BlkName);
-                           blockRef.RegenAllBlkDefinition();
+                            blockRef.RegenAllBlkDefinition();
                         }
 
                     }

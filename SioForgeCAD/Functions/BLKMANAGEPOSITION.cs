@@ -122,7 +122,7 @@ namespace SioForgeCAD.Functions
                 // Application de la position et de la rotation
                 blk.Position = new Point3d(data.X, data.Y, data.Z);
                 blk.Rotation = data.Rotation;
-                blk.ScaleFactors = new Scale3d(data.ScaleX,data.ScaleY,data.ScaleZ);
+                blk.ScaleFactors = new Scale3d(data.ScaleX, data.ScaleY, data.ScaleZ);
 
                 Generic.WriteMessage("Placement collé avec succès.");
                 tr.Commit();

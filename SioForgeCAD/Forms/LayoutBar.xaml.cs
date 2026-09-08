@@ -1849,6 +1849,7 @@ namespace SioForgeCAD.Forms
             }
 
         }
+
         public void Publish(List<LayoutTab> targetTabs, string FileName)
         {
             var recoverCurrentTab = _currentItem;
@@ -2091,7 +2092,6 @@ namespace SioForgeCAD.Forms
                 ClearSelection();
             }
         }
-
 
         private void SelectTabsInGroup_Click(object sender, RoutedEventArgs e)
         {

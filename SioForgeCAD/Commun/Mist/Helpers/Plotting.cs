@@ -8,18 +8,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Mist.Helpers
 {
     public static class Plotting
     {
-        public static void PublishLayouts(this Layout layout, string outputFilePath)
+        public static Task PublishLayouts(this Layout layout, string outputFilePath)
         {
-            new Layout[1] { layout }.PublishLayouts(outputFilePath);
+            return new Layout[1] { layout }.PublishLayouts(outputFilePath);
         }
-        public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
+
+        public static Task PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
         {
-            layouts.ProcessPrintLayouts(outputFilePath);
+            return layouts.ProcessPrintLayoutsAsync(outputFilePath);
         }
 
         /// <summary>
@@ -69,7 +71,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return deviceName;
         }
 
-        private static void ProcessPrintLayouts(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
+        private static async Task ProcessPrintLayoutsAsync(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
         {
             if (layouts?.Any() != true)
             {
@@ -87,12 +89,12 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 
             if (HaveSamePaperFormat)
             {
-                PlotSuccess = PublishLayoutsWithSamePaperFormats(layouts, outputFilePath);
+                PlotSuccess = await layouts.PublishLayoutsWithSamePaperFormats(outputFilePath);
             }
 
             if (!PlotSuccess) //if PublishLayoutsWithSamePaperFormats fails, we run your PublishLayoutsWithDifferentsPaperFormats
             {
-                PlotSuccess = PublishLayoutsWithDifferentsPaperFormats(layouts, outputFilePath);
+                PlotSuccess = await layouts.PublishLayoutsWithDifferentsPaperFormats(outputFilePath);
             }
 
             if (PlotSuccess && AutoOpenFile && File.Exists(outputFilePath))
@@ -101,7 +103,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             }
         }
 
-        private static bool PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static async Task<bool> PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             Document doc = Generic.GetDocument();
             string docName = doc.Name.Substring(doc.Name.LastIndexOf("\\") + 1);
@@ -200,6 +202,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             }
 
                             LayoutManager.Current.CurrentLayout = layout.LayoutName;
+                            await Task.Delay(100); // Attendre un peu pour que le changement de layout soit pris en compte
                             pagePlotInfo.OverrideSettings = plotSettings;
                             plotInfoValidator.Validate(pagePlotInfo);
 
@@ -275,7 +278,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return true;
         }
 
-        private static bool PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static async Task<bool> PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             if (layouts?.Any() != true)
             {
