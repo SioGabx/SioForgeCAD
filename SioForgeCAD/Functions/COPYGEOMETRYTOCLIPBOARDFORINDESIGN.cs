@@ -124,9 +124,9 @@ namespace SioForgeCAD.Functions
 
                 byte[] EPS = Encoding.ASCII.GetBytes(writer.ToString());
                 Debug.WriteLine(writer.ToString());
-                Generic.WriteMessage("Copié ! Vous pouvez maintenant coller la géométrie dans InDesign ou Illustrator");
+                Generic.WriteMessage("Copié ! Vous pouvez maintenant coller la géométrie dans InDesign");
                 Clipboard.Clear();
-                SioForgeCAD.Commun.Mist.Clipboard.SetRawDataToClipboard("Encapsulated PostScript", EPS);
+                SioForgeCAD.Commun.Mist.Clipboard.SetRawDataToClipboard("Encapsulated PostScript", EPS, true);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
 
             }
