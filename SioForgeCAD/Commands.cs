@@ -171,7 +171,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "BLKMANAGEPOSITION", CommandFlags.UsePickSet)]
         public static void BLKMANAGEPOSITION() => Functions.BLKMANAGEPOSITION.Menu();
 
-        [CommandMethod("SIOFORGECAD", "BLKUPDATEGRAPHICS", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "BLKREGEN", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "BLKRECORDMODIFIEDGRAPHICS", CommandFlags.Redraw)]
         public static void BLKRECORDMODIFIEDGRAPHICS() => Functions.BLKRECORDMODIFIEDGRAPHICS.Execute();
 

@@ -128,7 +128,6 @@ namespace SioForgeCAD.Functions
                 Clipboard.Clear();
                 SioForgeCAD.Commun.Mist.Clipboard.SetRawDataToClipboard("Encapsulated PostScript", EPS, true);
                 ed.SetImpliedSelection(SelectedEnts.Value.GetObjectIds());
-
             }
         }
 

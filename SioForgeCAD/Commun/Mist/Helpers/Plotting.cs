@@ -14,14 +14,14 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 {
     public static class Plotting
     {
-        public static Task PublishLayouts(this Layout layout, string outputFilePath)
+        public static void PublishLayouts(this Layout layout, string outputFilePath)
         {
-            return new Layout[1] { layout }.PublishLayouts(outputFilePath);
+            new Layout[1] { layout }.PublishLayouts(outputFilePath);
         }
 
-        public static Task PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
+        public static void PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
         {
-            return layouts.ProcessPrintLayoutsAsync(outputFilePath);
+            layouts.ProcessPrintLayouts(outputFilePath);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return deviceName;
         }
 
-        private static async Task ProcessPrintLayoutsAsync(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
+        private static void ProcessPrintLayouts(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
         {
             if (layouts?.Any() != true)
             {
@@ -89,12 +89,12 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 
             if (HaveSamePaperFormat)
             {
-                PlotSuccess = await layouts.PublishLayoutsWithSamePaperFormats(outputFilePath);
+                PlotSuccess = layouts.PublishLayoutsWithSamePaperFormats(outputFilePath);
             }
 
             if (!PlotSuccess) //if PublishLayoutsWithSamePaperFormats fails, we run your PublishLayoutsWithDifferentsPaperFormats
             {
-                PlotSuccess = await layouts.PublishLayoutsWithDifferentsPaperFormats(outputFilePath);
+                PlotSuccess = layouts.PublishLayoutsWithDifferentsPaperFormats(outputFilePath);
             }
 
             if (PlotSuccess && AutoOpenFile && File.Exists(outputFilePath))
@@ -103,7 +103,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             }
         }
 
-        private static async Task<bool> PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static bool PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             Document doc = Generic.GetDocument();
             string docName = doc.Name.Substring(doc.Name.LastIndexOf("\\") + 1);
@@ -202,7 +202,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             }
 
                             LayoutManager.Current.CurrentLayout = layout.LayoutName;
-                            await Task.Delay(100); // Attendre un peu pour que le changement de layout soit pris en compte
+                            
                             pagePlotInfo.OverrideSettings = plotSettings;
                             plotInfoValidator.Validate(pagePlotInfo);
 
@@ -219,6 +219,11 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             plotProcessDialog.UpperSheetProgressRange = 100;
                             plotProcessDialog.SheetProgressPos = 0;
 
+                            System.Threading.SpinWait.SpinUntil(() =>
+                            {
+                                System.Windows.Forms.Application.DoEvents();
+                                return false;
+                            }, 500);
 
                             PlotPageInfo plotPageInfo = new PlotPageInfo();
                             Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}, rotation : {layout.PlotRotation}");
@@ -278,7 +283,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return true;
         }
 
-        private static async Task<bool> PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static bool PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             if (layouts?.Any() != true)
             {
