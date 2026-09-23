@@ -144,6 +144,7 @@ namespace SioForgeCAD.Functions
                 return false;
             }
 
+            Layers.SetLayerColor(blkRef.Layer, selectedColor);
             var oldLayer = Layers.GetLayerTableRecordByName(blkRef.Layer);
             var layerId = Layers.CreateLayer(oldBlockName, selectedColor, oldLayer.LineWeight, oldLayer.Transparency, oldLayer.IsPlottable);
 
@@ -164,7 +165,6 @@ namespace SioForgeCAD.Functions
 
             // Appliquer la couleur avant de recréer le bloc
             Layers.SetLayerColor(oldBlockName, data.SelectedColor);
-
             string newBlockName = VEGBLOC.CreateBlockFromData(data.Name, data.Height, data.Width, data.Type, out string blockData, out bool wasCreated);
 
             if (string.IsNullOrWhiteSpace(newBlockName))

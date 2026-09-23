@@ -39,6 +39,7 @@ namespace SioForgeCAD.Commun.Drawing
             }
             return objectIdCollection;
         }
+
         public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
         {
             Database db = Generic.GetDatabase();
@@ -51,6 +52,7 @@ namespace SioForgeCAD.Commun.Drawing
                 tr.Commit();
             }
         }
+
         public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
         {
             Database db = Generic.GetDatabase();
@@ -61,9 +63,14 @@ namespace SioForgeCAD.Commun.Drawing
                 foreach (ObjectId entid in objectIdCollection)
                 {
                     Entity ent = entid.GetObject(OpenMode.ForRead) as Entity;
-
+                    
                     if (ent is BlockReference br)
                     {
+                        if (string.IsNullOrWhiteSpace(ent.Layer))
+                        {
+                            continue;
+                        }
+
                         bool IsEntOnLockedLayer = ent.IsEntityOnLockedLayer();
                         Dictionary<string, string> propertiesToCopy = PreserveProperties ? GetPropertiesFromBlock(tr, br) : null;
                         if (IsEntOnLockedLayer)

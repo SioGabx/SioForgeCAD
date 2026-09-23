@@ -28,6 +28,7 @@ namespace SioForgeCAD.Functions
         {
             BlocName, CompleteName, Height, Width, Type, VegblocVersion
         }
+
         public enum VegblocTypes
         {
             ARBRES,
@@ -144,18 +145,30 @@ namespace SioForgeCAD.Functions
 
         public static string GetVegblocType(object rowValue)
         {
-            // 1. Get raw string and cleaned version
+            // Get raw string and cleaned version
             string rawInput = rowValue?.ToString() ?? Enum.GetNames(typeof(VegblocTypes)).FirstOrDefault();
-            string cleanInput = rawInput.RemoveDiacritics().ToUpper().Trim();
 
-            // 2. Try to find a match in the Enum by comparing "Cleaned" names
+            string cleanInput = rawInput.RemoveDiacritics().Trim();
+
+            // Try exact match first
             var match = Enum.GetNames(typeof(VegblocTypes))
-                .FirstOrDefault(name => name.RemoveDiacritics().Equals(cleanInput, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(name => name.RemoveDiacritics()
+                .Equals(cleanInput, StringComparison.OrdinalIgnoreCase));
 
-            // 3. Return nameof(Match) if found, otherwise the original raw string
+            if (match != null)
+                return match;
+
+            // Try match with a missing/extra "S" at the end
+            match = Enum.GetNames(typeof(VegblocTypes))
+                .FirstOrDefault(name =>
+                {
+                    string cleanName = name.RemoveDiacritics().Trim();
+                    return cleanName.EndsWith("S", StringComparison.OrdinalIgnoreCase) &&
+                    cleanName.Substring(0, cleanName.Length - 1).Equals(cleanInput, StringComparison.OrdinalIgnoreCase);
+                });
+            // Return nameof(Match) if found, otherwise the original raw string
             return match ?? rawInput;
         }
-
         public static string GenerateDataStore(string BlocName, string CompleteName, double Height, double Width, string Type)
         {
             Dictionary<DataStore, string> data = new Dictionary<DataStore, string>

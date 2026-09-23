@@ -114,7 +114,7 @@ namespace SioForgeCAD.Functions
             foreach (var blk in blkList.OrderBy(b => b.BlockName))
             {
                 sb.AppendLine($"\n{blk.BlockName} (x{blk.Count})");
-                int PropertyNamesMaxLength = blk.Properties.Max(p => p.PropertyName.Length);
+                int PropertyNamesMaxLength = blk.Properties.Select(p => p.PropertyName.Length).DefaultIfEmpty(0).Max();
                 foreach (var prop in blk.Properties)
                 {
                     string numericSum = prop.PropertyValues.HasTypeOf(typeof(double)) ? Generic.FormatNumberForPrint(prop.PropertyValues.SumNumeric()).ToString() : "";
