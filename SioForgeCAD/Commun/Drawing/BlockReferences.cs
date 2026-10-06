@@ -40,20 +40,20 @@ namespace SioForgeCAD.Commun.Drawing
             return objectIdCollection;
         }
 
-        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
+        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
         {
             Database db = Generic.GetDatabase();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = GetAllBlockReferenceInstances(OldBlockName, tr, db);
-                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation, PreserveProperties);
+                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation, PreserveProperties, KeepLayer);
                 Purge(OldBlockName);
                 tr.Commit();
             }
         }
 
-        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true)
+        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -94,8 +94,12 @@ namespace SioForgeCAD.Commun.Drawing
                             newBr.Rotation = br.Rotation;
                         }
 
+                        if (KeepLayer)
+                        {
+                            newBr.Layer = br.Layer;
+                        }
+
                         newBr.Color = br.Color;
-                        newBr.Layer = br.Layer;
 
                         if (!br.IsErased)
                         {

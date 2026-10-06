@@ -300,6 +300,7 @@
     <Compile Include="Functions\CCDIF.cs" />
     <Compile Include="Functions\CCFROMPOINT.cs" />
     <Compile Include="Functions\CCFROMTEXT.cs" />
+    <Compile Include="Functions\CCFROMZBLK.cs" />
     <Compile Include="Functions\CCXREF.cs" />
     <Compile Include="Functions\CCP.cs" />
     <Compile Include="Functions\CCI.cs" />
