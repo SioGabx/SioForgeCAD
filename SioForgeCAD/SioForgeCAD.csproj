@@ -325,6 +325,7 @@
     <Compile Include="Functions\SETSELECTEDENTITIESSATURATION.cs" />
     <Compile Include="Functions\SKETCHUPCREATETERRAINFROMPOINTS.cs" />
     <Compile Include="Functions\SMARTLEGEND.cs" />
+    <Compile Include="Functions\SOLIDTOHATCH.cs" />
     <Compile Include="Functions\SSELEV.cs" />
     <Compile Include="Functions\TEST.cs" />
     <Compile Include="Functions\TOGGLELAYERCOMPARE.cs" />

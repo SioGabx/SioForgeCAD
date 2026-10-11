@@ -554,6 +554,11 @@ namespace SioForgeCAD
         {
             Functions.SELECTSPREADPOINTS.Select();
         }
+        [CommandMethod("SIOFORGECAD", "SOLIDTOHATCH", CommandFlags.Redraw)]
+        public static void SOLIDTOHATCH()
+        {
+            Functions.SOLIDTOHATCH.Convert();
+        }
 
         [CommandMethod("SIOFORGECAD", "LAZIMPORT", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]

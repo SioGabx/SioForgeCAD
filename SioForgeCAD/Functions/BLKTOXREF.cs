@@ -67,11 +67,18 @@ namespace SioForgeCAD.Functions
                     {
                         const int WaitTimeIncrement = 100;
                         CurrentWaitMs += WaitTimeIncrement;
+                        Application.DoEvents();
                         Thread.Sleep(WaitTimeIncrement);
                     }
                     //TODO : Check name if in drawing
+                    string BlockName = Path.GetFileNameWithoutExtension(dwgFileName);
+                    Thread.Sleep(500);
+                    if (BlockReferences.IsBlockExist(BlockName))
+                    {
+                        BlockName +="_XREF";
+                    }
 
-                    ObjectId xg = db.AttachXref(dwgFileName, Path.GetFileNameWithoutExtension(dwgFileName));
+                    ObjectId xg = db.AttachXref(dwgFileName, BlockName);
                     if (xg == ObjectId.Null)
                     {
                         Generic.WriteMessage("Failed to attach Xref.");
