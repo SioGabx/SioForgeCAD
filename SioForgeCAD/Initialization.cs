@@ -62,7 +62,14 @@ namespace SioForgeCAD
             Functions.PICKSTYLETRAY.AddTray();
 
             //Overrule
-            Functions.WIPEOUTGRIP.EnableOverrule(true);
+            try
+            {
+                Functions.WIPEOUTGRIP.EnableOverrule(true);
+            }
+            catch (System.Exception ex)
+            {
+                Generic.WriteMessage($"[ERROR] Wipeout Grip Overrule: {ex.Message}");
+            }
 
             //Event
             Functions.SAVEFILEATCLOSE.Event.Attach();
