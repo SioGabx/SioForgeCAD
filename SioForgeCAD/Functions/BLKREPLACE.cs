@@ -94,20 +94,10 @@ namespace SioForgeCAD.Functions
 
         private static void GetUserOptions(Editor ed, out bool keepAttributes, out bool keepRotation, out bool keepScale, out bool keepLayer)
         {
-            bool GetOption(string message)
-            {
-                var prompt = ed.GetOptions(message, false, "Oui", "Non");
-                if (prompt.Status == PromptStatus.OK)
-                {
-                    return prompt.StringResult != "Non";
-                }
-                return false;
-            }
-
-            keepAttributes = GetOption("Conserver les attributs dont le nom est identique des blocs À REMPLACER  ?");
-            keepRotation = GetOption("Conserver la rotation des blocs À REMPLACER  ?");
-            keepScale = GetOption("Conserver l’échelle des blocs À REMPLACER  ?");
-            keepLayer = GetOption("Conserver le calque des blocs À REMPLACER  ?");
+            keepAttributes = ed.GetBoolOption("Conserver les attributs dont le nom est identique des blocs À REMPLACER  ?");
+            keepRotation = ed.GetBoolOption("Conserver la rotation des blocs À REMPLACER  ?");
+            keepScale = ed.GetBoolOption("Conserver l’échelle des blocs À REMPLACER  ?");
+            keepLayer = ed.GetBoolOption("Conserver le calque des blocs À REMPLACER  ?");
         }
     }
 }

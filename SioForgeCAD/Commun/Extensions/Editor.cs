@@ -306,6 +306,17 @@ namespace SioForgeCAD.Commun.Extensions
 
         }
 
+        public static bool GetBoolOption(this Editor ed, string Message)
+        {
+            var prompt = ed.GetOptions(Message, false, "Oui", "Non");
+            if (prompt.Status == PromptStatus.OK)
+            {
+                return prompt.StringResult != "Non";
+            }
+            return false;
+        }
+
+
         public static int? GetIntegerInRange(this Editor ed, string message, int min, int max, int defaultValue)
         {
             while (true)

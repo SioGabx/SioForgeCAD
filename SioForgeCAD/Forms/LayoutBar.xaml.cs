@@ -701,6 +701,43 @@ namespace SioForgeCAD.Forms
             return newName;
         }
 
+        private void RenameGroup(List<LayoutGroup> targetGroups)
+        {
+            if (targetGroups.Count == 0)
+            {
+                return;
+            }
+
+            var oldNames = targetGroups.ConvertAll(g => g.Title);
+
+            var renameResults = ProcessRenamingUI(oldNames, "le groupe");
+            if (renameResults.Count == 0)
+            {
+                return;
+            }
+
+            bool hasChanges = false;
+
+            foreach (var item in renameResults)
+            {
+                var groupToRename = targetGroups.FirstOrDefault(g => g.Title == item.Original);
+                if (groupToRename != null)
+                {
+                    bool nameExists = Items.OfType<LayoutGroup>().Any(g => g != groupToRename && g.Title.Equals(item.Renamed, StringComparison.OrdinalIgnoreCase));
+
+                    groupToRename.Title = nameExists ? GenerateUniqueGroupName(item.Renamed) : item.Renamed;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                // La méthode SyncTabOrderToAutoCAD va automatiquement parcourir les onglets 
+                // du groupe et mettre à jour leurs XData avec le nouveau group.Title
+                SyncTabOrderToAutoCAD();
+                ClearSelection();
+            }
+        }
         private void InsertDuplicatedItems(List<LayoutItem> newItems, DuplicatePosition pos, LayoutItem targetItem)
         {
             int insertIndex = 0;
@@ -1949,6 +1986,9 @@ namespace SioForgeCAD.Forms
                 return;
             }
 
+
+
+
             var newGroup = new LayoutGroup { Title = GenerateUniqueGroupName("Nouveau Groupe"), IsExpanded = true };
 
             int insertIndex = Items.IndexOf(targetTabs.First());
@@ -1962,45 +2002,14 @@ namespace SioForgeCAD.Forms
 
             ClearSelection();
             SyncTabOrderToAutoCAD();
+
+            RenameGroup(new List<LayoutGroup> { newGroup });
         }
 
         private void ContextMenu_RenommerGroupe_Click(object sender, RoutedEventArgs e)
         {
             var targetGroups = GetTargetedGroupsForContextMenu(sender);
-            if (targetGroups.Count == 0)
-            {
-                return;
-            }
-
-            var oldNames = targetGroups.ConvertAll(g => g.Title);
-
-            var renameResults = ProcessRenamingUI(oldNames, "le groupe");
-            if (renameResults.Count == 0)
-            {
-                return;
-            }
-
-            bool hasChanges = false;
-
-            foreach (var item in renameResults)
-            {
-                var groupToRename = targetGroups.FirstOrDefault(g => g.Title == item.Original);
-                if (groupToRename != null)
-                {
-                    bool nameExists = Items.OfType<LayoutGroup>().Any(g => g != groupToRename && g.Title.Equals(item.Renamed, StringComparison.OrdinalIgnoreCase));
-
-                    groupToRename.Title = nameExists ? GenerateUniqueGroupName(item.Renamed) : item.Renamed;
-                    hasChanges = true;
-                }
-            }
-
-            if (hasChanges)
-            {
-                // La méthode SyncTabOrderToAutoCAD va automatiquement parcourir les onglets 
-                // du groupe et mettre à jour leurs XData avec le nouveau group.Title
-                SyncTabOrderToAutoCAD();
-                ClearSelection();
-            }
+            RenameGroup(targetGroups);
         }
 
         private void ContextMenu_TracerGroupe_Click(object sender, RoutedEventArgs e)
@@ -2509,8 +2518,13 @@ namespace SioForgeCAD.Forms
             }
             return Targeted.ToList();
         }
+
         private List<LayoutGroup> GetTargetedGroupsForContextMenu(object sender)
         {
+            if (sender is LayoutGroup senderLG)
+            {
+                return new List<LayoutGroup> { senderLG };
+            }
             LayoutGroup clickedGroup = GetRootLayoutItem(GetRootContextMenu(sender)) as LayoutGroup;
 
             // Si le clic a été fait sur un groupe spécifique qui n'est pas sélectionné

@@ -417,6 +417,9 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "VPOSELECTEDLAYOUTTAB", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPOSELECTEDLAYOUTTAB() => Functions.VIEWPORTOUTLINE.OutlineAll(true);
 
+        [CommandMethod("SIOFORGECAD", "VPSETPLOTTRANSPARENCY", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
+        public static void VPSETPLOTTRANSPARENCY() => Functions.VPSETPLOTTRANSPARENCY.Set();
+
         //Delete groups inside of a larger groups
         [CommandMethod("SIOFORGECAD", "DELETESUBGROUP", CommandFlags.Redraw)]
         public static void DELETESUBGROUP() => Functions.DELETESUBGROUP.Delete();
