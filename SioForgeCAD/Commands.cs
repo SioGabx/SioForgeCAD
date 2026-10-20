@@ -142,6 +142,13 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK() => Functions.BLKTOSTATICBLOCK.Convert();
 
+        [CommandMethod("SIOFORGECAD", "BLKCLIP", CommandFlags.Redraw)]
+        public static void BLKCLIP() => Functions.BLKCLIP.ClipBlocksWithPolyline();
+
+
+        [CommandMethod("SIOFORGECAD", "BLKCLIPFRAME", CommandFlags.Redraw)]
+        public static void BLKCLIPFRAME() => Functions.BLKCLIPFRAME.Toggle();
+
         //Create  block reference from selection
         [CommandMethod("SIOFORGECAD", "BLKCREATE", CommandFlags.Redraw)]
         public static void BLKCREATE() => Functions.BLKCREATE.Create();
