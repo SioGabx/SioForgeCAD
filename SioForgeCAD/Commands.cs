@@ -13,7 +13,7 @@ namespace SioForgeCAD
     public class Commands
     {
         //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
-        // Affiche le menu principal de SioForgeCAD et exécute l'option sélectionnée.
+        // Displays the SioForgeCAD main menu and executes the selected option.
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
         {
@@ -144,9 +144,11 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "BLKTOSTATICBLOCK", CommandFlags.UsePickSet)]
         public static void BLKTOSTATICBLOCK() => Functions.BLKTOSTATICBLOCK.Convert();
 
+        // Clips block references using a polyline.
         [CommandMethod("SIOFORGECAD", "BLKCLIP", CommandFlags.Redraw)]
         public static void BLKCLIP() => Functions.BLKCLIP.ClipBlocksWithPolyline();
 
+        // Toggles the display of the block clipping frame.
         [CommandMethod("SIOFORGECAD", "BLKCLIPFRAME", CommandFlags.Redraw)]
         public static void BLKCLIPFRAME() => Functions.BLKCLIPFRAME.Toggle();
 
@@ -162,56 +164,74 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "BLKTOXREF", CommandFlags.UsePickSet)]
         public static void BLKTOXREF() => Functions.BLKTOXREF.Convert();
 
+        // Adds entities to a block definition.
         [CommandMethod("SIOFORGECAD", "BLKADDENTITIES", CommandFlags.UsePickSet)]
         public static void BLKADDENTITIES() => Functions.BLKADDENTITIES.Add();
 
+        // Replaces all occurrences of one block with another block.
         [CommandMethod("SIOFORGECAD", "BLKREPLACEALL", CommandFlags.UsePickSet)]
         public static void BLKREPLACEALL() => Functions.BLKREPLACE.All();
 
+        // Replaces the selected blocks with another block.
         [CommandMethod("SIOFORGECAD", "BLKREPLACE", CommandFlags.UsePickSet)]
         public static void BLKREPLACE() => Functions.BLKREPLACE.Selected();
 
+        // Makes the block definition scale uniform.
         [CommandMethod("SIOFORGECAD", "BLKSETDEFINITIONTOSCALEUNIFORM", CommandFlags.UsePickSet)]
         public static void BLKSETDEFINITIONTOSCALEUNIFORM() => Functions.BLKSETDEFINITIONTOSCALEUNIFORM.SetBlockScaleToUniform();
 
+        // Makes the block definition explodable.
         [CommandMethod("SIOFORGECAD", "BLKSETDEFINITIONTOEXPLODABLE", CommandFlags.UsePickSet)]
         public static void BLKSETDEFINITIONTOEXPLODABLE() => Functions.BLKSETDEFINITIONTOEXPLODABLE.SetExplodable();
 
+        // Applies the selected references' scale to their block definition.
         [CommandMethod("SIOFORGECAD", "BLKAPPLYSCALE", CommandFlags.UsePickSet)]
         public static void BLKAPPLYSCALE() => Functions.BLKAPPLYSCALE.ApplyBlockScale();
 
+        // Opens the block position management menu.
         [CommandMethod("SIOFORGECAD", "BLKMANAGEPOSITION", CommandFlags.UsePickSet)]
         public static void BLKMANAGEPOSITION() => Functions.BLKMANAGEPOSITION.Menu();
 
+        // Regenerates the modified graphics of block references.
         [CommandMethod("SIOFORGECAD", "BLKREGEN", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "BLKRECORDMODIFIEDGRAPHICS", CommandFlags.Redraw)]
         public static void BLKRECORDMODIFIEDGRAPHICS() => Functions.BLKRECORDMODIFIEDGRAPHICS.Execute();
 
+        // Draws a perpendicular line from a point.
         [CommandMethod("SIOFORGECAD", "DRAWPERPENDICULARLINEFROMPOINT", CommandFlags.UsePickSet | CommandFlags.Redraw)]
         public static void DRAWPERPENDICULARLINEFROMPOINT() => Functions.DRAWPERPENDICULARLINEFROMPOINT.DrawPerpendicularLineFromPoint();
 
+        // Converts circles to polylines.
         [CommandMethod("SIOFORGECAD", "CIRCLETOPOLYLIGNE", CommandFlags.Redraw)]
         public static void CIRCLETOPOLYLIGNE() => Functions.CIRCLETOPOLYLIGNE.ConvertCirclesToPolylines();
+        // Converts ellipses to polylines.
         [CommandMethod("SIOFORGECAD", "ELLIPSETOPOLYLIGNE", CommandFlags.Redraw)]
         public static void ELLIPSETOPOLYLIGNE() => Functions.ELLIPSETOPOLYLIGNE.ConvertEllipseToPolylines();
+        // Converts lines to polylines.
         [CommandMethod("SIOFORGECAD", "LINETOPOLYLIGNE", CommandFlags.Redraw)]
         public static void LINETOPOLYLIGNE() => Functions.LINETOPOLYLIGNE.ConvertLineToPolylines();
 
+        // Converts 3D polylines to 2D polylines.
         [CommandMethod("SIOFORGECAD", "POLYLINE3DTOPOLYLIGNE", CommandFlags.Redraw)]
         public static void POLYLINE3DTOPOLYLIGNE() => Functions.POLYLINE3DTOPOLYLIGNE.ConvertPolyline3dToPolylines();
 
+        // Converts 2D polylines to polylines.
         [CommandMethod("SIOFORGECAD", "POLYLINE2DTOPOLYLIGNE", CommandFlags.Redraw)]
         public static void POLYLINE2DTOPOLYLIGNE() => Functions.POLYLINE2DTOPOLYLIGNE.ConvertPolyline2dToPolylines();
 
+        // Converts the selected curves to polygons.
         [CommandMethod("SIOFORGECAD", "CURVETOPOLYGON", CommandFlags.UsePickSet)]
         public static void CURVETOPOLYGON() => Functions.CURVETOPOLYGON.Convert();
 
+        // Draws terrain from the selected points.
         [CommandMethod("SIOFORGECAD", "DRAWCPTERRAIN", CommandFlags.Redraw)]
         public static void DRAWCPTERRAIN() => new Functions.DRAWCPTERRAIN().DrawTerrainFromSelectedPoints();
 
+        // Projects objects onto the terrain.
         [CommandMethod("SIOFORGECAD", "DROPCPOBJECTTOTERRAIN", CommandFlags.UsePickSet)]
         public static void DROPCPOBJECTTOTERRAIN() => Functions.DROPCPOBJECTTOTERRAIN.Project();
 
+        // Computes and draws a gradient between points.
         [CommandMethod("SIOFORGECAD", "DRAWCPORDERGRADIENT", CommandFlags.UsePickSet)]
         public static void DRAWCPORDERGRADIENT() => Functions.DRAWCPORDERGRADIENT.Compute();
 
@@ -219,34 +239,39 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "FORCELAYERCOLORTOENTITY", CommandFlags.Redraw)]
         public static void FORCELAYERCOLORTOENTITY() => Functions.FORCELAYERCOLORTOENTITY.Convert();
 
-        //
+        // Converts the color of the selected entities to grayscale.
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCOLORTOGRAYSCALE", CommandFlags.Redraw)]
         public static void SETSELECTEDENTITIESCOLORTOGRAYSCALE() => Functions.SETSELECTEDENTITIESCOLORTOGRAYSCALE.Set();
 
-        //
+        // Changes the brightness of the selected entities.
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESBRIGHTNESS", CommandFlags.Redraw)]
         public static void SETSELECTEDENTITIESBRIGHTNESS() => Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
 
-        //
+        // Changes the saturation of the selected entities.
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESSATURATION", CommandFlags.Redraw)]
         public static void SETSELECTEDENTITIESSATURATION() => Functions.SETSELECTEDENTITIESBRIGHTNESS.Set();
 
-        //
+        // Changes the contrast of the selected entities.
         [CommandMethod("SIOFORGECAD", "SETSELECTEDENTITIESCONTRAST", CommandFlags.Redraw)]
         public static void SETSELECTEDENTITIESCONTRAST() => Functions.SETSELECTEDENTITIESCONTRAST.Set();
 
+        // Displays external reference layers in grayscale.
         [CommandMethod("SIOFORGECAD", "OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE", CommandFlags.UsePickSet)]
         public static void OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE() => Functions.OVERRIDEXREFLAYERSCOLORSTOGRAYSCALE.Convert();
 
+        // Selects all entities on the selected layers.
         [CommandMethod("SIOFORGECAD", "SSL", CommandFlags.Redraw)]
         public static void SSL() => Functions.SPECIALSSELECTIONS.AllOnSelectedEntitiesLayers();
 
+        // Selects all entities with the same colors as the selection.
         [CommandMethod("SIOFORGECAD", "SSC", CommandFlags.Redraw)]
         public static void SSC() => Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesColors();
 
+        // Selects all entities with the same transparency as the selection.
         [CommandMethod("SIOFORGECAD", "SST", CommandFlags.Redraw)]
         public static void SST() => Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTransparency();
 
+        // Selects all entities with the same types as the selection.
         [CommandMethod("SIOFORGECAD", "SSE", CommandFlags.Redraw)]
         public static void SSE() => Functions.SPECIALSSELECTIONS.AllWithSelectedEntitiesTypes();
 
@@ -258,86 +283,114 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "SSCL", CommandFlags.Transparent)]
         public static void SSCL() => Functions.SPECIALSSELECTIONS.AllOnCurrentLayer();
 
+        // Selects entities inside or crossing a polyline.
         [CommandMethod("SIOFORGECAD", "SSALLINSIDE", CommandFlags.Redraw)]
         public static void SSALLINSIDE() => Functions.SPECIALSSELECTIONS.InsideCrossingPolyline();
 
+        // Selects entities strictly inside a polyline.
         [CommandMethod("SIOFORGECAD", "SSALLSTRICTLYINSIDE", CommandFlags.Redraw)]
         public static void SSALLSTRICTLYINSIDE() => Functions.SPECIALSSELECTIONS.InsideStrictPolyline();
 
+        // Selects entities by elevation.
         [CommandMethod("SIOFORGECAD", "SSELEV", CommandFlags.Redraw)]
         public static void SSELEV() => Functions.SSELEV.SelectByElevation();
 
+        // Rotates the selected entities around a reference point.
         [CommandMethod("SIOFORGECAD", "RRR", CommandFlags.UsePickSet)]
         public static void RRR() => Functions.RRR.Rotate();
 
+        // Orients the user coordinate system according to the current view.
         [CommandMethod("SIOFORGECAD", "RP2", CommandFlags.NoPaperSpace | CommandFlags.Interruptible)]
         public static void RP2() => Functions.RP2.RotateUCS();
 
+        // Frames the selected entities in the view.
         [CommandMethod("SIOFORGECAD", "FRAMESELECTED", CommandFlags.Redraw)]
         public static void FRAMESELECTED() => Functions.FRAMESELECTED.FrameEntitiesToView();
 
+        // Computes the storage volume between surfaces or points.
         [CommandMethod("SIOFORGECAD", "VOLUMESTOCKAGEEP", CommandFlags.Redraw)]
         public static void VOLUMESTOCKAGEEP() => Functions.VOLUMESTOCKAGEEP.Compute();
 
+        // Converts an area into a field or usable value.
         [CommandMethod("SIOFORGECAD", "AREATOFIELD", CommandFlags.Redraw)]
         public static void AREATOFIELD() => Functions.AREATOFIELD.Compute();
 
+        // Computes the total area of the selected objects.
         [CommandMethod("SIOFORGECAD", "TAREA", CommandFlags.Redraw)]
         public static void TAREA() => Functions.TAREA.Compute();
 
+        // Computes the total length of the selected objects.
         [CommandMethod("SIOFORGECAD", "TLENS", CommandFlags.Redraw)]
         public static void TLENS() => Functions.TLENS.Compute();
 
+        // Computes cumulative information for the selected blocks.
         [CommandMethod("SIOFORGECAD", "TBLK", CommandFlags.Redraw)]
         public static void TBLK() => Functions.TBLK.Compute();
 
+        // Computes cumulative values for block attributes.
         [CommandMethod("SIOFORGECAD", "TBLKATTR", CommandFlags.Redraw)]
         public static void TBLKATTR() => Functions.TBLK.ComputeCumulativeAttributes();
+        // Displays detailed block attribute information.
         [CommandMethod("SIOFORGECAD", "TBLKATTRDETAILED", CommandFlags.Redraw)]
         public static void TBLKATTRDETAILED() => Functions.TBLK.ComputeDetailed();
 
+        // Creates a vegetation block.
         [CommandMethod("SIOFORGECAD", "VEGBLOC", CommandFlags.Modal)]
         public static void VEGBLOC() => Functions.VEGBLOC.Create();
 
+        // Edits a selected vegetation block.
         [CommandMethod("SIOFORGECAD", "VEGBLOCEDIT", CommandFlags.UsePickSet)]
         public static void VEGBLOCEDIT() => Functions.VEGBLOCEDIT.Edit();
 
+        // Counts the fills in vegetation blocks.
         [CommandMethod("SIOFORGECAD", "VEGBLOCCOUNTFILL", CommandFlags.Redraw)]
         public static void VEGBLOCCOUNTFILL() => Functions.VEGBLOCCOUNTFILL.CountFill();
 
+        // Toggles grip copying for vegetation blocks.
         [CommandMethod("SIOFORGECAD", "VEGBLOCCOPYGRIP", CommandFlags.UsePickSet)]
         public static void VEGBLOCCOPYGRIP() => Functions.VEGBLOCCOPYGRIP.ToggleGrip();
 
+        // Adds a legend for vegetation blocks.
         [CommandMethod("SIOFORGECAD", "VEGBLOCLEGEND", CommandFlags.UsePickSet)]
         public static void VEGBLOCLEGEND() => Functions.VEGBLOCLEGEND.Add();
 
+        // Creates a layout from vegetation blocks.
         [CommandMethod("SIOFORGECAD", "VEGBLOCLAYOUT", CommandFlags.UsePickSet)]
         public static void VEGBLOCLAYOUT() => Functions.VEGBLOCLAYOUT.Create();
 
+        // Extracts data from vegetation blocks.
         [CommandMethod("SIOFORGECAD", "VEGBLOCEXTRACT", CommandFlags.Redraw)]
         public static void VEGBLOCEXTRACT() => Functions.VEGBLOCEXTRACT.Extract();
 
+        // Exports vegetation blocks to SVG format for Illustrator.
         [CommandMethod("SIOFORGECAD", "VEGBLOCEXPORTTOILLUSTRATOR", CommandFlags.Redraw)]
         public static void VEGBLOCEXPORTTOILLUSTRATOR() => Functions.VEGBLOCEXPORTTOILLUSTRATOR.ExportToSvg();
 
+        // Draws battlements or battlement-like elements.
         [CommandMethod("SIOFORGECAD", "BATTLEMENTS", CommandFlags.Modal)]
         public static void BATTLEMENTS() => Functions.BATTLEMENTS.Draw();
 
+        // Applies a perspective transformation to the geometry.
         [CommandMethod("SIOFORGECAD", "PERSPECTIVETRANSFORM", CommandFlags.Modal)]
         public static void PERSPECTIVETRANSFORM() => Functions.PERSPECTIVETRANSFORM.Create();
 
+        // Draws pavement with a random layout.
         [CommandMethod("SIOFORGECAD", "RANDOMPAVEMENT", CommandFlags.Modal)]
         public static void RANDOMPAVEMENT() => Functions.RANDOMPAVEMENT.Draw();
 
+        // Cleans the drawing by removing unused elements.
         [CommandMethod("SIOFORGECAD", "PURGEALL", CommandFlags.Modal | CommandFlags.NoBlockEditor)]
         public static void PURGEALL() => Functions.PURGEALL.Purge();
 
+        // Reads extended data from the selected entities.
         [CommandMethod("SIOFORGECAD", "READXDATA", CommandFlags.UsePickSet)]
         public static void READXDATA() => Functions.ENTITIESXDATA.Read();
 
+        // Removes extended data from the selected entities.
         [CommandMethod("SIOFORGECAD", "REMOVEENTITIESXDATA", CommandFlags.UsePickSet)]
         public static void REMOVEENTITIESXDATA() => Functions.ENTITIESXDATA.Remove();
 
+        // Removes all extended data from the drawing.
         [CommandMethod("SIOFORGECAD", "REMOVEALLENTITIESXDATA", CommandFlags.Modal)]
         public static void REMOVEALLENTITIESXDATA() => Functions.ENTITIESXDATA.RemoveAll();
 
@@ -365,15 +418,19 @@ namespace SioForgeCAD
         //Add a point to the within centroid of a polyline
         public static void GETINNERCENTROID() => Functions.GETINNERCENTROID.Get();
 
+        // Fusionne plusieurs polylignes en une seule.
         [CommandMethod("SIOFORGECAD", "MERGEPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void MERGEPOLYLIGNES() => Functions.MERGEPOLYLIGNES.Merge();
 
+        // Soustrait une polyligne d'une autre.
         [CommandMethod("SIOFORGECAD", "SUBSTRACTPOLYLIGNES", CommandFlags.UsePickSet)]
         public static void SUBSTRACTPOLYLIGNES() => Functions.SUBSTRACTPOLYLIGNES.Substract();
 
+        // Checks whether a polyline is oriented clockwise.
         [CommandMethod("SIOFORGECAD", "POLYISCLOCKWISE", CommandFlags.UsePickSet)]
         public static void POLYISCLOCKWISE() => Functions.POLYISCLOCKWISE.Check();
 
+        // Ajoute des points aux sommets des polylignes.
         [CommandMethod("SIOFORGECAD", "ADDPOINTSATPOLYLIGNEVERTICES", CommandFlags.Redraw)]
         public static void ADDPOINTSATPOLYLIGNEVERTICES() => Functions.ADDPOINTSATPOLYLIGNEVERTICES.Execute();
 
@@ -381,32 +438,39 @@ namespace SioForgeCAD
         //Overule to draw a circle at each vertex of the selected entities
         public static void VIEWGEOMETRYVERTEX() => Functions.VIEWGEOMETRYVERTEX.ToggleOverrule();
 
+        // Computes the average length of the selected lines.
         [CommandMethod("SIOFORGECAD", "LINESAVERAGE", CommandFlags.UsePickSet)]
         public static void LINESAVERAGE() => Functions.LINESAVERAGE.Compute();
 
+        //ViewPorts lock / unlock all
         [CommandMethod("SIOFORGECAD", "VPL", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VPLOCK", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VPUNLOCK", CommandFlags.NoBlockEditor)]
         [CommandMethod("SIOFORGECAD", "VIEWPORTLOCK", CommandFlags.NoBlockEditor)]
-        //ViewPorts lock / unlock all
         public static void VIEWPORTLOCK() => Functions.VIEWPORTLOCK.Menu();
 
+        // Cleans the selected polylines.
         [CommandMethod("SIOFORGECAD", "POLYCLEAN", CommandFlags.UsePickSet)]
         public static void POLYCLEAN() => Functions.POLYCLEAN.PolyClean();
 
+        // Optimizes the selected polylines.
         [CommandMethod("SIOFORGECAD", "POLYOPTIMIZE", CommandFlags.UsePickSet)]
         public static void POLYOPTIMIZE() => Functions.POLYOPTIMIZE.PolyOptimize();
 
+        // Adds or updates the selection style settings panel.
         [CommandMethod("SIOFORGECAD", "PICKSTYLETRAY", CommandFlags.Transparent)]
         public static void PICKSTYLETRAY() => Functions.PICKSTYLETRAY.AddTray();
 
+        // Converts a raster image into an embedded OLE object.
         [CommandMethod("SIOFORGECAD", "CONVERTIMAGETOOLE", CommandFlags.UsePickSet)]
         [CommandMethod("SIOFORGECAD", "EMBEDIMAGE", CommandFlags.UsePickSet)]
         public static void CONVERTIMAGETOOLE() => Functions.CONVERTIMAGETOOLE.RasterToOle();
 
+        // Copies geometry from model space to paper space.
         [CommandMethod("SIOFORGECAD", "COPYMODELTOPAPER", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYMODELTOPAPER() => Functions.COPYMODELTOPAPER.ChangeSpace();
 
+        // Copies geometry from paper space to model space.
         [CommandMethod("SIOFORGECAD", "COPYPAPERTOMODEL", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor | CommandFlags.NoPerspective)]
         public static void COPYPAPERTOMODEL() => Functions.COPYPAPERTOMODEL.ChangeSpace();
 
@@ -425,6 +489,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "VPOSELECTEDLAYOUTTAB", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPOSELECTEDLAYOUTTAB() => Functions.VIEWPORTOUTLINE.OutlineAll(true);
 
+        //Configures the plot transparency of the selected viewports.
         [CommandMethod("SIOFORGECAD", "VPSETPLOTTRANSPARENCY", CommandFlags.UsePickSet | CommandFlags.NoBlockEditor)]
         public static void VPSETPLOTTRANSPARENCY() => Functions.VPSETPLOTTRANSPARENCY.Set();
 
@@ -454,14 +519,17 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "HATCHRECREATEMISSINGBOUNDARIES", CommandFlags.UsePickSet)]
         public static void HATCHRECREATEMISSINGBOUNDARIES() => Functions.HATCHRECREATEMISSINGBOUNDARIES.Recreate();
 
+        // Recherche les hachures dont l'aire n'est pas valide.
         [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHINVALIDAREA", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "FINDHATCHWITHOUTVALIDAREA", CommandFlags.Redraw)]
         public static void FINDHATCHWITHOUTVALIDAREA() => Functions.FINDHATCHWITHOUTVALIDAREA.Search();
 
+        // Find non-associative hatches
         [CommandMethod("SIOFORGECAD", "HATCHSELECTWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "FINDHATCHWITHOUTASSOCIATIVEBOUNDARY", CommandFlags.Redraw)]
         public static void FINDHATCHWITHOUTASSOCIATIVEBOUNDARY() => Functions.FINDHATCHWITHOUTASSOCIATIVEBOUNDARY.Search();
 
+        // Finds hatches whose associated boundary is on another layer.
         [CommandMethod("SIOFORGECAD", "HATCHSELECTASSOCIATIVEBOUNDARYNOTSAMELAYER", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER", CommandFlags.Redraw)]
         public static void FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER() => Functions.FINDHATCHASSOCIATIVEBOUNDARYNOTSAMELAYER.Search();
@@ -474,7 +542,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "SMARTFLATTENEVERYTHINGS", CommandFlags.UsePickSet)]
         public static void SMARTFLATTENEVERYTHINGS() => Functions.SMARTFLATTEN.FlattenAll();
 
-        //
+        // Removes formatting from the selected text objects.
         [CommandMethod("SIOFORGECAD", "STRIPTEXTFORMATING", CommandFlags.UsePickSet)]
         public static void STRIPTEXTFORMATING() => Functions.STRIPTEXTFORMATING.Strip();
 
@@ -482,95 +550,121 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "FIXDRAWING", CommandFlags.Modal)]
         public static void FIXDRAWING() => Functions.FIXDRAWING.Fix();
 
+        // Toggles the grip of wipeout objects.
         [CommandMethod("SIOFORGECAD", "WIPEOUTGRIP", CommandFlags.UsePickSet)]
         public static void WIPEOUTGRIP() => Functions.WIPEOUTGRIP.ToggleGrip();
 
+        // Toggles automatic saving when closing the drawing.
         [CommandMethod("SIOFORGECAD", "SAVEFILEATCLOSE", CommandFlags.Redraw)]
         public static void SAVEFILEATCLOSE() => Functions.SAVEFILEATCLOSE.Toggle();
 
+        // Recherche et supprime les objets proxy du dessin.
         [CommandMethod("SIOFORGECAD", "REMOVEALLPROXIES", CommandFlags.Redraw)]
         public static void REMOVEALLPROXIES() => Functions.REMOVEALLPROXIES.SearchAndEraseProxy();
 
+        // Creates regions from polyline boundaries.
         [CommandMethod("SIOFORGECAD", "SKETCHUPCREATEREGIONFROMPOLY", CommandFlags.Redraw)]
         public static void SKETCHUPCREATEREGIONFROMPOLY() => Functions.SKETCHUPCREATEREGIONFROMPOLY.GenerateRegionFromBoundaries();
 
+        // Creates terrain from elevation points.
         [CommandMethod("SIOFORGECAD", "SKETCHUPCREATETERRAINFROMPOINTS", CommandFlags.Redraw)]
         public static void SKETCHUPCREATETERRAINFROMPOINTS() => Functions.SKETCHUPCREATETERRAINFROMPOINTS.GeneratePointsFromAlt();
 
+        // Creates multiple offsets of the selected objects.
         [CommandMethod("SIOFORGECAD", "OFFSETMULTIPLE", CommandFlags.Redraw)]
         public static void OFFSETMULTIPLE() => Functions.OFFSETMULTIPLE.Execute();
 
+        // Prolonge une polyligne jusqu'à une limite.
         [CommandMethod("SIOFORGECAD", "EXTENDPOLY", CommandFlags.Redraw)]
         public static void EXTENDPOLY() => Functions.EXTENDPOLY.Execute();
 
+        // Copies geometry to the clipboard for InDesign.
         [CommandMethod("SIOFORGECAD", "COPYGEOMETRYTOCLIPBOARDFORINDESIGN", CommandFlags.Redraw)]
         public static void COPYGEOMETRYTOCLIPBOARDFORINDESIGN() => Functions.COPYGEOMETRYTOCLIPBOARDFORINDESIGN.Copy();
 
+        // Renames a layout.
         [CommandMethod("SIOFORGECAD", "RENAMELAYOUT", CommandFlags.UsePickSet)]
         public static void RENAMELAYOUT() => Functions.RENAMELAYOUT.Rename();
 
+        // Renomme des calques.
         [CommandMethod("SIOFORGECAD", "RENAMELAYERS", CommandFlags.UsePickSet)]
         public static void RENAMELAYERS() => Functions.RENAMELAYERS.Rename();
 
+        // Opens the drawing custom properties management menu.
         [CommandMethod("SIOFORGECAD", "MANAGEDRAWINGCUSTOMPROPERTIES", CommandFlags.UsePickSet)]
         public static void MANAGEDRAWINGCUSTOMPROPERTIES() => Functions.MANAGEDRAWINGCUSTOMPROPERTIES.Menu();
 
+        // Opens the user coordinate system management menu.
         [CommandMethod("SIOFORGECAD", "MANAGESCU", CommandFlags.UsePickSet)]
         public static void MANAGESCU() => Functions.MANAGESCU.Menu();
 
+        // Imports 3D geometry from an OBJ file.
         [CommandMethod("SIOFORGECAD", "IMPORT3DGEOMETRYFROMOBJFILE", CommandFlags.UsePickSet)]
         public static void IMPORT3DGEOMETRYFROMOBJFILE() => Functions.IMPORT3DGEOMETRYFROMOBJFILE.Menu();
 
+        // Updates the drawing's external references.
         [CommandMethod("SIOFORGECAD", "UPDATEXREFS", CommandFlags.UsePickSet)]
         public static void UPDATEXREFS() => Functions.UPDATEXREFS.Update();
 
+        // Copies objects in an array pattern.
         [CommandMethod("SIOFORGECAD", "ARRAYCOPY", CommandFlags.Redraw)]
         public static void ARRAYCOPY() => Functions.ARRAYCOPY.Execute();
 
+        // Creates the outer outline of a polyline.
         [CommandMethod("SIOFORGECAD", "POLYOUTLINE", CommandFlags.Redraw)]
         public static void POLYOUTLINE() => Functions.POLYOUTLINE.CreatePolyOutline();
 
+        // Creates a layout from a rectangle.
         [CommandMethod("SIOFORGECAD", "LAYOUTFROMRECTANGLE", CommandFlags.Redraw)]
         public static void LAYOUTFROMRECTANGLE() => Functions.LAYOUTFROMRECTANGLE.Execute();
 
+        // Shows or hides the custom layout bar.
         [CommandMethod("SIOFORGECAD", "CUSTOMLAYOUTBAR", CommandFlags.Redraw)]
         public static void CUSTOMLAYOUTBAR() => Functions.CUSTOMLAYOUTBAR.Toggle();
 
+        // Dessine le cadre de la zone papier.
         [CommandMethod("SIOFORGECAD", "DRAWPAPERFRAME", CommandFlags.Redraw)]
         public static void DRAWPAPERFRAME() => Functions.DRAWPAPERFRAME.Draw();
 
+        // Opens the publish dialog for the selected layouts.
         [CommandMethod("SIOFORGECAD", "PUBLISHSELECTEDLAYOUTS", CommandFlags.Redraw)]
         public static void PUBLISHSELECTEDLAYOUTS() => Functions.PUBLISHSELECTEDLAYOUTS.ShowPublishDialog();
 
+        // Creates contour lines from elevation points.
         [CommandMethod("SIOFORGECAD", "CREATECONTOURSLINESFROMPOINTS", CommandFlags.Redraw)]
         public static void CREATECONTOURSLINESFROMPOINTS()
         {
             Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
         }
 
+        // Adds labels to contour lines.
         [CommandMethod("SIOFORGECAD", "CREATELABELSONCONTOURELEVATIONS", CommandFlags.Redraw)]
         public static void CREATELABELSONCONTOURELEVATIONS()
         {
             Functions.CREATELABELSONCONTOURELEVATIONS.Create();
         }
 
+        // Toggles layer comparison.
         [CommandMethod("SIOFORGECAD", "TOGGLELAYERCOMPARE", CommandFlags.Redraw)]
         public static void TOGGLELAYERCOMPARE()
         {
             Functions.TOGGLELAYERCOMPARE.Execute();
         }
 
+        // Selects spread points according to the requested criteria.
         [CommandMethod("SIOFORGECAD", "SELECTSPREADPOINTS", CommandFlags.Redraw)]
         public static void SELECTSPREADPOINTS()
         {
             Functions.SELECTSPREADPOINTS.Select();
         }
+        // Converts the selected solids to hatches.
         [CommandMethod("SIOFORGECAD", "SOLIDTOHATCH", CommandFlags.Redraw)]
         public static void SOLIDTOHATCH()
         {
             Functions.SOLIDTOHATCH.Convert();
         }
 
+        // Import a point cloud from a LAS or LAZ file.
         [CommandMethod("SIOFORGECAD", "LAZIMPORT", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
         public static void LASIMPORT()
@@ -582,16 +676,19 @@ namespace SioForgeCAD
 
 #if DEBUG
         //https://www.keanw.com/2007/04/rendering_autoc.html
+        // Tests the field editor.
         [CommandMethod("DEBUG", "FIELDEDITOR", CommandFlags.Redraw)]
         public static void FIELDEDITOR() => Functions.FIELDEDITOR.Test();
 
 
+        // Tests smart legend generation.
         [CommandMethod("DEBUG", "SMARTLEGEND", CommandFlags.Redraw)]
         public static void SMARTLEGEND()
         {
             Functions.SMARTLEGEND.Test();
         }
 
+        // Attempts to convert an AutoCAD elevation proxy into a block.
         [CommandMethod("DEBUG", "TRYCONVERTACADPROXYENTALTIMETRYTOBLK", CommandFlags.Redraw)]
         public static void TRYCONVERTACADPROXYENTALTIMETRYTOBLK()
         {
@@ -655,13 +752,16 @@ namespace SioForgeCAD
         //https://github.com/huypham0808/Autopublish_AutoCAD_Plug-in/blob/f2f059f795bb26f7b654a05e64de68557f34f950/Command.cs#L165
 
 
+        // Displays the memory size of the selected object.
         [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.UsePickSet)]
         public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
 
 
+        // Generates random points for testing.
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]
         public static void DEBUG_RANDOM_POINTS() => Functions.DEBUG.DEBUG_RANDOM_POINTS();
 
+        // Dessine des lignes aux couleurs de l'arc-en-ciel pour les tests.
         [CommandMethod("DEBUG", "DRAWRAINBOWLIGNES", CommandFlags.Transparent)]
         public static void DRAWRAINBOWLIGNES() => Functions.DEBUG.DRAWRAINBOWLIGNES();
 
