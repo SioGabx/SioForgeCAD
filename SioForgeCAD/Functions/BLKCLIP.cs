@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using System;
 
 namespace SioForgeCAD.Functions
 {
@@ -49,6 +50,8 @@ namespace SioForgeCAD.Functions
                     polyWcsPoints.Add(poly.GetPoint3dAt(i));
                 }
 
+                int clippedCount = 0;
+
                 // 3. Application du SpatialFilter sur chaque bloc sélectionné
                 foreach (var selectedObj in BlockSet)
                 {
@@ -60,6 +63,14 @@ namespace SioForgeCAD.Functions
                     BlockReference br = selectedObj.GetDBObject(OpenMode.ForWrite) as BlockReference;
                     if (br == null)
                     {
+                        continue;
+                    }
+
+                    // --- VÉRIFICATION DE LA COLLISION ---
+                    Extents3d blockExtents = br.GeometricExtents;
+                    if (!IsPolylineCollidingWithExtents(poly, blockExtents))
+                    {
+                        // Le bloc ne touche pas la polyligne, on passe au suivant
                         continue;
                     }
 
@@ -103,13 +114,73 @@ namespace SioForgeCAD.Functions
                     }
                     fDict.SetAt(SpatialName, sf);
                     tr.AddNewlyCreatedDBObject(sf, true);
+
+                    clippedCount++;
                 }
 
                 tr.Commit();
+                Generic.Regen();
+                Generic.WriteMessage($"{clippedCount} bloc(s) délimité(s) sur {BlockSet.Length} sélectionné(s).");
+            }
+        }
+
+        /// <summary>
+        /// Vérifie si la BoundingBox (Extents3d) collisionne avec les segments de la polyligne 
+        /// ou si elle est contenue à l'intérieur.
+        /// </summary>
+        private static bool IsPolylineCollidingWithExtents(Polyline poly, Extents3d extents)
+        {
+            // 1. Test rapide AABB (Axis-Aligned Bounding Box) pour éliminer les cas éloignés
+            Extents3d polyExtents = poly.GeometricExtents;
+            if (polyExtents.MinPoint.X > extents.MaxPoint.X || polyExtents.MaxPoint.X < extents.MinPoint.X ||
+                polyExtents.MinPoint.Y > extents.MaxPoint.Y || polyExtents.MaxPoint.Y < extents.MinPoint.Y)
+            {
+                return false;
             }
 
-            Generic.Regen();
-            Generic.WriteMessage($"{BlockSet.Length} bloc(s) délimité(s) avec succès.");
+            // 2. Construction des 4 segments 2D de la BoundingBox dans le plan XY
+            Point2d min = new Point2d(extents.MinPoint.X, extents.MinPoint.Y);
+            Point2d max = new Point2d(extents.MaxPoint.X, extents.MaxPoint.Y);
+
+            LineSegment2d[] bboxEdges = new LineSegment2d[]
+            {
+                new LineSegment2d(min, new Point2d(max.X, min.Y)),
+                new LineSegment2d(new Point2d(max.X, min.Y), max),
+                new LineSegment2d(max, new Point2d(min.X, max.Y)),
+                new LineSegment2d(new Point2d(min.X, max.Y), min)
+            };
+
+            for (int i = 0; i < poly.NumberOfVertices; i++)
+            {
+                SegmentType segType = poly.GetSegmentType(i);
+
+                if (segType == SegmentType.Line)
+                {
+                    LineSegment2d polySeg = poly.GetLineSegment2dAt(i);
+                    foreach (var edge in bboxEdges)
+                    {
+                        if (polySeg.IntersectWith(edge) != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (segType == SegmentType.Arc)
+                {
+                    CircularArc2d polyArc = poly.GetArcSegment2dAt(i);
+                    foreach (var edge in bboxEdges)
+                    {
+                        if (polyArc.IntersectWith(edge) != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            Point3d bboxCenter = new Point3d((min.X + max.X) / 2.0, (min.Y + max.Y) / 2.0, extents.MinPoint.Z);
+            return bboxCenter.IsInsidePolyline(poly);
         }
+
     }
 }
