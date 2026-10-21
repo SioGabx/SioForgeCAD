@@ -23,21 +23,60 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            PromptEntityOptions polyOpts = new PromptEntityOptions("\nSélectionnez la polyligne de découpe : ")
-            {
-                AllowNone = false
-            };
-            polyOpts.SetRejectMessage("\nL'objet doit être une polyligne.");
-            polyOpts.AddAllowedClass(typeof(Polyline), true);
-
-            PromptEntityResult polyRes = ed.GetEntity(polyOpts);
-            if (polyRes.Status != PromptStatus.OK)
-            {
-                return;
-            }
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                // Vérification si au moins un bloc sélectionné contient un xclip
+                bool hasClippedBlocks = false;
+                foreach (var objId in BlockSet)
+                {
+                    if (HasSpatialFilter(tr, objId))
+                    {
+                        hasClippedBlocks = true;
+                        break;
+                    }
+                }
+
+                // Configuration du PromptEntityOptions avec le Keyword si nécessaire
+                PromptEntityOptions polyOpts = new PromptEntityOptions("\nSélectionnez la polyligne de découpe : ")
+                {
+                    AllowNone = false,
+                    AppendKeywordsToMessage = true
+                };
+                polyOpts.SetRejectMessage("\nL'objet doit être une polyligne.");
+                polyOpts.AddAllowedClass(typeof(Polyline), true);
+
+                if (hasClippedBlocks)
+                {
+                    polyOpts.Keywords.Add("SUPPRIMER", "SUPPRIMER", "Supprimer XCLIP existant (S)");
+                    polyOpts.Message = "\nSélectionnez la polyligne de découpe ou ";
+                }
+
+                PromptEntityResult polyRes = ed.GetEntity(polyOpts);
+
+                // Cas 1 : L'utilisateur choisit le mot-clé pour supprimer les xclips
+                if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "SUPPRIMER")
+                {
+                    int removedCount = 0;
+                    foreach (var objId in BlockSet)
+                    {
+                        if (RemoveSpatialFilter(tr, objId))
+                        {
+                            removedCount++;
+                        }
+                    }
+
+                    tr.Commit();
+                    Generic.Regen();
+                    Generic.WriteMessage($"{removedCount} xclip(s) supprimé(s) sur {BlockSet.Length} bloc(s) sélectionné(s).");
+                    return;
+                }
+
+                if (polyRes.Status != PromptStatus.OK)
+                {
+                    return;
+                }
+
+                // Cas 2 : L'utilisateur a sélectionné une polyligne
                 Polyline poly = polyRes.ObjectId.GetDBObject(OpenMode.ForRead) as Polyline;
                 if (poly == null)
                 {
@@ -52,7 +91,6 @@ namespace SioForgeCAD.Functions
 
                 int clippedCount = 0;
 
-                // 3. Application du SpatialFilter sur chaque bloc sélectionné
                 foreach (var selectedObj in BlockSet)
                 {
                     if (selectedObj == null)
@@ -66,15 +104,13 @@ namespace SioForgeCAD.Functions
                         continue;
                     }
 
-                    // --- VÉRIFICATION DE LA COLLISION ---
+                    // Verification de la collision
                     Extents3d blockExtents = br.GeometricExtents;
                     if (!IsPolylineCollidingWithExtents(poly, blockExtents))
                     {
-                        // Le bloc ne touche pas la polyligne, on passe au suivant
                         continue;
                     }
 
-                    // Transformer les points de la polyligne dans l'espace local du bloc (OCS)
                     Matrix3d invTransform = br.BlockTransform.Inverse();
                     Point2dCollection localPts = new Point2dCollection();
 
@@ -125,12 +161,53 @@ namespace SioForgeCAD.Functions
         }
 
         /// <summary>
-        /// Vérifie si la BoundingBox (Extents3d) collisionne avec les segments de la polyligne 
-        /// ou si elle est contenue à l'intérieur.
+        /// Teste si le bloc possède un SpatialFilter (xclip).
         /// </summary>
+        private static bool HasSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            BlockReference br = tr.GetObject(blockId, OpenMode.ForRead) as BlockReference;
+            if (br == null || br.ExtensionDictionary == ObjectId.Null)
+            {
+                return false;
+            }
+
+            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+            if (xDict != null && xDict.Contains(FilterDictName))
+            {
+                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
+                return fDict != null && fDict.Contains(SpatialName);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Supprime le SpatialFilter (xclip) du bloc s'il existe.
+        /// </summary>
+        private static bool RemoveSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            BlockReference br = tr.GetObject(blockId, OpenMode.ForWrite) as BlockReference;
+            if (br == null || br.ExtensionDictionary == ObjectId.Null)
+            {
+                return false;
+            }
+
+            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
+            if (xDict != null && xDict.Contains(FilterDictName))
+            {
+                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite) as DBDictionary;
+                if (fDict != null && fDict.Contains(SpatialName))
+                {
+                    fDict.Remove(SpatialName);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static bool IsPolylineCollidingWithExtents(Polyline poly, Extents3d extents)
         {
-            // 1. Test rapide AABB (Axis-Aligned Bounding Box) pour éliminer les cas éloignés
             Extents3d polyExtents = poly.GeometricExtents;
             if (polyExtents.MinPoint.X > extents.MaxPoint.X || polyExtents.MaxPoint.X < extents.MinPoint.X ||
                 polyExtents.MinPoint.Y > extents.MaxPoint.Y || polyExtents.MaxPoint.Y < extents.MinPoint.Y)
@@ -138,7 +215,6 @@ namespace SioForgeCAD.Functions
                 return false;
             }
 
-            // 2. Construction des 4 segments 2D de la BoundingBox dans le plan XY
             Point2d min = new Point2d(extents.MinPoint.X, extents.MinPoint.Y);
             Point2d max = new Point2d(extents.MaxPoint.X, extents.MaxPoint.Y);
 
@@ -181,6 +257,5 @@ namespace SioForgeCAD.Functions
             Point3d bboxCenter = new Point3d((min.X + max.X) / 2.0, (min.Y + max.Y) / 2.0, extents.MinPoint.Z);
             return bboxCenter.IsInsidePolyline(poly);
         }
-
     }
 }
