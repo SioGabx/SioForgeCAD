@@ -75,7 +75,7 @@ namespace SioForgeCAD.Functions
                     Thread.Sleep(500);
                     if (BlockReferences.IsBlockExist(BlockName))
                     {
-                        BlockName +="_XREF";
+                        BlockName += "_XREF";
                     }
 
                     ObjectId xg = db.AttachXref(dwgFileName, BlockName);

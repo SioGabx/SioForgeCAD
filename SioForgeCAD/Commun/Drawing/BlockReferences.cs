@@ -40,20 +40,30 @@ namespace SioForgeCAD.Commun.Drawing
             return objectIdCollection;
         }
 
-        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
+        public static Scale3d? GetScaleForBlkReplacements(bool keepScale, BlockReference BlkToReplacement)
+        {
+            Scale3d? ScaleFactors = null;
+            if (keepScale)
+            {
+                ScaleFactors = BlkToReplacement.ScaleFactors;
+            }
+            return ScaleFactors;
+        }
+
+        public static void ReplaceAllBlockReference(string OldBlockName, string NewBlockName, Scale3d? ScaleFactors = null, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
         {
             Database db = Generic.GetDatabase();
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 ObjectIdCollection objectIdCollection = GetAllBlockReferenceInstances(OldBlockName, tr, db);
-                ReplaceAllBlockReference(objectIdCollection, NewBlockName, KeepScale, KeepRotation, PreserveProperties, KeepLayer);
+                ReplaceAllBlockReference(objectIdCollection, NewBlockName, ScaleFactors, KeepRotation, PreserveProperties, KeepLayer);
                 Purge(OldBlockName);
                 tr.Commit();
             }
         }
 
-        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, bool KeepScale = true, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
+        public static void ReplaceAllBlockReference(ObjectIdCollection objectIdCollection, string NewBlockName, Scale3d? ScaleFactors = null, bool KeepRotation = true, bool PreserveProperties = true, bool KeepLayer = true)
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -63,7 +73,7 @@ namespace SioForgeCAD.Commun.Drawing
                 foreach (ObjectId entid in objectIdCollection)
                 {
                     Entity ent = entid.GetObject(OpenMode.ForRead) as Entity;
-                    
+
                     if (ent is BlockReference br)
                     {
                         if (string.IsNullOrWhiteSpace(ent.Layer))
@@ -84,9 +94,13 @@ namespace SioForgeCAD.Commun.Drawing
                         var newBrObjId = InsertFromName(NewBlockName, br.Position.ToPoints(), ed.GetUSCRotation(AngleUnit.Radians), propertiesToCopy, NewBlockName, ownerBtr);
                         var newBr = tr.GetObject(newBrObjId, OpenMode.ForWrite) as BlockReference;
 
-                        if (KeepScale)
+                        if (ScaleFactors is null)
                         {
                             newBr.ScaleFactors = br.ScaleFactors;
+                        }
+                        else
+                        {
+                            newBr.ScaleFactors = ScaleFactors.Value;
                         }
 
                         if (KeepRotation)

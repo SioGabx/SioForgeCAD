@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Commun.Mist.Helpers
 {
@@ -202,7 +201,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             }
 
                             LayoutManager.Current.CurrentLayout = layout.LayoutName;
-                            
+
                             pagePlotInfo.OverrideSettings = plotSettings;
                             plotInfoValidator.Validate(pagePlotInfo);
 

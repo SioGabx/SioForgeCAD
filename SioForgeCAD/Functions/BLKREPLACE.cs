@@ -49,10 +49,11 @@ namespace SioForgeCAD.Functions
                 GetUserOptions(ed, out bool keepAttributes, out bool keepRotation, out bool keepScale, out bool keepLayer);
                 var BackupLayer = Layers.GetCurrentLayerName();
                 Layers.SetCurrentLayerName(BlkToReplacement.Layer);
+                var ScaleFactors = BlockReferences.GetScaleForBlkReplacements(keepScale, BlkToReplacement);
                 foreach (var OldBlockNewRenameName in OldBlockNewRenameNames)
                 {
 
-                    BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, keepScale, keepRotation, keepAttributes, keepLayer);
+                    BlockReferences.ReplaceAllBlockReference(OldBlockNewRenameName, NewBlockName, ScaleFactors, keepRotation, keepAttributes, keepLayer);
                 }
                 Layers.SetCurrentLayerName(BackupLayer);
                 tr.Commit();
@@ -85,7 +86,8 @@ namespace SioForgeCAD.Functions
                 var BackupLayer = Layers.GetCurrentLayerName();
                 Layers.SetCurrentLayerName(BlkToReplacement.Layer);
 
-                BlockReferences.ReplaceAllBlockReference(BlkToReplaceObjIds.ToObjectIdCollection(), NewBlockName, keepScale, keepRotation, keepAttributes, keepLayer);
+                var ScaleFactors = BlockReferences.GetScaleForBlkReplacements(keepScale, BlkToReplacement);
+                BlockReferences.ReplaceAllBlockReference(BlkToReplaceObjIds.ToObjectIdCollection(), NewBlockName, ScaleFactors, keepRotation, keepAttributes, keepLayer);
                 Layers.SetCurrentLayerName(BackupLayer);
 
                 tr.Commit();

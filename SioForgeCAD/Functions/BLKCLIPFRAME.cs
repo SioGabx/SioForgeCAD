@@ -1,7 +1,4 @@
-﻿using System;
-using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using SioForgeCAD.Commun;
+﻿using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 
 namespace SioForgeCAD.Functions

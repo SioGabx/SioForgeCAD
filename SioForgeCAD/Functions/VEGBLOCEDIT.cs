@@ -204,7 +204,7 @@ namespace SioForgeCAD.Functions
             blkDef.Comments = blockData;
 
             // Remplacement final et fusion des calques
-            BlockReferences.ReplaceAllBlockReference(oldBlockNewRenameName, newBlockName, true, true);
+            BlockReferences.ReplaceAllBlockReference(oldBlockNewRenameName, newBlockName, null, true);
             Layers.Merge(oldBlockName, newBlockName);
             Layers.SetLayerColor(newBlockName, data.SelectedColor);
         }

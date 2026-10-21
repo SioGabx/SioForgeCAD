@@ -13,6 +13,7 @@ namespace SioForgeCAD
     public class Commands
     {
         //https://forums.autodesk.com/t5/net/net-ribbon-persistance/td-p/12803033
+        // Affiche le menu principal de SioForgeCAD et exécute l'option sélectionnée.
         [CommandMethod("SIOFORGECAD")]
         public static void SIOFORGECAD()
         {
@@ -90,6 +91,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "CCA", CommandFlags.Modal)]
         public static void CCA() => Functions.CCA.Compute();
 
+        //Compute the elevation difference between two points.
         [CommandMethod("SIOFORGECAD", "CCDIF", CommandFlags.Modal)]
         public static void CCDIF() => Functions.CCDIF.Compute();
 
@@ -144,7 +146,6 @@ namespace SioForgeCAD
 
         [CommandMethod("SIOFORGECAD", "BLKCLIP", CommandFlags.Redraw)]
         public static void BLKCLIP() => Functions.BLKCLIP.ClipBlocksWithPolyline();
-
 
         [CommandMethod("SIOFORGECAD", "BLKCLIPFRAME", CommandFlags.Redraw)]
         public static void BLKCLIPFRAME() => Functions.BLKCLIPFRAME.Toggle();
