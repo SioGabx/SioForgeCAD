@@ -2,32 +2,41 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Drawing;
+using SioForgeCAD.Commun.Extensions;
 using System;
 using System.Diagnostics;
 
 namespace SioForgeCAD.Functions
 {
-    public static class POLYLIGNDIVIDEEQUALAREA
+    public static class DIVIDEPOLYLIGNINEQUALAREAS
     {
-        public static void DiviserAireEquivalente()
+        public static void DivideInEqualArea()
         {
-            Document doc = Application.DocumentManager.MdiActiveDocument;
-            Database db = doc.Database;
-            Editor ed = doc.Editor;
+            Database db = Generic.GetDatabase();
+            Editor ed = Generic.GetEditor();
 
-            // 1. Sélection polyligne
+            // 1. Sélection de la polyligne
             PromptEntityOptions peoPoly = new PromptEntityOptions("\nSélectionnez une polyligne fermée : ");
             peoPoly.SetRejectMessage("Veuillez sélectionner une polyligne valide.");
             peoPoly.AddAllowedClass(typeof(Polyline), false);
             PromptEntityResult perPoly = ed.GetEntity(peoPoly);
-            if (perPoly.Status != PromptStatus.OK) return;
+            if (perPoly.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
-            // 2. Sélection ligne
+            // 2. Sélection du segment/ligne de direction
             PromptEntityOptions peoLine = new PromptEntityOptions("\nSélectionnez le segment/ligne de direction : ");
             peoLine.SetRejectMessage("Veuillez sélectionner une ligne valide.");
-            peoLine.AddAllowedClass(typeof(Line), false);
+            peoLine.AddAllowedClass(typeof(Line), false); 
+            peoLine.AddAllowedClass(typeof(Polyline), false);
             PromptEntityResult perLine = ed.GetEntity(peoLine);
-            if (perLine.Status != PromptStatus.OK) return;
+            if (perLine.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             // 3. Nombre de parties
             PromptIntegerOptions pio = new PromptIntegerOptions("\nEn combien de parties voulez-vous diviser l'aire ? ")
@@ -38,20 +47,34 @@ namespace SioForgeCAD.Functions
                 UseDefaultValue = true
             };
             PromptIntegerResult pir = ed.GetInteger(pio);
-            if (pir.Status != PromptStatus.OK) return;
+            if (pir.Status != PromptStatus.OK)
+            {
+                return;
+            }
 
             int numParts = pir.Value;
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                Polyline poly = tr.GetObject(perPoly.ObjectId, OpenMode.ForRead) as Polyline;
-                Line baseLine = tr.GetObject(perLine.ObjectId, OpenMode.ForRead) as Line;
-
-                if (poly == null || !poly.Closed)
+                Polyline poly = perPoly.ObjectId.GetDBObject(OpenMode.ForRead) as Polyline;
+                Entity baseLineOrPoly = perLine.ObjectId.GetDBObject(OpenMode.ForRead) as Entity;
+                Line baseLine = null;
+                if (baseLineOrPoly is Line line)
                 {
-                    ed.WriteMessage("\nErreur : La polyligne doit être fermée.");
-                    return;
+                    baseLine = line;
                 }
+                else if (baseLineOrPoly is Polyline polySegment)
+                {
+                    // Validation : la polyligne doit comporter exactement 2 sommets (1 segment)
+                    if (polySegment.NumberOfVertices != 2)
+                    {
+                        Generic.WriteMessage("Erreur : La polyligne de direction doit contenir exactement 1 segment (2 sommets).");
+                        return;
+                    }
+                    baseLine = polySegment.ToLine();
+                }
+
+                if (baseLine == null) return;
 
                 BlockTableRecord btr = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
@@ -62,7 +85,7 @@ namespace SioForgeCAD.Functions
                 Point3d origStart = baseLine.StartPoint;
                 Point3d origEnd = baseLine.EndPoint;
 
-                // Projection des sommets pour établir le domaine exact de balayage
+                // Emprise de balayage par projection des sommets
                 double minOffset = double.MaxValue;
                 double maxOffset = double.MinValue;
 
@@ -70,21 +93,26 @@ namespace SioForgeCAD.Functions
                 {
                     Point3d pt = poly.GetPoint3dAt(i);
                     double proj = (pt - origStart).DotProduct(perpDir);
-                    if (proj < minOffset) minOffset = proj;
-                    if (proj > maxOffset) maxOffset = proj;
+                    if (proj < minOffset)
+                    {
+                        minOffset = proj;
+                    }
+
+                    if (proj > maxOffset)
+                    {
+                        maxOffset = proj;
+                    }
                 }
 
-                // Ajout d'une marge de sécurité
                 double margin = (maxOffset - minOffset) * 0.05;
                 minOffset -= margin;
                 maxOffset += margin;
 
-                // Détermination de l'orientation de croissance de l'aire
                 double areaMin = CalculateHalfSpaceArea(poly, origStart, origEnd, perpDir, lineDir, minOffset);
                 double areaMax = CalculateHalfSpaceArea(poly, origStart, origEnd, perpDir, lineDir, maxOffset);
                 bool isIncreasing = areaMax > areaMin;
 
-                // Boucle de division
+                // Génération des N-1 lignes ajustées
                 for (int part = 1; part < numParts; part++)
                 {
                     double targetArea = (totalArea / numParts) * part;
@@ -101,44 +129,75 @@ namespace SioForgeCAD.Functions
 
                         currentArea = CalculateHalfSpaceArea(poly, origStart, origEnd, perpDir, lineDir, mid);
 
-                        Debug.WriteLine($"[DEBUG] Part {part} | Itération {i + 1:D2} | Offset: {mid,10:F4} | Aire: {currentArea,12:F4} | Cible: {targetArea,12:F4}");
-
                         if (Math.Abs(currentArea - targetArea) < tolerance)
+                        {
                             break;
+                        }
 
                         if (isIncreasing)
                         {
-                            if (currentArea < targetArea) low = mid;
-                            else high = mid;
+                            if (currentArea < targetArea)
+                            {
+                                low = mid;
+                            }
+                            else
+                            {
+                                high = mid;
+                            }
                         }
                         else
                         {
-                            if (currentArea > targetArea) low = mid;
-                            else high = mid;
+                            if (currentArea > targetArea)
+                            {
+                                low = mid;
+                            }
+                            else
+                            {
+                                high = mid;
+                            }
                         }
                     }
 
-                    // Insertion de la ligne de separation finale
-                    Point3d pStart = origStart + (perpDir * mid);
-                    Point3d pEnd = origEnd + (perpDir * mid);
-                    Line cutLine = new Line(pStart, pEnd);
-                    cutLine.SetDatabaseDefaults();
-                    btr.AppendEntity(cutLine);
-                    tr.AddNewlyCreatedDBObject(cutLine, true);
+                    // Calcul de la ligne de coupe prolongée virtuellement pour trouver les intersections
+                    Point3d pCenterStart = origStart + (perpDir * mid);
+                    Point3d pCenterEnd = origEnd + (perpDir * mid);
+                    Point3d pExtStart = pCenterStart - (lineDir * 1e5);
+                    Point3d pExtEnd = pCenterEnd + (lineDir * 1e5);
+
+                    using (Line infiniteLine = new Line(pExtStart, pExtEnd))
+                    {
+                        Point3dCollection intersectPoints = new Point3dCollection();
+                        poly.IntersectWith(infiniteLine, Intersect.OnBothOperands, intersectPoints, IntPtr.Zero, IntPtr.Zero);
+
+                        // Création des segments coupés aux bordures exactes
+                        if (intersectPoints.Count >= 2)
+                        {
+                            // Tri des points d'intersection le long de la ligne
+                            Point3d[] sortedPts = new Point3d[intersectPoints.Count];
+                            intersectPoints.CopyTo(sortedPts, 0);
+                            Array.Sort(sortedPts, (pt1, pt2) => (pt1 - pExtStart).Length.CompareTo((pt2 - pExtStart).Length));
+
+                            // Si la ligne traverse plusieurs fois une forme complexe (ex: forme en C ou U), 
+                            // on crée des segments pour chaque paire d'intersections.
+                            for (int k = 0; k < sortedPts.Length - 1; k += 2)
+                            {
+                                Line cutLine = new Line(sortedPts[k], sortedPts[k + 1]);
+                                cutLine.AddToDrawingCurrentTransaction();
+                            }
+                        }
+                    }
                 }
 
                 tr.Commit();
-                ed.WriteMessage($"\nSuccès : Polyligne ({totalArea:F2} m²) divisée en {numParts} parties égales ({totalArea / numParts:F2} m²).");
+                Generic.WriteMessage($"Succès : Polyligne ({totalArea:F2} m²) divisée en {numParts} parties égales ({totalArea / numParts:F2} m²).");
             }
         }
 
         private static double CalculateHalfSpaceArea(Polyline poly, Point3d origStart, Point3d origEnd, Vector3d perpDir, Vector3d lineDir, double offset)
         {
-            // Position courante de la ligne de coupe
             Point3d p1 = origStart + (perpDir * offset) - (lineDir * 1e5);
             Point3d p2 = origEnd + (perpDir * offset) + (lineDir * 1e5);
 
-            // Construction d'un demi-plan très large du côté positif de perpDir
             Point3d p3 = p2 + (perpDir * 1e5);
             Point3d p4 = p1 + (perpDir * 1e5);
 
@@ -157,17 +216,17 @@ namespace SioForgeCAD.Functions
                     using (DBObjectCollection halfRegions = Region.CreateFromCurves(halfColl))
                     {
                         if (mainRegions.Count == 0 || halfRegions.Count == 0)
+                        {
                             return 0;
+                        }
 
                         Region mainReg = (Region)mainRegions[0];
                         Region halfReg = (Region)halfRegions[0];
 
-                        // Intersection booléenne
                         mainReg.BooleanOperation(BooleanOperationType.BoolIntersect, halfReg);
 
                         double area = mainReg.Area;
 
-                        // Nettoyage explicite
                         mainReg.Dispose();
                         halfReg.Dispose();
 

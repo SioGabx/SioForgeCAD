@@ -589,6 +589,16 @@ namespace SioForgeCAD.Commun.Extensions
             return poly.Clone() as Polyline;
         }
 
+        public static Line ToLine(this Polyline poly)
+        {
+            if (poly.NumberOfVertices != 2)
+            {
+                return null;
+            }
+            return new Line(poly.GetPoint3dAt(0), poly.GetPoint3dAt(1));
+        }
+
+
         /// <summary>
         /// Gets the bulge between two parameters within the same arc segment of a polyline.
         /// </summary>
