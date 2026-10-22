@@ -320,6 +320,7 @@
     <Compile Include="Functions\MANAGESCU.cs" />
     <Compile Include="Functions\LAYERMANAGERNEWLAYERDEFAULTNAME.cs" />
     <Compile Include="Functions\LAYERMANAGERCTXNEWLAYERFROMSELECTED.cs" />
+    <Compile Include="Functions\POLYLIGNDIVIDEEQUALAREA.cs" />
     <Compile Include="Functions\POLYOPTIMIZE.cs" />
     <Compile Include="Functions\POLYOUTLINE.cs" />
     <Compile Include="Functions\PUBLISHSELECTEDLAYOUTS.cs" />

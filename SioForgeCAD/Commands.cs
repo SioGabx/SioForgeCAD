@@ -672,6 +672,12 @@ namespace SioForgeCAD
             Functions.LASIMPORT.ImportLAS();
         }
 
+        [CommandMethod("SIOFORGECAD", "POLYLIGNDIVIDEEQUALAREA", CommandFlags.Redraw)]
+        public static void POLYLIGNDIVIDEEQUALAREA()
+        {
+            Functions.POLYLIGNDIVIDEEQUALAREA.DiviserAireEquivalente();
+        }
+
 
 
 #if DEBUG
