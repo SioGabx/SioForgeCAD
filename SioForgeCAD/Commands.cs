@@ -676,7 +676,7 @@ namespace SioForgeCAD
         [CommandMethod("SIOFORGECAD", "DIVIDEPOLYLIGNINEQUALAREA", CommandFlags.Redraw)]
         public static void DIVIDEPOLYLIGNINEQUALAREAS()
         {
-            Functions.DIVIDEPOLYLIGNINEQUALAREAS.DivideInEqualArea();
+            Functions.DIVIDEPOLYLIGNINEQUALAREAS.DivideInEqualAreas();
         }
 
 

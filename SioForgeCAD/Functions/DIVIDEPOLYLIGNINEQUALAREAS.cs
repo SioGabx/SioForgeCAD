@@ -12,7 +12,7 @@ namespace SioForgeCAD.Functions
 {
     public static class DIVIDEPOLYLIGNINEQUALAREAS
     {
-        public static void DivideInEqualArea()
+        public static void DivideInEqualAreas()
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
@@ -121,9 +121,9 @@ namespace SioForgeCAD.Functions
                     double high = maxOffset;
                     double mid = 0;
                     double currentArea = 0;
-                    double tolerance = 1e-4;
-
-                    for (int i = 0; i < 60; i++)
+                    double tolerance = 1e-5;
+                    const int MaxNumberOfIteration = 70;
+                    for (int i = 0; i < MaxNumberOfIteration; i++)
                     {
                         mid = (low + high) / 2.0;
 
