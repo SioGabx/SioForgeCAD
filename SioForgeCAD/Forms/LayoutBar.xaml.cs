@@ -1629,6 +1629,9 @@ namespace SioForgeCAD.Forms
                             var ct = targetTabs.Count(t => t.IsInGroup);
                             menuItem.IsEnabled = !tab.IsModel && ct <= 0;
                             break;
+                        case "TabMenuItem_CloseGp":
+                            menuItem.Visibility = tab.IsInGroup ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                            break;
                         case "TabMenuItem_Duplicate":
                             PopulatePositionSubMenu(menuItem, ContextMenu_Duplicate_Click, tab, DuplicateOperation.Duplicate);
                             menuItem.IsEnabled = !tab.IsModel;
@@ -2188,6 +2191,45 @@ namespace SioForgeCAD.Forms
                 {
                     tab.IsSelected = true;
                 }
+            }
+        }
+
+        private void ContextMenu_FermerGroupe_Click(object sender, RoutedEventArgs e)
+        {
+            bool hasChanges = false;
+
+            // 1. Essayer de récupérer le(s) groupe(s) ciblé(s) (si le clic vient de l'en-tête du groupe)
+            var targetGroups = GetTargetedGroupsForContextMenu(sender);
+
+            if (targetGroups != null && targetGroups.Count > 0)
+            {
+                foreach (var group in targetGroups)
+                {
+                    if (group.IsExpanded)
+                    {
+                        group.IsExpanded = false;
+                        hasChanges = true;
+                    }
+                }
+            }
+            else
+            {
+                // 2. Sinon, récupérer les onglets ciblés et fermer leurs groupes parents (si le clic vient d'un onglet)
+                var targetTabs = GetTargetedTabsForContextMenu(sender, t => t.IsInGroup);
+                foreach (var tab in targetTabs)
+                {
+                    if (tab.ParentGroup != null && tab.ParentGroup.IsExpanded)
+                    {
+                        tab.ParentGroup.IsExpanded = false;
+                        hasChanges = true;
+                    }
+                }
+            }
+
+            // Sauvegarde l'état d'expansion dans AutoCAD (pour qu'il reste fermé au redémarrage)
+            if (hasChanges)
+            {
+                SyncTabOrderToAutoCAD();
             }
         }
 
