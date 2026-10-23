@@ -114,6 +114,7 @@ namespace SioForgeCAD.Forms
 
         private void LayoutBar_Loaded(object sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("LayoutBar_Loaded");
             Application.DocumentManager.DocumentActivated += OnDocumentActivated;
 
             var lm = LayoutManager.Current;
@@ -132,6 +133,7 @@ namespace SioForgeCAD.Forms
 
         private void LayoutBar_Unloaded(object sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("LayoutBar_Unloaded");
             Application.DocumentManager.DocumentActivated -= OnDocumentActivated;
 
             var lm = LayoutManager.Current;
@@ -314,7 +316,7 @@ namespace SioForgeCAD.Forms
             {
                 try
                 {
-                    long lHandle = Convert.ToInt64(handleStr, 16);
+                    long lHandle = (long)Convert.ToUInt64(handleStr, 16);
                     Handle handle = new Handle(lHandle);
 
                     Database db = Generic.GetDatabase();
@@ -1254,7 +1256,7 @@ namespace SioForgeCAD.Forms
 
         private void AutoScrollTimer_Tick(object sender, EventArgs e)
         {
-            if (!_isDragging || TabScrollViewer == null || PinnedControl == null)
+            if (!_isDragging || TabScrollViewer == null || PinnedControl == null || PresentationSource.FromVisual(this) == null)
             {
                 return;
             }
