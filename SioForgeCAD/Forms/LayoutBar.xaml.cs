@@ -1756,6 +1756,16 @@ namespace SioForgeCAD.Forms
             // l'événement LayoutManager.Current.LayoutRenamed appel ReloadTabs().
         }
 
+        public static string GetPlotFileName(LayoutTab targetTabs)
+        {
+            return FormatPlotFileName(targetTabs?.Title);
+        }
+
+        public static string GetPlotFileName(Layout layout)
+        {
+            return FormatPlotFileName(layout?.LayoutName);
+        }
+
         public static string GetPlotFileName(List<LayoutTab> targetTabs)
         {
             return FormatPlotFileName(string.Join("+", targetTabs.FirstOrDefault()?.Title));
@@ -1806,32 +1816,33 @@ namespace SioForgeCAD.Forms
                 Document doc = Generic.GetDocument();
                 string docName = Path.GetFileNameWithoutExtension(doc.Name);
                 string dwgDirectory = doc.GetPath();
+
                 using (var tr = Generic.GetTrans())
                 {
                     try
                     {
-                        List<Layout> LayoutListToPlot = new List<Layout>();
+                        List<Layout> layoutListToPlot = new List<Layout>();
                         for (int i = 0; i < targetTabs.Count; i++)
                         {
                             if (GetLayoutFromTab(tr, targetTabs[i], OpenMode.ForRead) is Layout layout)
                             {
-                                LayoutListToPlot.Add(layout);
+                                layoutListToPlot.Add(layout);
                             }
                         }
-                        var PlotsDevicesErrors = LayoutListToPlot.IsPlotsDeviceAvailable();
 
-                        if (PlotsDevicesErrors.Count > 0)
+                        var plotsDevicesErrors = layoutListToPlot.IsPlotsDeviceAvailable();
+                        if (plotsDevicesErrors.Count > 0)
                         {
-                            foreach (var item in PlotsDevicesErrors)
+                            foreach (var item in plotsDevicesErrors)
                             {
                                 Generic.WriteMessage($"Le périphérique de traçage \"{item.Device}\" pour la présentation \"{item.LayoutName}\" n'est pas disponible.");
                             }
-                            Generic.WriteMessage("Traçage annulé. Veuillez corriger les erreurs");
+                            Generic.WriteMessage("Traçage annulé. Veuillez corriger les erreurs.");
                             return;
                         }
 
                         // SCÉNARIO 1 : Un seul fichier à tracer
-                        if (LayoutListToPlot.Count == 1)
+                        if (layoutListToPlot.Count == 1)
                         {
                             SaveFileDialog saveFileDialog = new SaveFileDialog
                             {
@@ -1847,31 +1858,86 @@ namespace SioForgeCAD.Forms
                                 return; // Annulation utilisateur
                             }
 
-                            LayoutListToPlot.PublishLayouts(saveFileDialog.FileName);
+                            bool retry;
+                            do
+                            {
+                                var result = layoutListToPlot.PublishLayouts(saveFileDialog.FileName);
+                                retry = false;
+
+                                if (!result.Success)
+                                {
+                                    var dialogResult = System.Windows.Forms.MessageBox.Show(
+                                        $"Erreur lors de l'impression : {result.Message}\n\nVoulez-vous réessayer ?",
+                                        "Échec du traçage",
+                                        System.Windows.Forms.MessageBoxButtons.YesNo,
+                                        System.Windows.Forms.MessageBoxIcon.Warning);
+
+                                    retry = (dialogResult == System.Windows.Forms.DialogResult.Yes);
+                                }
+                            } while (retry);
                         }
                         // SCÉNARIO 2 : Plusieurs fichiers à tracer
                         else
                         {
-                            var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog("Sélectionnez le dossier d'enregistrement", "", "", "jj", Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
+                            var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog(
+                                "Sélectionnez le dossier d'enregistrement", "", "",
+                                Generic.GetExtensionDLLName(),
+                                Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
+
+                            if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                             {
-                                if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                                {
-                                    return; // Annulation
-                                }
-
-                                string selectedFolder = folderDialog.FileOrFoldername;
-
-                                foreach (var tab in LayoutListToPlot)
-                                {
-                                    string fileName = Path.Combine(selectedFolder, $"{docName}_{tab.LayoutName}.pdf");
-
-                                    tab.PublishLayouts(fileName);
-                                }
-
+                                return; // Annulation
                             }
+
+                            string selectedFolder = folderDialog.FileOrFoldername;
+
+                            // Liste de travail contenant les éléments restant à tracer
+                            List<Layout> remainingLayouts = new List<Layout>(layoutListToPlot);
+                            bool retry;
+
+                            do
+                            {
+                                List<Layout> failedLayouts = new List<Layout>();
+
+                                foreach (var tab in remainingLayouts)
+                                {
+
+                                    string fileName = Path.Combine(selectedFolder, $"{GetPlotFileName(tab)}.pdf");
+                                    var result = tab.PublishLayouts(fileName);
+
+                                    if (!result.Success)
+                                    {
+                                        failedLayouts.Add(tab);
+                                        Generic.WriteMessage($"Erreur sur \"{tab.LayoutName}\" : {result.Message}");
+                                    }
+                                }
+
+                                retry = false;
+
+                                // S'il y a eu au moins un échec
+                                if (failedLayouts.Count > 0)
+                                {
+                                    int totalCount = layoutListToPlot.Count;
+                                    int errorCount = failedLayouts.Count;
+                                    int successCount = totalCount - errorCount;
+
+                                    var dialogResult = System.Windows.Forms.MessageBox.Show(
+                                        $"{errorCount} erreur(s) sur {totalCount} présentation(s) ({successCount} réussie(s)).\n\nVoulez-vous retracer uniquement les {errorCount} présentation(s) en échec ?",
+                                        "Échec partiel du traçage",
+                                        System.Windows.Forms.MessageBoxButtons.YesNo,
+                                        System.Windows.Forms.MessageBoxIcon.Warning);
+
+                                    if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+                                    {
+                                        remainingLayouts = failedLayouts; // On réessaye uniquement les échecs
+                                        retry = true;
+                                    }
+                                }
+
+                            } while (retry);
                         }
 
-                        Generic.WriteMessage($"Impression de {targetTabs.Count} présentation(s) terminée.");
+                        Generic.WriteMessage($"Traitement des présentations terminé.");
                     }
                     finally
                     {
@@ -1884,7 +1950,6 @@ namespace SioForgeCAD.Forms
                 SetCurrentItem(recoverCurrentTab);
                 SetSelection(recoverSelectedTab);
             }
-
         }
 
         public void Publish(List<LayoutTab> targetTabs, string FileName)
@@ -1933,10 +1998,36 @@ namespace SioForgeCAD.Forms
 
                     if (layouts.Count > 0)
                     {
-                        layouts.PublishLayouts(outputPath);
+                        bool retry;
+                        do
+                        {
+                            retry = false;
+                            (bool Success, string Message) result = layouts.PublishLayouts(outputPath);
+
+                            if (!result.Success)
+                            {
+                                var dialogResult = System.Windows.Forms.MessageBox.Show(
+                                    $"Une erreur est survenue lors de la publication du carnet PDF :\n\n{result.Message}\n\nVoulez-vous réessayer de publier les {layouts.Count} présentation(s) ?",
+                                    "Échec de la publication",
+                                    System.Windows.Forms.MessageBoxButtons.YesNo,
+                                    System.Windows.Forms.MessageBoxIcon.Warning);
+
+                                if (dialogResult == System.Windows.Forms.DialogResult.Yes)
+                                {
+                                    retry = true;
+                                }
+                                else
+                                {
+                                    Generic.WriteMessage("Publication annulée après échec.");
+                                    return; // Sortie prématurée si refus de réessayer
+                                }
+                            }
+                        } while (retry);
                     }
+
                     tr.Commit();
                 }
+
                 Generic.WriteMessage($"Publication de {targetTabs.Count} présentation(s) terminée.\n{outputPath}");
             }
             finally

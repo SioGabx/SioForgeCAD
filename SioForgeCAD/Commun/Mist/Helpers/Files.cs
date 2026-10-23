@@ -147,5 +147,36 @@ namespace SioForgeCAD.Commun.Mist
             return true;
         }
 
+
+        public static bool TryCreateLog(string logs, string logFilePath = "app.log")
+        {
+            try
+            {
+                // Si le chemin pointe vers un dossier existant ou se termine par un séparateur, on ajoute "app.log"
+                if (Directory.Exists(logFilePath) ||
+                    logFilePath.EndsWith(Path.DirectorySeparatorChar.ToString()) ||
+                    logFilePath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                {
+                    logFilePath = Path.Combine(logFilePath, "app.log");
+                }
+
+                // Si le chemin contient des dossiers parents, on s'assure qu'ils existent
+                string directoryPath = Path.GetDirectoryName(logFilePath);
+                if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                // Écriture du log
+                string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {logs}{Environment.NewLine}";
+                File.AppendAllText(logFilePath, logMessage);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
     }
 }
