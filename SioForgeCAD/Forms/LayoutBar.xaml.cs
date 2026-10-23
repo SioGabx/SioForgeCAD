@@ -332,34 +332,6 @@ namespace SioForgeCAD.Forms
             return null;
         }
 
-        //private void SyncObservableCollection<T>(ObservableCollection<T> collection, List<T> targetList)
-        //{
-        //    // 1. Supprimer les éléments qui ne doivent plus être là
-        //    for (int i = collection.Count - 1; i >= 0; i--)
-        //    {
-        //        if (!targetList.Contains(collection[i]))
-        //        {
-        //            collection.RemoveAt(i);
-        //        }
-        //    }
-
-        //    // 2. Insérer les nouveaux ou déplacer ceux qui ont changé d'ordre
-        //    for (int i = 0; i < targetList.Count; i++)
-        //    {
-        //        var item = targetList[i];
-        //        int currentIndex = collection.IndexOf(item);
-
-        //        if (currentIndex == -1)
-        //        {
-        //            collection.Insert(i, item);
-        //        }
-        //        else if (currentIndex != i)
-        //        {
-        //            collection.Move(currentIndex, i);
-        //        }
-        //    }
-        //}
-
         private static void UpdateLayoutData(Transaction tr, LayoutTab tab, int order, string groupName, bool isExpanded)
         {
             if (GetLayoutFromTab(tr, tab, OpenMode.ForWrite) is Layout layout)
@@ -1411,9 +1383,24 @@ namespace SioForgeCAD.Forms
                     clickedTab.ParentGroup.IsExpanded = true;
                 }
 
-                SetCurrentItem(clickedTab);
-                OverflowToggle.IsChecked = false;
-                ClearSelection();
+                // 1. Détection des touches de modification
+                bool isCtrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+                bool isShift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+
+                // 2. Empêcher la fermeture automatique du menu WPF lors d'une sélection multiple
+                if (sender is MenuItem menuItem)
+                {
+                    menuItem.StaysOpenOnClick = isCtrl || isShift;
+                }
+
+                // 3. Appliquer la logique de sélection commune (gère déjà Ctrl, Shift et Clic Simple)
+                HandleSelection(clickedTab, isCtrl, isShift);
+
+                // 4. Si c'est un clic simple, on replie le popup manuellement
+                if (!isCtrl && !isShift)
+                {
+                    OverflowToggle.IsChecked = false;
+                }
             }
         }
 
