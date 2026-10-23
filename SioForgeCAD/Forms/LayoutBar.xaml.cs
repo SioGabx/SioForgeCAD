@@ -1371,32 +1371,27 @@ namespace SioForgeCAD.Forms
 
         private void OverflowMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            if (!CanLayoutSwitch)
-            {
-                return;
-            }
+            if (!CanLayoutSwitch) return;
 
-            if ((sender as MenuItem)?.DataContext is LayoutTab clickedTab)
-            {
-                if (clickedTab.IsInGroup)
-                {
-                    clickedTab.ParentGroup.IsExpanded = true;
-                }
+            // 1. Empêche le clic de remonter au parent (ce qui fermerait le sous-menu)
+            e.Handled = true;
 
-                // 1. Détection des touches de modification
+            // 2. On utilise LayoutItem pour gérer aussi bien les LayoutTab que les LayoutGroup
+            if ((sender as MenuItem)?.DataContext is LayoutItem clickedItem)
+            {
                 bool isCtrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
                 bool isShift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
 
-                // 2. Empêcher la fermeture automatique du menu WPF lors d'une sélection multiple
+                // 3. Maintient le menu ouvert si on fait une sélection multiple
                 if (sender is MenuItem menuItem)
                 {
                     menuItem.StaysOpenOnClick = isCtrl || isShift;
                 }
 
-                // 3. Appliquer la logique de sélection commune (gère déjà Ctrl, Shift et Clic Simple)
-                HandleSelection(clickedTab, isCtrl, isShift);
+                // 4. On délègue à votre méthode existante
+                HandleSelection(clickedItem, isCtrl, isShift);
 
-                // 4. Si c'est un clic simple, on replie le popup manuellement
+                // 5. Ferme le menu principal uniquement sur un clic simple
                 if (!isCtrl && !isShift)
                 {
                     OverflowToggle.IsChecked = false;

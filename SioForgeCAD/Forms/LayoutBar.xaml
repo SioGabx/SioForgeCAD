@@ -700,16 +700,25 @@
                                                 </Border>
 
                                                 <ControlTemplate.Triggers>
+                                                    <!-- Flèche pour les groupes -->
                                                     <Trigger Property="HasItems" Value="True">
                                                         <Setter TargetName="RightArrow" Property="Visibility" Value="Visible" />
                                                     </Trigger>
 
+                                                    <!-- Survol de la souris -->
                                                     <Trigger Property="IsHighlighted" Value="True">
                                                         <Setter TargetName="BgBorder" Property="Background" Value="{StaticResource TabHoverBg}" />
                                                         <Setter Property="Foreground" Value="{StaticResource TextActive}" />
                                                         <Setter TargetName="RightArrow" Property="Fill" Value="{StaticResource TextActive}" />
                                                     </Trigger>
 
+                                                    <!-- Élément sélectionné (Ctrl/Shift) -->
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter TargetName="BgBorder" Property="Background" Value="{StaticResource TabHoverBg}" />
+                                                        <Setter Property="Foreground" Value="{StaticResource TextActive}" />
+                                                    </DataTrigger>
+
+                                                    <!-- Élément actif/courant -->
                                                     <DataTrigger Binding="{Binding IsCurrent}" Value="True">
                                                         <Setter Property="Foreground" Value="{StaticResource TextActive}" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
