@@ -5,6 +5,7 @@ using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
@@ -25,7 +26,6 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                // Vérification si au moins un bloc sélectionné contient un XCLIP
                 bool hasClippedBlocks = false;
                 foreach (var objId in BlockSet)
                 {
@@ -36,7 +36,6 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-                // Configuration du PromptEntityOptions
                 PromptEntityOptions polyOpts = new PromptEntityOptions("\nSélectionnez la polyligne de découpe : ")
                 {
                     AllowNone = false,
@@ -154,7 +153,7 @@ namespace SioForgeCAD.Functions
                             if (!IsPolylineInsideOrCollidingWithExtents(poly, br.GeometricExtents))
                                 continue;
 
-                            CreateOrReplaceSpatialFilter(tr, br, wcs2dPoints, true);
+                            CreateOrReplaceSpatialFilter(tr, br, wcs2dPoints);
                             clippedCount++;
                         }
                     }
@@ -168,9 +167,33 @@ namespace SioForgeCAD.Functions
         }
 
         /// <summary>
-        /// Re-crée un filtre spatial (XCLIP) en supprimant l'existant si nécessaire.
+        /// Inverse l'état du filtre en basculant sf.Inverted directement sur le SpatialFilter.
         /// </summary>
-        private static bool CreateOrReplaceSpatialFilter(Transaction tr, BlockReference br, Point2dCollection wcsPts, bool clipEnabled)
+        private static bool InvertSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
+            {
+                DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+                if (xDict != null && xDict.Contains(FilterDictName))
+                {
+                    DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
+                    if (fDict != null && fDict.Contains(SpatialName))
+                    {
+                        SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite) as SpatialFilter;
+                        if (sf != null)
+                        {
+                            // Inversion explicite de la propriété Inverted du SpatialFilter
+                            sf.Inverted = !sf.Inverted;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool CreateOrReplaceSpatialFilter(Transaction tr, BlockReference br, Point2dCollection wcsPts)
         {
             Matrix3d invTransform = br.BlockTransform.Inverse();
             Point2dCollection localPts = new Point2dCollection();
@@ -187,7 +210,7 @@ namespace SioForgeCAD.Functions
                 0.0,
                 double.PositiveInfinity,
                 double.NegativeInfinity,
-                clipEnabled
+                true
             );
 
             SpatialFilter sf = new SpatialFilter { Definition = sfd };
@@ -206,7 +229,7 @@ namespace SioForgeCAD.Functions
                 if (fDict.Contains(SpatialName))
                 {
                     DBObject oldSf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite);
-                    oldSf.Erase(); // Supprime l'ancien filtre proprement
+                    oldSf.Erase();
                 }
             }
             else
@@ -222,44 +245,6 @@ namespace SioForgeCAD.Functions
             return true;
         }
 
-        /// <summary>
-        /// Inverse le filtre existant en le supprimant puis en le recréant avec le flag inversé.
-        /// </summary>
-        private static bool InvertSpatialFilter(Transaction tr, ObjectId blockId)
-        {
-            if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
-            {
-                DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
-                if (xDict != null && xDict.Contains(FilterDictName))
-                {
-                    DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
-                    if (fDict != null && fDict.Contains(SpatialName))
-                    {
-                        SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForRead) as SpatialFilter;
-                        if (sf != null)
-                        {
-                            SpatialFilterDefinition sfd = sf.Definition;
-                            Point2dCollection localPts = sfd.GetPoints();
-
-                            // Re-conversion des points locaux vers WCS pour la méthode de re-création
-                            Matrix3d blockTransform = br.BlockTransform;
-                            Point2dCollection wcsPts = new Point2dCollection();
-                            foreach (Point2d pt2d in localPts)
-                            {
-                                Point3d wcsPt = new Point3d(pt2d.X, pt2d.Y, 0.0).TransformBy(blockTransform);
-                                wcsPts.Add(new Point2d(wcsPt.X, wcsPt.Y));
-                            }
-
-                            // Suppression et récréation avec le statut Inverted inversé
-                            return CreateOrReplaceSpatialFilter(tr, br, wcsPts, !sfd.Inverted);
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
         private static bool RemoveSpatialFilter(Transaction tr, ObjectId blockId)
         {
             if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
@@ -273,7 +258,7 @@ namespace SioForgeCAD.Functions
                         DBObject sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite);
                         sf.Erase();
                         fDict.Remove(SpatialName);
-                        return true;
+                         return true;
                     }
                 }
             }
