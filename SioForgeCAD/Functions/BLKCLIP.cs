@@ -10,8 +10,8 @@ namespace SioForgeCAD.Functions
 {
     internal class BLKCLIP
     {
-        const string FilterDictName = "ACAD_FILTER";
-        const string SpatialName = "SPATIAL";
+        private const string FilterDictName = "ACAD_FILTER";
+        private const string SpatialName = "SPATIAL";
 
         public static void ClipBlocksWithPolyline()
         {
@@ -25,7 +25,7 @@ namespace SioForgeCAD.Functions
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                // Vérification si au moins un bloc sélectionné contient un xclip
+                // Vérification si au moins un bloc sélectionné contient un XCLIP
                 bool hasClippedBlocks = false;
                 foreach (var objId in BlockSet)
                 {
@@ -36,36 +36,29 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-                // Configuration du PromptEntityOptions avec les mots-clés si nécessaire
+                // Configuration du PromptEntityOptions
                 PromptEntityOptions polyOpts = new PromptEntityOptions("\nSélectionnez la polyligne de découpe : ")
                 {
                     AllowNone = false,
-                    AppendKeywordsToMessage = true
+                    AppendKeywordsToMessage = true,
+                    Message = "\nSélectionnez la polyligne de découpe ou "
                 };
                 polyOpts.SetRejectMessage("\nL'objet doit être une polyligne.");
                 polyOpts.AddAllowedClass(typeof(Polyline), true);
 
                 if (hasClippedBlocks)
                 {
+                    polyOpts.Keywords.Add("OPTIMISER", "OPTIMISER", "Optimiser (O)");
                     polyOpts.Keywords.Add("SUPPRIMER", "SUPPRIMER", "Supprimer XCLIP existant (S)");
                     polyOpts.Keywords.Add("INVERSER", "INVERSER", "Inverser XCLIP existant (I)");
-                    polyOpts.Message = "\nSélectionnez la polyligne de découpe ou ";
                 }
 
                 PromptEntityResult polyRes = ed.GetEntity(polyOpts);
 
-                // Cas 1 : L'utilisateur choisit le mot-clé pour supprimer les xclips
+                // --- CAS 1 : SUPPRIMER ---
                 if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "SUPPRIMER")
                 {
-                    int removedCount = 0;
-                    foreach (var objId in BlockSet)
-                    {
-                        if (RemoveSpatialFilter(tr, objId))
-                        {
-                            removedCount++;
-                        }
-                    }
-
+                    int removedCount = ProcessBlocks(tr, BlockSet, RemoveSpatialFilter);
                     tr.Commit();
                     Generic.Regen();
                     ed.SetImpliedSelection(BlockSet);
@@ -73,18 +66,10 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                // Cas 2 : L'utilisateur choisit le mot-clé pour inverser les xclips
+                // --- CAS 2 : INVERSER ---
                 if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "INVERSER")
                 {
-                    int invertedCount = 0;
-                    foreach (var objId in BlockSet)
-                    {
-                        if (InvertSpatialFilter(tr, objId))
-                        {
-                            invertedCount++;
-                        }
-                    }
-
+                    int invertedCount = ProcessBlocks(tr, BlockSet, InvertSpatialFilter);
                     tr.Commit();
                     Generic.Regen();
                     ed.SetImpliedSelection(BlockSet);
@@ -92,169 +77,259 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                if (polyRes.Status != PromptStatus.OK)
+                // --- CAS 3 : OPTIMISER ---
+                if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "OPTIMISER")
                 {
-                    return;
-                }
+                    int removedCount = 0;
+                    int keptCount = 0;
+                    int skippedCount = 0;
 
-                // Cas 3 : L'utilisateur a sélectionné une polyligne pour la découpe
-                Polyline poly = polyRes.ObjectId.GetDBObject(OpenMode.ForRead) as Polyline;
-                if (poly == null)
-                {
-                    return;
-                }
-
-                Point3dCollection polyWcsPoints = new Point3dCollection();
-                for (int i = 0; i < poly.NumberOfVertices; i++)
-                {
-                    polyWcsPoints.Add(poly.GetPoint3dAt(i));
-                }
-
-                int clippedCount = 0;
-
-                foreach (var selectedObj in BlockSet)
-                {
-                    if (selectedObj == null)
+                    foreach (var selectedObj in BlockSet)
                     {
-                        continue;
-                    }
-
-                    BlockReference br = selectedObj.GetDBObject(OpenMode.ForWrite) as BlockReference;
-                    if (br == null)
-                    {
-                        continue;
-                    }
-
-                    // Vérification de la collision
-                    Extents3d blockExtents = br.GeometricExtents;
-                    if (!IsPolylineCollidingWithExtents(poly, blockExtents))
-                    {
-                        continue;
-                    }
-
-                    Matrix3d invTransform = br.BlockTransform.Inverse();
-                    Point2dCollection localPts = new Point2dCollection();
-
-                    foreach (Point3d ptWcs in polyWcsPoints)
-                    {
-                        Point3d localPt = ptWcs.TransformBy(invTransform);
-                        localPts.Add(new Point2d(localPt.X, localPt.Y));
-                    }
-
-                    SpatialFilterDefinition sfd = new SpatialFilterDefinition(localPts, Vector3d.ZAxis, 0.0, double.PositiveInfinity, double.NegativeInfinity, true);
-
-                    SpatialFilter sf = new SpatialFilter
-                    {
-                        Definition = sfd
-                    };
-
-                    if (br.ExtensionDictionary == ObjectId.Null)
-                    {
-                        br.CreateExtensionDictionary();
-                    }
-
-                    DBDictionary xDict = (DBDictionary)tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite);
-                    DBDictionary fDict;
-                    if (xDict.Contains(FilterDictName))
-                    {
-                        fDict = (DBDictionary)tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite);
-                        if (fDict.Contains(SpatialName))
+                        if (selectedObj == null || !HasSpatialFilter(tr, selectedObj))
                         {
-                            fDict.Remove(SpatialName);
+                            skippedCount++;
+                            continue;
+                        }
+
+                        if (tr.GetObject(selectedObj, OpenMode.ForRead) is BlockReference br)
+                        {
+                            Point3dCollection polyWcsPoints = GetSpatialFilterPointsWcs(tr, br);
+                            if (polyWcsPoints == null || polyWcsPoints.Count == 0)
+                            {
+                                skippedCount++;
+                                continue;
+                            }
+
+                            using (Polyline polyOpt = new Polyline())
+                            {
+                                for (int i = 0; i < polyWcsPoints.Count; i++)
+                                {
+                                    Point3d pt = polyWcsPoints[i];
+                                    polyOpt.AddVertexAt(i, new Point2d(pt.X, pt.Y), 0, 0, 0);
+                                }
+                                polyOpt.Closed = true;
+
+                                Extents3d blockExtents = br.GeometricExtents;
+
+                                if (IsPolylineCollidingWithExtents(polyOpt, blockExtents))
+                                {
+                                    keptCount++;
+                                }
+                                else if (RemoveSpatialFilter(tr, selectedObj))
+                                {
+                                    removedCount++;
+                                }
+                            }
                         }
                     }
-                    else
-                    {
-                        fDict = new DBDictionary();
-                        xDict.SetAt(FilterDictName, fDict);
-                        tr.AddNewlyCreatedDBObject(fDict, true);
-                    }
-                    fDict.SetAt(SpatialName, sf);
-                    tr.AddNewlyCreatedDBObject(sf, true);
 
-                    clippedCount++;
+                    tr.Commit();
+                    Generic.Regen();
+                    ed.SetImpliedSelection(BlockSet);
+                    Generic.WriteMessage($"Optimisation : {removedCount} XCLIP(s) inutile(s) supprimé(s), {keptCount} conservé(s), {skippedCount} bloc(s) non clippé(s) ignoré(s).");
+                    return;
                 }
 
-                tr.Commit();
-                Generic.Regen();
-                ed.SetImpliedSelection(BlockSet);
-                Generic.WriteMessage($"{clippedCount} bloc(s) délimité(s) sur {BlockSet.Length} sélectionné(s).");
-            }
-        }
+                if (polyRes.Status != PromptStatus.OK)
+                    return;
 
-        /// <summary>
-        /// Teste si le bloc possède un SpatialFilter (xclip).
-        /// </summary>
-        private static bool HasSpatialFilter(Transaction tr, ObjectId blockId)
-        {
-            BlockReference br = tr.GetObject(blockId, OpenMode.ForRead) as BlockReference;
-            if (br == null || br.ExtensionDictionary == ObjectId.Null)
-            {
-                return false;
-            }
-
-            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
-            if (xDict != null && xDict.Contains(FilterDictName))
-            {
-                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
-                return fDict != null && fDict.Contains(SpatialName);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Supprime le SpatialFilter (xclip) du bloc s'il existe.
-        /// </summary>
-        private static bool RemoveSpatialFilter(Transaction tr, ObjectId blockId)
-        {
-            BlockReference br = tr.GetObject(blockId, OpenMode.ForWrite) as BlockReference;
-            if (br == null || br.ExtensionDictionary == ObjectId.Null)
-            {
-                return false;
-            }
-
-            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
-            if (xDict != null && xDict.Contains(FilterDictName))
-            {
-                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite) as DBDictionary;
-                if (fDict != null && fDict.Contains(SpatialName))
+                // --- CAS 4 : DÉCOUPE CLASSIQUE ---
+                if (polyRes.ObjectId.GetDBObject(OpenMode.ForRead) is Polyline poly)
                 {
-                    fDict.Remove(SpatialName);
-                    return true;
+                    Point2dCollection wcs2dPoints = new Point2dCollection();
+                    for (int i = 0; i < poly.NumberOfVertices; i++)
+                    {
+                        Point3d pt = poly.GetPoint3dAt(i);
+                        wcs2dPoints.Add(new Point2d(pt.X, pt.Y));
+                    }
+
+                    int clippedCount = 0;
+                    foreach (var selectedObj in BlockSet)
+                    {
+                        if (selectedObj == null) continue;
+
+                        if (selectedObj.GetDBObject(OpenMode.ForWrite) is BlockReference br)
+                        {
+                            if (!IsPolylineInsideOrCollidingWithExtents(poly, br.GeometricExtents))
+                                continue;
+
+                            CreateOrReplaceSpatialFilter(tr, br, wcs2dPoints, true);
+                            clippedCount++;
+                        }
+                    }
+
+                    tr.Commit();
+                    Generic.Regen();
+                    ed.SetImpliedSelection(BlockSet);
+                    Generic.WriteMessage($"{clippedCount} bloc(s) délimité(s) sur {BlockSet.Length} sélectionné(s).");
                 }
             }
-
-            return false;
         }
 
         /// <summary>
-        /// Inverse l'état du SpatialFilter (xclip) du bloc s'il existe.
+        /// Re-crée un filtre spatial (XCLIP) en supprimant l'existant si nécessaire.
+        /// </summary>
+        private static bool CreateOrReplaceSpatialFilter(Transaction tr, BlockReference br, Point2dCollection wcsPts, bool clipEnabled)
+        {
+            Matrix3d invTransform = br.BlockTransform.Inverse();
+            Point2dCollection localPts = new Point2dCollection();
+
+            foreach (Point2d ptWcs in wcsPts)
+            {
+                Point3d localPt = new Point3d(ptWcs.X, ptWcs.Y, 0.0).TransformBy(invTransform);
+                localPts.Add(new Point2d(localPt.X, localPt.Y));
+            }
+
+            SpatialFilterDefinition sfd = new SpatialFilterDefinition(
+                localPts,
+                Vector3d.ZAxis,
+                0.0,
+                double.PositiveInfinity,
+                double.NegativeInfinity,
+                clipEnabled
+            );
+
+            SpatialFilter sf = new SpatialFilter { Definition = sfd };
+
+            if (br.ExtensionDictionary == ObjectId.Null)
+            {
+                br.CreateExtensionDictionary();
+            }
+
+            DBDictionary xDict = (DBDictionary)tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite);
+            DBDictionary fDict;
+
+            if (xDict.Contains(FilterDictName))
+            {
+                fDict = (DBDictionary)tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite);
+                if (fDict.Contains(SpatialName))
+                {
+                    DBObject oldSf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite);
+                    oldSf.Erase(); // Supprime l'ancien filtre proprement
+                }
+            }
+            else
+            {
+                fDict = new DBDictionary();
+                xDict.SetAt(FilterDictName, fDict);
+                tr.AddNewlyCreatedDBObject(fDict, true);
+            }
+
+            fDict.SetAt(SpatialName, sf);
+            tr.AddNewlyCreatedDBObject(sf, true);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Inverse le filtre existant en le supprimant puis en le recréant avec le flag inversé.
         /// </summary>
         private static bool InvertSpatialFilter(Transaction tr, ObjectId blockId)
         {
-            BlockReference br = tr.GetObject(blockId, OpenMode.ForWrite) as BlockReference;
-            if (br == null || br.ExtensionDictionary == ObjectId.Null)
+            if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
             {
-                return false;
+                DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+                if (xDict != null && xDict.Contains(FilterDictName))
+                {
+                    DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
+                    if (fDict != null && fDict.Contains(SpatialName))
+                    {
+                        SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForRead) as SpatialFilter;
+                        if (sf != null)
+                        {
+                            SpatialFilterDefinition sfd = sf.Definition;
+                            Point2dCollection localPts = sfd.GetPoints();
+
+                            // Re-conversion des points locaux vers WCS pour la méthode de re-création
+                            Matrix3d blockTransform = br.BlockTransform;
+                            Point2dCollection wcsPts = new Point2dCollection();
+                            foreach (Point2d pt2d in localPts)
+                            {
+                                Point3d wcsPt = new Point3d(pt2d.X, pt2d.Y, 0.0).TransformBy(blockTransform);
+                                wcsPts.Add(new Point2d(wcsPt.X, wcsPt.Y));
+                            }
+
+                            // Suppression et récréation avec le statut Inverted inversé
+                            return CreateOrReplaceSpatialFilter(tr, br, wcsPts, !sfd.Inverted);
+                        }
+                    }
+                }
             }
 
-            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
-            if (xDict != null && xDict.Contains(FilterDictName))
+            return false;
+        }
+
+        private static bool RemoveSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
             {
-                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite) as DBDictionary;
-                if (fDict != null && fDict.Contains(SpatialName))
+                DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
+                if (xDict != null && xDict.Contains(FilterDictName))
                 {
-                    SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite) as SpatialFilter;
-                    if (sf != null)
+                    DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite) as DBDictionary;
+                    if (fDict != null && fDict.Contains(SpatialName))
                     {
-                        sf.Inverted = !sf.Inverted;
+                        DBObject sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite);
+                        sf.Erase();
+                        fDict.Remove(SpatialName);
                         return true;
                     }
                 }
             }
 
             return false;
+        }
+
+        private static bool HasSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            if (tr.GetObject(blockId, OpenMode.ForRead) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
+            {
+                DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+                if (xDict != null && xDict.Contains(FilterDictName))
+                {
+                    DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
+                    return fDict != null && fDict.Contains(SpatialName);
+                }
+            }
+            return false;
+        }
+
+        private static Point3dCollection GetSpatialFilterPointsWcs(Transaction tr, BlockReference br)
+        {
+            if (br == null || br.ExtensionDictionary == ObjectId.Null) return null;
+
+            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+            if (xDict == null || !xDict.Contains(FilterDictName)) return null;
+
+            DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForRead) as DBDictionary;
+            if (fDict == null || !fDict.Contains(SpatialName)) return null;
+
+            SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForRead) as SpatialFilter;
+            if (sf == null) return null;
+
+            Point2dCollection localPts = sf.Definition.GetPoints();
+            if (localPts == null || localPts.Count == 0) return null;
+
+            Matrix3d blockTransform = br.BlockTransform;
+            Point3dCollection wcsPts = new Point3dCollection();
+
+            foreach (Point2d pt2d in localPts)
+            {
+                wcsPts.Add(new Point3d(pt2d.X, pt2d.Y, 0.0).TransformBy(blockTransform));
+            }
+
+            return wcsPts;
+        }
+
+        private static int ProcessBlocks(Transaction tr, ObjectId[] blockSet, Func<Transaction, ObjectId, bool> action)
+        {
+            int count = 0;
+            foreach (var objId in blockSet)
+            {
+                if (action(tr, objId)) count++;
+            }
+            return count;
         }
 
         private static bool IsPolylineCollidingWithExtents(Polyline poly, Extents3d extents)
@@ -286,10 +361,7 @@ namespace SioForgeCAD.Functions
                     LineSegment2d polySeg = poly.GetLineSegment2dAt(i);
                     foreach (var edge in bboxEdges)
                     {
-                        if (polySeg.IntersectWith(edge) != null)
-                        {
-                            return true;
-                        }
+                        if (polySeg.IntersectWith(edge) != null) return true;
                     }
                 }
                 else if (segType == SegmentType.Arc)
@@ -297,13 +369,26 @@ namespace SioForgeCAD.Functions
                     CircularArc2d polyArc = poly.GetArcSegment2dAt(i);
                     foreach (var edge in bboxEdges)
                     {
-                        if (polyArc.IntersectWith(edge) != null)
-                        {
-                            return true;
-                        }
+                        if (polyArc.IntersectWith(edge) != null) return true;
                     }
                 }
             }
+            return false;
+        }
+
+        private static bool IsPolylineInsideOrCollidingWithExtents(Polyline poly, Extents3d extents)
+        {
+            if (IsPolylineCollidingWithExtents(poly, extents)) return true;
+
+            Extents3d polyExtents = poly.GeometricExtents;
+            if (polyExtents.MinPoint.X > extents.MaxPoint.X || polyExtents.MaxPoint.X < extents.MinPoint.X ||
+                polyExtents.MinPoint.Y > extents.MaxPoint.Y || polyExtents.MaxPoint.Y < extents.MinPoint.Y)
+            {
+                return false;
+            }
+
+            Point2d min = new Point2d(extents.MinPoint.X, extents.MinPoint.Y);
+            Point2d max = new Point2d(extents.MaxPoint.X, extents.MaxPoint.Y);
 
             Point3d bboxCenter = new Point3d((min.X + max.X) / 2.0, (min.Y + max.Y) / 2.0, extents.MinPoint.Z);
             return bboxCenter.IsInsidePolyline(poly);
