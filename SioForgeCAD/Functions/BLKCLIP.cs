@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
                     }
                 }
 
-                // Configuration du PromptEntityOptions avec le Keyword si nécessaire
+                // Configuration du PromptEntityOptions avec les mots-clés si nécessaire
                 PromptEntityOptions polyOpts = new PromptEntityOptions("\nSélectionnez la polyligne de découpe : ")
                 {
                     AllowNone = false,
@@ -48,6 +48,7 @@ namespace SioForgeCAD.Functions
                 if (hasClippedBlocks)
                 {
                     polyOpts.Keywords.Add("SUPPRIMER", "SUPPRIMER", "Supprimer XCLIP existant (S)");
+                    polyOpts.Keywords.Add("INVERSER", "INVERSER", "Inverser XCLIP existant (I)");
                     polyOpts.Message = "\nSélectionnez la polyligne de découpe ou ";
                 }
 
@@ -67,7 +68,27 @@ namespace SioForgeCAD.Functions
 
                     tr.Commit();
                     Generic.Regen();
+                    ed.SetImpliedSelection(BlockSet);
                     Generic.WriteMessage($"{removedCount} xclip(s) supprimé(s) sur {BlockSet.Length} bloc(s) sélectionné(s).");
+                    return;
+                }
+
+                // Cas 2 : L'utilisateur choisit le mot-clé pour inverser les xclips
+                if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "INVERSER")
+                {
+                    int invertedCount = 0;
+                    foreach (var objId in BlockSet)
+                    {
+                        if (InvertSpatialFilter(tr, objId))
+                        {
+                            invertedCount++;
+                        }
+                    }
+
+                    tr.Commit();
+                    Generic.Regen();
+                    ed.SetImpliedSelection(BlockSet);
+                    Generic.WriteMessage($"{invertedCount} xclip(s) inversé(s) sur {BlockSet.Length} bloc(s) sélectionné(s).");
                     return;
                 }
 
@@ -76,7 +97,7 @@ namespace SioForgeCAD.Functions
                     return;
                 }
 
-                // Cas 2 : L'utilisateur a sélectionné une polyligne
+                // Cas 3 : L'utilisateur a sélectionné une polyligne pour la découpe
                 Polyline poly = polyRes.ObjectId.GetDBObject(OpenMode.ForRead) as Polyline;
                 if (poly == null)
                 {
@@ -104,7 +125,7 @@ namespace SioForgeCAD.Functions
                         continue;
                     }
 
-                    // Verification de la collision
+                    // Vérification de la collision
                     Extents3d blockExtents = br.GeometricExtents;
                     if (!IsPolylineCollidingWithExtents(poly, blockExtents))
                     {
@@ -156,6 +177,7 @@ namespace SioForgeCAD.Functions
 
                 tr.Commit();
                 Generic.Regen();
+                ed.SetImpliedSelection(BlockSet);
                 Generic.WriteMessage($"{clippedCount} bloc(s) délimité(s) sur {BlockSet.Length} sélectionné(s).");
             }
         }
@@ -200,6 +222,35 @@ namespace SioForgeCAD.Functions
                 {
                     fDict.Remove(SpatialName);
                     return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Inverse l'état du SpatialFilter (xclip) du bloc s'il existe.
+        /// </summary>
+        private static bool InvertSpatialFilter(Transaction tr, ObjectId blockId)
+        {
+            BlockReference br = tr.GetObject(blockId, OpenMode.ForWrite) as BlockReference;
+            if (br == null || br.ExtensionDictionary == ObjectId.Null)
+            {
+                return false;
+            }
+
+            DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
+            if (xDict != null && xDict.Contains(FilterDictName))
+            {
+                DBDictionary fDict = tr.GetObject(xDict.GetAt(FilterDictName), OpenMode.ForWrite) as DBDictionary;
+                if (fDict != null && fDict.Contains(SpatialName))
+                {
+                    SpatialFilter sf = tr.GetObject(fDict.GetAt(SpatialName), OpenMode.ForWrite) as SpatialFilter;
+                    if (sf != null)
+                    {
+                        sf.Inverted = !sf.Inverted;
+                        return true;
+                    }
                 }
             }
 
