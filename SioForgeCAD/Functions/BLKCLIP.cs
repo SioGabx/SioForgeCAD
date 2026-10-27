@@ -1,13 +1,13 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 
 namespace SioForgeCAD.Functions
 {
@@ -18,16 +18,15 @@ namespace SioForgeCAD.Functions
 
         public static void ClipBlocksWithPolyline()
         {
-            Database db = Generic.GetDatabase();
+            Database srcDb = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-
 
             if (!ed.GetBlocks(out var BlockSet, "Sélectionnez le ou les blocs à délimiter", false, true))
             {
                 return;
             }
 
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+            using (Transaction tr = srcDb.TransactionManager.StartTransaction())
             {
                 bool hasClippedBlocks = false;
                 foreach (var objId in BlockSet)
@@ -71,12 +70,11 @@ namespace SioForgeCAD.Functions
                 // --- CAS 2 : INVERSER ---
                 if (polyRes.Status == PromptStatus.Keyword && polyRes.StringResult == "INVERSER")
                 {
-                    Debug.WriteLine("[LOG] Traitement mot-clé INVERSER...");
-                    int invertedCount = ProcessBlocks(tr, BlockSet, InvertSpatialFilter);
+                    Debug.WriteLine("[LOG] Traitement mot-clé INVERSER en mémoire...");
+                    int invertedCount = ProcessBlocksInMemoryAndReimportExploded(srcDb, tr, BlockSet, (tempTr, tempBr, tempDb) => InvertSpatialFilter(tempTr, tempBr, tempDb));
                     tr.Commit();
                     Generic.Regen();
-                    ed.SetImpliedSelection(BlockSet);
-                    Generic.WriteMessage($"\n{invertedCount} xclip(s) inversé(s) sur {BlockSet.Length} bloc(s) sélectionné(s).");
+                    Generic.WriteMessage($"\n{invertedCount} xclip(s) inversé(s) et réimporté(s) décomposé(s).");
                     return;
                 }
 
@@ -149,36 +147,221 @@ namespace SioForgeCAD.Functions
                         wcs2dPoints.Add(new Point2d(pt.X, pt.Y));
                     }
 
-                    int clippedCount = 0;
-                    foreach (var selectedObj in BlockSet)
+                    int clippedCount = ProcessBlocksInMemoryAndReimportExploded(srcDb, tr, BlockSet, (tempTr, tempBr, tempDb) =>
                     {
-                        if (selectedObj == null) continue;
-
-                        if (selectedObj.GetDBObject(OpenMode.ForWrite) is BlockReference br)
+                        if (!IsPolylineInsideOrCollidingWithExtents(poly, tempBr.GeometricExtents))
                         {
-                            if (!IsPolylineInsideOrCollidingWithExtents(poly, br.GeometricExtents))
-                            {
-                                continue;
-                            }
-
-                            CreateOrReplaceSpatialFilter(tr, br, wcs2dPoints, false);
-                            clippedCount++;
+                            return new SpatialFilterResult();
                         }
-                    }
+                        return CreateOrReplaceSpatialFilter(tempTr, tempBr, wcs2dPoints, false, tempDb);
+                    });
 
                     tr.Commit();
                     Generic.Regen();
-                    ed.SetImpliedSelection(BlockSet);
-                    Generic.WriteMessage($"\n{clippedCount} bloc(s) délimité(s) sur {BlockSet.Length} sélectionné(s).");
+                    Generic.WriteMessage($"\n{clippedCount} bloc(s) délimité(s), réimporté(s) et décomposé(s).");
                 }
             }
         }
 
-        private static bool InvertSpatialFilter(Transaction tr, ObjectId blockId)
+        /// <summary>
+        /// Effectue l'opération dans une base mémoire, sauvegarde le résultat temporaire,
+        /// insère le DWG temporaire comme bloc dans le dessin d'origine, puis l'explose.
+        /// </summary>
+        /// <summary>
+        /// Effectue l'opération dans une base mémoire, sauvegarde le résultat temporaire,
+        /// insère le DWG temporaire comme bloc dans le dessin d'origine, puis parcourt
+        /// chaque entité du bloc pour la cloner et copier son ExtensionDictionary.
+        /// </summary>
+        /// <summary>
+        /// Effectue l'opération dans une base mémoire, sauvegarde le résultat temporaire,
+        /// insère le DWG temporaire comme bloc dans le dessin d'origine, puis clone
+        /// exactement chaque entité du bloc avec DeepCloneObjects et IdMapping.
+        /// </summary>
+        private static int ProcessBlocksInMemoryAndReimportExploded(
+            Database srcDb,
+            Transaction srcTr,
+            ObjectId[] blockSet,
+            Func<Transaction, BlockReference, Database, SpatialFilterResult> action)
         {
-            if (tr.GetObject(blockId, OpenMode.ForWrite) is BlockReference br && br.ExtensionDictionary != ObjectId.Null)
+            int processedCount = 0;
+            string tempFilePath = Path.Combine(Path.GetTempPath(), $"BLKCLIP_Import_{Guid.NewGuid():N}.dwg");
+
+            using (Database tempDb = new Database(true, true))
             {
-                // 1. Récupérer le filtre existant pour connaître son état Inverted actuel
+                foreach (var selectedObj in blockSet)
+                {
+                    if (selectedObj == null) continue;
+
+                    // 1. Cloner la BlockReference originale vers la base temporaire
+                    ObjectIdCollection idsToClone = new ObjectIdCollection { selectedObj };
+                    IdMapping mappingToTemp = new IdMapping();
+                    srcDb.WblockCloneObjects(
+                        idsToClone,
+                        tempDb.CurrentSpaceId,
+                        mappingToTemp,
+                        DuplicateRecordCloning.Ignore,
+                        false
+                    );
+
+                    ObjectId tempBlockRefId = mappingToTemp[selectedObj].Value;
+
+                    // 2. Traitement dans la base temporaire
+                    using (Transaction tempTr = tempDb.TransactionManager.StartTransaction())
+                    {
+                        if (tempTr.GetObject(tempBlockRefId, OpenMode.ForWrite) is BlockReference tempBr)
+                        {
+                            SpatialFilterResult result = action(tempTr, tempBr, tempDb);
+                            if (result != null && result.Success)
+                            {
+                                CreateOrReplaceSpatialFilterInDb(tempTr, tempBr, result.Definition, result.Inverted);
+                                processedCount++;
+
+                                // Supprimer le bloc d'origine du dessin actif puisqu'on réimporte une version modifiée
+                                if (srcTr.GetObject(selectedObj, OpenMode.ForWrite) is BlockReference srcBr)
+                                {
+                                    srcBr.Erase();
+                                }
+                            }
+                        }
+                        tempTr.Commit();
+                    }
+                }
+
+                if (processedCount > 0)
+                {
+                    // 3. Sauvegarder le dessin mémoire sur disque
+                    tempDb.SaveAs(tempFilePath, DwgVersion.Current);
+                }
+            }
+
+            // 4. Réimporter le DWG temporaire et cloner exactement son contenu via DeepCloneObjects
+            if (processedCount > 0 && File.Exists(tempFilePath))
+            {
+                try
+                {
+                    using (Database importDb = new Database(false, true))
+                    {
+                        importDb.ReadDwgFile(tempFilePath, FileOpenMode.OpenForReadAndAllShare, true, "");
+
+                        string tempBlockName = $"TMP_IMPORT_{Guid.NewGuid():N}";
+                        ObjectId importedBlockDefId = srcDb.Insert(tempBlockName, importDb, true);
+
+                        if (srcTr.GetObject(importedBlockDefId, OpenMode.ForRead) is BlockTableRecord importedBtr)
+                        {
+                            // Récupérer les ObjectId de toutes les entités de la définition du bloc
+                            ObjectIdCollection entitiesToClone = new ObjectIdCollection();
+                            foreach (ObjectId entId in importedBtr)
+                            {
+                                entitiesToClone.Add(entId);
+                            }
+
+                            if (entitiesToClone.Count > 0)
+                            {
+                                IdMapping idMap = new IdMapping();
+
+                                // Clonage profond (DeepClone) vers l'espace de dessin actif (ModelSpace ou PaperSpace)
+                                srcDb.DeepCloneObjects(
+                                    entitiesToClone,
+                                    srcDb.CurrentSpaceId,
+                                    idMap,
+                                    false
+                                );
+
+                                // Copie explicite du dictionnaire d'extension si nécessaire pour chaque entité clonée
+                                foreach (ObjectId srcEntId in entitiesToClone)
+                                {
+                                    if (idMap.Contains(srcEntId))
+                                    {
+                                        IdPair pair = idMap[srcEntId];
+                                        if (pair.IsCloned && pair.Value != ObjectId.Null)
+                                        {
+                                            DBObject srcEnt = srcTr.GetObject(srcEntId, OpenMode.ForRead);
+                                            DBObject clonedEnt = srcTr.GetObject(pair.Value, OpenMode.ForWrite);
+
+                                            CopyExtensionDictionary(srcTr, srcEnt, clonedEnt);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Supprimer la définition de bloc temporaire
+                            importedBtr.UpgradeOpen();
+                            importedBtr.Erase();
+                        }
+                    }
+                }
+                finally
+                {
+                    if (File.Exists(tempFilePath))
+                    {
+                        try { File.Delete(tempFilePath); } catch { }
+                    }
+                }
+            }
+
+            return processedCount;
+        }
+
+        /// <summary>
+        /// Duplique intégralement l'ExtensionDictionary d'un objet source vers un objet cible.
+        /// </summary>
+        private static void CopyExtensionDictionary(Transaction tr, DBObject source, DBObject target)
+        {
+            if (source.ExtensionDictionary == ObjectId.Null) return;
+
+            // S'assurer que l'objet cible possède un ExtensionDictionary
+            if (target.ExtensionDictionary == ObjectId.Null)
+            {
+                target.CreateExtensionDictionary();
+            }
+
+            DBDictionary srcDict = tr.GetObject(source.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
+            DBDictionary targetDict = tr.GetObject(target.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
+
+            CopyDictionaryRecursive(tr, srcDict, targetDict);
+        }
+
+        /// <summary>
+        /// Copie de manière récursive le contenu d'un DBDictionary vers un autre.
+        /// </summary>
+        private static void CopyDictionaryRecursive(Transaction tr, DBDictionary srcDict, DBDictionary targetDict)
+        {
+            foreach (DBDictionaryEntry entry in srcDict)
+            {
+                // Ignorer les filtres système AutoCAD automatiques si nécessaire (ex: ACAD_FILTER)
+                DBObject srcObj = tr.GetObject(entry.Value, OpenMode.ForRead);
+
+                DBObject clonedObj = srcObj.Clone() as DBObject;
+                if (clonedObj == null) continue;
+
+                // Si l'élément est lui-même un sous-dictionnaire
+                if (srcObj is DBDictionary subSrcDict && clonedObj is DBDictionary subTargetDict)
+                {
+                    targetDict.SetAt(entry.Key, subTargetDict);
+                    tr.AddNewlyCreatedDBObject(subTargetDict, true);
+
+                    // Copie récursive des sous-éléments
+                    CopyDictionaryRecursive(tr, subSrcDict, subTargetDict);
+                }
+                else
+                {
+                    targetDict.SetAt(entry.Key, clonedObj);
+                    tr.AddNewlyCreatedDBObject(clonedObj, true);
+                }
+            }
+        }
+
+        private class SpatialFilterResult
+        {
+            public bool Success { get; set; }
+            public SpatialFilterDefinition Definition { get; set; }
+            public bool Inverted { get; set; }
+        }
+
+        private static SpatialFilterResult InvertSpatialFilter(Transaction tr, BlockReference br, Database targetDb = null)
+        {
+            if (br != null && br.ExtensionDictionary != ObjectId.Null)
+            {
                 DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForRead) as DBDictionary;
                 if (xDict != null && xDict.Contains(FilterDictName))
                 {
@@ -190,26 +373,18 @@ namespace SioForgeCAD.Functions
                         {
                             Point3dCollection polyWcsPoints = GetSpatialFilterPointsWcs(tr, br);
                             if (polyWcsPoints == null || polyWcsPoints.Count == 0)
-                                return false;
+                                return new SpatialFilterResult { Success = false };
 
-                            // 2. Inverser l'état actuel (!currentSf.Inverted)
                             bool newInvertedState = !currentSf.Inverted;
-
-                            return CreateOrReplaceSpatialFilter(tr, br, polyWcsPoints.ToPoint2dCollection(), newInvertedState);
+                            return CreateOrReplaceSpatialFilter(tr, br, polyWcsPoints.ToPoint2dCollection(), newInvertedState, targetDb);
                         }
                     }
                 }
             }
-
-            return false;
+            return new SpatialFilterResult { Success = false };
         }
 
-
-
-
-
-
-        private static bool CreateOrReplaceSpatialFilter(Transaction tr, BlockReference br, Point2dCollection wcsPts, bool inverted)
+        private static SpatialFilterResult CreateOrReplaceSpatialFilter(Transaction tr, BlockReference br, Point2dCollection wcsPts, bool inverted, Database targetDb = null)
         {
             Matrix3d invTransform = br.BlockTransform.Inverse();
             Point2dCollection localPts = new Point2dCollection();
@@ -220,12 +395,11 @@ namespace SioForgeCAD.Functions
                 localPts.Add(new Point2d(localPt.X, localPt.Y));
             }
 
-            // Define the normal and elevation for the clipping boundary 
             Vector3d normal;
             double elev = 0;
-            var acCurDb = Generic.GetDatabase();
+            Database acCurDb = targetDb ?? Generic.GetDatabase();
 
-            if (acCurDb.TileMode == true)
+            if (acCurDb.TileMode)
             {
                 normal = acCurDb.Ucsxdir.CrossProduct(acCurDb.Ucsydir);
                 elev = acCurDb.Elevation;
@@ -236,7 +410,6 @@ namespace SioForgeCAD.Functions
                 elev = acCurDb.Pelevation;
             }
 
-
             SpatialFilterDefinition sfd = new SpatialFilterDefinition(
                 localPts,
                 normal,
@@ -246,22 +419,32 @@ namespace SioForgeCAD.Functions
                 true
             );
 
-            SpatialFilter sf = new SpatialFilter { Definition = sfd, Inverted = inverted };
+            return new SpatialFilterResult
+            {
+                Success = true,
+                Definition = sfd,
+                Inverted = inverted
+            };
+        }
 
+        private static void CreateOrReplaceSpatialFilterInDb(Transaction tr, BlockReference br, SpatialFilterDefinition sfd, bool inverted)
+        {
             if (br.ExtensionDictionary == ObjectId.Null)
             {
                 br.CreateExtensionDictionary();
             }
 
-
             RemoveSpatialFilter(tr, br);
+
+            SpatialFilter sf = new SpatialFilter { Definition = sfd, Inverted = inverted };
             DBDictionary fDict = new DBDictionary();
             DBDictionary xDict = (DBDictionary)tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite);
+
             xDict.SetAt(FilterDictName, fDict);
             tr.AddNewlyCreatedDBObject(fDict, true);
+
             fDict.SetAt(SpatialName, sf);
             tr.AddNewlyCreatedDBObject(sf, true);
-            return true;
         }
 
         private static bool RemoveSpatialFilter(Transaction tr, ObjectId blockId)
@@ -275,7 +458,7 @@ namespace SioForgeCAD.Functions
 
         private static bool RemoveSpatialFilter(Transaction tr, BlockReference br)
         {
-            if (br is BlockReference && br.ExtensionDictionary != ObjectId.Null)
+            if (br != null && br.ExtensionDictionary != ObjectId.Null)
             {
                 DBDictionary xDict = tr.GetObject(br.ExtensionDictionary, OpenMode.ForWrite) as DBDictionary;
                 if (xDict != null && xDict.Contains(FilterDictName))
@@ -293,7 +476,6 @@ namespace SioForgeCAD.Functions
             }
             return false;
         }
-
 
         private static bool HasSpatialFilter(Transaction tr, ObjectId blockId)
         {

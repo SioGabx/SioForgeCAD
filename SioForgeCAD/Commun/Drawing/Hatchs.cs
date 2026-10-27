@@ -26,11 +26,16 @@ namespace SioForgeCAD.Commun.Drawing
                     var OriginHatchPatternDefinition = hachure.GetPatternDefinitionAt(0);
                     var oHatchOrigin = new Point3d(OriginHatchPatternDefinition.BaseX, OriginHatchPatternDefinition.BaseY, 0);
 
-                    ViewportTableRecord vtr = (ViewportTableRecord)tr.GetObject(ed.ActiveViewportId, OpenMode.ForWrite);
+                    // AbstractViewTableRecord fonctionne aussi bien pour Viewport que pour ViewportTableRecord
+                    var vtr = (AbstractViewTableRecord)tr.GetObject(ed.ActiveViewportId, OpenMode.ForWrite);
 
+                    // On vérifie le SCU courant de la vue active
                     if (!vtr.Ucs.Origin.IsEqualTo(oHatchOrigin))
                     {
-                        ed.CurrentUserCoordinateSystem = Matrix3d.AlignCoordinateSystem(Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis, oHatchOrigin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis);
+                        ed.CurrentUserCoordinateSystem = Matrix3d.AlignCoordinateSystem(
+                            Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis,
+                            oHatchOrigin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis
+                        );
                     }
                 }
 
