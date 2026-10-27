@@ -1,8 +1,12 @@
-﻿using Autodesk.AutoCAD.EditorInput;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.DatabaseServices.Filters;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.Helpers;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -712,7 +716,8 @@ namespace SioForgeCAD
         {
         }
 
-        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
+
+[CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
             Functions.TEST2.P3D2DTrim();
