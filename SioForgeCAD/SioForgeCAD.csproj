@@ -312,6 +312,7 @@
     <Compile Include="Functions\CUSTOMLAYOUTBAR.cs" />
     <Compile Include="Functions\DEBUG.cs" />
     <Compile Include="Functions\DRAWPAPERFRAME.cs" />
+    <Compile Include="Functions\EXECUTEONEACHOBJECTSINSELECTION.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
     <Compile Include="Functions\LABELCONTOURELEVATIONS.cs" />
     <Compile Include="Functions\LASIMPORT.cs" />

@@ -683,6 +683,13 @@ namespace SioForgeCAD
             Functions.DIVIDEPOLYLIGNINEQUALAREAS.DivideInEqualAreas();
         }
 
+        //Divide a polyline into equal areas
+        [CommandMethod("SIOFORGECAD", "EXECUTEONEACHOBJECTSINSELECTION", CommandFlags.Redraw)]
+        public static void EXECUTEONEACHOBJECTSINSELECTION()
+        {
+            Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
+        }
+
 
 
 #if DEBUG

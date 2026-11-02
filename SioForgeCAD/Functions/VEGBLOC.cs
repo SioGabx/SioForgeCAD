@@ -440,8 +440,12 @@ namespace SioForgeCAD.Functions
 
         private static Color GetTextColorFromBackgroundColor(Color BlocColor, Transparency LayerTransparency)
         {
-            double alpha = LayerTransparency.Alpha / 255.0;
-
+            double alpha = 1;
+            try
+            {
+                alpha = LayerTransparency.Alpha / 255.0;
+            }
+            catch { }
             const double backgroundLuminance = 255.0; // Blanc
             // Calcul des couleurs effectives avec l'Alpha Blending
             // Formule : (Couleur * Alpha) + (Fond * (1 - Alpha))

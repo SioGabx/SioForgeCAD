@@ -46,9 +46,51 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return input.ToLowerInvariant().CapitalizeFirstLetters(1);
         }
-        public static string TrimStart(this string input, string prefix)
+
+        /// <summary>
+        /// Supprime le préfixe spécifié au début de la chaîne s'il est présent.
+        /// </summary>
+        public static string TrimStart(this string target, string trimString, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            return input.StartsWith(prefix) ? input.Substring(prefix.Length) : input;
+            if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
+            {
+                return target;
+            }
+
+            if (target.StartsWith(trimString, comparisonType))
+            {
+                return target.Substring(trimString.Length);
+            }
+
+            return target;
+        }
+
+        /// <summary>
+        /// Supprime le suffixe spécifié à la fin de la chaîne s'il est présent.
+        /// </summary>
+        public static string TrimEnd(this string target, string trimString, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(trimString))
+            {
+                return target;
+            }
+
+            if (target.EndsWith(trimString, comparisonType))
+            {
+                return target.Substring(0, target.Length - trimString.Length);
+            }
+
+            return target;
+        }
+
+        /// <summary>
+        /// Supprime le texte spécifié au début ET à la fin de la chaîne.
+        /// </summary>
+        public static string Trim(this string target, string trimString, StringComparison comparisonType = StringComparison.Ordinal)
+        {
+            return target
+                .TrimStart(trimString, comparisonType)
+                .TrimEnd(trimString, comparisonType);
         }
 
         public static string RemoveDiacritics(this string str)
