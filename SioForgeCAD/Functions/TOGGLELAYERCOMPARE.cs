@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Forms;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SioForgeCAD.Functions
 {
@@ -80,23 +81,23 @@ namespace SioForgeCAD.Functions
 
         public static List<string> GetAffectedLayers(List<string> SelectedItems)
         {
-            var layoutNames = Layers.GetAllLayersInDrawings();
-            List<string> layers = new List<string>();
-            if (layoutNames.Count == 0)
+            var layersNames = Layers.GetAllLayersInDrawings().OrderBy(t => t);
+            List<string> SelectedLayers = new List<string>();
+            if (!layersNames.Any())
             {
-                return layers;
+                return SelectedLayers;
             }
 
             // Dialogue de sélection
-            var dlg = new ComboboxDialog(layoutNames, "Layers", false);
+            var dlg = new ComboboxDialog(layersNames.ToArray(), "Layers", false);
             dlg.SetSelectedItems(SelectedItems);
 
 
             if (Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(dlg) == System.Windows.Forms.DialogResult.OK)
             {
-                layers.AddRange(dlg.GetSelectedItems());
+                SelectedLayers.AddRange(dlg.GetSelectedItems());
             }
-            return layers;
+            return SelectedLayers;
         }
     }
 }

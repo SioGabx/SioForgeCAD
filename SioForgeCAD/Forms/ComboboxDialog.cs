@@ -35,7 +35,7 @@ namespace SioForgeCAD.Forms
 
         private readonly BindingList<SelectionItem> _items = new BindingList<SelectionItem>();
 
-        public ComboboxDialog(List<string> dataList, string ElementsNames = "Élément", bool CheckAllByDefault = true)
+        public ComboboxDialog(IEnumerable<string> dataList, string ElementsNames = "Élément", bool CheckAllByDefault = true)
         {
             InitializeComponent();
             SetupDataGridView(ElementsNames, CheckAllByDefault);
