@@ -8,7 +8,6 @@ namespace SioForgeCAD.Forms
 {
     public partial class ComboboxDialog : Form
     {
-        // Classe simplifiée pour la sélection
         public class SelectionItem : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
@@ -24,31 +23,53 @@ namespace SioForgeCAD.Forms
             public bool Include
             {
                 get => include;
-                set { include = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Include))); }
+                set
+                {
+                    if (include != value)
+                    {
+                        include = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Include)));
+                    }
+                }
             }
+
             public string Name
             {
                 get => name;
-                set { name = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name))); }
+                set
+                {
+                    if (name != value)
+                    {
+                        name = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+                    }
+                }
             }
         }
 
         private readonly BindingList<SelectionItem> _items = new BindingList<SelectionItem>();
+        private bool _isUpdatingHeader = false;
 
-        public ComboboxDialog(IEnumerable<string> dataList, string ElementsNames = "Élément", bool CheckAllByDefault = true)
+        public ComboboxDialog(IEnumerable<string> DataList, string Prompt, bool CheckAllByDefault = true)
         {
             InitializeComponent();
-            SetupDataGridView(ElementsNames, CheckAllByDefault);
+            SetupDataGridView(Prompt, CheckAllByDefault);
+            this.Text = Prompt;
+            // Écouter les modifications dans la BindingList
+            _items.ListChanged += Items_ListChanged;
 
-            foreach (var item in dataList)
+            foreach (var item in DataList)
             {
                 _items.Add(new SelectionItem(item, CheckAllByDefault));
             }
 
             dataGridView1.DataSource = new BindingSource(_items, null);
+
+            // Synchronisation initiale
+            UpdateHeaderCheckBoxState();
         }
 
-        private void SetupDataGridView(string ElementsNames, bool CheckAllByDefault)
+        private void SetupDataGridView(string Prompt, bool CheckAllByDefault)
         {
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.Columns.Clear();
@@ -64,7 +85,7 @@ namespace SioForgeCAD.Forms
 
             var nameCol = new DataGridViewTextBoxColumn
             {
-                HeaderText = ElementsNames,
+                HeaderText = Prompt,
                 DataPropertyName = nameof(SelectionItem.Name),
                 ReadOnly = true,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
@@ -72,19 +93,11 @@ namespace SioForgeCAD.Forms
 
             dataGridView1.Columns.AddRange(includeCol, nameCol);
 
-            // Checkbox d'en-tête (Tout sélectionner)
-            headerCheckBox.Checked = CheckAllByDefault;
-            headerCheckBox.CheckedChanged += (s, e) =>
-            {
-                foreach (var item in _items)
-                {
-                    item.Include = headerCheckBox.Checked;
-                }
-
-                dataGridView1.Refresh();
-            };
+            // Gestion du clic utilisateur sur la Checkbox d'en-tête
+            headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
             dataGridView1.Controls.Add(headerCheckBox);
 
+            // Validation immédiate de l'édition d'une cellule pour déclencher INotifyPropertyChanged sans attendre de changement de focus
             dataGridView1.CurrentCellDirtyStateChanged += (s, e) =>
             {
                 if (dataGridView1.IsCurrentCellDirty)
@@ -92,17 +105,54 @@ namespace SioForgeCAD.Forms
                     dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
                 }
             };
-            dummy.Focus(); // Pour éviter que la première ligne soit sélectionnée par défaut
+
+            dummy.Focus();
         }
 
-        // Récupérer les éléments cochés
+        private void HeaderCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_isUpdatingHeader) return;
+
+            _isUpdatingHeader = true;
+            foreach (var item in _items)
+            {
+                item.Include = headerCheckBox.Checked;
+            }
+            _isUpdatingHeader = false;
+
+            dataGridView1.Refresh();
+        }
+
+        private void Items_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            UpdateHeaderCheckBoxState();
+        }
+
+        private void UpdateHeaderCheckBoxState()
+        {
+            if (_isUpdatingHeader) return;
+
+            _isUpdatingHeader = true;
+            // Coché uniquement si TOUS les éléments sont cochés (et la liste non vide)
+            headerCheckBox.Checked = _items.Count > 0 && _items.All(x => x.Include);
+            _isUpdatingHeader = false;
+        }
+
         public List<string> GetSelectedItems()
         {
             return _items.Where(x => x.Include).Select(x => x.Name).ToList();
         }
-        public void SetSelectedItems(List<string> Items)
+
+        public void SetSelectedItems(List<string> items)
         {
-            _items.Where(x => Items.Contains(x.Name)).ToList().ForEach(x => x.Include = true);
+            var selectedSet = new HashSet<string>(items ?? Enumerable.Empty<string>());
+
+            foreach (var item in _items)
+            {
+                item.Include = selectedSet.Contains(item.Name);
+            }
+
+            UpdateHeaderCheckBoxState();
         }
 
         private void ValidateButton_Click(object sender, EventArgs e)
@@ -113,7 +163,6 @@ namespace SioForgeCAD.Forms
 
         private void SelectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Agit sur toutes les lignes sélectionnées (surlignées en bleu)
             if (dataGridView1.SelectedRows.Count > 0)
             {
                 foreach (DataGridViewRow row in dataGridView1.SelectedRows)
@@ -128,7 +177,6 @@ namespace SioForgeCAD.Forms
 
         private void DeselectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Agit sur toutes les lignes sélectionnées (surlignées en bleu)
             if (dataGridView1.SelectedRows.Count > 0)
             {
                 foreach (DataGridViewRow row in dataGridView1.SelectedRows)

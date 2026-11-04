@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
+using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,34 +29,62 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            var SelRedraw = ed.GetSelectionRedraw();
-            if (SelRedraw.Status != PromptStatus.OK) { return; }
+            List<string> selectedLayersNames = new List<string>();
+
+
+            var selResult = ed.GetSelectionRedraw(Options: new string[] { "Noms" });
 
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
-                List<string> LayerNames = new List<string>();
-                foreach (var SelItem in SelRedraw.Value.GetObjectIds())
+                // Si l'utilisateur a sélectionné des objets directement à l'écran
+                if (selResult.Status == PromptStatus.OK)
                 {
-                    var LayerName = SelItem.GetEntity().Layer;
-                    if (!LayerNames.Contains(LayerName))
+                    foreach (var objId in selResult.Value.GetObjectIds())
                     {
-                        LayerNames.Add(LayerName);
+                        var layerName = objId.GetEntity().Layer;
+                        if (!selectedLayersNames.Contains(layerName))
+                        {
+                            selectedLayersNames.Add(layerName);
+                        }
+                    }
+                }
+                else if (selResult.Status == PromptStatus.Keyword && selResult.Value.ToString() == "Noms")
+                {
+                    var allLayersNames = Layers.GetAllLayersInDrawings().OrderBy(t => t);
+                    List<string> SelectedLayers = new List<string>();
+                    if (!allLayersNames.Any())
+                    {
+                        Generic.WriteMessage("Aucun calque trouvé dans le dessin.");
+                        return;
+                    }
+                    var dlg = new ComboboxDialog(allLayersNames.ToArray(), "Selectionnez les calques", false);
+                    if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        selectedLayersNames.AddRangeUnique(dlg.GetSelectedItems());
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
 
-                List<TypedValue> typedValues = new List<TypedValue>
+                if (selectedLayersNames.Count == 0) { return; }
+
+                List<TypedValue> typedValues = new List<TypedValue> { new TypedValue((int)DxfCode.Operator, "<or") };
+                foreach (var layerName in selectedLayersNames)
                 {
-                    new TypedValue((int)DxfCode.Operator, "<or")
-                };
-                foreach (var LayerName in LayerNames)
-                {
-                    Generic.WriteMessage($"Selection des entités sur le calque \"{LayerName}\"");
-                    typedValues.Add(new TypedValue((int)DxfCode.LayerName, LayerName));
+                    Generic.WriteMessage($"Sélection des entités sur le calque \"{layerName}\"");
+                    typedValues.Add(new TypedValue((int)DxfCode.LayerName, layerName));
                 }
                 typedValues.Add(new TypedValue((int)DxfCode.Operator, "or>"));
+
                 SelectionFilter sf = new SelectionFilter(typedValues.ToArray());
                 PromptSelectionResult psr = ed.SelectAll(sf);
-                ed.SetImpliedSelection(psr.Value);
+                if (psr.Status == PromptStatus.OK)
+                {
+                    ed.SetImpliedSelection(psr.Value);
+                }
+
                 tr.Commit();
             }
         }

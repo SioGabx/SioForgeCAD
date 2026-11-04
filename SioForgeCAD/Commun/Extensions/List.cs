@@ -35,7 +35,18 @@ namespace SioForgeCAD.Commun.Extensions
             return NewList;
         }
 
-        public static List<T> AddRangeUnique<T>(this IEnumerable<T> list, IEnumerable<T> ItemsToAddIfNotAlreadyInside)
+        public static void AddRangeUnique<T>(this List<T> list, IEnumerable<T> itemsToAddIfNotAlreadyInside)
+        {
+            foreach (var item in itemsToAddIfNotAlreadyInside)
+            {
+                if (!list.Contains(item))
+                {
+                    list.Add(item);
+                }
+            }
+        }
+
+        public static List<T> UnionUnique<T>(this IEnumerable<T> list, IEnumerable<T> ItemsToAddIfNotAlreadyInside)
         {
             List<T> NewList = list.ToList();
             foreach (var item in ItemsToAddIfNotAlreadyInside)

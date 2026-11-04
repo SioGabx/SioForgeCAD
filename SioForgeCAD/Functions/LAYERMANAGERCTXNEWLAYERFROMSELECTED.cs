@@ -64,25 +64,6 @@ namespace SioForgeCAD.Functions
                 }
             }
 
-            /*      var db = Generic.GetDatabase();
-                //Autodesk.AutoCAD.DatabaseServices.TransactionManager transactionManager = LayerManager.LayerViewManager.CurrentDatabase.TransactionManager;
-                Autodesk.AutoCAD.DatabaseServices.TransactionManager transactionManager = db.TransactionManager;
-                Editor editor = Autodesk.AutoCAD.ApplicationServices.Core.Application.DocumentManager.MdiActiveDocument.Editor;
-                var PolySelection = editor.GetSelectionRedraw("Selectionnez une polyligne", true, false);
-                if (PolySelection.Status != PromptStatus.OK) { return; }
-                using (var tr = transactionManager.StartTransaction()) { 
-                foreach (var polyObjId in PolySelection.Value.GetObjectIds())
-                {
-                    if (transactionManager.GetObject(polyObjId, OpenMode.ForWrite) is Entity poly)
-                    {
-                        poly.ColorIndex = 1;
-                    }
-
-                }
-                    tr.Commit();
-                }
-                return;
-*/
             private static void OnExecute(object sender, EventArgs e)
             {
                 DataGridViewSelectedRowCollection CurrentSelectedRows = LayerGrid.SelectedRows;

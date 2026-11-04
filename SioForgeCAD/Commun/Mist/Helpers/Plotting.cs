@@ -13,12 +13,12 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 {
     public static class Plotting
     {
-        public static (bool Success, string Message) PublishLayouts(this Layout layout, string outputFilePath)
+        public static (bool Success, bool IsCancelled, string Message) PublishLayouts(this Layout layout, string outputFilePath)
         {
             return new Layout[1] { layout }.PublishLayouts(outputFilePath);
         }
 
-        public static (bool Success, string Message) PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
+        public static (bool Success, bool IsCancelled, string Message) PublishLayouts(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             return layouts.ProcessPrintLayouts(outputFilePath);
         }
@@ -70,11 +70,11 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return deviceName;
         }
 
-        private static (bool Success, string Message) ProcessPrintLayouts(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
+        private static (bool Success, bool IsCancelled, string Message) ProcessPrintLayouts(this IEnumerable<Layout> layouts, string outputFilePath, bool AutoOpenFile = false)
         {
             if (layouts?.Any() != true)
             {
-                return (false, "The number of sheets to plot is zero. Skipped.");
+                return (false, false, "The number of sheets to plot is zero. Skipped.");
             }
 
             string firstMedia = layouts.First().CanonicalMediaName ?? string.Empty;
@@ -85,40 +85,41 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                 plotRotation == l.PlotRotation;
             });
 
-            (bool Success, string Message) result = (false, string.Empty);
+            (bool Success, bool IsCancelled, string Message) result = (false, false, string.Empty);
 
             if (HaveSamePaperFormat)
             {
                 result = layouts.PublishLayoutsWithSamePaperFormats(outputFilePath);
             }
 
-            if (result.Success == false) //if PublishLayoutsWithSamePaperFormats fails, we run your PublishLayoutsWithDifferentsPaperFormats
+            if (!result.Success && !result.IsCancelled)
             {
-                result = layouts.PublishLayoutsWithDifferentsPaperFormats(outputFilePath);
+                var fallbackResult = layouts.PublishLayoutsWithDifferentsPaperFormats(outputFilePath);
+                result = (fallbackResult.Success, false, fallbackResult.Message);
             }
 
             if (result.Success && AutoOpenFile && File.Exists(outputFilePath))
             {
-                Process.Start(outputFilePath); //System.Diagnostics.Process.Start
+                Process.Start(outputFilePath);
             }
 
             return result;
         }
 
-        private static (bool Success, string Message) PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static (bool Success, bool IsCancelled, string Message) PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             Document doc = Generic.GetDocument();
             string docName = doc.Name.Substring(doc.Name.LastIndexOf("\\") + 1);
             if (layouts?.Any() != true)
             {
                 Generic.WriteMessage("The number of sheets to plot is zero. Skipped.");
-                return (false, "The number of sheets to plot is zero. Skipped.");
+                return (false, false, "The number of sheets to plot is zero. Skipped.");
             }
 
             if (!Files.TryDeleteFile(outputFilePath))
             {
                 Generic.WriteMessage("The output file is being used by another process. Cancelled.");
-                return (false, "The output file is being used by another process. Cancelled.");
+                return (false, false, "The output file is being used by another process. Cancelled.");
             }
 
             string tempFolderPath = Files.GetATempFolder("AcPublish");
@@ -134,7 +135,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             if (PlotFactory.ProcessPlotState != ProcessPlotState.NotPlotting)
             {
                 Generic.WriteMessage("Cancelled. Printer is busy (another plot job is in progress).");
-                return (false, "Cancelled. Printer is busy (another plot job is in progress).");
+                return (false, false, "Cancelled. Printer is busy (another plot job is in progress).");
             }
 
             using (PlotEngine plotEngine = PlotFactory.CreatePublishEngine())
@@ -159,6 +160,12 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 
                     foreach (var (layout, layoutIndex) in layouts.Select((val, i) => (val, i + 1)))
                     {
+                        if (plotProcessDialog.IsPlotCancelled)
+                        {
+                            Generic.WriteMessage("Impression annulée par l'utilisateur.");
+                            return (false, IsCancelled: true, Message: "Plot cancelled by user.");
+                        }
+
                         // 1. Créer un nouveau PlotInfo pour chaque page
                         PlotInfo pagePlotInfo = new PlotInfo
                         {
@@ -190,13 +197,13 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                                 else
                                 {
                                     Generic.WriteMessage($"Attention : Format de papier n'est pas indiqué pour la présentation {layout.LayoutName}");
-                                    return (false, "The paper format is not specified for the layout.");
+                                    return (false, false, "The paper format is not specified for the layout.");
                                 }
                             }
                             catch (Autodesk.AutoCAD.Runtime.Exception)
                             {
                                 Generic.WriteMessage($"Attention : Format de papier '{media}' non supporté par {globalDevice} pour la présentation {layout.LayoutName}.");
-                                return (false, "The paper format is not supported by the printer.");
+                                return (false, false, "The paper format is not supported by the printer.");
                             }
                             if (!plotProcessDialog.IsVisible)
                             {
@@ -227,6 +234,11 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                                 return false;
                             }, 500);
 
+                            if (plotProcessDialog.IsSheetCancelled)
+                            {
+                                continue; // Passer à la feuille suivante sans interrompre tout le job
+                            }
+
                             PlotPageInfo plotPageInfo = new PlotPageInfo();
                             Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}, rotation : {layout.PlotRotation}");
 
@@ -247,10 +259,14 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                 }
                 catch (System.Exception ex)
                 {
+                    if (plotProcessDialog.IsPlotCancelled)
+                    {
+                        return (false, true, "Plot cancelled by user.");
+                    }
                     Generic.WriteMessage("Plotting failed.");
                     Debug.WriteLine(ex.ToString());
                     Files.TryCreateLog(ex.ToString(), Path.Combine(tempFolderPath, "crash.log"));
-                    return (false, "Echec du tracé.");
+                    return (false, false, "Echec du tracé.");
                 }
                 finally
                 {
@@ -268,12 +284,12 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                 try
                 {
                     File.Copy(tempOutputPdfPath, outputFilePath, true);
-                    return (true, "Plotting completed.");
+                    return (true, false, "Plotting completed.");
                 }
                 catch (System.Exception ex)
                 {
                     Generic.WriteMessage($"Erreur lors de la copie du fichier final : {ex.Message}");
-                    return (false, "Erreur lors de la copie du fichier final.");
+                    return (false, false, "Erreur lors de la copie du fichier final.");
                 }
                 finally
                 {
@@ -283,21 +299,21 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                 }
             }
 
-            return (true, "Plotting completed.");
+            return (true, false, "Plotting completed.");
         }
 
-        private static (bool Success, string Message) PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
+        private static (bool Success, bool IsCancelled, string Message) PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             if (layouts?.Any() != true)
             {
-                return (false, "The number of sheets to plot is zero. Skipped.");
+                return (false, false, "The number of sheets to plot is zero. Skipped.");
             }
 
             // Fail-fast : Vérification préalable sur la destination
             if (!Files.TryDeleteFile(outputFilePath))
             {
                 Generic.WriteMessage("Impossible de remplacer le fichier PDF final (il est peut-être ouvert ou verrouillé par un autre processus).");
-                return (false, "The output file is being used by another process. Cancelled.");
+                return (false, false, "The output file is being used by another process. Cancelled.");
             }
 
             Document doc = Generic.GetDocument();
@@ -329,7 +345,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             catch (System.Exception ex)
             {
                 Generic.WriteMessage($"\nErreur lors de la préparation du clonage du dessin : {ex.Message}");
-                return (false, "Erreur lors de la préparation du clonage du dessin.");
+                return (false, false, "Erreur lors de la préparation du clonage du dessin.");
             }
 
             bool isMultiPage = layouts.Count() > 1;
@@ -373,7 +389,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 
                     if (!Files.TryDeleteFile(dsdFilePath))
                     {
-                        return (false, "Failed to delete the temporary DSD file.");
+                        return (false, false, "Failed to delete the temporary DSD file.");
                     }
 
                     dsdFileData.WriteDsd(dsdFilePath);
@@ -401,14 +417,14 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                 else
                 {
                     Generic.WriteMessage("Le tracé a échoué. Fichier PDF temporaire introuvable.");
-                    return (false, "The temporary PDF file was not found.");
+                    return (false, false, "The temporary PDF file was not found.");
                 }
             }
             catch (System.Exception ex)
             {
                 Generic.WriteMessage(ex.Message);
                 Files.TryCreateLog(ex.ToString(), Path.Combine(tempFolderPath, "crash.log"));
-                return (false, "An error occurred while plotting.");
+                return (false, false, "An error occurred while plotting.");
             }
             finally
             {
@@ -417,7 +433,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                     Files.TryDeleteDirectory(tempFolderPath);
 #endif
             }
-            return (true, "Plotting completed.");
+            return (true, false, "Plotting completed.");
         }
 
     }

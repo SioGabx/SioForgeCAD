@@ -25,9 +25,10 @@ namespace SioForgeCAD.Functions
 
             while (true)
             {
-                var ppo = new PromptPointOptions("\nEntrée = Toggle des calques, Liste = sélectionner les calques, Echap = quitter");
-
-                ppo.AllowNone = true;
+                var ppo = new PromptPointOptions("\nEntrée = Toggle des calques, Liste = sélectionner les calques, Echap = quitter")
+                {
+                    AllowNone = true
+                };
                 ppo.Keywords.Add("Liste");
 
                 var result = ed.GetPoint(ppo);
@@ -89,7 +90,7 @@ namespace SioForgeCAD.Functions
             }
 
             // Dialogue de sélection
-            var dlg = new ComboboxDialog(layersNames.ToArray(), "Layers", false);
+            var dlg = new ComboboxDialog(layersNames.ToArray(), "Selectionnez les calques à toggle", false);
             dlg.SetSelectedItems(SelectedItems);
 
 

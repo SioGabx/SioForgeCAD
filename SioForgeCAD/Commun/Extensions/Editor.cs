@@ -423,7 +423,7 @@ namespace SioForgeCAD.Commun.Extensions
         {
             if (Message is null)
             {
-                Message = SingleOnly ? "Veuillez selectionner des entités" : "Veuillez selectionner une entité";
+                Message = SingleOnly ? "Veuillez selectionner des entités " : "Veuillez selectionner une entité ";
             }
 
             PromptSelectionOptions selectionOptions = new PromptSelectionOptions
@@ -492,7 +492,7 @@ namespace SioForgeCAD.Commun.Extensions
             }
             catch (PromptSelectionKeywordEntered ex)
             {
-                return (PromptStatus.Keyword, ex.Message);
+                return (PromptStatus.Keyword, ex.Keyword);
             }
         }
 

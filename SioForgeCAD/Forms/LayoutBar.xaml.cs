@@ -874,7 +874,7 @@ namespace SioForgeCAD.Forms
         {
             base.OnMouseMove(e);
 
-            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging && _dragSource != null && _dragStart is Point dragStart)
+            if (!_isDragging && _dragSource != null && e.LeftButton == MouseButtonState.Pressed && _dragStart is Point dragStart)
             {
                 Point currentPos = e.GetPosition(this);
                 Vector diff = dragStart - currentPos;
@@ -1851,7 +1851,7 @@ namespace SioForgeCAD.Forms
                                 var result = layoutListToPlot.PublishLayouts(saveFileDialog.FileName);
                                 retry = false;
 
-                                if (!result.Success)
+                                if (!result.Success && !result.IsCancelled)
                                 {
                                     var dialogResult = System.Windows.Forms.MessageBox.Show(
                                         $"Erreur lors de l'impression : {result.Message}\n\nVoulez-vous réessayer ?",
@@ -1989,9 +1989,9 @@ namespace SioForgeCAD.Forms
                         do
                         {
                             retry = false;
-                            (bool Success, string Message) result = layouts.PublishLayouts(outputPath);
+                            (bool Success, bool IsCancelled, string Message) result = layouts.PublishLayouts(outputPath);
 
-                            if (!result.Success)
+                            if (!result.Success && !result.IsCancelled)
                             {
                                 var dialogResult = System.Windows.Forms.MessageBox.Show(
                                     $"Une erreur est survenue lors de la publication du carnet PDF :\n\n{result.Message}\n\nVoulez-vous réessayer de publier les {layouts.Count} présentation(s) ?",

@@ -685,9 +685,9 @@ namespace SioForgeCAD
 
         //Divide a polyline into equal areas
         [CommandMethod("SIOFORGECAD", "EXECUTEONEACHOBJECTSINSELECTION", CommandFlags.Redraw)]
-        public static void EXECUTEONEACHOBJECTSINSELECTION()
+        public static async void EXECUTEONEACHOBJECTSINSELECTION()
         {
-            Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
+            await Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
         }
 
 

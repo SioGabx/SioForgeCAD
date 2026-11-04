@@ -21,8 +21,8 @@ namespace SioForgeCAD.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.StripContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.SelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,20 +47,20 @@ namespace SioForgeCAD.Forms
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
             this.dataGridView1.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.White;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView1.ColumnHeadersHeight = 35;
             this.dataGridView1.ContextMenuStrip = this.StripContextMenu;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(240)))), ((int)(((byte)(250)))));
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.Black;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.Color.White;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(240)))), ((int)(((byte)(250)))));
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle6;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.EnableHeadersVisualStyles = false;
             this.dataGridView1.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
@@ -145,14 +145,20 @@ namespace SioForgeCAD.Forms
             // dummy
             // 
             this.dummy.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.dummy.BackColor = System.Drawing.Color.Transparent;
+            this.dummy.Dock = System.Windows.Forms.DockStyle.Top;
+            this.dummy.FlatAppearance.BorderSize = 0;
+            this.dummy.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.dummy.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.dummy.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.dummy.Location = new System.Drawing.Point(0, 0);
+            this.dummy.ForeColor = System.Drawing.Color.Transparent;
+            this.dummy.Location = new System.Drawing.Point(0, 35);
             this.dummy.Margin = new System.Windows.Forms.Padding(0);
             this.dummy.Name = "dummy";
-            this.dummy.Size = new System.Drawing.Size(10, 10);
+            this.dummy.Size = new System.Drawing.Size(700, 0);
             this.dummy.TabIndex = 0;
-            this.dummy.UseVisualStyleBackColor = true;
-            this.dummy.Visible = false;
+            this.dummy.Text = "dummy";
+            this.dummy.UseVisualStyleBackColor = false;
             // 
             // ComboboxDialog
             // 
