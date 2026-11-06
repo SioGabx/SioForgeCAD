@@ -213,6 +213,45 @@ namespace SioForgeCAD.Functions
             //return null;
         }
 
+        public static Dictionary<DataStore, string> GetDataStoreFromLayerName(string LayerName)
+        {
+            if (string.IsNullOrWhiteSpace(LayerName))
+            {
+                return null;
+            }
+            Dictionary<DataStore, string> BlocData = new Dictionary<DataStore, string>();
+            string input = LayerName;
+            string prefix = Settings.PrefixVegblocLayer;
+
+            // 1. On retire le préfixe s'il est présent
+            if (input.StartsWith(Settings.PrefixVegblocLayer))
+            {
+                input = input.Trim(Settings.PrefixVegblocLayer);
+
+                // Splitting sur le premier '_' trouvé
+                var parts = input.Split(new[] { '_' }, 2);
+                if (parts.Length == 2)
+                {
+                    string nomVegetal = parts.Length > 1 ? parts[1] : string.Empty;
+                    BlocData.Add(DataStore.BlocName, LayerName);
+                    BlocData.Add(DataStore.CompleteName, nomVegetal);
+
+                    // Identification du VegblocType à partir du code (4 premières lettres)
+                    string cleanCode = parts[0].RemoveDiacritics().ToUpper();
+                    foreach (VegblocTypes type in Enum.GetValues(typeof(VegblocTypes)))
+                    {
+                        string enumNameClean = type.ToString().RemoveDiacritics().ToUpper();
+                        if (enumNameClean.Length >= 4 && enumNameClean.Substring(0, 4) == cleanCode)
+                        {
+                            BlocData.Add(DataStore.Type, Enum.GetName(typeof(VegblocTypes), type));
+                            break;
+                        }
+                    }
+                }
+            }
+            return BlocData;
+        }
+
         [Obsolete("Old VEGBLOC versions, for compatibility only.", false)]
         private static Dictionary<DataStore, string> GetLEGACYDataStore(BlockReference BlkRef)
         {

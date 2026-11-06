@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 
 namespace SioForgeCAD.Commun.Mist.Helpers
 {
@@ -106,6 +107,8 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             return result;
         }
 
+        [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+        [System.Security.SecurityCritical]
         private static (bool Success, bool IsCancelled, string Message) PublishLayoutsWithSamePaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)
         {
             Document doc = Generic.GetDocument();
@@ -209,9 +212,11 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             {
                                 plotProcessDialog.IsVisible = true;
                             }
+                            LayoutManager.Current.LayoutSwitched += Current_LayoutSwitched;
 
+                            Debug.WriteLine("switch");
                             LayoutManager.Current.CurrentLayout = layout.LayoutName;
-
+                            Debug.WriteLine("end switch");
                             pagePlotInfo.OverrideSettings = plotSettings;
                             plotInfoValidator.Validate(pagePlotInfo);
 
@@ -230,6 +235,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
 
                             System.Threading.SpinWait.SpinUntil(() =>
                             {
+                                //Debug.WriteLine("Is busy : " + Autodesk.AutoCAD.ApplicationServices.Application.IsQuiescent);
                                 System.Windows.Forms.Application.DoEvents();
                                 return false;
                             }, 500);
@@ -238,7 +244,7 @@ namespace SioForgeCAD.Commun.Mist.Helpers
                             {
                                 continue; // Passer à la feuille suivante sans interrompre tout le job
                             }
-
+                            LayoutManager.Current.LayoutSwitched -= Current_LayoutSwitched;
                             PlotPageInfo plotPageInfo = new PlotPageInfo();
                             Debug.WriteLine($"Tentative de tracé : {globalDevice} sur papier {media}, rotation : {layout.PlotRotation}");
 
@@ -300,6 +306,11 @@ namespace SioForgeCAD.Commun.Mist.Helpers
             }
 
             return (true, false, "Plotting completed.");
+        }
+
+        private static void Current_LayoutSwitched(object sender, LayoutEventArgs e)
+        {
+            Debug.WriteLine("Current_LayoutSwitched");
         }
 
         private static (bool Success, bool IsCancelled, string Message) PublishLayoutsWithDifferentsPaperFormats(this IEnumerable<Layout> layouts, string outputFilePath)

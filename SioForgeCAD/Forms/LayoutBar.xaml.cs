@@ -22,6 +22,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using static Autodesk.AutoCAD.Windows.OpenFileDialog;
 using static SioForgeCAD.Commun.Mist.User32PInvoke;
 using Application = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
@@ -1786,7 +1787,10 @@ namespace SioForgeCAD.Forms
                 return DateTime.Now.ToString(dateFormat);
             });
 
-            return result.RemoveInvalidFileNameChars();
+            return result
+                .Replace('\\', '-')
+                .Replace('/', '-')
+                .RemoveInvalidFileNameChars();
         }
 
         public void Plot(List<LayoutTab> targetTabs, string FileName)
@@ -1867,10 +1871,9 @@ namespace SioForgeCAD.Forms
                         else
                         {
                             var folderDialog = new Autodesk.AutoCAD.Windows.OpenFileOrFolderDialog(
-                                "Sélectionnez le dossier d'enregistrement", "", "",
+                                "Sélectionnez le dossier d'enregistrement", dwgDirectory, "pdf",
                                 Generic.GetExtensionDLLName(),
-                                Autodesk.AutoCAD.Windows.OpenFileDialog.OpenFileDialogFlags.AllowFoldersOnly);
-
+                                OpenFileDialogFlags.AllowFoldersOnly |OpenFileDialogFlags.DefaultIsFolder | OpenFileDialogFlags.ForceDefaultFolder);
                             if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                             {
                                 return; // Annulation

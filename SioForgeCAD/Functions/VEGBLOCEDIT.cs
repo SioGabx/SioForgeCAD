@@ -112,32 +112,14 @@ namespace SioForgeCAD.Functions
             else
             {
                 string input = blkRef.Layer;
-                string prefix = Settings.PrefixVegblocLayer;
+                var BlocDataFromLayer = VEGBLOC.GetDataStoreFromLayerName(input);
 
-                // 1. On retire le préfixe s'il est présent
-                if (input.StartsWith(Settings.PrefixVegblocLayer))
+                if (BlocDataFromLayer != null)
                 {
-                    input = input.Trim(Settings.PrefixVegblocLayer);
-
-                    // Splitting sur le premier '_' trouvé
-                    var parts = input.Split(new[] { '_' }, 2);
-                    if (parts.Length == 2)
-                    {
-                        string nomVegetal = parts.Length > 1 ? parts[1] : string.Empty;
-                        editDialog.NameInput.Text = nomVegetal;
-
-                        // Identification du VegblocType à partir du code (4 premières lettres)
-                        string cleanCode = parts[0].RemoveDiacritics().ToUpper();
-                        foreach (VegblocTypes type in Enum.GetValues(typeof(VegblocTypes)))
-                        {
-                            string enumNameClean = type.ToString().RemoveDiacritics().ToUpper();
-                            if (enumNameClean.Length >= 4 && enumNameClean.Substring(0, 4) == cleanCode)
-                            {
-                                editDialog.TypeInput.Text = Enum.GetName(typeof(VegblocTypes), type);
-                                break;
-                            }
-                        }
-                    }
+                    editDialog.NameInput.Text = BlocDataFromLayer.TryGetValueString(VEGBLOC.DataStore.CompleteName);
+                    editDialog.HeightInput.Text = BlocDataFromLayer.TryGetValueString(VEGBLOC.DataStore.Height);
+                    editDialog.WidthInput.Text = BlocDataFromLayer.TryGetValueString(VEGBLOC.DataStore.Width);
+                    editDialog.TypeInput.Text = VEGBLOC.GetVegblocType(BlocDataFromLayer.TryGetValueString(VEGBLOC.DataStore.Type));
                 }
             }
 
