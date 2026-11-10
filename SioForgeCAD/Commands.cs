@@ -4,11 +4,17 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using SioForgeCAD.Commun.Mist.Helpers;
+using SioForgeCAD.Forms;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Windows.Forms;
 
 [assembly: CommandClass(typeof(SioForgeCAD.Commands))]
 
@@ -690,6 +696,13 @@ namespace SioForgeCAD
             await Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
         }
 
+        //Searches for specific block references across drawing hierarchies and generates their full parent-child structure directly to the system clipboard.
+        [CommandMethod("SIOFORGECAD", "BLKFINDTREESTRUCTURE", CommandFlags.Redraw)]
+        public static void BLKFINDTREESTRUCTURE()
+        {
+            Functions.BLKFINDTREESTRUCTURE.Find();
+        }
+
 
 
 #if DEBUG
@@ -713,6 +726,8 @@ namespace SioForgeCAD
             Functions.TRYCONVERTACADPROXYENTALTIMETRYTOBLK.Convert();
         }
 
+       
+
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
@@ -724,7 +739,7 @@ namespace SioForgeCAD
         }
 
 
-[CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
+        [CommandMethod("DEBUG", "TEST2", CommandFlags.Redraw)]
         public static void TEST2()
         {
             Functions.TEST2.P3D2DTrim();

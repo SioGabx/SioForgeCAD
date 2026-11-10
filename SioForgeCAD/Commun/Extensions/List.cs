@@ -83,5 +83,22 @@ namespace SioForgeCAD.Commun.Extensions
         {
             return list.Any(item => item != null && type.IsAssignableFrom(item.GetType()));
         }
+
+        public static List<string> LevenshteinDistance(this List<string> list, string value, int distance = 3, int NumberToTake = -1)
+        {
+            if (NumberToTake == -1)
+            {
+                NumberToTake = list.Count;
+            }
+
+            List<string> suggestions = list
+                .Select(b => new { Name = b, Distance = b.LevenshteinDistance(value) })
+                .Where(x => x.Distance <= distance) // Seuil maximum d'erreurs
+                .OrderBy(x => x.Distance)
+                .Take(3)
+                .Select(x => x.Name)
+                .ToList();
+            return suggestions;
+        }
     }
 }

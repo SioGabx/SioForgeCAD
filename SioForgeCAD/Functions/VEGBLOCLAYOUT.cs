@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.Colors;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using SioForgeCAD.Commun;
@@ -6,7 +7,6 @@ using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist.DrawJigs;
 using System.Collections.Generic;
 using System.Linq;
-
 
 namespace SioForgeCAD.Functions
 {
@@ -66,6 +66,7 @@ namespace SioForgeCAD.Functions
                         }
                     }
                 }
+                boundary?.Dispose();
                 tr.Commit();
             }
         }
@@ -79,60 +80,160 @@ namespace SioForgeCAD.Functions
 
             bool AlwaysTrue(Points _, GetPointJig __) => true;
 
-            DBObjectCollection StaticEntities = new DBObjectCollection();
-            foreach (var vec in vectors)
-            {
-                var clone = boundary.Clone() as Polyline;
-                clone.TransformBy(Matrix3d.Displacement(vec));
-                StaticEntities.Add(clone);
-            }
-
-
             using (var jig = new GetPointJig
             {
                 Entities = new DBObjectCollection { boundary.Clone() as Entity },
-                StaticEntities = StaticEntities,
+                StaticEntities = new DBObjectCollection(),
                 UpdateFunction = AlwaysTrue,
             })
             {
+                int currentIndex = vectors.Count > 0 ? vectors.Count - 1 : -1;
+
+                // Reconstruit toutes les entités statiques et la hachure depuis la liste des vecteurs
+                void UpdateStaticEntities()
+                {
+                    jig.StaticEntities.DeepDispose(false);
+                    jig.StaticEntities.Clear();
+
+                    if (vectors.Count == 0)
+                    {
+                        currentIndex = -1;
+                        return;
+                    }
+
+                    // S'assurer que l'index reste valide
+                    if (currentIndex < 0) currentIndex = 0;
+                    if (currentIndex >= vectors.Count) currentIndex = vectors.Count - 1;
+
+                    Polyline selectedPolyline = null;
+
+                    // 2. Génération des polylignes pour chaque vecteur
+                    for (int i = 0; i < vectors.Count; i++)
+                    {
+                        var clone = boundary.Clone() as Polyline;
+
+                        // Le vecteur part du centroid initial, mais 'boundary' est à l'Origine (0,0,0).
+                        // On convertit donc le vecteur pour repartir de l'Origine dans le Jig :
+                        Vector3d displacementFromOrigin = Point3d.Origin.GetVectorTo(centroid + vectors[i]);
+
+                        clone.TransformBy(Matrix3d.Displacement(displacementFromOrigin));
+                        jig.StaticEntities.Add(clone);
+
+                        if (i == currentIndex)
+                        {
+                            selectedPolyline = clone;
+                        }
+                    }
+
+                    // 3. Génération de la hachure de surbrillance sur le cadre sélectionné
+                    if (selectedPolyline != null)
+                    {
+                        var highlightHatch = new Hatch();
+                        highlightHatch.SetHatchPattern(HatchPatternType.PreDefined, "SOLID");
+                        highlightHatch.Color = Color.FromColorIndex(ColorMethod.ByAci, 1); // Rouge
+                        highlightHatch.Transparency = new Transparency(128); // 50% transparence
+
+                        Point2dCollection pts = new Point2dCollection();
+                        DoubleCollection bulges = new DoubleCollection();
+
+                        for (int i = 0; i < selectedPolyline.NumberOfVertices; i++)
+                        {
+                            pts.Add(selectedPolyline.GetPoint2dAt(i));
+                            bulges.Add(selectedPolyline.GetBulgeAt(i));
+                        }
+
+                        highlightHatch.AppendLoop(HatchLoopTypes.Polyline, pts, bulges);
+                        highlightHatch.EvaluateHatch(true);
+
+                        jig.StaticEntities.Add(highlightHatch);
+                    }
+                }
+
+                UpdateStaticEntities();
+
                 while (true)
                 {
-                    var res = jig.GetPoint("Indiquez les emplacements des présentations", "Terminer", "Modifier", "Annuler précédent");
+                    string promptMsg = vectors.Count > 0
+                        ? $"\nClic = Ajouter cadre | Cadre sélectionné : [{currentIndex + 1}/{vectors.Count}]"
+                        : "\nIndiquez les emplacements des présentations";
+
+                    var res = jig.GetPoint(promptMsg, "Terminer", "Suivant", "Precedent", "Deplacer", "sUpprimer");
 
                     if (res.PromptPointResult.Status == PromptStatus.OK)
                     {
                         var target = res.Point.SCG;
-                        var clone = boundary.Clone() as Polyline;
-                        clone.TransformBy(Matrix3d.Displacement(Point3d.Origin.GetVectorTo(target)));
-                        jig.StaticEntities.Add(clone);
-
                         vectors.Add(centroid.GetVectorTo(target));
+                        currentIndex = vectors.Count - 1;
+                        UpdateStaticEntities();
                     }
                     else if (res.PromptPointResult.Status == PromptStatus.Keyword)
                     {
-                        if (res.PromptPointResult.StringResult == "Terminer")
-                        {
-                            return vectors;
-                        }
-                        else if (res.PromptPointResult.StringResult == "Annuler précédent")
-                        {
-                            int index = vectors.Count - 1;
-                            if (index >= 0)
-                            {
-                                vectors.RemoveAt(index);
-                                var Ent = jig.StaticEntities[index];
-                                jig.StaticEntities.RemoveAt(index);
-                                Ent.Dispose();
+                        string kw = res.PromptPointResult.StringResult;
 
-                            }
+                        if (kw == "Terminer")
+                        {
+                            break;
                         }
-                        continue;
+
+                        if (vectors.Count == 0)
+                        {
+                            continue;
+                        }
+
+                        switch (kw)
+                        {
+                            case "Suivant":
+                                currentIndex = (currentIndex + 1) % vectors.Count;
+                                UpdateStaticEntities();
+                                break;
+
+                            case "Precedent":
+                                currentIndex = (currentIndex - 1 + vectors.Count) % vectors.Count;
+                                UpdateStaticEntities();
+                                break;
+
+                            case "Deplacer":
+                                // Masque temporairement le cadre en cours de déplacement pour la Jig dynamique
+                                var tempVector = vectors[currentIndex];
+                                vectors.RemoveAt(currentIndex);
+                                UpdateStaticEntities();
+
+                                string moveMsg = $"\nIndiquez le nouvel emplacement du cadre";
+                                var moveRes = jig.GetPoint(moveMsg);
+
+                                if (moveRes.PromptPointResult.Status == PromptStatus.OK)
+                                {
+                                    var newTarget = moveRes.Point.SCG;
+                                    vectors.Insert(currentIndex, centroid.GetVectorTo(newTarget));
+                                }
+                                else
+                                {
+                                    // Restaure le vecteur d'origine en cas d'annulation
+                                    vectors.Insert(currentIndex, tempVector);
+                                }
+
+                                UpdateStaticEntities();
+                                break;
+
+                            case "sUpprimer":
+                                vectors.RemoveAt(currentIndex);
+                                if (currentIndex >= vectors.Count && vectors.Count > 0)
+                                {
+                                    currentIndex = vectors.Count - 1;
+                                }
+                                UpdateStaticEntities();
+                                break;
+                        }
                     }
                     else
                     {
+                        // Annulation (Échap / Clic droit)
                         break;
                     }
                 }
+
+                jig.StaticEntities.DeepDispose(false);
+                jig.StaticEntities.Clear();
             }
 
             return vectors;
@@ -153,16 +254,13 @@ namespace SioForgeCAD.Functions
 
                 ViewPort.Locked = false;
 
-                //  On définit la matrice de transformation du WCS vers le DCS
-                // On prend en compte la direction de vue, la cible et l'angle de torsion (Twist)
+                // Matrix transformation WCS -> DCS
                 Matrix3d matWcsToDcs = Matrix3d.PlaneToWorld(ViewPort.ViewDirection);
                 matWcsToDcs = Matrix3d.Displacement(ViewPort.ViewTarget - Point3d.Origin) * matWcsToDcs;
                 matWcsToDcs = Matrix3d.Rotation(-ViewPort.TwistAngle, ViewPort.ViewDirection, ViewPort.ViewTarget) * matWcsToDcs;
                 matWcsToDcs = matWcsToDcs.Inverse();
-                // On transforme le vecteur de déplacement (WCS -> DCS)
-                Vector3d dcsVector = vector.TransformBy(matWcsToDcs);
 
-                // On applique le déplacement sur le ViewCenter (en 2D)
+                Vector3d dcsVector = vector.TransformBy(matWcsToDcs);
                 ViewPort.ViewCenter = ViewPort.ViewCenter.Add(new Vector2d(dcsVector.X, dcsVector.Y));
                 ViewPort.Locked = true;
             }
@@ -184,8 +282,6 @@ namespace SioForgeCAD.Functions
                 return SymbolUtilityServices.RepairSymbolName(newName, false);
             }
         }
-
-
 
         private static string PromptForLayoutName()
         {

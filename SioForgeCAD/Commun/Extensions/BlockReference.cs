@@ -9,7 +9,39 @@ using System.Linq;
 namespace SioForgeCAD.Commun.Extensions
 {
     static class BlockReferenceExtensions
-    {
+    {/// <summary>
+     /// Récupère la liste de tous les noms de définitions de blocs du dessin (y compris anonymes et présentations).
+     /// </summary>
+        public static List<string> GetAllBlockNames(this Database db, bool includeLayouts = false, bool includeAnonymous = true)
+        {
+            List<string> blockNames = new List<string>();
+
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+
+                foreach (ObjectId btrId in bt)
+                {
+                    BlockTableRecord btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
+
+                    // Exclut les espaces Objet/Papier (Layouts) si non demandés
+                    if (!includeLayouts && btr.IsLayout)
+                        continue;
+
+                    // Vérifie si on garde ou non les blocs anonymes (commençant par *)
+                    if (!includeAnonymous && btr.IsAnonymous)
+                        continue;
+
+                    blockNames.Add(btr.Name);
+                }
+
+                tr.Commit();
+            }
+
+            return blockNames;
+        }
+
+
         public static bool FixNormal(this BlockReference block)
         {
             if (block.Normal.IsEqualTo(Vector3d.ZAxis.MultiplyBy(-1)))

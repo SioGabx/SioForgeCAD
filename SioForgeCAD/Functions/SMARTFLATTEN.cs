@@ -168,10 +168,13 @@ namespace SioForgeCAD.Functions
                 HashSet<ObjectId> updatedBlockDefs = new HashSet<ObjectId>();
                 foreach (ObjectId entityObjectId in finalIdsToProcess)
                 {
-                    if (LongOperation.IsCanceled) { return; }
+                    if (LongOperation.IsCanceled) {
+                        tr.Commit();
+                        return; 
+                    }
                     LongOperation.UpdateProgress();
 
-                    var DbObjEnt = tr.GetObject(entityObjectId, OpenMode.ForWrite, true, true);
+                    var DbObjEnt = entityObjectId.GetDBObject(OpenMode.ForWrite, true);
                     if (!(DbObjEnt is Entity entity))
                     {
                         DbObjEnt.DowngradeOpen();
@@ -183,8 +186,9 @@ namespace SioForgeCAD.Functions
                         Debug.WriteLine($"Entité non traitée : \"{entity.GetType()}\"");
                     }
 
-                    if (entity is BlockReference bk && !updatedBlockDefs.Contains(bk.BlockTableRecord))
+                    if (entity is BlockReference bk && !updatedBlockDefs.Contains(bk.BlockTableRecord) && processInsideBlocks)
                     {
+                        Debug.WriteLine(bk.Name);
                         bk.RegenAllBlkDefinition();
                         updatedBlockDefs.Add(bk.BlockTableRecord);
                     }

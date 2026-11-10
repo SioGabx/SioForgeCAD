@@ -16,7 +16,7 @@ namespace SioForgeCAD.Commun.Extensions
             return A;
         }
 
-        public static void DeepDispose(this DBObjectCollection collection)
+        public static void DeepDispose(this DBObjectCollection collection, bool DisposeCollection = true)
         {
             foreach (DBObject item in collection)
             {
@@ -25,7 +25,10 @@ namespace SioForgeCAD.Commun.Extensions
                     item.Dispose();
                 }
             }
-            collection.Dispose();
+            if (DisposeCollection)
+            {
+                collection.Dispose();
+            }
         }
 
         public static DBObjectCollection DeepClone(this DBObjectCollection collection)

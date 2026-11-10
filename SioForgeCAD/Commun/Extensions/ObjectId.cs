@@ -21,14 +21,14 @@ namespace SioForgeCAD.Commun
             throw new System.InvalidCastException("Impossible de convertir l'entité, utilisez GetDBObject");
         }
 
-        public static DBObject GetDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead)
+        public static DBObject GetDBObject(this ObjectId objectId, OpenMode openMode = OpenMode.ForRead, bool OpenErased = false)
         {
             if (objectId.IsNull)
             {
                 return null;
             }
             var db = Generic.GetDatabase();
-            return db.TransactionManager.GetObject(objectId, openMode, false, true);
+            return db.TransactionManager.GetObject(objectId, openMode, OpenErased, true);
         }
 
         public static List<ObjectId> GetObjectIds(this IEnumerable<DBObject> dBObjects)

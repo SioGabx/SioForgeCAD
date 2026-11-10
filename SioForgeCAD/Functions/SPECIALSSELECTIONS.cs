@@ -8,6 +8,7 @@ using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace SioForgeCAD.Functions
 {
@@ -302,30 +303,130 @@ namespace SioForgeCAD.Functions
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            var SelRedraw = ed.GetSelectionRedraw();
-            if (SelRedraw.Status != PromptStatus.OK) { return; }
+            List<string> BlocksNames = new List<string>();
 
-            using (Transaction tr = db.TransactionManager.StartTransaction())
+            var SelRedraw = ed.GetSelectionRedraw(Options: new string[] { "Nom", "Liste" });
+
+
+            // Si l'utilisateur a choisi l'option/mot-clé "Nom"
+            if (SelRedraw.Status == PromptStatus.Keyword && SelRedraw.Value.ToString() == "Nom")
             {
-                List<string> BlocksNames = new List<string>();
-                foreach (var SelItem in SelRedraw.Value.GetObjectIds())
+                bool isNameValid = false; 
+                string BlkName = string.Empty;
+                List<string> AllBlksNames = BlockReferenceExtensions.GetAllBlockNames(db, false, true);
+                while (!isNameValid)
                 {
-                    if (SelItem.GetDBObject(OpenMode.ForRead) is BlockReference SelBlkRef)
+                    using (Forms.InputDialogBox dialogBox = new Forms.InputDialogBox())
                     {
-                        var BlkName = SelBlkRef.GetBlockReferenceName();
-                        if (!BlocksNames.Contains(BlkName))
+                        dialogBox.SetPrompt($"Entrez le nom du bloc");
+                        dialogBox.SetUserInputPlaceholder(BlkName);
+                        dialogBox.SetCursorAtEnd();
+
+                        if (dialogBox.ShowDialog() != DialogResult.OK)
                         {
-                            BlocksNames.Add(BlkName);
+                            return;
+                        }
+
+                        BlkName = dialogBox.GetUserInput();
+
+                        if (string.IsNullOrWhiteSpace(BlkName))
+                        {
+                            Generic.WriteMessage("Impossible, le nom du block est vide.");
+                            continue;
+                        }
+
+                        if (AllBlksNames.Contains(BlkName))
+                        {
+                            isNameValid = true;
+                        }
+                        else
+                        {
+                            var suggestions = AllBlksNames.LevenshteinDistance(BlkName);
+                           
+                            string Message = $"Le dessin ne contient pas de block nommé {BlkName}{(suggestions.Count > 0 ? $"\nVouliez-vous dire : {string.Join(", ", suggestions)} ?" : string.Empty)}";
+                            Generic.WriteMessage(Message);
+
+                            if (suggestions.Count == 1)
+                            {
+                                var result = MessageBox.Show(Message, Generic.GetExtensionDLLName(), MessageBoxButtons.YesNo);
+                                if (result == DialogResult.Yes)
+                                {
+                                    BlkName = suggestions.FirstOrDefault();
+                                    isNameValid = true;
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show(Message);
+                            }
                         }
                     }
                 }
 
+                if (string.IsNullOrWhiteSpace(BlkName))
+                {
+                    Generic.WriteMessage("Impossible, le nom du block est vide.");
+                    return;
+                }
+
+                BlocksNames.Add(BlkName);
+
+            }
+            else if (SelRedraw.Status == PromptStatus.Keyword && SelRedraw.Value.ToString() == "Liste")
+            {
+                List<string> AllBlksNames = BlockReferenceExtensions.GetAllBlockNames(db, false, true);
+                List<string> SelectedBlkNames = new List<string>();
+                if (AllBlksNames.Count == 0)
+                {
+                    Generic.WriteMessage("Aucun bloc trouvé dans le dessin.");
+                    return;
+                }
+                var dlg = new ComboboxDialog(AllBlksNames.ToArray(), "Selectionnez les noms des blocks", false);
+                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    BlocksNames.AddRangeUnique(dlg.GetSelectedItems());
+                }
+                else
+                {
+                    return;
+                }
+
+            }
+            else if (SelRedraw.Status == PromptStatus.OK)
+            {
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    foreach (var SelItem in SelRedraw.Value.GetObjectIds())
+                    {
+                        if (SelItem.GetDBObject(OpenMode.ForRead) is BlockReference SelBlkRef)
+                        {
+                            var BlkName = SelBlkRef.GetBlockReferenceName();
+                            if (!BlocksNames.Contains(BlkName))
+                            {
+                                BlocksNames.Add(BlkName);
+                            }
+                        }
+                    }
+                    tr.Commit();
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            if (BlocksNames.Count == 0) { return; }
+
+            // Recherche de toutes les références correspondant aux noms collectés
+            using (Transaction tr = db.TransactionManager.StartTransaction())
+            {
                 PromptSelectionResult psr = ed.SelectAll();
                 if (psr.Status != PromptStatus.OK)
                 {
                     tr.Commit();
                     return;
                 }
+
                 HashSet<ObjectId> BlocksWithSameName = new HashSet<ObjectId>();
                 foreach (var SelItem in psr.Value.GetObjectIds())
                 {

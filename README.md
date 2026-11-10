@@ -20,7 +20,6 @@ ONLY FOR AUTOCAD < 2025
 <!-- 
 Regex to get command name      : \[(?:[^\]]*\s*,\s*)?"([^"]+)"   
 Regex to get command name (V2) : \[(?:[^\]]*\s*,\s*)?"\K[^"]+(?=")
-Regex to get README command name : /`([^`]+?)`/g
 https://regex101.com/?regex=%5C%5B%28%3F%3A%5B%5E%5C%5D%5D*%5Cs*%2C%5Cs*%29%3F%22%5CK%5B%5E%22%5D%2B%28%3F%3D%22%29&testString=&flags=g&flavor=pcre2&delimiter=%2F
 
 
@@ -182,6 +181,7 @@ Commandes existantes fichier MD (à completer par les commandes manquantes, prop
 | `LAZIMPORT` / `LASIMPORT` | Import LiDAR point clouds from .LAS or .LAZ files. |
 | `DIVIDEPOLYLIGNINEQUALAREA` | Divide polyline area into equal polygon segments. |
 | `EXECUTEONEACHOBJECTSINSELECTION` | Run a specified command sequentially on every object in selection. |
+| `BLKFINDTREESTRUCTURE` | Search for specific block references across drawing hierarchies and generate their full parent-child structure directly to the system clipboard. |
 | `FIELDEDITOR` | Debug only - Open advanced editor for dynamic fields. |
 | `SMARTLEGEND` | Debug only - Test smart legend generation. |
 | `TRYCONVERTACADPROXYENTALTIMETRYTOBLK` | Debug only - Attempt to convert AutoCAD altimetry proxies to blocks. |

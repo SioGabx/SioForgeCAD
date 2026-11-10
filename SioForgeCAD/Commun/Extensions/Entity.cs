@@ -449,7 +449,7 @@ namespace SioForgeCAD.Commun.Extensions
                             Point3d Point = mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount);
                             mLeader.SetVertex(LeaderLineCount, LeaderVerticesCount, Point.Flatten());
 
-                            Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}");
+                            //Debug.WriteLine($"Flatten point {mLeader.GetVertex(LeaderLineCount, LeaderVerticesCount)}");
                         }
                     }
                     catch (Exception)
