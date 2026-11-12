@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun.Extensions;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
@@ -155,14 +156,60 @@ namespace SioForgeCAD.Commun.Overrules.PolyGripOverrule
             base.GetGripPoints(entity, grips, curViewUnitSize, gripSize, curViewDir, bitFlags);
         }
 
+     
+        //    //Filter to avoid System.AccessViolationException - Tentative de lecture ou d'écriture de mémoire protégée. Cela indique souvent qu'une autre mémoire est endommagée.
+        //    /*
+        //       à AcDbGripOverrule.moveGripPointsAt(AcDbGripOverrule* , AcDbEntity* , AcArray<void \*\,AcArrayMemCopyReallocator<void \*> >* , AcGeVector3d* , Int32 )
+        //    à Autodesk.AutoCAD.DatabaseServices.GripOverrule.MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
+        //    à SioForgeCAD.Commun.Overrules.PolyGripOverrule.PolyGripOverrule.MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags) dans H:\SharpDevelop Projects\SioForgeCAD\SioForgeCAD\Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs :ligne 176
+        //    à AcMgGripOverrule.moveGripPointsAt(AcMgGripOverrule* , AcDbEntity* , AcArray<void \*\,AcArrayMemCopyReallocator<void \*> >* , AcGeVector3d* , Int32 )
+        //    */
+
         public override void MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
         {
+            if (!IsApplicable(entity))
+            {
+                base.MoveGripPointsAt(entity, grips, offset, bitFlags);
+                return;
+            }
+
             if (grips.Count > 1)
             {
                 Generic.WriteMessage("Impossible de déplacer un point superposé");
                 return;
             }
-            base.MoveGripPointsAt(entity, grips, offset, bitFlags);
+
+            /*
+            Filter to avoid System.AccessViolationException - Tentative de lecture ou d'écriture de mémoire protégée. Cela indique souvent qu'une autre mémoire est endommagée.
+               à AcDbGripOverrule.moveGripPointsAt(AcDbGripOverrule* , AcDbEntity* , AcArray<void \*\,AcArrayMemCopyReallocator<void \*> >* , AcGeVector3d* , Int32 )
+            à Autodesk.AutoCAD.DatabaseServices.GripOverrule.MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags)
+            à SioForgeCAD.Commun.Overrules.PolyGripOverrule.PolyGripOverrule.MoveGripPointsAt(Entity entity, GripDataCollection grips, Vector3d offset, MoveGripPointsFlags bitFlags) dans H:\SharpDevelop Projects\SioForgeCAD\SioForgeCAD\Commun\Overrules\PolyGripOverrule\PolyGripOverrule.cs :ligne 176
+            à AcMgGripOverrule.moveGripPointsAt(AcMgGripOverrule* , AcDbEntity* , AcArray<void \*\,AcArrayMemCopyReallocator<void \*> >* , AcGeVector3d* , Int32 )
+            */
+            GripDataCollection nativeGrips = new GripDataCollection();
+
+            foreach (GripData grip in grips)
+            {
+                if (grip is PolyCornerGrip cornerGrip)
+                {
+                    continue;
+                }
+                else if (grip is PolyMiddleGrip middleGrip)
+                {
+                    continue;
+                }
+                else
+                {
+                    // Ce grip n'est pas l'un des nôtres, c'est un grip natif (si _hideOriginals == false)
+                    nativeGrips.Add(grip);
+                }
+            }
+
+            if (nativeGrips.Count > 0)
+            {
+                base.MoveGripPointsAt(entity, nativeGrips, offset, bitFlags);
+            }
         }
+
     }
 }
