@@ -130,10 +130,11 @@ namespace SioForgeCAD.Commun.Extensions
                     if (OriginHatch.IsHatch)
                     {
                         TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
-                        TargetHatch.HatchStyle = OriginHatch.HatchStyle;
                         TargetHatch.PatternSpace = OriginHatch.PatternSpace;
+                        TargetHatch.PatternScale = OriginHatch.PatternScale;
                         TargetHatch.PatternAngle = OriginHatch.PatternAngle;
                         TargetHatch.PatternDouble = OriginHatch.PatternDouble;
+                        TargetHatch.HatchStyle = OriginHatch.HatchStyle;
                     }
                     TargetHatch.ShadeTintValue = OriginHatch.ShadeTintValue;
                     TargetHatch.HatchObjectType = OriginHatch.HatchObjectType;
