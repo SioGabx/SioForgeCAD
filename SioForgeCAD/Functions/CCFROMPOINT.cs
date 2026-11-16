@@ -34,10 +34,9 @@ namespace SioForgeCAD.Functions
                         AlignmentPoint = Point3d.Origin
                     };
 
-
                     bool UpdateFunction(Point3d currentPoint, InputPointContext _, GetEntityJig jig)
                     {
-                        double maxDistance = .1;//10 cm
+                        double maxDistance = .1; // 10 cm
                         if (db.Pdsize > 0)
                         {
                             maxDistance = db.Pdsize;
@@ -86,8 +85,6 @@ namespace SioForgeCAD.Functions
                         return true;
                     }
 
-
-
                     using (var GetEntJig = new GetEntityJig()
                     {
                         StaticEntities = new DBObjectCollection() { HeightHintText },
@@ -95,7 +92,6 @@ namespace SioForgeCAD.Functions
                     })
                     {
                         var JigResults = GetEntJig.GetEntity("Veuillez sélectionner un point", new System.Type[] { typeof(DBPoint), typeof(BlockReference) }, true, "Multiples");
-
 
                         // Sélection multiple
                         if (JigResults.Result.Status == PromptStatus.Keyword)
@@ -114,14 +110,28 @@ namespace SioForgeCAD.Functions
                                 return;
                             }
 
-                            foreach (ObjectId id in selection.Value.GetObjectIds())
-                            {
-                                if (!(id.GetEntity() is DBPoint point))
-                                {
-                                    continue;
-                                }
+                            ObjectId[] selectedIds = selection.Value.GetObjectIds();
 
-                                InsertAltitudeBlock(point.Position, ed);
+                            using (LongOperationProcess LongOperation = new LongOperationProcess("Insertion des blocs d'altimétrie..."))
+                            {
+                                LongOperation.SetTotalOperations(selectedIds.Length);
+
+                                foreach (ObjectId id in selectedIds)
+                                {
+                                    LongOperation.UpdateProgress();
+
+                                    if (LongOperation.IsCanceled)
+                                    {
+                                        return;
+                                    }
+
+                                    if (!(id.GetEntity() is DBPoint point))
+                                    {
+                                        continue;
+                                    }
+
+                                    InsertAltitudeBlock(point.Position, ed);
+                                }
                             }
 
                             return;
@@ -134,7 +144,6 @@ namespace SioForgeCAD.Functions
                         }
 
                         Entity Ent = JigResults.Entity;
-                        Point3d Location = Point3d.Origin;
                         if (Ent is DBPoint dbPoint)
                         {
                             InsertAltitudeBlock(dbPoint.Position, ed);
@@ -143,9 +152,7 @@ namespace SioForgeCAD.Functions
                         {
                             if (blockReference.IsXref())
                             {
-                                List<ObjectId> XrefObjectId;
                                 (ObjectId[] XrefObjectId, ObjectId SelectedObjectId, PromptStatus PromptStatus) XrefSelection = SelectInXref.Select("", JigResults.Result.PickedPoint);
-                                XrefObjectId = XrefSelection.XrefObjectId.ToList();
                                 if (XrefSelection.PromptStatus == PromptStatus.OK && XrefSelection.SelectedObjectId != ObjectId.Null)
                                 {
                                     DBObject XrefObject = XrefSelection.SelectedObjectId.GetDBObject();
@@ -156,7 +163,6 @@ namespace SioForgeCAD.Functions
                                 }
                             }
                         }
-
                     }
                 }
                 finally
@@ -186,7 +192,6 @@ namespace SioForgeCAD.Functions
                 {
                     polygonUcs.Add(p.TransformBy(wcsToUcs));
                 }
-
 
                 PromptSelectionResult res = ed.SelectWindowPolygon(polygonUcs, filter);
                 if (res.Status == PromptStatus.OK)
