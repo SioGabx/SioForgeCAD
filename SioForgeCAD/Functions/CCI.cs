@@ -86,6 +86,7 @@ namespace SioForgeCAD.Functions
 
                             return new Dictionary<string, string>() {
                                 {"ALTIMETRIE", CotePoints.FormatAltitude(Altitude) },
+                                {"ALT", CotePoints.FormatAltitude(Altitude) },
                                 {"RAW_ALTIMETRIE", CotePoints.FormatAltitude(Altitude, 3) },
                                 {"DISTANCEPERCM", DistancePerCm.ToString() },
                                 {"PENTE", $"{Slope}%" },

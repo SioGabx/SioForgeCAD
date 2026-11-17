@@ -213,7 +213,7 @@ namespace SioForgeCAD.Functions
 
         private static void InsertAltitudeBlock(Point3d position, Editor ed)
         {
-            Dictionary<string, string> values = new Dictionary<string, string>() { { "ALTIMETRIE", CotePoints.FormatAltitude(position.Z) } };
+            Dictionary<string, string> values = new Dictionary<string, string>() { { "ALTIMETRIE", CotePoints.FormatAltitude(position.Z) }, { "ALT", CotePoints.FormatAltitude(position.Z) } };
 
             BlockReferences.InsertFromNameImportIfNotExist(
                 Settings.BlkAltimetry,
