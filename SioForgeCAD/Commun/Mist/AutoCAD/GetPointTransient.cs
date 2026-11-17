@@ -220,7 +220,7 @@ namespace SioForgeCAD.Commun
 
         public virtual Autodesk.AutoCAD.Colors.Color GetTransGraphicsColor(Entity Drawable, bool IsStaticDrawable)
         {
-            return Autodesk.AutoCAD.Colors.Color.FromColorIndex(Autodesk.AutoCAD.Colors.ColorMethod.ByColor, (short)Settings.TransientPrimaryColorIndex);
+            return Color.FromColorIndex(ColorMethod.ByColor, (short)Settings.TransientPrimaryColorIndex);
         }
 
         public virtual Autodesk.AutoCAD.Colors.Transparency GetTransGraphicsTransparency(Entity Drawable, bool IsStaticDrawable)

@@ -283,6 +283,7 @@
     <Compile Include="Functions\ALLANAVDIALOGSDEFINECURRENTDRAWING.cs" />
     <Compile Include="Functions\AREATOFIELD.cs" />
     <Compile Include="Functions\ARRAYCOPY.cs" />
+    <Compile Include="Functions\BATCHHATCHPOLYS.cs" />
     <Compile Include="Functions\BATTLEMENTS.cs" />
     <Compile Include="Functions\BLKADDENTITIES.cs" />
     <Compile Include="Functions\BLKAPPLYSCALE.cs" />

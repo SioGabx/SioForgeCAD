@@ -703,6 +703,13 @@ namespace SioForgeCAD
             Functions.BLKFINDTREESTRUCTURE.Find();
         }
 
+        //Prompts the user to select polylines and automatically creates an associative SOLID hatch for every closed polyline in the selection.
+        [CommandMethod("SIOFORGECAD", "BATCHHATCHPOLYS", CommandFlags.Redraw)]
+        public static void BATCHHATCHPOLYS()
+        {
+            Functions.BATCHHATCHPOLYS.HatchClosedPolylines();
+        }
+
 
 
 #if DEBUG
@@ -726,11 +733,11 @@ namespace SioForgeCAD
             Functions.TRYCONVERTACADPROXYENTALTIMETRYTOBLK.Convert();
         }
 
-       
 
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
+            Functions.LASIMPORT.TestReadFirstThenAdd();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]
