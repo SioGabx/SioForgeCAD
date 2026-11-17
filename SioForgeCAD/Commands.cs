@@ -737,7 +737,6 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
         public static void TEST()
         {
-            Functions.LASIMPORT.TestReadFirstThenAdd();
         }
 
         [CommandMethod("DEBUG", "TEST1", CommandFlags.Redraw)]

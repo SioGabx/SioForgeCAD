@@ -1,10 +1,7 @@
 ﻿using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
-using Autodesk.AutoCAD.Runtime;
 
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Drawing;
@@ -13,7 +10,6 @@ using SioForgeCAD.Commun.Mist.Helpers.Projections;
 using SioForgeCAD.Forms;
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -22,159 +18,84 @@ namespace SioForgeCAD.Functions
 {
     public static class LASIMPORT
     {
-
-        public static void TestReadFirstThenAdd()
-        {
-            List<(Point3d, Color)> dictionary = new List<(Point3d, Color)>();
-            Database db = Generic.GetDatabase();
-            Editor ed = Generic.GetEditor();
-
-            string file = GetFile();
-
-            if (string.IsNullOrEmpty(file))
-            {
-                return;
-            }
-
-            // Conversion LAZ automatique
-            if (Path.GetExtension(file).Equals(".laz", StringComparison.OrdinalIgnoreCase))
-            {
-                file = ConvertLAZtoLAS(file);
-
-                if (string.IsNullOrEmpty(file))
-                {
-                    return;
-                }
-            }
-
-            // Projection du dessin
-            const int drawingEPSG = 2154;
-
-            int lasEPSG = GetProjectionOption(ed, drawingEPSG);
-
-            if (lasEPSG == 0)
-            {
-                return;
-            }
-
-            CoordinateTransform transform = new CoordinateTransform(drawingEPSG, lasEPSG);
-            using (LasReader las = new LasReader(file))
-            {
-                int count = 0;
-                using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
-                {
-                    using (Transaction tr = db.TransactionManager.StartTransaction())
-                    {
-                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-
-                        BlockTableRecord ms = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-                        while (las.ReadPoint(out LasPoint pt))
-                        {
-                            if (op.IsCanceled)
-                            {
-                                return;
-                            }
-
-                            // Transformation LAS -> dessin
-                            Point2d converted = transform.Transform(pt.X, pt.Y);
-                            dictionary.Add((new Point3d(converted.X, converted.Y, pt.Z), pt.HasRGB ? Color.FromRgb(pt.R, pt.G, pt.B) : GetClassificationColor(pt.Classification)));
-                            count++;
-
-                            if (count % 10000 == 0)
-                            {
-                                Generic.WriteMessage($"{count} points");
-
-                                System.Windows.Forms.Application.DoEvents();
-                            }
-                        }
-                        Generic.WriteMessage($"End reading {count} points");
-                        tr.Commit();
-                    }
-                }
-
-            }
-        }
-
-
-
-
         public static void ImportLAS()
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
-            string file = GetFile();
-
-            if (string.IsNullOrEmpty(file))
+            string selectedFile = GetFile();
+            if (string.IsNullOrEmpty(selectedFile))
             {
                 return;
             }
+
+            string lasFile = selectedFile;
 
             // Conversion LAZ automatique
-            if (Path.GetExtension(file).Equals(".laz", StringComparison.OrdinalIgnoreCase))
+            if (Path.GetExtension(selectedFile).Equals(".laz", StringComparison.OrdinalIgnoreCase))
             {
-                file = ConvertLAZtoLAS(file);
-
-                if (string.IsNullOrEmpty(file))
+                lasFile = ConvertLAZtoLAS(selectedFile);
+                if (string.IsNullOrEmpty(lasFile))
                 {
                     return;
                 }
             }
 
-            // Projection du dessin
-            const int drawingEPSG = 2154;
+            // Les fichiers LAS Lidar IGN/France sont en Lambert 93 (EPSG:2154)
+            const int lasEPSG = 2154;
 
-            int lasEPSG = GetProjectionOption(ed, drawingEPSG);
-
-            if (lasEPSG == 0)
+            int drawingEPSG = GetProjectionOption(ed, lasEPSG);
+            if (drawingEPSG == 0)
             {
                 return;
             }
 
-            CoordinateTransform transform = new CoordinateTransform(drawingEPSG, lasEPSG);
+            // Transformation : LAS (source) -> Dessin (target)
+            CoordinateTransform transform = new CoordinateTransform(lasEPSG, drawingEPSG);
 
-            // Ouverture du LAS
-            //
-            // Le constructeur ne lit que le HEADER.
-            // Aucun point n'est encore parcouru.
-
-            using (LasReader las = new LasReader(file))
+            using (LasReader las = new LasReader(lasFile))
             {
-                PromptKeywordOptions keywordOpts = new PromptKeywordOptions("\nImporter toute la LAS ? [Oui/Non] <Non> : ", "Oui Non")
+                if (las.PointCount == 0)
                 {
-                    AllowNone = true
-                };
-                PromptResult keywordResult = ed.GetKeywords(keywordOpts);
-
-                if (keywordResult.Status != PromptStatus.OK && keywordResult.Status != PromptStatus.None)
-                {
+                    Generic.WriteMessage("Le fichier LAS ne contient aucun point.");
                     return;
                 }
-                bool importAll = keywordResult.StringResult == "Oui";
+                ObjectId bboxId = ShowLASBoundingBox(las, transform);
 
-                // Limites dans le système de coordonnées LAS
-                double lasXmin = double.MinValue;
-                double lasXmax = double.MaxValue;
-                double lasYmin = double.MinValue;
-                double lasYmax = double.MaxValue;
 
-                // Sélection de la zone
-                if (!importAll)
+
+                try
                 {
-                    // Affichage de l'emprise du fichier LAS
-                    var bboxId = ShowLASBoundingBox(ed, las, transform);
-
-                    try
+                    PromptKeywordOptions keywordOpts = new PromptKeywordOptions("\nImporter toute la LAS ? [Oui/Non] <Non> : ", "Oui Non")
                     {
-                        // Demande du premier coin
-                        PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
+                        AllowNone = true
+                    };
+                    PromptResult keywordResult = ed.GetKeywords(keywordOpts);
 
+                    if (keywordResult.Status != PromptStatus.OK && keywordResult.Status != PromptStatus.None)
+                    {
+                        return;
+                    }
+
+                    bool importAll = keywordResult.StringResult == "Oui";
+
+                    // Limites dans le système de coordonnées LAS
+                    double lasXmin = double.MinValue;
+                    double lasXmax = double.MaxValue;
+                    double lasYmin = double.MinValue;
+                    double lasYmax = double.MaxValue;
+
+
+                    // Sélection de la zone
+                    if (!importAll)
+                    {
+
+                        PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
                         if (p1.Status != PromptStatus.OK)
                         {
                             return;
                         }
 
-                        // Demande du deuxième coin
                         PromptCornerOptions opts = new PromptCornerOptions("\nDeuxième coin : ", p1.Value);
                         PromptPointResult p2 = ed.GetCorner(opts);
                         if (p2.Status != PromptStatus.OK)
@@ -188,170 +109,211 @@ namespace SioForgeCAD.Functions
                         double ymin = Math.Min(p1.Value.Y, p2.Value.Y);
                         double ymax = Math.Max(p1.Value.Y, p2.Value.Y);
 
-                        // Transformation dessin -> LAS
-                        // On transforme les 4 coins plutôt que seulement
-                        // 2 coins afin de gérer correctement la projection.
+                        // Transformation dessin -> LAS sur les 4 coins
                         Point2d lasP1 = transform.Inverse(xmin, ymin);
                         Point2d lasP2 = transform.Inverse(xmax, ymin);
                         Point2d lasP3 = transform.Inverse(xmax, ymax);
                         Point2d lasP4 = transform.Inverse(xmin, ymax);
+
                         lasXmin = Math.Min(Math.Min(lasP1.X, lasP2.X), Math.Min(lasP3.X, lasP4.X));
                         lasXmax = Math.Max(Math.Max(lasP1.X, lasP2.X), Math.Max(lasP3.X, lasP4.X));
                         lasYmin = Math.Min(Math.Min(lasP1.Y, lasP2.Y), Math.Min(lasP3.Y, lasP4.Y));
                         lasYmax = Math.Max(Math.Max(lasP1.Y, lasP2.Y), Math.Max(lasP3.Y, lasP4.Y));
-                        Generic.WriteMessage($"Zone LAS : " + $"{lasXmin} , {lasYmin} -> " + $"{lasXmax} , {lasYmax}");
-                    }
-                    finally
-                    {
-                        // Suppression de la bbox temporaire
-                        HideLASBoundingBox(bboxId);
-                    }
-                }
+                        Generic.WriteMessage($"Zone LAS : {lasXmin:0.###} , {lasYmin:0.###} -> {lasXmax:0.###} , {lasYmax:0.###}");
 
-                // IMPORT DES POINTS
-                int count = 0;
-                int lastPercent = -1;
-                using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
+                    }
+                // Cache des couleurs par classification pour éviter les allocations répétées
+                Color[] classColorCache = new Color[256];
+                for (int i = 0; i < 256; i++)
                 {
-                    op.SetTotalOperations(100); //100%
-                    using (Transaction tr = db.TransactionManager.StartTransaction())
-                    {
-                        BlockTable bt = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-
-                        BlockTableRecord ms = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-                        while (las.ReadPoint(out LasPoint pt))
-                        {
-                            if (op.IsCanceled)
-                            {
-                                return;
-                            }
-
-                            // Filtrage dans les coordonnées LAS
-                            if (!importAll)
-                            {
-                                if (pt.X < lasXmin || pt.X > lasXmax || pt.Y < lasYmin || pt.Y > lasYmax)
-                                {
-                                    continue;
-                                }
-                            }
-
-                            // Transformation LAS -> dessin
-                            Point2d converted = transform.Transform(pt.X, pt.Y);
-                            DBPoint acPoint = new DBPoint(new Point3d(converted.X, converted.Y, pt.Z));
-
-                            if (pt.HasRGB)
-                            {
-                                acPoint.Color = Color.FromRgb(pt.R, pt.G, pt.B);
-                            }
-                            else
-                            {
-                                acPoint.Color = GetClassificationColor(pt.Classification);
-                            }
-
-                            ms.AppendEntity(acPoint);
-
-                            tr.AddNewlyCreatedDBObject(acPoint, true);
-
-                            count++;
-
-                            int currentPercent = (int)((count * 100L) / las.PointCount);
-
-                            if (currentPercent > lastPercent)
-                            {
-                                Generic.WriteMessage($"{count} points");
-                                op.UpdateProgress();
-                            }
-                        }
-
-                        tr.Commit();
-                    }
+                    classColorCache[i] = GetClassificationColor((byte)i);
                 }
 
-                Generic.WriteMessage($"Import terminé : {count} points");
+                // IMPORT DES POINTS PAR LOTS (CHUNKS)
+                const int batchSize = 50000;
+                int importedCount = 0;
+                long readIndex = 0;
+                int lastPercent = -1;
+
+                bool previousUndoState = db.UndoRecording;
+                //db.DisableUndoRecording(true); // Évite le freeze dû à l'enregistrement Undo massif
+
+                try
+                {
+                    using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
+                    {
+                        op.SetTotalOperations(100);
+
+                        bool hasMorePoints = true;
+                        using (Transaction tr = db.TransactionManager.StartTransaction())
+                        {
+                            while (hasMorePoints)
+                            {
+
+                                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                                BlockTableRecord ms = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
+
+                                int batchCount = 0;
+
+                                while (batchCount < batchSize)
+                                {
+                                    if (!las.ReadPoint(out LasPoint pointVal))
+                                    {
+                                        hasMorePoints = false;
+                                        break;
+                                    }
+
+                                    readIndex++;
+
+                                    if ((readIndex & 1023) == 0) // Vérification annulation / progression tous les 1024 points
+                                    {
+                                        if (op.IsCanceled)
+                                        {
+                                            tr.Abort();
+                                            Generic.WriteMessage("\nImport LAS annulé.");
+                                            return;
+                                        }
+                                        UpdateProgressIfNeeded(las, op, ref lastPercent);
+                                    }
+
+                                    // Filtrage spatial rapide AVANT échantillonnage et projection
+                                    if (!importAll)
+                                    {
+                                        if (pointVal.X < lasXmin || pointVal.X > lasXmax ||
+                                            pointVal.Y < lasYmin || pointVal.Y > lasYmax)
+                                        {
+                                            continue;
+                                        }
+                                    }
+
+
+                                    // Transformation LAS -> dessin
+                                    Point2d converted = transform.Transform(pointVal.X, pointVal.Y);
+                                    DBPoint acPoint = new DBPoint(new Point3d(converted.X, converted.Y, pointVal.Z))
+                                    {
+                                        Color = pointVal.HasRGB
+                                            ? Color.FromRgb(pointVal.R, pointVal.G, pointVal.B)
+                                            : classColorCache[pointVal.Classification]
+                                    };
+
+                                    ms.AppendEntity(acPoint);
+                                    tr.AddNewlyCreatedDBObject(acPoint, true);
+
+                                    importedCount++;
+                                    batchCount++;
+                                }
+
+
+                            }
+                            tr.Commit();
+                        }
+                    }
+                }
+                finally
+                {
+                    db.DisableUndoRecording(previousUndoState);
+                }
+
+                Generic.WriteMessage($"Import terminé : {importedCount:N0} points importés.");
+                }
+                finally
+                {
+                    HideLASBoundingBox(bboxId);
+                }
             }
         }
 
-
-
-
-        private static ObjectId ShowLASBoundingBox(Editor ed, LasReader las, CoordinateTransform transform)
+        private static void UpdateProgressIfNeeded(LasReader las, LongOperationProcess op, ref int lastPercent)
         {
-            // Transformation des 4 coins LAS -> dessin
+            if (las.PointCount == 0) return;
+
+            int currentPercent = (int)((las.PointsProcessed * 100L) / las.PointCount);
+            if (currentPercent > lastPercent)
+            {
+                Generic.WriteMessage($"Progression : {currentPercent}% - {las.PointsProcessed} points traités");
+
+                int steps = currentPercent - lastPercent;
+                for (int i = 0; i < steps; i++)
+                {
+                    op.UpdateProgress(); // Appelle déjà Application.DoEvents()
+                }
+                lastPercent = currentPercent;
+            }
+        }
+
+        private static ObjectId ShowLASBoundingBox(LasReader las, CoordinateTransform transform)
+        {
             Point2d p1 = transform.Transform(las.MinX, las.MinY);
             Point2d p2 = transform.Transform(las.MaxX, las.MinY);
             Point2d p3 = transform.Transform(las.MaxX, las.MaxY);
             Point2d p4 = transform.Transform(las.MinX, las.MaxY);
-
-            // On calcule l'emprise dans le dessin.
-            // Important :
-            // on ne suppose pas que la transformation conserve
-            // exactement l'orientation du rectangle.
 
             double xmin = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
             double xmax = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
             double ymin = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
             double ymax = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
 
-            // Création de la polyline temporaire
-            Autodesk.AutoCAD.DatabaseServices.Polyline pl = new Autodesk.AutoCAD.DatabaseServices.Polyline();
+            Polyline pl = new Polyline();
             pl.AddVertexAt(0, new Point2d(xmin, ymin), 0, 0, 0);
             pl.AddVertexAt(1, new Point2d(xmax, ymin), 0, 0, 0);
             pl.AddVertexAt(2, new Point2d(xmax, ymax), 0, 0, 0);
             pl.AddVertexAt(3, new Point2d(xmin, ymax), 0, 0, 0);
             pl.Closed = true;
-            var id = pl.AddToDrawing();
+            ObjectId id = pl.AddToDrawing();
 
             Generic.WriteMessage(
-                $"Emprise LAS : " +
+                $"Emprise LAS :" +
                 $"\nX : {las.MinX:0.###} -> {las.MaxX:0.###}" +
                 $"\nY : {las.MinY:0.###} -> {las.MaxY:0.###}" +
                 $"\nZ : {las.MinZ:0.###} -> {las.MaxZ:0.###}" +
-                $"\nPoints : {las.PointCount}");
+                $"\nPoints : {las.PointCount:N0}");
 
             return id;
         }
 
-
         private static void HideLASBoundingBox(ObjectId obj)
         {
-            obj.EraseObject();
+            if (!obj.IsNull && !obj.IsErased)
+            {
+                obj.EraseObject();
+            }
         }
 
         public class CoordinateTransform
         {
             private readonly Lambert93 source;
             private readonly Lambert93 target;
-
+            private readonly bool isIdentity;
 
             public CoordinateTransform(int sourceEPSG, int targetEPSG)
             {
+                isIdentity = (sourceEPSG == targetEPSG);
                 source = Lambert93.Get(sourceEPSG);
                 target = Lambert93.Get(targetEPSG);
             }
 
-
-            // LAS -> dessin
             public Point2d Transform(double x, double y)
             {
+                if (isIdentity) return new Point2d(x, y);
+
                 var geo = source.Inverse(x, y);
                 var result = target.Forward(geo.Lon, geo.Lat);
                 return new Point2d(result.X, result.Y);
             }
 
-
-            // dessin -> LAS
             public Point2d Inverse(double x, double y)
             {
+                if (isIdentity) return new Point2d(x, y);
+
                 var geo = target.Inverse(x, y);
                 var result = source.Forward(geo.Lon, geo.Lat);
                 return new Point2d(result.X, result.Y);
             }
         }
 
-        // CHOIX PROJECTION
-        private static int GetProjectionOption(Editor ed, int drawingEPSG)
+        private static int GetProjectionOption(Editor ed, int defaultEPSG)
         {
-            PromptKeywordOptions opts = new PromptKeywordOptions("\nLes fichiers LAS Lidar en FRANCE sont en Lambert93. " + "Sélectionnez la projection du dessin courant : ");
+            PromptKeywordOptions opts = new PromptKeywordOptions("\nLes fichiers LAS Lidar en FRANCE sont en Lambert93. Sélectionnez la projection du dessin courant : ");
 
             opts.Keywords.Add("Aucune");
             opts.Keywords.Add("Lambert93");
@@ -367,132 +329,60 @@ namespace SioForgeCAD.Functions
             opts.AllowNone = false;
 
             PromptResult res = ed.GetKeywords(opts);
-
-            if (res.Status != PromptStatus.OK)
-            {
-                return 0;
-            }
+            if (res.Status != PromptStatus.OK) return 0;
 
             switch (res.StringResult)
             {
                 case "Aucune":
-                    return drawingEPSG;
-
-                case "Lambert93":
-                    return 2154;
-
-                case "CC42":
-                    return 3942;
-
-                case "CC43":
-                    return 3943;
-
-                case "CC44":
-                    return 3944;
-
-                case "CC45":
-                    return 3945;
-
-                case "CC46":
-                    return 3946;
-
-                case "CC47":
-                    return 3947;
-
-                case "CC48":
-                    return 3948;
-
-                case "CC49":
-                    return 3949;
-
-                case "CC50":
-                    return 3950;
+                case "Lambert93": return defaultEPSG;
+                case "CC42": return 3942;
+                case "CC43": return 3943;
+                case "CC44": return 3944;
+                case "CC45": return 3945;
+                case "CC46": return 3946;
+                case "CC47": return 3947;
+                case "CC48": return 3948;
+                case "CC49": return 3949;
+                case "CC50": return 3950;
+                default: return 0;
             }
-
-            return 0;
         }
 
         private static Color GetClassificationColor(byte classification)
         {
             switch (classification)
             {
-                case 0: // Never classified
-                    return Color.FromRgb(200, 200, 200);
-
-                case 1: // Unassigned
-                    return Color.FromRgb(160, 160, 160);
-
-                case 2: // Ground
-                    return Color.FromRgb(150, 100, 50);
-
-                case 3: // Low vegetation
-                    return Color.FromRgb(170, 220, 80);
-
-                case 4: // Medium vegetation
-                    return Color.FromRgb(80, 180, 80);
-
-                case 5: // High vegetation
-                    return Color.FromRgb(0, 120, 0);
-
-                case 6: // Building
-                    return Color.FromRgb(220, 170, 120);
-
-                case 7: // Low point / noise
-                    return Color.FromRgb(255, 0, 0);
-
-                case 8: // Reserved
-                    return Color.FromRgb(255, 255, 0);
-
-                case 9: // Water
-                    return Color.FromRgb(0, 120, 255);
-
-                case 10: // Rail
-                    return Color.FromRgb(120, 120, 120);
-
-                case 11: // Road surface
-                    return Color.FromRgb(80, 80, 80);
-
-                case 12: // Reserved
-                    return Color.FromRgb(255, 180, 0);
-
-                case 13: // Wire guard
-                    return Color.FromRgb(255, 0, 255);
-
-                case 14: // Wire conductor
-                    return Color.FromRgb(255, 100, 255);
-
-                case 15: // Transmission tower
-                    return Color.FromRgb(100, 0, 100);
-
-                case 16: // Wire connector
-                    return Color.FromRgb(180, 0, 180);
-
-                case 17: // Bridge deck
-                    return Color.FromRgb(0, 180, 180);
-
-                case 18: // High noise
-                    return Color.FromRgb(255, 50, 50);
-
-                default:
-                    // Classes utilisateur 19-255
-                    return Color.FromRgb(100, 100, 255);
+                case 0: return Color.FromRgb(200, 200, 200);
+                case 1: return Color.FromRgb(160, 160, 160);
+                case 2: return Color.FromRgb(150, 100, 50);
+                case 3: return Color.FromRgb(170, 220, 80);
+                case 4: return Color.FromRgb(80, 180, 80);
+                case 5: return Color.FromRgb(0, 120, 0);
+                case 6: return Color.FromRgb(220, 170, 120);
+                case 7: return Color.FromRgb(255, 0, 0);
+                case 8: return Color.FromRgb(255, 255, 0);
+                case 9: return Color.FromRgb(0, 120, 255);
+                case 10: return Color.FromRgb(120, 120, 120);
+                case 11: return Color.FromRgb(80, 80, 80);
+                case 12: return Color.FromRgb(255, 180, 0);
+                case 13: return Color.FromRgb(255, 0, 255);
+                case 14: return Color.FromRgb(255, 100, 255);
+                case 15: return Color.FromRgb(100, 0, 100);
+                case 16: return Color.FromRgb(180, 0, 180);
+                case 17: return Color.FromRgb(0, 180, 180);
+                case 18: return Color.FromRgb(255, 50, 50);
+                default: return Color.FromRgb(100, 100, 255);
             }
         }
 
-
         private static string GetFile()
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Filter = "Fichiers LAS/LAZ (*.las;*.laz)|*.las;*.laz",
-                Title = "Choisir un fichier LAS"
-            };
-
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                return dlg.FileName;
+                dlg.Filter = "Fichiers LAS/LAZ (*.las;*.laz)|*.las;*.laz";
+                dlg.Title = "Choisir un fichier LAS";
+                if (dlg.ShowDialog() == DialogResult.OK) return dlg.FileName;
             }
-
             return null;
         }
 
@@ -508,25 +398,27 @@ namespace SioForgeCAD.Functions
 
                 if (string.IsNullOrWhiteSpace(lastoolsPath) || !Directory.Exists(lastoolsPath))
                 {
-                    MessageBox.Show("Le dossier LAStools\\bin n'est pas défini " + "ou manquant.\n\n" + "Veuillez télécharger LAStools et redéfinir " + "le chemin.\n\n" + "Téléchargement :\n" + LastToolDownloadPage, "LAStools", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(
+                        "Le dossier LAStools\\bin n'est pas défini ou manquant.\n\n" +
+                        "Veuillez télécharger LAStools et redéfinir le chemin.\n\n" +
+                        "Téléchargement :\n" + LastToolDownloadPage,
+                        "LAStools", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                    FolderBrowserDialog dlg = new FolderBrowserDialog
+                    using (FolderBrowserDialog dlg = new FolderBrowserDialog())
                     {
-                        Description = "Sélectionnez le dossier " + "\"LAStools\\bin\".\n\n" + "Téléchargement :\n" + LastToolDownloadPage
-                    };
-
-                    if (dlg.ShowDialog() != DialogResult.OK)
-                    {
-                        return null;
+                        dlg.Description = "Sélectionnez le dossier \"LAStools\\bin\".\n\nTéléchargement :\n" + LastToolDownloadPage;
+                        if (dlg.ShowDialog() != DialogResult.OK) return null;
+                        lastoolsPath = dlg.SelectedPath;
                     }
-                    lastoolsPath = dlg.SelectedPath;
                 }
 
                 laszip = Path.Combine(lastoolsPath, "laszip.exe");
 
                 if (!File.Exists(laszip))
                 {
-                    MessageBox.Show("laszip.exe introuvable.\n\n" + "Télécharger LAStools :\n" + LastToolDownloadPage, "LAStools manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(
+                        "laszip.exe introuvable.\n\nTélécharger LAStools :\n" + LastToolDownloadPage,
+                        "LAStools manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                     Settings.LastoolsPath = string.Empty;
                     continue;
@@ -537,15 +429,14 @@ namespace SioForgeCAD.Functions
 
             } while (!isPathOk);
 
-
             string output = Path.Combine(Path.GetDirectoryName(lazFile), Path.GetFileNameWithoutExtension(lazFile) + ".las");
 
-            Generic.WriteMessage("Conversion LAZ -> LAS...");
+            Generic.WriteMessage("\nConversion LAZ -> LAS...");
 
             ProcessStartInfo psi = new ProcessStartInfo
             {
                 FileName = laszip,
-                Arguments = "-i \"" + lazFile + "\" -o \"" + output + "\"",
+                Arguments = $"-i \"{lazFile}\" -o \"{output}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
@@ -553,19 +444,19 @@ namespace SioForgeCAD.Functions
             using (ProgressDialog dlg = new ProgressDialog("Conversion LAZ → LAS en cours..."))
             {
                 dlg.Show();
-                System.Windows.Forms.Application.DoEvents();
+                Application.DoEvents();
 
                 using (Process p = Process.Start(psi))
                 {
                     while (!p.HasExited)
                     {
-                        System.Windows.Forms.Application.DoEvents();
+                        Application.DoEvents();
                         System.Threading.Thread.Sleep(50);
                     }
 
                     dlg.Close();
 
-                    if (p.ExitCode != 0)
+                    if (p.ExitCode != 0 || !File.Exists(output))
                     {
                         MessageBox.Show("Erreur pendant la conversion LAZ.", "LAZ", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return null;
@@ -574,12 +465,10 @@ namespace SioForgeCAD.Functions
             }
 
             Generic.WriteMessage("Conversion LAZ -> LAS terminée !");
-
             return output;
         }
 
-
-        public class LasPoint
+        public struct LasPoint
         {
             public double X;
             public double Y;
@@ -593,11 +482,19 @@ namespace SioForgeCAD.Functions
 
         public class LasReader : IDisposable
         {
+            private readonly FileStream fs;
             private readonly BinaryReader br;
             private readonly long pointOffset;
             private readonly ushort pointSize;
             private readonly byte pointFormat;
-            private uint pointCount;
+            private readonly byte[] pointBuffer;
+            private readonly int rgbOffsetInPoint;
+            private readonly int classOffsetInPoint;
+
+            public uint PointCount { get; }
+            private uint pointsRemaining;
+            public uint PointsProcessed => PointCount - pointsRemaining;
+
             private readonly double scaleX;
             private readonly double scaleY;
             private readonly double scaleZ;
@@ -605,93 +502,67 @@ namespace SioForgeCAD.Functions
             private readonly double offsetY;
             private readonly double offsetZ;
 
-
-            public double MinX { get; private set; }
-            public double MaxX { get; private set; }
-            public double MinY { get; private set; }
-            public double MaxY { get; private set; }
-            public double MinZ { get; private set; }
-            public double MaxZ { get; private set; }
-
-            public uint PointCount
-            {
-                get { return pointCount; }
-            }
-
+            public double MinX { get; }
+            public double MaxX { get; }
+            public double MinY { get; }
+            public double MaxY { get; }
+            public double MinZ { get; }
+            public double MaxZ { get; }
 
             public LasReader(string filename)
             {
-                br = new BinaryReader(File.OpenRead(filename));
-                // Signature LAS
-                br.BaseStream.Seek(0, SeekOrigin.Begin);
+                // Tampon de 1 Mo pour une lecture séquentielle quasi instantanée
+                fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 1024 * 1024, FileOptions.SequentialScan);
+                br = new BinaryReader(fs);
+
+                fs.Seek(0, SeekOrigin.Begin);
                 string signature = new string(br.ReadChars(4));
                 if (signature != "LASF")
                 {
-                    throw new System.Exception("Fichier LAS invalide");
+                    throw new Exception("Fichier LAS invalide (signature LASF manquante).");
                 }
 
-                // Version LAS
-                br.BaseStream.Seek(24, SeekOrigin.Begin);
+                fs.Seek(24, SeekOrigin.Begin);
                 byte versionMajor = br.ReadByte();
                 byte versionMinor = br.ReadByte();
 
-
-                // Offset début des points
-                br.BaseStream.Seek(96, SeekOrigin.Begin);
+                fs.Seek(96, SeekOrigin.Begin);
                 pointOffset = br.ReadUInt32();
 
-                // Nombre de VLR
-
-                br.BaseStream.Seek(100, SeekOrigin.Begin);
+                fs.Seek(100, SeekOrigin.Begin);
                 uint vlrCount = br.ReadUInt32();
-                Generic.WriteMessage($"Nombre VLR : {vlrCount}");
 
-                // Format du point
-                br.BaseStream.Seek(104, SeekOrigin.Begin);
+                fs.Seek(104, SeekOrigin.Begin);
                 pointFormat = br.ReadByte();
-
-                // Taille du point
                 pointSize = br.ReadUInt16();
 
-                // Nombre de points
                 if (versionMajor == 1 && versionMinor >= 4)
                 {
-                    // LAS 1.4
-                    br.BaseStream.Seek(247, SeekOrigin.Begin);
+                    fs.Seek(247, SeekOrigin.Begin);
                     ulong count64 = br.ReadUInt64();
                     if (count64 > uint.MaxValue)
                     {
-                        throw new System.Exception("Trop de points pour ce lecteur");
+                        throw new Exception("Trop de points pour ce lecteur (> 4 milliards).");
                     }
-                    pointCount = (uint)count64;
+                    PointCount = (uint)count64;
                 }
                 else
                 {
-                    // LAS <= 1.3
-                    br.BaseStream.Seek(107, SeekOrigin.Begin);
-                    pointCount = br.ReadUInt32();
+                    fs.Seek(107, SeekOrigin.Begin);
+                    PointCount = br.ReadUInt32();
                 }
 
-                // Echelles
-                br.BaseStream.Seek(131, SeekOrigin.Begin);
+                pointsRemaining = PointCount;
+
+                fs.Seek(131, SeekOrigin.Begin);
                 scaleX = br.ReadDouble();
                 scaleY = br.ReadDouble();
                 scaleZ = br.ReadDouble();
-
-                // Offsets
                 offsetX = br.ReadDouble();
                 offsetY = br.ReadDouble();
                 offsetZ = br.ReadDouble();
 
-                // BOUNDING BOX LAS
-                // Offset 179 :
-                // Max X
-                // Min X
-                // Max Y
-                // Min Y
-                // Max Z
-                // Min Z
-                br.BaseStream.Seek(179, SeekOrigin.Begin);
+                fs.Seek(179, SeekOrigin.Begin);
                 MaxX = br.ReadDouble();
                 MinX = br.ReadDouble();
                 MaxY = br.ReadDouble();
@@ -699,101 +570,78 @@ namespace SioForgeCAD.Functions
                 MaxZ = br.ReadDouble();
                 MinZ = br.ReadDouble();
 
-                // Aller au premier point
-                br.BaseStream.Seek(pointOffset, SeekOrigin.Begin);
+                // Pré-calcul des offsets fixes dans le buffer de point (zéro branchement dans la boucle)
+                pointBuffer = new byte[pointSize];
+                rgbOffsetInPoint = -1;
+
+                if (pointFormat <= 5)
+                {
+                    classOffsetInPoint = 15;
+                    if (pointFormat == 2) rgbOffsetInPoint = 20;
+                    else if (pointFormat == 3 || pointFormat == 5) rgbOffsetInPoint = 28;
+                }
+                else
+                {
+                    classOffsetInPoint = 16;
+                    if (pointFormat == 7 || pointFormat == 8 || pointFormat == 10) rgbOffsetInPoint = 30;
+                }
+
+                // Un seul Seek initial vers le début des points
+                fs.Seek(pointOffset, SeekOrigin.Begin);
 
                 Generic.WriteMessage(
-                    $"LAS {versionMajor}.{versionMinor}" +
-                    $"\nFormat point : {pointFormat}" +
-                    $"\nTaille point : {pointSize}" +
-                    $"\nNombre points : {pointCount}" +
-                    $"\nMin X : {MinX}" +
-                    $"\nMax X : {MaxX}" +
-                    $"\nMin Y : {MinY}" +
-                    $"\nMax Y : {MaxY}" +
-                    $"\nMin Z : {MinZ}" +
-                    $"\nMax Z : {MaxZ}");
+                    $"\nLAS {versionMajor}.{versionMinor} | VLR : {vlrCount}" +
+                    $"\nFormat point : {pointFormat} (Taille : {pointSize} octets)" +
+                    $"\nNombre points : {PointCount:N0}" +
+                    $"\nEmprise : X[{MinX:0.##}..{MaxX:0.##}] Y[{MinY:0.##}..{MaxY:0.##}] Z[{MinZ:0.##}..{MaxZ:0.##}]");
             }
-
 
             public bool ReadPoint(out LasPoint point)
             {
-                point = null;
-
-                if (pointCount == 0)
+                point = default;
+                if (pointsRemaining == 0)
                 {
                     return false;
                 }
 
-                long start = br.BaseStream.Position;
-                LasPoint p = new LasPoint();
-                // Coordonnées brutes
-                int rawX = br.ReadInt32();
-                int rawY = br.ReadInt32();
-                int rawZ = br.ReadInt32();
-
-                // Coordonnées réelles
-                p.X = (rawX * scaleX) + offsetX;
-                p.Y = (rawY * scaleY) + offsetY;
-                p.Z = (rawZ * scaleZ) + offsetZ;
-
-                // Intensité
-                br.ReadUInt16();
-
-                // Return Number / Flags
-                br.ReadByte();
-
-                // Classification Flags
-                br.ReadByte();
-
-                // Classification
-                p.Classification = br.ReadByte();
-
-                // User Data
-                br.ReadByte();
-
-                // Scan Angle
-                br.ReadInt16();
-
-                // Point Source ID
-                br.ReadUInt16();
-
-                // GPS Time
-                br.ReadDouble();
-
-
-                // Lecture du reste du point
-                long afterBasic = br.BaseStream.Position;
-                int remaining = pointSize - (int)(afterBasic - start);
-                byte[] buffer = br.ReadBytes(remaining);
-
-
-                // RGB Formats 2 et 3
-                if (pointFormat == 2 || pointFormat == 3)
+                // Lecture séquentielle d'un bloc complet sans aucun Seek()
+                int bytesRead = fs.Read(pointBuffer, 0, pointSize);
+                if (bytesRead < pointSize)
                 {
-                    if (buffer.Length >= 6)
-                    {
-                        int index = buffer.Length - 6;
-
-                        ushort r = BitConverter.ToUInt16(buffer, index);
-                        ushort g = BitConverter.ToUInt16(buffer, index + 2);
-                        ushort b = BitConverter.ToUInt16(buffer, index + 4);
-
-                        // LAS stocke généralement RGB sur 16 bits.
-                        // Conversion vers AutoCAD RGB 8 bits.
-                        p.R = (byte)(r >> 8);
-                        p.G = (byte)(g >> 8);
-                        p.B = (byte)(b >> 8);
-                        p.HasRGB = true;
-                    }
+                    pointsRemaining = 0;
+                    return false;
                 }
-                pointCount--;
-                point = p;
+
+                int rawX = BitConverter.ToInt32(pointBuffer, 0);
+                int rawY = BitConverter.ToInt32(pointBuffer, 4);
+                int rawZ = BitConverter.ToInt32(pointBuffer, 8);
+
+                point.X = (rawX * scaleX) + offsetX;
+                point.Y = (rawY * scaleY) + offsetY;
+                point.Z = (rawZ * scaleZ) + offsetZ;
+                point.Classification = pointBuffer[classOffsetInPoint];
+
+                if (rgbOffsetInPoint >= 0 && pointSize >= rgbOffsetInPoint + 6)
+                {
+                    ushort r = BitConverter.ToUInt16(pointBuffer, rgbOffsetInPoint);
+                    ushort g = BitConverter.ToUInt16(pointBuffer, rgbOffsetInPoint + 2);
+                    ushort b = BitConverter.ToUInt16(pointBuffer, rgbOffsetInPoint + 4);
+
+                    point.R = (byte)(r >> 8);
+                    point.G = (byte)(g >> 8);
+                    point.B = (byte)(b >> 8);
+                    point.HasRGB = true;
+                }
+
+                pointsRemaining--;
                 return true;
             }
 
-
-            void IDisposable.Dispose() => br?.Dispose();
+            public void Dispose()
+            {
+                br?.Dispose();
+                fs?.Dispose();
+            }
         }
     }
 }
