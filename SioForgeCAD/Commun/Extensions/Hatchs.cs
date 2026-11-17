@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -202,5 +203,86 @@ namespace SioForgeCAD.Commun.Extensions
             }
             return plines;
         }
+
+        /// <summary>
+        /// Cloner originHatch pour conserver le motif (même sans .pat) et les propriétés
+        /// </summary>
+        /// <param name="originHatch"></param>
+        /// <param name="targetHatch"></param>
+        public static (Hatch Hachure, ObjectId ObjectId) CopyHatchPropertiesToAndDelete(this Hatch originHatch, Hatch targetHatch)
+        {
+            try
+            {
+                if (originHatch == null || targetHatch == null)
+                {
+                    return (null, ObjectId.Null);
+                }
+
+                BlockTableRecord currentSpace = targetHatch.BlockId.GetDBObject(OpenMode.ForWrite) as BlockTableRecord;
+                // Cloner originHatch pour conserver le motif (même sans .pat) et les propriétés
+                Hatch newHatch = originHatch.Clone() as Hatch;
+                if (newHatch == null)
+                {
+                    return (null, ObjectId.Null);
+                }
+
+                for (int i = newHatch.NumberOfLoops - 1; i >= 0; i--)
+                {
+                    newHatch.RemoveLoopAt(i);
+                }
+
+                var HtchObjId = currentSpace.AppendEntity(newHatch);
+                newHatch.AddNewlyCreatedDBObject(true);
+
+                bool hasValidAssociativeEntities = targetHatch.Associative;
+
+                newHatch.Associative = hasValidAssociativeEntities;
+
+                for (int i = 0; i < targetHatch.NumberOfLoops; i++)
+                {
+                    HatchLoop loop = targetHatch.GetLoopAt(i);
+
+                    ObjectIdCollection validIds = new ObjectIdCollection();
+                    if (hasValidAssociativeEntities)
+                    {
+                        ObjectIdCollection assocIds = targetHatch.GetAssociatedObjectIdsAt(i);
+                        if (assocIds != null)
+                        {
+                            foreach (ObjectId id in assocIds)
+                            {
+                                if (!id.IsNull && !id.IsErased)
+                                {
+                                    validIds.Add(id);
+                                }
+                            }
+                        }
+                    }
+
+                    if (validIds.Count > 0)
+                    {
+                        newHatch.AppendLoop(loop.LoopType, validIds);
+                    }
+                    else
+                    {
+                        newHatch.Associative = false;
+                        newHatch.AppendLoop(loop);
+                    }
+                }
+
+                newHatch.EvaluateHatch(true);
+
+                if (newHatch != null)
+                {
+                    targetHatch.Erase();
+                }
+                return (newHatch, HtchObjId);
+            }
+            catch (Exception ex)
+            {
+                Generic.WriteMessage(ex.ToString());
+            }
+            return (null, ObjectId.Null);
+        }
+
     }
 }

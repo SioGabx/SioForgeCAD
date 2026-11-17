@@ -2,10 +2,12 @@
 using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Windows.Data;
 using SioForgeCAD.Commun.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SioForgeCAD.Commun.Extensions
 {
@@ -129,10 +131,18 @@ namespace SioForgeCAD.Commun.Extensions
                     }
                     if (OriginHatch.IsHatch)
                     {
-                        TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
+                        try
+                        {
+                            Debug.WriteLine(OriginHatch.NumberOfPatternDefinitions);
+                            TargetHatch.SetHatchPattern(OriginHatch.PatternType, OriginHatch.PatternName);
+                            TargetHatch.PatternAngle = OriginHatch.PatternAngle;
+                        }
+                        catch (Autodesk.AutoCAD.Runtime.Exception)
+                        {
+                            // Thrown: 1. When the pattern type is predefine, but the pattern name does not exist. 2. When the pattern type is user-define, but the pattern name is not "_USER". 
+                        }
                         TargetHatch.PatternSpace = OriginHatch.PatternSpace;
                         TargetHatch.PatternScale = OriginHatch.PatternScale;
-                        TargetHatch.PatternAngle = OriginHatch.PatternAngle;
                         TargetHatch.PatternDouble = OriginHatch.PatternDouble;
                         TargetHatch.HatchStyle = OriginHatch.HatchStyle;
                     }
@@ -154,19 +164,6 @@ namespace SioForgeCAD.Commun.Extensions
                         double angleB = TargetHatchPatternDefinition.Angle; // objet 2
                         double compensation = angleA - angleB;
                         TargetHatch.PatternAngle += compensation;
-
-
-                        //// 3. rotation du point de base
-                        //double x = OriginHatchPatternDefinition.BaseX + OriginHatch.Origin.X + OriginHatchPatternDefinition.OffsetX;
-                        //double y = OriginHatchPatternDefinition.BaseY + OriginHatch.Origin.Y + OriginHatchPatternDefinition.OffsetY;
-
-                        //double cos = Math.Cos(compensation);
-                        //double sin = Math.Sin(compensation);
-
-                        //double newX = x * cos - y * sin;
-                        //double newY = x * sin + y * cos;
-                        ////TargetHatch.Origin = new Point2d(newX, newY);
-                        //Generic.WriteMessage(TargetHatch.Origin);
                     }
 
                 }

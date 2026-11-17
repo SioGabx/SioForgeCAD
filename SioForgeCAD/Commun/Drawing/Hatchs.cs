@@ -29,14 +29,14 @@ namespace SioForgeCAD.Commun.Drawing
                     // AbstractViewTableRecord fonctionne aussi bien pour Viewport que pour ViewportTableRecord
                     var vtr = (AbstractViewTableRecord)tr.GetObject(ed.ActiveViewportId, OpenMode.ForWrite);
 
-                    // On vérifie le SCU courant de la vue active
-                    if (!vtr.Ucs.Origin.IsEqualTo(oHatchOrigin))
-                    {
-                        ed.CurrentUserCoordinateSystem = Matrix3d.AlignCoordinateSystem(
-                            Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis,
-                            oHatchOrigin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis
-                        );
-                    }
+                    // On vérifie le SCU courant de la vue active OBSOLETE SI CopyHatchPropertiesToAndDelete fonctionne parfaitement
+                    //if (!vtr.Ucs.Origin.IsEqualTo(oHatchOrigin))
+                    //{
+                    //    ed.CurrentUserCoordinateSystem = Matrix3d.AlignCoordinateSystem(
+                    //        Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis,
+                    //        oHatchOrigin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis
+                    //    );
+                    //}
                 }
 
                 try
@@ -75,7 +75,7 @@ namespace SioForgeCAD.Commun.Drawing
                     ObjectIdCollection OutsideObjId = new ObjectIdCollection { OutsidePolyline.ObjectId };
 
                     Hatch oHatch = new Hatch();
-                    var oHatchObjectId = btr.AppendEntity(oHatch);
+                    btr.AppendEntity(oHatch);
                     tr.AddNewlyCreatedDBObject(oHatch, true);
                     oHatch.Associative = true;
                     try
@@ -115,9 +115,12 @@ namespace SioForgeCAD.Commun.Drawing
                     hachure.CopyPropertiesTo(oHatch);
                     oHatch.HatchStyle = HatchStyle.Normal;
 
+                    var oHatchObjectId = hachure.CopyHatchPropertiesToAndDelete(oHatch);
+
+
                     //Keep same draw order as old hatch
-                    orderTable.MoveAbove(DrawOrderCollection, oHatchObjectId);
-                    DrawOrderCollection.Insert(0, oHatchObjectId);
+                    orderTable.MoveAbove(DrawOrderCollection, oHatchObjectId.ObjectId);
+                    DrawOrderCollection.Insert(0, oHatchObjectId.ObjectId);
                     try
                     {
                         orderTable.MoveBelow(DrawOrderCollection, hachure.ObjectId);

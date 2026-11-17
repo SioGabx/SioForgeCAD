@@ -31,6 +31,12 @@ namespace SioForgeCAD.Commun
             return db.TransactionManager.GetObject(objectId, openMode, OpenErased, true);
         }
 
+        public static void AddNewlyCreatedDBObject(this DBObject Obj, bool Add)
+        {
+            var db = Generic.GetDatabase();
+            db.TransactionManager.AddNewlyCreatedDBObject(Obj, Add);
+        }
+
         public static List<ObjectId> GetObjectIds(this IEnumerable<DBObject> dBObjects)
         {
             List<ObjectId> ObjectIds = new List<ObjectId>();

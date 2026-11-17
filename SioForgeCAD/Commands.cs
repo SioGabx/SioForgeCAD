@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.DatabaseServices.Filters;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -11,6 +12,7 @@ using SioForgeCAD.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -708,6 +710,13 @@ namespace SioForgeCAD
         public static void BATCHHATCHPOLYS()
         {
             Functions.BATCHHATCHPOLYS.HatchClosedPolylines();
+        }
+
+        //Clone a source hatch and replace the target while preserving its properties, patterns, valid loops, and draw order. Handle unavailable or custom patterns
+        [CommandMethod("SIOFORGECAD", "HATCHCOPYPROPERTIES", CommandFlags.Redraw)]
+        public static void HATCHCOPYPROPERTIES()
+        {
+            Functions.HATCHCOPYPROPERTIES.CopyProperties();
         }
 
 

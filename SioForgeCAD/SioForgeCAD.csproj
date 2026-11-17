@@ -317,6 +317,7 @@
     <Compile Include="Functions\DRAWPAPERFRAME.cs" />
     <Compile Include="Functions\EXECUTEONEACHOBJECTSINSELECTION.cs" />
     <Compile Include="Functions\EXTENDPOLY.cs" />
+    <Compile Include="Functions\HATCHCOPYPROPERTIES.cs" />
     <Compile Include="Functions\LABELCONTOURELEVATIONS.cs" />
     <Compile Include="Functions\LASIMPORT.cs" />
     <Compile Include="Functions\LAYERMANAGERHANDLEBETTEREDITING.cs" />

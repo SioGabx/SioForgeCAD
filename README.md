@@ -183,6 +183,7 @@ Commandes existantes fichier MD (à completer par les commandes manquantes, prop
 | `EXECUTEONEACHOBJECTSINSELECTION` | Run a specified command sequentially on every object in selection. |
 | `BLKFINDTREESTRUCTURE` | Search for specific block references across drawing hierarchies and generate their full parent-child structure directly to the system clipboard. |
 | `BATCHHATCHPOLYS` | Prompt the user to select polylines and automatically create an associative SOLID hatch for every closed polyline in the selection. |
+| `HATCHCOPYPROPERTIES` | Clone a source hatch and replace the target while preserving its properties, patterns, valid loops, and draw order. Handle unavailable or custom patterns. |
 <!-- DEBUG only -->
 | `FIELDEDITOR` | Debug only - Open advanced editor for dynamic fields. |
 | `SMARTLEGEND` | Debug only - Test smart legend generation. |
