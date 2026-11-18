@@ -3,11 +3,6 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using SioForgeCAD.Commun;
 using SioForgeCAD.Commun.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SioForgeCAD.Functions
 {
@@ -15,7 +10,6 @@ namespace SioForgeCAD.Functions
     {
         public static void CopyProperties()
         {
-            Document doc = Generic.GetDocument(); ;
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
 
@@ -24,22 +18,58 @@ namespace SioForgeCAD.Functions
                 return;
             }
 
-            if (!ed.GetHatch(out ObjectId TargetHatchId, "\nSélectionnez la hachure cible (à remplacer) : "))
+            TypedValue[] filterList = new TypedValue[]
+            {
+                new TypedValue((int)DxfCode.Start, "HATCH")
+            };
+            SelectionFilter filter = new SelectionFilter(filterList);
+
+            PromptSelectionOptions opts = new PromptSelectionOptions
+            {
+                MessageForAdding = "\nSélectionnez les hachures cibles (à remplacer) : "
+            };
+
+            var selRes = ed.GetSelectionRedraw(opts, filter);
+            if (selRes.Status != PromptStatus.OK)
             {
                 return;
             }
 
-            if (SourceHatchId == TargetHatchId)
-            {
-                ed.WriteMessage("Vous avez sélectionné deux fois la même hachure.");
-                return;
-            }
-            // 3. Exécuter dans une Transaction
+            ObjectId[] selectedIds = selRes.Value.GetObjectIds();
+
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
                 Hatch originHatch = SourceHatchId.GetDBObject(OpenMode.ForRead) as Hatch;
-                Hatch targetHatch = TargetHatchId.GetDBObject(OpenMode.ForWrite) as Hatch;
-                originHatch.CopyHatchPropertiesToAndDelete(targetHatch);
+                if (originHatch == null)
+                {
+                    return;
+                }
+
+                int count = 0;
+                foreach (ObjectId targetHatchId in selectedIds)
+                {
+                    if (SourceHatchId == targetHatchId)
+                    {
+                        // Ignorer si l'utilisateur a inclus la hachure source dans la sélection cible
+                        continue;
+                    }
+
+                    Hatch targetHatch = targetHatchId.GetDBObject(OpenMode.ForWrite) as Hatch;
+                    if (targetHatch != null)
+                    {
+                        originHatch.CopyHatchPropertiesToAndDelete(targetHatch);
+                        count++;
+                    }
+                }
+
+                if (count == 0)
+                {
+                    ed.WriteMessage("Aucune hachure cible valide sélectionnée (vous avez peut-être uniquement sélectionné la hachure source).");
+                }else if (count > 0)
+                {
+                    ed.WriteMessage($"{count} hachures cibles ont été copiées à la perfection !");
+                }
+
                 tr.Commit();
             }
         }
