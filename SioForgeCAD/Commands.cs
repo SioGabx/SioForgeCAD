@@ -714,6 +714,7 @@ namespace SioForgeCAD
 
         //Clone a source hatch and replace the target while preserving its properties, patterns, valid loops, and draw order. Handle unavailable or custom patterns
         [CommandMethod("SIOFORGECAD", "HATCHCOPYPROPERTIES", CommandFlags.Redraw)]
+        [CommandMethod("SIOFORGECAD", "COPYHATCHPROPERTIES", CommandFlags.Redraw)]
         public static void HATCHCOPYPROPERTIES()
         {
             Functions.HATCHCOPYPROPERTIES.CopyProperties();
