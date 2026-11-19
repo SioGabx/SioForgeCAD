@@ -60,9 +60,8 @@ namespace SioForgeCAD.Functions
                     Generic.WriteMessage("Le fichier LAS ne contient aucun point.");
                     return;
                 }
+
                 ObjectId bboxId = ShowLASBoundingBox(las, transform);
-
-
 
                 try
                 {
@@ -79,142 +78,162 @@ namespace SioForgeCAD.Functions
 
                     bool importAll = keywordResult.StringResult == "Oui";
 
-                    // Limites dans le système de coordonnées LAS
+                    // Limites englobantes et polygone dans le système de coordonnées LAS
                     double lasXmin = double.MinValue;
                     double lasXmax = double.MaxValue;
                     double lasYmin = double.MinValue;
                     double lasYmax = double.MaxValue;
+                    Point3dCollection lasPolygonPts = null;
 
-
-                    // Sélection de la zone
+                    // Sélection de la polyligne fermée
                     if (!importAll)
                     {
 
-                        PromptPointResult p1 = ed.GetPoint("\nPremier coin de la zone : ");
-                        if (p1.Status != PromptStatus.OK)
+                        using (Transaction trPoly = db.TransactionManager.StartTransaction())
                         {
-                            return;
-                        }
 
-                        PromptCornerOptions opts = new PromptCornerOptions("\nDeuxième coin : ", p1.Value);
-                        PromptPointResult p2 = ed.GetCorner(opts);
-                        if (p2.Status != PromptStatus.OK)
-                        {
-                            return;
-                        }
+                            Polyline selectedPoly = ed.GetPolyline("Sélectionnez une polyligne fermée de délimitation :", false, false);
 
-                        // Emprise sélectionnée dans le dessin
-                        double xmin = Math.Min(p1.Value.X, p2.Value.X);
-                        double xmax = Math.Max(p1.Value.X, p2.Value.X);
-                        double ymin = Math.Min(p1.Value.Y, p2.Value.Y);
-                        double ymax = Math.Max(p1.Value.Y, p2.Value.Y);
-
-                        // Transformation dessin -> LAS sur les 4 coins
-                        Point2d lasP1 = transform.Inverse(xmin, ymin);
-                        Point2d lasP2 = transform.Inverse(xmax, ymin);
-                        Point2d lasP3 = transform.Inverse(xmax, ymax);
-                        Point2d lasP4 = transform.Inverse(xmin, ymax);
-
-                        lasXmin = Math.Min(Math.Min(lasP1.X, lasP2.X), Math.Min(lasP3.X, lasP4.X));
-                        lasXmax = Math.Max(Math.Max(lasP1.X, lasP2.X), Math.Max(lasP3.X, lasP4.X));
-                        lasYmin = Math.Min(Math.Min(lasP1.Y, lasP2.Y), Math.Min(lasP3.Y, lasP4.Y));
-                        lasYmax = Math.Max(Math.Max(lasP1.Y, lasP2.Y), Math.Max(lasP3.Y, lasP4.Y));
-                        Generic.WriteMessage($"Zone LAS : {lasXmin:0.###} , {lasYmin:0.###} -> {lasXmax:0.###} , {lasYmax:0.###}");
-
-                    }
-                // Cache des couleurs par classification pour éviter les allocations répétées
-                Color[] classColorCache = new Color[256];
-                for (int i = 0; i < 256; i++)
-                {
-                    classColorCache[i] = GetClassificationColor((byte)i);
-                }
-
-                // IMPORT DES POINTS PAR LOTS (CHUNKS)
-                const int batchSize = 50000;
-                int importedCount = 0;
-                long readIndex = 0;
-                int lastPercent = -1;
-
-                bool previousUndoState = db.UndoRecording;
-                //db.DisableUndoRecording(true); // Évite le freeze dû à l'enregistrement Undo massif
-
-                try
-                {
-                    using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
-                    {
-                        op.SetTotalOperations(100);
-
-                        bool hasMorePoints = true;
-                        using (Transaction tr = db.TransactionManager.StartTransaction())
-                        {
-                            while (hasMorePoints)
+                            if (selectedPoly == null)
                             {
-
-                                BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
-                                BlockTableRecord ms = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
-
-                                int batchCount = 0;
-
-                                while (batchCount < batchSize)
-                                {
-                                    if (!las.ReadPoint(out LasPoint pointVal))
-                                    {
-                                        hasMorePoints = false;
-                                        break;
-                                    }
-
-                                    readIndex++;
-
-                                    if ((readIndex & 1023) == 0) // Vérification annulation / progression tous les 1024 points
-                                    {
-                                        if (op.IsCanceled)
-                                        {
-                                            tr.Abort();
-                                            Generic.WriteMessage("\nImport LAS annulé.");
-                                            return;
-                                        }
-                                        UpdateProgressIfNeeded(las, op, ref lastPercent);
-                                    }
-
-                                    // Filtrage spatial rapide AVANT échantillonnage et projection
-                                    if (!importAll)
-                                    {
-                                        if (pointVal.X < lasXmin || pointVal.X > lasXmax ||
-                                            pointVal.Y < lasYmin || pointVal.Y > lasYmax)
-                                        {
-                                            continue;
-                                        }
-                                    }
-
-
-                                    // Transformation LAS -> dessin
-                                    Point2d converted = transform.Transform(pointVal.X, pointVal.Y);
-                                    DBPoint acPoint = new DBPoint(new Point3d(converted.X, converted.Y, pointVal.Z))
-                                    {
-                                        Color = pointVal.HasRGB
-                                            ? Color.FromRgb(pointVal.R, pointVal.G, pointVal.B)
-                                            : classColorCache[pointVal.Classification]
-                                    };
-
-                                    ms.AppendEntity(acPoint);
-                                    tr.AddNewlyCreatedDBObject(acPoint, true);
-
-                                    importedCount++;
-                                    batchCount++;
-                                }
-
-
+                                return;
                             }
-                            tr.Commit();
+
+                            bool isClosed = selectedPoly.Closed || (selectedPoly.NumberOfVertices > 2 && selectedPoly.StartPoint.IsEqualTo(selectedPoly.EndPoint, Tolerance.Global));
+
+                            if (!isClosed)
+                            {
+                                Generic.WriteMessage("La polyligne sélectionnée n'est pas fermée.");
+                                return;
+                            }
+
+                            // Discrétisation des arcs (calculée une seule fois avant la boucle de points)
+                            Polyline noArcPoly = selectedPoly.ToPolygon(15);
+                            Point3dCollection drawingPts = noArcPoly.GetPoints().ToPoint3dCollection();
+                            if (noArcPoly != selectedPoly)
+                            {
+                                noArcPoly.Dispose();
+                            }
+
+                            // Conversion des sommets du polygone : Dessin (WCS) -> Système LAS
+                            // et calcul de la boîte englobante (Bounding Box) pour le pré-filtrage rapide
+                            lasPolygonPts = new Point3dCollection();
+                            lasXmin = double.MaxValue;
+                            lasXmax = double.MinValue;
+                            lasYmin = double.MaxValue;
+                            lasYmax = double.MinValue;
+
+                            foreach (Point3d pt in drawingPts)
+                            {
+                                Point2d lasPt = transform.Inverse(pt.X, pt.Y);
+                                lasPolygonPts.Add(new Point3d(lasPt.X, lasPt.Y, 0));
+
+                                if (lasPt.X < lasXmin) lasXmin = lasPt.X;
+                                if (lasPt.X > lasXmax) lasXmax = lasPt.X;
+                                if (lasPt.Y < lasYmin) lasYmin = lasPt.Y;
+                                if (lasPt.Y > lasYmax) lasYmax = lasPt.Y;
+                            }
+
+                            trPoly.Commit();
+                        }
+
+                        Generic.WriteMessage($"Emprise polyligne (LAS) : {lasXmin:0.###} , {lasYmin:0.###} -> {lasXmax:0.###} , {lasYmax:0.###}");
+                    }
+
+                    // Cache des couleurs par classification pour éviter les allocations répétées
+                    Color[] classColorCache = new Color[256];
+                    for (int i = 0; i < 256; i++)
+                    {
+                        classColorCache[i] = GetClassificationColor((byte)i);
+                    }
+
+                    // IMPORT DES POINTS PAR LOTS (CHUNKS)
+                    const int batchSize = 50000;
+                    int importedCount = 0;
+                    long readIndex = 0;
+                    int lastPercent = -1;
+
+                    bool previousUndoState = db.UndoRecording;
+                    //db.DisableUndoRecording(true); // Évite le freeze dû à l'enregistrement Undo massif
+
+                    try
+                    {
+                        using (LongOperationProcess op = new LongOperationProcess("Import LAS"))
+                        {
+                            op.SetTotalOperations(100);
+
+                            bool hasMorePoints = true;
+                            using (Transaction tr = db.TransactionManager.StartTransaction())
+                            {
+                                while (hasMorePoints)
+                                {
+                                    BlockTable bt = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForRead);
+                                    BlockTableRecord ms = (BlockTableRecord)tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
+
+                                    int batchCount = 0;
+
+                                    while (batchCount < batchSize)
+                                    {
+                                        if (!las.ReadPoint(out LasPoint pointVal))
+                                        {
+                                            hasMorePoints = false;
+                                            break;
+                                        }
+
+                                        readIndex++;
+
+                                        if ((readIndex & 1023) == 0) // Vérification annulation / progression tous les 1024 points
+                                        {
+                                            if (op.IsCanceled)
+                                            {
+                                                tr.Abort();
+                                                Generic.WriteMessage("\nImport LAS annulé.");
+                                                return;
+                                            }
+                                            UpdateProgressIfNeeded(las, op, ref lastPercent);
+                                        }
+
+                                        // Filtrage spatial en 2 étapes : Bounding Box rapide puis test point-dans-polygone
+                                        if (!importAll)
+                                        {
+                                            if (pointVal.X < lasXmin || pointVal.X > lasXmax ||
+                                                pointVal.Y < lasYmin || pointVal.Y > lasYmax)
+                                            {
+                                                continue;
+                                            }
+
+                                            if (!(pointVal.X, pointVal.Y).IsPointInsidePolygonMcMartin(lasPolygonPts))
+                                            {
+                                                continue;
+                                            }
+                                        }
+
+                                        // Transformation LAS -> dessin
+                                        Point2d converted = transform.Transform(pointVal.X, pointVal.Y);
+                                        DBPoint acPoint = new DBPoint(new Point3d(converted.X, converted.Y, pointVal.Z))
+                                        {
+                                            Color = pointVal.HasRGB
+                                                ? Color.FromRgb(pointVal.R, pointVal.G, pointVal.B)
+                                                : classColorCache[pointVal.Classification]
+                                        };
+
+                                        ms.AppendEntity(acPoint);
+                                        tr.AddNewlyCreatedDBObject(acPoint, true);
+
+                                        importedCount++;
+                                        batchCount++;
+                                    }
+                                }
+                                tr.Commit();
+                            }
                         }
                     }
-                }
-                finally
-                {
-                    db.DisableUndoRecording(previousUndoState);
-                }
+                    finally
+                    {
+                        db.DisableUndoRecording(previousUndoState);
+                    }
 
-                Generic.WriteMessage($"Import terminé : {importedCount:N0} points importés.");
+                    Generic.WriteMessage($"Import terminé : {importedCount:N0} points importés.");
                 }
                 finally
                 {

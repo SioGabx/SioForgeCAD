@@ -1513,11 +1513,17 @@ namespace SioForgeCAD.Forms
             string currentViergeFile = Settings.EmptyLayoutGabaritFile;
             MenuItem chooseFile = new MenuItem
             {
-                Header = string.IsNullOrEmpty(currentViergeFile) ? "Choisir un gabarit..." : $"Gabarit : {Path.GetFileName(currentViergeFile)}"
+                Header = string.IsNullOrEmpty(currentViergeFile) ? "Choisir un gabarit..." : $"Gabarit séléctionné : {Path.GetFileName(currentViergeFile)}"
             };
             chooseFile.Click += (s, args) =>
             {
-                string path = PromptFileSelection(PromptGabaritInitialDir);
+                var IntialDir = Settings.EmptyLayoutGabaritFile;
+                if (string.IsNullOrEmpty(IntialDir) || !File.Exists(IntialDir))
+                {
+                    IntialDir = PromptGabaritInitialDir;
+                }
+
+                string path = PromptFileSelection(IntialDir);
                 if (path != null)
                 {
                     Settings.EmptyLayoutGabaritFile = path;
@@ -1538,7 +1544,13 @@ namespace SioForgeCAD.Forms
             MenuItem redefineItem = new MenuItem { Header = "Redéfinir le fichier de gabarit" };
             redefineItem.Click += (s, args) =>
             {
-                string path = PromptFileSelection(PromptGabaritInitialDir);
+                var IntialDir = Settings.GabaritFile;
+                if (string.IsNullOrEmpty(IntialDir) || !File.Exists(IntialDir))
+                {
+                    IntialDir = PromptGabaritInitialDir;
+                }
+
+                string path = PromptFileSelection(IntialDir);
                 if (path != null)
                 {
                     Settings.GabaritFile = path;

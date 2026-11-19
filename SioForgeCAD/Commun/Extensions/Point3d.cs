@@ -269,6 +269,16 @@ namespace SioForgeCAD.Commun.Extensions
             double tx = p.X;
             double ty = p.Y;
 
+            return IsPointInsidePolygonMcMartin((tx, ty), verts);
+        }
+
+        public static bool IsPointInsidePolygonMcMartin(this (double tx, double ty) point, Point3dCollection verts)
+        {
+            //https://erich.realtimerendering.com/ptinpoly/
+            //https://www.realtimerendering.com/resources/RTNews/html//rtnv5n3.html#art3
+            double tx = point.tx;
+            double ty = point.ty;
+
             //get initial test bit for above/below X axis
             var vtx0 = verts[0];
             var yflag0 = vtx0[1] >= ty;

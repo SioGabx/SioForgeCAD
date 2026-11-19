@@ -155,13 +155,13 @@ namespace SioForgeCAD
 
         public static string EmptyLayoutGabaritFile
         {
-            get => GetValue(nameof(EmptyLayoutGabaritFile), @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt");
+            get => GetValue(nameof(EmptyLayoutGabaritFile), string.Empty);
             set => SetValue(nameof(EmptyLayoutGabaritFile), value);
         }
 
         public static string EmptyLayoutGabaritPresentationName
         {
-            get => GetValue(nameof(EmptyLayoutGabaritPresentationName), "");
+            get => GetValue(nameof(EmptyLayoutGabaritPresentationName), string.Empty);
             set => SetValue(nameof(EmptyLayoutGabaritPresentationName), value);
         }
 
@@ -173,7 +173,7 @@ namespace SioForgeCAD
 
         public static string GabaritFile
         {
-            get => GetValue(nameof(GabaritFile), @"%UserProfile%\AppData\Local\Autodesk\AutoCAD 2021\R24.0\fra\Template\HOFFMANN.dwt");
+            get => GetValue(nameof(GabaritFile), string.Empty);
             set => SetValue(nameof(GabaritFile), value);
         }
 
