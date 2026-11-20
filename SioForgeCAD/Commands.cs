@@ -720,6 +720,13 @@ namespace SioForgeCAD
             Functions.HATCHCOPYPROPERTIES.CopyProperties();
         }
 
+        //Quickly inspect the exact scale of any Paper Space viewport => formatted scale ratio (such as 1/500 or 1/200)
+        [CommandMethod("SIOFORGECAD", "VPGETSCALEINFO", CommandFlags.Redraw)]
+        public static void VPGETSCALEINFO()
+        {
+            Functions.VPGETSCALEINFO.GetViewportScaleInfo();
+        }
+
 
 
 #if DEBUG
