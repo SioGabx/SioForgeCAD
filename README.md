@@ -185,7 +185,11 @@ Commandes existantes fichier MD (à completer par les commandes manquantes, prop
 | `BATCHHATCHPOLYS` | Prompt the user to select polylines and automatically create an associative SOLID hatch for every closed polyline in the selection. |
 | `HATCHCOPYPROPERTIES` / `COPYHATCHPROPERTIES` | Clone a source hatch and replace the target while preserving its properties, patterns, valid loops, and draw order. Handle unavailable or custom patterns. |
 | `VPGETSCALEINFO` | Quickly inspect the exact scale of any Paper Space viewport => formatted scale ratio (such as 1/500 or 1/200) |
-<!-- DEBUG only -->
+| `GETOBJECTBYTESIZE` | Display memory footprint (in bytes) of selected objects. |
+<br>
+
+| Debug Command | Description |
+|---|---|
 | `FIELDEDITOR` | Debug only - Open advanced editor for dynamic fields. |
 | `SMARTLEGEND` | Debug only - Test smart legend generation. |
 | `TRYCONVERTACADPROXYENTALTIMETRYTOBLK` | Debug only - Attempt to convert AutoCAD altimetry proxies to blocks. |
@@ -193,6 +197,5 @@ Commandes existantes fichier MD (à completer par les commandes manquantes, prop
 | `TEST1` | Debug only - Development test method 1. |
 | `TEST2` | Debug only - Development test method 2 (3D/2D polyline trimming). |
 | `TEST3` | Debug only - Development test method 3. |
-| `GETOBJECTBYTESIZE` | Debug only - Display memory footprint (in bytes) of selected objects. |
 | `RANDOM_POINTS` | Debug only - Generate random point entities for testing. |
 | `DRAWRAINBOWLIGNES` | Debug only - Draw test lines with rainbow color gradient. |

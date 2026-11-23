@@ -443,8 +443,8 @@ namespace SioForgeCAD
         public static void POLYISCLOCKWISE() => Functions.POLYISCLOCKWISE.Check();
 
         // Ajoute des points aux sommets des polylignes.
-        [CommandMethod("SIOFORGECAD", "ADDPOINTSATPOLYLIGNEVERTICES", CommandFlags.Redraw)]
-        public static void ADDPOINTSATPOLYLIGNEVERTICES() => Functions.ADDPOINTSATPOLYLIGNEVERTICES.Execute();
+        [CommandMethod("SIOFORGECAD", "ADDDBPOINTSATPOLYLIGNEVERTICES", CommandFlags.Redraw)]
+        public static void ADDDBPOINTSATPOLYLIGNEVERTICES() => Functions.ADDDBPOINTSATPOLYLIGNEVERTICES.Execute();
 
         [CommandMethod("SIOFORGECAD", "VIEWGEOMETRYVERTEX", CommandFlags.Redraw)]
         //Overule to draw a circle at each vertex of the selected entities
@@ -644,88 +644,56 @@ namespace SioForgeCAD
 
         // Creates contour lines from elevation points.
         [CommandMethod("SIOFORGECAD", "CREATECONTOURSLINESFROMPOINTS", CommandFlags.Redraw)]
-        public static void CREATECONTOURSLINESFROMPOINTS()
-        {
-            Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
-        }
+        public static void CREATECONTOURSLINESFROMPOINTS() => Functions.CREATECONTOURSLINESFROMPOINTS.GeneratePointsFromAlt();
 
         // Adds labels to contour lines.
         [CommandMethod("SIOFORGECAD", "CREATELABELSONCONTOURELEVATIONS", CommandFlags.Redraw)]
-        public static void CREATELABELSONCONTOURELEVATIONS()
-        {
-            Functions.CREATELABELSONCONTOURELEVATIONS.Create();
-        }
+        public static void CREATELABELSONCONTOURELEVATIONS() => Functions.CREATELABELSONCONTOURELEVATIONS.Create();
 
         // Toggles layer comparison.
         [CommandMethod("SIOFORGECAD", "TOGGLELAYERCOMPARE", CommandFlags.Redraw)]
-        public static void TOGGLELAYERCOMPARE()
-        {
-            Functions.TOGGLELAYERCOMPARE.Execute();
-        }
+        public static void TOGGLELAYERCOMPARE() => Functions.TOGGLELAYERCOMPARE.Execute();
 
         // Selects spread points according to the requested criteria.
         [CommandMethod("SIOFORGECAD", "SELECTSPREADPOINTS", CommandFlags.Redraw)]
-        public static void SELECTSPREADPOINTS()
-        {
-            Functions.SELECTSPREADPOINTS.Select();
-        }
+        public static void SELECTSPREADPOINTS() => Functions.SELECTSPREADPOINTS.Select();
         // Converts the selected solids to hatches.
         [CommandMethod("SIOFORGECAD", "SOLIDTOHATCH", CommandFlags.Redraw)]
-        public static void SOLIDTOHATCH()
-        {
-            Functions.SOLIDTOHATCH.Convert();
-        }
+        public static void SOLIDTOHATCH() => Functions.SOLIDTOHATCH.Convert();
 
         // Import a point cloud from a LAS or LAZ file.
         [CommandMethod("SIOFORGECAD", "LAZIMPORT", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "LASIMPORT", CommandFlags.Redraw)]
-        public static void LASIMPORT()
-        {
-            Functions.LASIMPORT.ImportLAS();
-        }
+        public static void LASIMPORT() => Functions.LASIMPORT.ImportLAS();
 
         //Divide a polyline into equal areas
         [CommandMethod("SIOFORGECAD", "DIVIDEPOLYLIGNINEQUALAREA", CommandFlags.Redraw)]
-        public static void DIVIDEPOLYLIGNINEQUALAREAS()
-        {
-            Functions.DIVIDEPOLYLIGNINEQUALAREAS.DivideInEqualAreas();
-        }
+        public static void DIVIDEPOLYLIGNINEQUALAREAS() => Functions.DIVIDEPOLYLIGNINEQUALAREAS.DivideInEqualAreas();
 
         //Divide a polyline into equal areas
         [CommandMethod("SIOFORGECAD", "EXECUTEONEACHOBJECTSINSELECTION", CommandFlags.Redraw)]
-        public static async void EXECUTEONEACHOBJECTSINSELECTION()
-        {
-            await Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
-        }
+        public static async void EXECUTEONEACHOBJECTSINSELECTION() => await Functions.EXECUTEONEACHOBJECTSINSELECTION.RunCommandOnSelectionAsync();
 
         //Searches for specific block references across drawing hierarchies and generates their full parent-child structure directly to the system clipboard.
         [CommandMethod("SIOFORGECAD", "BLKFINDTREESTRUCTURE", CommandFlags.Redraw)]
-        public static void BLKFINDTREESTRUCTURE()
-        {
-            Functions.BLKFINDTREESTRUCTURE.Find();
-        }
+        public static void BLKFINDTREESTRUCTURE() => Functions.BLKFINDTREESTRUCTURE.Find();
 
         //Prompts the user to select polylines and automatically creates an associative SOLID hatch for every closed polyline in the selection.
         [CommandMethod("SIOFORGECAD", "BATCHHATCHPOLYS", CommandFlags.Redraw)]
-        public static void BATCHHATCHPOLYS()
-        {
-            Functions.BATCHHATCHPOLYS.HatchClosedPolylines();
-        }
+        public static void BATCHHATCHPOLYS() => Functions.BATCHHATCHPOLYS.HatchClosedPolylines();
 
         //Clone a source hatch and replace the target while preserving its properties, patterns, valid loops, and draw order. Handle unavailable or custom patterns
         [CommandMethod("SIOFORGECAD", "HATCHCOPYPROPERTIES", CommandFlags.Redraw)]
         [CommandMethod("SIOFORGECAD", "COPYHATCHPROPERTIES", CommandFlags.Redraw)]
-        public static void HATCHCOPYPROPERTIES()
-        {
-            Functions.HATCHCOPYPROPERTIES.CopyProperties();
-        }
+        public static void HATCHCOPYPROPERTIES() => Functions.HATCHCOPYPROPERTIES.CopyProperties();
 
         //Quickly inspect the exact scale of any Paper Space viewport => formatted scale ratio (such as 1/500 or 1/200)
         [CommandMethod("SIOFORGECAD", "VPGETSCALEINFO", CommandFlags.Redraw)]
-        public static void VPGETSCALEINFO()
-        {
-            Functions.VPGETSCALEINFO.GetViewportScaleInfo();
-        }
+        public static void VPGETSCALEINFO() => Functions.VPGETSCALEINFO.GetViewportScaleInfo();
+
+        // Displays the memory size of the selected object.
+        [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.Redraw)]
+        public static void GETOBJECTBYTESIZE() => Functions.GETOBJECTBYTESIZE.GetObjectByteSize();
 
 
 
@@ -738,17 +706,11 @@ namespace SioForgeCAD
 
         // Tests smart legend generation.
         [CommandMethod("DEBUG", "SMARTLEGEND", CommandFlags.Redraw)]
-        public static void SMARTLEGEND()
-        {
-            Functions.SMARTLEGEND.Test();
-        }
+        public static void SMARTLEGEND() => Functions.SMARTLEGEND.Test();
 
         // Attempts to convert an AutoCAD elevation proxy into a block.
         [CommandMethod("DEBUG", "TRYCONVERTACADPROXYENTALTIMETRYTOBLK", CommandFlags.Redraw)]
-        public static void TRYCONVERTACADPROXYENTALTIMETRYTOBLK()
-        {
-            Functions.TRYCONVERTACADPROXYENTALTIMETRYTOBLK.Convert();
-        }
+        public static void TRYCONVERTACADPROXYENTALTIMETRYTOBLK() => Functions.TRYCONVERTACADPROXYENTALTIMETRYTOBLK.Convert();
 
 
         [CommandMethod("DEBUG", "TEST", CommandFlags.Redraw)]
@@ -771,10 +733,13 @@ namespace SioForgeCAD
         [CommandMethod("DEBUG", "TEST3", CommandFlags.Redraw)]
         public static void TEST3()
         {
-            //LambertProjectionTest.Run();
 
-            //Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
-            //DEBUG.EXPORTPOLYLINEDATA();
+            //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
+            //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
+
+
+            //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
+
 
             //var Paths = Directory.GetFiles(@"C:\Users\AMPLITUDE PAYSAGE\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters");
             //foreach (var item in Paths)
@@ -787,32 +752,12 @@ namespace SioForgeCAD
             //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(pathb, pathb + "_edited.pc3");
         }
 
-        //CMLContentSearchPreviews.GetBlockTRThumbnail(); https://keanw.com/2013/11/generating-larger-preview-images-for-all-blocks-in-an-autocad-drawing-using-net.html
-        //Autodesk.AutoCAD.Internal.Utils.GetBlockImage() https://drive-cad-with-code.blogspot.com/2020/12/obtaining-blocks-image.html
 
+        [CommandMethod("DEBUG", "TESTEXPORTLAYOUT", CommandFlags.Redraw)]
+        public static void TESTEXPORTLAYOUT() => Functions.TESTEXPORTLAYOUT.ExportLayoutComplet();
 
-        //%USERPROFILE%\AppData\Roaming\Autodesk\AutoCAD 2021\R24.0\fra\Plotters\PMP Files
-
-        //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Decode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\DWG To PDF_AMPLITUDE.pmp");
-        //SioForgeCAD.Commun.Mist.Helpers.TextParsers.PC3.Files.Encode(@"%USERPROFILE%\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE_modified.pmp.txt", @"C:\Users\AMPLITUDE PAYSAGE\Source\Repos\unzip_pc3\unzip_pc3\bin\Debug\Converted\DWG To PDF_AMPLITUDE.pmp");
-
-
-        //TODO : BLKSETTOBYLAYER
-        //TODO : Overrule for XCLIP
-        //TOTO : Transform perspective
-        //TODO : Edit field formula
-
-        //https://aps.autodesk.com/blog/explode-dbtext-geometry-using-design-automation-api-6
-
-        //https://keanw.com/2014/06/iterating-autocad-system-variables-using-net-part-2.html
-
-        //https://github.com/huypham0808/Autopublish_AutoCAD_Plug-in/blob/f2f059f795bb26f7b654a05e64de68557f34f950/Command.cs#L165
-
-
-        // Displays the memory size of the selected object.
-        [CommandMethod("DEBUG", "GETOBJECTBYTESIZE", CommandFlags.UsePickSet)]
-        public static void GETOBJECTBYTESIZE() => Functions.DEBUG.GETOBJECTBYTESIZE();
-
+        [CommandMethod("DEBUG", "EXPORTPOLYLINEDATA", CommandFlags.Redraw)]
+        public static void EXPORTPOLYLINEDATA() => Functions.DEBUG.EXPORTPOLYLINEDATA();
 
         // Generates random points for testing.
         [CommandMethod("DEBUG", "RANDOM_POINTS", CommandFlags.Transparent)]

@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace SioForgeCAD.Functions
 {
-    public static class ADDPOINTSATPOLYLIGNEVERTICES
+    public static class ADDDBPOINTSATPOLYLIGNEVERTICES
     {
         public static void Execute()
         {

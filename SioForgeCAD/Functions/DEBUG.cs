@@ -68,15 +68,6 @@ namespace SioForgeCAD.Functions
             }
             Generic.Command("_PLAN", "");
         }
-        public static void GETOBJECTBYTESIZE()
-        {
-            var ed = Generic.GetEditor();
-            var x = ed.GetEntity("Selectionnez une entité");
-            if (x.Status == PromptStatus.OK)
-            {
-                Generic.WriteMessage($"Taille : {Files.FormatFileSizeFromByte(x.ObjectId.GetObjectByteSize())}");
-            }
-        }
 
         public static void DRAWRAINBOWLIGNES()
         {
