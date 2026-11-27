@@ -38,7 +38,7 @@ namespace SioForgeCAD.Functions
 
             private static void OnExecute(object o, EventArgs e)
             {
-                Generic.SendStringToExecute("SIOFORGECAD.POLYLINE3DTOPOLYLIGNE");
+                Generic.SendStringToExecute($"{Generic.GetExtensionDLLName().ToUpperInvariant()}.POLYLINE3DTOPOLYLIGNE");
             }
         }
 

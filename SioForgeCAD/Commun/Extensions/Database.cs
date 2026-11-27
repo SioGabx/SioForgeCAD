@@ -332,7 +332,7 @@ namespace SioForgeCAD.Commun.Extensions
 
         public static long GetSize(this Database db, DwgVersion version)
         {
-            string tempFileName = $"SioForgeCAD_SizeCheck_{DateTime.Now:yyMMdd_HHmmss}_{Guid.NewGuid()}.dwg";
+            string tempFileName = $"{Generic.GetExtensionDLLName()}_SizeCheck_{DateTime.Now:yyMMdd_HHmmss}_{Guid.NewGuid()}.dwg";
             string tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
             long sizeBytes = 0;
 

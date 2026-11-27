@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.Runtime;
 using SioForgeCAD.Commun;
+using SioForgeCAD.Commun.Extensions;
 using SioForgeCAD.Commun.Mist;
 using System;
 using System.Reflection;
@@ -23,19 +24,18 @@ namespace SioForgeCAD
                 doc.Editor.WriteMessage($"\n{Settings.CopyrightMessage}\n");
             }
             InitPlugin();
+            SetDefaultSysVariables();
             VerifApp();
         }
 
         public static void VerifApp()
         {
             DateTime buildDate = Assembly.GetExecutingAssembly().GetLinkerTime();
-
-            // Si la date actuelle a dépassé (date de compilation + 2 ans)
-            if (DateTime.Now > buildDate.AddYears(2))
+            if (buildDate.IsOlderThan(DateTime.Now, 2)) // Si la date actuelle a dépassé (date de compilation + 2 ans)
             {
                 Generic.WriteMessage($"=======================================================");
-                Generic.WriteMessage($"[ALERTE DE SÉCURITÉ] SioForgeCAD");
-                Generic.WriteMessage($"Cette version a été compilée le {buildDate:dd/MM/yyyy} (il y a plus de 2 ans).");
+                Generic.WriteMessage($"[ALERTE DE SÉCURITÉ] {Generic.GetExtensionDLLName()}");
+                Generic.WriteMessage($"{Generic.GetExtensionDLLName()} a été compilée le {buildDate:dd/MM/yyyy} (il y a plus de {buildDate.GetDifferenceInYears(DateTime.Now)} ans).");
                 Generic.WriteMessage($"Pour des raisons de sécurité et de stabilité, une mise à jour est requise.");
                 Generic.WriteMessage($"=======================================================\n");
 
@@ -79,6 +79,13 @@ namespace SioForgeCAD
             Functions.LAYERMANAGERNEWLAYERDEFAULTNAME.Override();
             Functions.LAYERMANAGERHANDLEBETTEREDITING.Override();
             Functions.CUSTOMLAYOUTBAR.Override();
+
+        }
+
+
+        public static void SetDefaultSysVariables()
+        {
+            Generic.SetSystemVariable("HPNAME", "SOLID", false);
         }
 
         public void Terminate()

@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
 
             private static void OnExecute(object o, EventArgs e)
             {
-                Generic.SendStringToExecute("SIOFORGECAD.LINETOPOLYLIGNE");
+                Generic.SendStringToExecute($"{Generic.GetExtensionDLLName().ToUpperInvariant()}.LINETOPOLYLIGNE");
             }
         }
 

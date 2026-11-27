@@ -148,6 +148,7 @@
     <Compile Include="Commun\Extensions\CircularArc3d.cs" />
     <Compile Include="Commun\Extensions\ConcurrentBag.cs" />
     <Compile Include="Commun\Extensions\Control.cs" />
+    <Compile Include="Commun\Extensions\DateTime.cs" />
     <Compile Include="Commun\Extensions\DBPoint.cs" />
     <Compile Include="Commun\Extensions\DBText.cs" />
     <Compile Include="Commun\Extensions\Dimension.cs" />

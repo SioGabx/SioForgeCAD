@@ -42,7 +42,7 @@ namespace SioForgeCAD.Functions
 
             private static void OnExecute(object o, EventArgs e)
             {
-                Generic.SendStringToExecute("SIOFORGECAD.CONVERTIMAGETOOLE");
+                Generic.SendStringToExecute($"{Generic.GetExtensionDLLName().ToUpperInvariant()}.CONVERTIMAGETOOLE");
             }
         }
 

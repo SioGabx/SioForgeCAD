@@ -82,7 +82,7 @@ namespace SioForgeCAD
 
         public static string PrefixCAD
         {
-            get => GetValue(nameof(PrefixCAD), "_SIOFORGECAD_");
+            get => GetValue(nameof(PrefixCAD), $"_{Generic.GetExtensionDLLName().ToUpperInvariant()}_");
             set => SetValue(nameof(PrefixCAD), value);
         }
 

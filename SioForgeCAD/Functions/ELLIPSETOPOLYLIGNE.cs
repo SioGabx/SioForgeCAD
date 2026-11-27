@@ -36,7 +36,7 @@ namespace SioForgeCAD.Functions
 
             private static void OnExecute(object o, EventArgs e)
             {
-                Generic.SendStringToExecute("SIOFORGECAD.ELLIPSETOPOLYLIGNE");
+                Generic.SendStringToExecute($"{Generic.GetExtensionDLLName().ToUpperInvariant()}.ELLIPSETOPOLYLIGNE");
             }
         }
 
