@@ -12,33 +12,35 @@ namespace SioForgeCAD.Functions
         {
             Database db = Generic.GetDatabase();
             Editor ed = Generic.GetEditor();
-
-            if (!ed.GetHatch(out ObjectId SourceHatchId, "\nSélectionnez la hachure source (motif à copier) : "))
-            {
-                return;
-            }
-
-            TypedValue[] filterList = new TypedValue[]
-            {
-                new TypedValue((int)DxfCode.Start, "HATCH")
-            };
-            SelectionFilter filter = new SelectionFilter(filterList);
-
-            PromptSelectionOptions opts = new PromptSelectionOptions
-            {
-                MessageForAdding = "\nSélectionnez les hachures cibles (à remplacer) : "
-            };
-
-            var selRes = ed.GetSelectionRedraw(opts, filter);
-            if (selRes.Status != PromptStatus.OK)
-            {
-                return;
-            }
-
-            ObjectId[] selectedIds = selRes.Value.GetObjectIds();
-
             using (Transaction tr = db.TransactionManager.StartTransaction())
             {
+                if (!ed.GetHatch(out ObjectId SourceHatchId, "\nSélectionnez la hachure source (motif à copier) : "))
+                {
+                    tr.Commit();
+                    return;
+                }
+
+                TypedValue[] filterList = new TypedValue[]
+                {
+                new TypedValue((int)DxfCode.Start, "HATCH")
+                };
+                SelectionFilter filter = new SelectionFilter(filterList);
+
+                PromptSelectionOptions opts = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nSélectionnez les hachures cibles (à remplacer) : "
+                };
+
+                var selRes = ed.GetSelectionRedraw(opts, filter);
+                if (selRes.Status != PromptStatus.OK)
+                {
+                    tr.Commit();
+                    return;
+                }
+
+                ObjectId[] selectedIds = selRes.Value.GetObjectIds();
+
+
                 Hatch originHatch = SourceHatchId.GetDBObject(OpenMode.ForRead) as Hatch;
                 if (originHatch == null)
                 {
@@ -65,7 +67,8 @@ namespace SioForgeCAD.Functions
                 if (count == 0)
                 {
                     ed.WriteMessage("Aucune hachure cible valide sélectionnée (vous avez peut-être uniquement sélectionné la hachure source).");
-                }else if (count > 0)
+                }
+                else if (count > 0)
                 {
                     ed.WriteMessage($"{count} hachures cibles ont été copiées à la perfection !");
                 }
